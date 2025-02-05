@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rice call
 
-## Getting Started
+這是 Raidcall 的網頁非官方復刻版 Ricecall，目前尚處於開發階段，若有興趣歡迎於 Discord 一同參與討論
 
-First, run the development server:
+### ->[Discord 群組](https://discord.gg/adCWzv6wwS)<-
+
+## 使用方法
+
+若是想參與測試開發版本，此 repo 的 branch 分別為：
+
+| branch      | role   |
+| ----------- | ------ |
+| `master`    | client |
+| `Websocket` | server |
+
+## 如何啟動
+
+### 啟動 Client
 
 ```bash
+# 使用 npm
 npm run dev
-# or
+
+# 使用 yarn
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 啟動 Server
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+node index.js
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+客戶端及伺服器即會運行於本地電腦上
 
-## Learn More
+> [客戶端](localhost:3000) (預設為 port3000)
+>
+> [伺服器端](localhost:4500) (預設為 port4500)
 
-To learn more about Next.js, take a look at the following resources:
+## 免責聲明
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**RiceCall** 是一個**獨立開發**的專案，與 RaidCall 的原開發團隊、伺服器或任何官方組織 **沒有任何關聯**。本專案**並非** RaidCall 的延續或官方授權版本，亦**不涉及恢復過去的 RaidCall 服務或其伺服器**。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+RiceCall 的開發純屬愛好者社群的自主行動，目的在於提供一個新的語音交流平台，並非商業化項目。本專案可能會參考或取用部分 RaidCall 相關的素材，但所有內容皆屬我們的獨立創作，且不代表 RaidCall 官方立場或意圖。
 
-## Deploy on Vercel
+如有任何與 RaidCall 相關的問題，請直接聯繫其原開發團隊或官方渠道。**RiceCall 不負責與 RaidCall 相關的任何技術支援**、帳號恢復或資料遺失等問題。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+本專案完全獨立開發，所有內容僅供學術研究與技術交流使用。如涉及任何版權、商標或其他權利問題，請聯繫我們進行溝通。
