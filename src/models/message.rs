@@ -17,4 +17,4 @@ pub struct Message {
     pub timestamp: i64,
     #[serde(rename = "type")]
     pub message_type: MessageType,
-} 
+}

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Server {
@@ -20,5 +20,4 @@ pub struct Server {
     pub contributions: HashMap<String, i64>,
     #[serde(rename = "joinDate")]
     pub join_date: HashMap<String, i64>,
-
-} 
+}

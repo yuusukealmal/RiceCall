@@ -1,5 +1,5 @@
 use super::{Database, DbError, DbResult};
-use crate::models::{Channel, Message, Server, User, UserGender, UserState, MessageType};
+use crate::models::{Channel, Message, MessageType, Server, User, UserGender, UserState};
 use async_trait::async_trait;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use std::collections::HashMap;
@@ -14,7 +14,7 @@ impl SqliteDatabase {
             .max_connections(5)
             .connect(database_url)
             .await?;
-        
+
         Ok(Self { pool })
     }
 }
@@ -28,7 +28,7 @@ impl Database for SqliteDatabase {
             .map_err(|e| DbError::Sqlx(e.into()))?;
         Ok(())
     }
-    
+
     async fn create_user(&self, user: &User) -> DbResult<()> {
         sqlx::query(
             r#"
@@ -60,10 +60,10 @@ impl Database for SqliteDatabase {
         .bind(&user.current_channel_id)
         .execute(&self.pool)
         .await?;
-        
+
         Ok(())
     }
-    
+
     async fn get_user(&self, id: &str) -> DbResult<User> {
         let row = sqlx::query!(
             r#"
@@ -73,7 +73,7 @@ impl Database for SqliteDatabase {
         )
         .fetch_one(&self.pool)
         .await?;
-        
+
         Ok(User {
             id: row.id.expect("id is null"),
             name: row.name,
@@ -108,7 +108,7 @@ impl Database for SqliteDatabase {
         )
         .fetch_one(&self.pool)
         .await?;
-        
+
         Ok(User {
             id: row.id.expect("id is null"),
             name: row.name,
@@ -133,7 +133,7 @@ impl Database for SqliteDatabase {
             current_channel_id: row.current_channel_id,
         })
     }
-    
+
     async fn update_user(&self, user: &User) -> DbResult<()> {
         sqlx::query(
             r#"
@@ -163,44 +163,44 @@ impl Database for SqliteDatabase {
         .bind(&user.id)
         .execute(&self.pool)
         .await?;
-        
+
         Ok(())
     }
-    
+
     async fn get_users_list(&self) -> DbResult<Vec<User>> {
-        let rows = sqlx::query!(
-            r#"SELECT * FROM users"#
-        )
-        .fetch_all(&self.pool)
-        .await?;
-        
+        let rows = sqlx::query!(r#"SELECT * FROM users"#)
+            .fetch_all(&self.pool)
+            .await?;
+
         rows.into_iter()
-            .map(|row| Ok(User {
-                id: row.id.expect("id is null"),
-                name: row.name,
-                account: row.account.expect("account is null"),
-                password: row.password.expect("password is null"),
-                gender: match row.gender.as_str() {
-                    "Male" => UserGender::Male,
-                    "Female" => UserGender::Female,
-                    _ => return Err(DbError::InvalidData("Invalid gender".into())),
-                },
-                avatar: row.avatar,
-                level: row.level,
-                created_at: row.created_at,
-                last_login_at: row.last_login_at,
-                state: match row.state.as_str() {
-                    "online" => UserState::Online,
-                    "dnd" => UserState::Dnd,
-                    "idle" => UserState::Idle,
-                    "gn" => UserState::Gn,
-                    _ => return Err(DbError::InvalidData("Invalid state".into())),
-                },
-                current_channel_id: row.current_channel_id,
-            }))
+            .map(|row| {
+                Ok(User {
+                    id: row.id.expect("id is null"),
+                    name: row.name,
+                    account: row.account.expect("account is null"),
+                    password: row.password.expect("password is null"),
+                    gender: match row.gender.as_str() {
+                        "Male" => UserGender::Male,
+                        "Female" => UserGender::Female,
+                        _ => return Err(DbError::InvalidData("Invalid gender".into())),
+                    },
+                    avatar: row.avatar,
+                    level: row.level,
+                    created_at: row.created_at,
+                    last_login_at: row.last_login_at,
+                    state: match row.state.as_str() {
+                        "online" => UserState::Online,
+                        "dnd" => UserState::Dnd,
+                        "idle" => UserState::Idle,
+                        "gn" => UserState::Gn,
+                        _ => return Err(DbError::InvalidData("Invalid state".into())),
+                    },
+                    current_channel_id: row.current_channel_id,
+                })
+            })
             .collect()
     }
-    
+
     // Server operations
     async fn create_server(&self, server: &Server) -> DbResult<()> {
         let mut tx = self.pool.begin().await?;
@@ -248,19 +248,13 @@ impl Database for SqliteDatabase {
     async fn get_server(&self, id: &str) -> DbResult<Server> {
         let mut tx = self.pool.begin().await?;
 
-        let server_row = sqlx::query!(
-            r#"SELECT * FROM servers WHERE id = ?"#,
-            id
-        )
-        .fetch_one(&mut *tx)
-        .await?;
+        let server_row = sqlx::query!(r#"SELECT * FROM servers WHERE id = ?"#, id)
+            .fetch_one(&mut *tx)
+            .await?;
 
-        let users_rows = sqlx::query!(
-            r#"SELECT * FROM server_users WHERE server_id = ?"#,
-            id
-        )
-        .fetch_all(&mut *tx)
-        .await?;
+        let users_rows = sqlx::query!(r#"SELECT * FROM server_users WHERE server_id = ?"#, id)
+            .fetch_all(&mut *tx)
+            .await?;
 
         let applications = sqlx::query!(
             r#"SELECT user_id, message FROM server_applications WHERE server_id = ?"#,
@@ -269,12 +263,9 @@ impl Database for SqliteDatabase {
         .fetch_all(&mut *tx)
         .await?;
 
-        let channels = sqlx::query!(
-            r#"SELECT id FROM channels WHERE server_id = ?"#,
-            id
-        )
-        .fetch_all(&mut *tx)
-        .await?;
+        let channels = sqlx::query!(r#"SELECT id FROM channels WHERE server_id = ?"#, id)
+            .fetch_all(&mut *tx)
+            .await?;
 
         let mut user_ids = Vec::new();
         let mut permissions = HashMap::new();
@@ -354,7 +345,7 @@ impl Database for SqliteDatabase {
             channel.is_lobby,
             channel.is_category,
             channel.parent_id,
-            server_id  // 確保設置 server_id
+            server_id // 確保設置 server_id
         )
         .execute(&mut *tx)
         .await?;
@@ -365,12 +356,9 @@ impl Database for SqliteDatabase {
     }
 
     async fn get_channel(&self, id: &str) -> DbResult<Channel> {
-        let channel = sqlx::query!(
-            r#"SELECT * FROM channels WHERE id = ?"#,
-            id
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let channel = sqlx::query!(r#"SELECT * FROM channels WHERE id = ?"#, id)
+            .fetch_one(&self.pool)
+            .await?;
 
         let users = sqlx::query!(
             r#"SELECT user_id FROM channel_users WHERE channel_id = ?"#,
@@ -379,12 +367,9 @@ impl Database for SqliteDatabase {
         .fetch_all(&self.pool)
         .await?;
 
-        let message_ids = sqlx::query!(
-            r#"SELECT id FROM messages WHERE channel_id = ?"#,
-            id
-        )
-        .fetch_all(&self.pool)
-        .await?;
+        let message_ids = sqlx::query!(r#"SELECT id FROM messages WHERE channel_id = ?"#, id)
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(Channel {
             id: channel.id.expect("id is null"),
@@ -426,12 +411,9 @@ impl Database for SqliteDatabase {
     }
 
     async fn get_message(&self, id: &str) -> DbResult<Message> {
-        let row = sqlx::query!(
-            r#"SELECT * FROM messages WHERE id = ?"#,
-            id
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let row = sqlx::query!(r#"SELECT * FROM messages WHERE id = ?"#, id)
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(Message {
             id: row.id.expect("id is null"),
@@ -461,34 +443,41 @@ impl Database for SqliteDatabase {
         .await?;
 
         rows.into_iter()
-            .map(|row| Ok(User {
-                id: row.id.expect("id is null"),
-                name: row.name,
-                account: row.account.expect("account is null"),
-                password: row.password.expect("password is null"),
-                gender: match row.gender.as_str() {
-                    "Male" => UserGender::Male,
-                    "Female" => UserGender::Female,
-                    _ => return Err(DbError::InvalidData("Invalid gender".into())),
-                },
+            .map(|row| {
+                Ok(User {
+                    id: row.id.expect("id is null"),
+                    name: row.name,
+                    account: row.account.expect("account is null"),
+                    password: row.password.expect("password is null"),
+                    gender: match row.gender.as_str() {
+                        "Male" => UserGender::Male,
+                        "Female" => UserGender::Female,
+                        _ => return Err(DbError::InvalidData("Invalid gender".into())),
+                    },
 
-                avatar: row.avatar,
-                level: row.level,
-                created_at: row.created_at,
-                last_login_at: row.last_login_at,
-                state: match row.state.as_str() {
-                    "online" => UserState::Online,
-                    "dnd" => UserState::Dnd,
-                    "idle" => UserState::Idle,
-                    "gn" => UserState::Gn,
-                    _ => return Err(DbError::InvalidData("Invalid state".into())),
-                },
-                current_channel_id: row.current_channel_id,
-            }))
+                    avatar: row.avatar,
+                    level: row.level,
+                    created_at: row.created_at,
+                    last_login_at: row.last_login_at,
+                    state: match row.state.as_str() {
+                        "online" => UserState::Online,
+                        "dnd" => UserState::Dnd,
+                        "idle" => UserState::Idle,
+                        "gn" => UserState::Gn,
+                        _ => return Err(DbError::InvalidData("Invalid state".into())),
+                    },
+                    current_channel_id: row.current_channel_id,
+                })
+            })
             .collect()
     }
 
-    async fn add_server_user(&self, server_id: &str, user_id: &str, permissions: i64) -> DbResult<()> {
+    async fn add_server_user(
+        &self,
+        server_id: &str,
+        user_id: &str,
+        permissions: i64,
+    ) -> DbResult<()> {
         let now = chrono::Utc::now().timestamp_millis();
         sqlx::query!(
             r#"
@@ -502,7 +491,6 @@ impl Database for SqliteDatabase {
         )
         .execute(&self.pool)
         .await?;
-
 
         Ok(())
     }
@@ -522,7 +510,12 @@ impl Database for SqliteDatabase {
         Ok(())
     }
 
-    async fn add_server_application(&self, server_id: &str, user_id: &str, message: &str) -> DbResult<()> {
+    async fn add_server_application(
+        &self,
+        server_id: &str,
+        user_id: &str,
+        message: &str,
+    ) -> DbResult<()> {
         sqlx::query!(
             r#"
             INSERT INTO server_applications (server_id, user_id, message)
@@ -572,21 +565,36 @@ impl Database for SqliteDatabase {
         .fetch_all(&self.pool)
         .await?;
 
-        channels.into_iter()
-            .map(|row| Ok(Channel {
-                id: row.id.expect("id is null"),
-                name: row.name,
-                permission: row.permission,
-                is_lobby: row.is_lobby,
-                is_category: row.is_category,
-                user_ids: row.user_ids
-                    .map(|ids| ids.split(',').filter(|s| !s.is_empty()).map(|s| s.to_string()).collect())
-                    .unwrap_or_default(),
-                message_ids: row.message_ids
-                    .map(|ids| ids.split(',').filter(|s| !s.is_empty()).map(|s| s.to_string()).collect())
-                    .unwrap_or_default(),
-                parent_id: row.parent_id,
-            }))
+        channels
+            .into_iter()
+            .map(|row| {
+                Ok(Channel {
+                    id: row.id.expect("id is null"),
+                    name: row.name,
+                    permission: row.permission,
+                    is_lobby: row.is_lobby,
+                    is_category: row.is_category,
+                    user_ids: row
+                        .user_ids
+                        .map(|ids| {
+                            ids.split(',')
+                                .filter(|s| !s.is_empty())
+                                .map(|s| s.to_string())
+                                .collect()
+                        })
+                        .unwrap_or_default(),
+                    message_ids: row
+                        .message_ids
+                        .map(|ids| {
+                            ids.split(',')
+                                .filter(|s| !s.is_empty())
+                                .map(|s| s.to_string())
+                                .collect()
+                        })
+                        .unwrap_or_default(),
+                    parent_id: row.parent_id,
+                })
+            })
             .collect()
     }
 
@@ -604,17 +612,19 @@ impl Database for SqliteDatabase {
         .await?;
 
         rows.into_iter()
-            .map(|row| Ok(Message {
-                id: row.id.expect("id is null"),
-                sender_id: row.sender_id.expect("sender_id is null"),
-                content: row.content,
-                timestamp: row.timestamp,
-                message_type: match row.r#type.as_str() {
-                    "general" => MessageType::General,
-                    "info" => MessageType::Info,
-                    _ => return Err(DbError::InvalidData("Invalid message type".into())),
-                },
-            }))
+            .map(|row| {
+                Ok(Message {
+                    id: row.id.expect("id is null"),
+                    sender_id: row.sender_id.expect("sender_id is null"),
+                    content: row.content,
+                    timestamp: row.timestamp,
+                    message_type: match row.r#type.as_str() {
+                        "general" => MessageType::General,
+                        "info" => MessageType::Info,
+                        _ => return Err(DbError::InvalidData("Invalid message type".into())),
+                    },
+                })
+            })
             .collect()
     }
 
@@ -693,29 +703,31 @@ impl Database for SqliteDatabase {
         .await?;
 
         rows.into_iter()
-            .map(|row| Ok(User {
-                id: row.id.expect("id is null"),
-                name: row.name,
-                account: row.account.expect("account is null"),
-                password: row.password.expect("password is null"),
-                gender: match row.gender.as_str() {
-                    "Male" => UserGender::Male,
-                    "Female" => UserGender::Female,
-                    _ => return Err(DbError::InvalidData("Invalid gender".into())),
-                },
-                avatar: row.avatar,
-                level: row.level,
-                created_at: row.created_at,
-                last_login_at: row.last_login_at,
-                state: match row.state.as_str() {
-                    "online" => UserState::Online,
-                    "dnd" => UserState::Dnd,
-                    "idle" => UserState::Idle,
-                    "gn" => UserState::Gn,
-                    _ => return Err(DbError::InvalidData("Invalid state".into())),
-                },
-                current_channel_id: row.current_channel_id,
-            }))
+            .map(|row| {
+                Ok(User {
+                    id: row.id.expect("id is null"),
+                    name: row.name,
+                    account: row.account.expect("account is null"),
+                    password: row.password.expect("password is null"),
+                    gender: match row.gender.as_str() {
+                        "Male" => UserGender::Male,
+                        "Female" => UserGender::Female,
+                        _ => return Err(DbError::InvalidData("Invalid gender".into())),
+                    },
+                    avatar: row.avatar,
+                    level: row.level,
+                    created_at: row.created_at,
+                    last_login_at: row.last_login_at,
+                    state: match row.state.as_str() {
+                        "online" => UserState::Online,
+                        "dnd" => UserState::Dnd,
+                        "idle" => UserState::Idle,
+                        "gn" => UserState::Gn,
+                        _ => return Err(DbError::InvalidData("Invalid state".into())),
+                    },
+                    current_channel_id: row.current_channel_id,
+                })
+            })
             .collect()
     }
-} 
+}

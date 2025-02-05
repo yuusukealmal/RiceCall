@@ -18,9 +18,10 @@ impl IntoResponse for ApiError {
             self.0,
             Json(json!({
                 "error": self.1
-            }))
-        ).into_response()
+            })),
+        )
+            .into_response()
     }
 }
 
-pub type ApiResult<T> = Result<Json<T>, ApiError>; 
+pub type ApiResult<T> = Result<Json<T>, ApiError>;

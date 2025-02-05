@@ -15,4 +15,4 @@ pub struct Channel {
     pub message_ids: Vec<String>,
     #[serde(rename = "parentId")]
     pub parent_id: Option<String>,
-} 
+}

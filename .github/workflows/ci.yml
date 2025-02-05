@@ -71,24 +71,10 @@ jobs:
             target: x86_64-unknown-linux-musl
             skip-tests: true
             cross: false
-
-          - os-name: Linux-x86_64 (native-tls)
-            runs-on: ubuntu-22.04
-            target: x86_64-unknown-linux-musl
-            features: native-tls
-            skip-tests: true
-            cross: false
           
           - os-name: Linux-x86_64
             runs-on: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            skip-tests: true
-            cross: false
-
-          - os-name: Linux-x86_64 (native-tls)
-            runs-on: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
-            features: native-tls
             skip-tests: true
             cross: false
 
@@ -189,27 +175,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set "--features" flag value
+      - name: Set toolchain
         id: pre
         shell: bash
         run: |
-          if [ -n "${{ matrix.platform.features }}" ]; then
-            echo "features=${{ matrix.platform.features }}" >> "$GITHUB_OUTPUT"
-            echo "binary-postfix=-${{ matrix.platform.features }}" >> "$GITHUB_OUTPUT"
-          else 
-            echo "features=default" >> "$GITHUB_OUTPUT"
-            echo "binary-postfix=" >> "$GITHUB_OUTPUT"
-          fi
           if [ -n "${{ matrix.platform.toolchain }}" ]; then
             echo "toolchain=${{ matrix.platform.toolchain }}" >> "$GITHUB_OUTPUT"
           else
             echo "toolchain=stable" >> "$GITHUB_OUTPUT"
           fi
           cat "$GITHUB_OUTPUT"
-
-      - name: Install SSL packages (if required)
-        run: sudo apt-get update --yes && sudo apt-get install --yes pkg-config openssl libssl-dev
-        if: ${{ steps.pre.outputs.features == 'native-tls' }}
 
       - name: Install musl (if required)
         run: sudo apt-get update --yes && sudo apt-get install --yes musl musl-dev musl-tools
@@ -234,7 +209,7 @@ jobs:
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.platform.target }}-${{ steps.pre.outputs.toolchain  }}-${{ steps.pre.outputs.features }}
+          key: ${{ matrix.platform.target }}-${{ steps.pre.outputs.toolchain  }}
           cache-all-crates: true
 
     #   - name: Copy config
@@ -244,7 +219,7 @@ jobs:
         uses: ClementTsang/cargo-action@v0.0.5
         with:
           command: build
-          args: --locked --release --features ${{ steps.pre.outputs.features }} --target=${{ matrix.platform.target }}
+          args: --locked --release --target=${{ matrix.platform.target }}
           use-cross: ${{ matrix.platform.cross }}
           cross-version: main
           toolchain: ${{ steps.pre.outputs.toolchain }}
@@ -255,7 +230,7 @@ jobs:
     #     uses: ClementTsang/cargo-action@v0.0.5
     #     with:
     #       command: test
-    #       args: --locked --release --features ${{ steps.pre.outputs.features }} --target=${{ matrix.platform.target }}
+    #       args: --locked --release --target=${{ matrix.platform.target }}
     #       use-cross: ${{ matrix.platform.cross }}
     #       toolchain: ${{ steps.pre.outputs.toolchain }}
     #     if: ${{ !matrix.platform.skip-tests }}

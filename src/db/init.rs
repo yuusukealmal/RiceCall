@@ -1,8 +1,8 @@
 use super::{Database, DbResult};
-use crate::my_config::Settings;
 use crate::db::DbError;
+use crate::my_config::Settings;
 use sqlx::error::DatabaseError;
-use tracing::{info, error};
+use tracing::{error, info};
 
 pub async fn init_database<D: Database>(db: &D, settings: &Settings) -> DbResult<()> {
     info!("Starting database initialization...");
@@ -37,9 +37,16 @@ pub async fn init_database<D: Database>(db: &D, settings: &Settings) -> DbResult
     info!("Creating channels...");
     for server in &settings.initial_data.servers {
         for channel_id in &server.channel_ids {
-            if let Some(channel) = settings.initial_data.channels.iter().find(|c| &c.id == channel_id) {
+            if let Some(channel) = settings
+                .initial_data
+                .channels
+                .iter()
+                .find(|c| &c.id == channel_id)
+            {
                 info!("Creating channel: {} for server: {}", channel.id, server.id);
-                if let Err(DbError::Sqlx(sqlx::Error::Database(e))) = db.create_channel(channel, &server.id).await {
+                if let Err(DbError::Sqlx(sqlx::Error::Database(e))) =
+                    db.create_channel(channel, &server.id).await
+                {
                     if !is_unique_violation(&e) {
                         error!("Failed to create channel {}: {}", channel.id, e);
                         return Err(DbError::Sqlx(sqlx::Error::Database(e)));
@@ -57,10 +64,18 @@ pub async fn init_database<D: Database>(db: &D, settings: &Settings) -> DbResult
     for server in &settings.initial_data.servers {
         for user_id in &server.user_ids {
             let permissions = server.permissions.get(user_id).cloned().unwrap_or(1);
-            info!("Adding user {} to server {} with permissions {}", user_id, server.id, permissions);
-            if let Err(DbError::Sqlx(sqlx::Error::Database(e))) = db.add_server_user(&server.id, user_id, permissions).await {
+            info!(
+                "Adding user {} to server {} with permissions {}",
+                user_id, server.id, permissions
+            );
+            if let Err(DbError::Sqlx(sqlx::Error::Database(e))) =
+                db.add_server_user(&server.id, user_id, permissions).await
+            {
                 if !is_unique_violation(&e) {
-                    error!("Failed to add user {} to server {}: {}", user_id, server.id, e);
+                    error!(
+                        "Failed to add user {} to server {}: {}",
+                        user_id, server.id, e
+                    );
                     return Err(DbError::Sqlx(sqlx::Error::Database(e)));
                 }
                 info!("User {} already in server {}", user_id, server.id);
@@ -72,8 +87,13 @@ pub async fn init_database<D: Database>(db: &D, settings: &Settings) -> DbResult
     info!("Creating messages...");
     for message in &settings.initial_data.messages {
         if let Some(first_channel) = settings.initial_data.channels.first() {
-            info!("Creating message: {} in channel: {}", message.id, first_channel.id);
-            if let Err(DbError::Sqlx(sqlx::Error::Database(e))) = db.create_message(message, &first_channel.id).await {
+            info!(
+                "Creating message: {} in channel: {}",
+                message.id, first_channel.id
+            );
+            if let Err(DbError::Sqlx(sqlx::Error::Database(e))) =
+                db.create_message(message, &first_channel.id).await
+            {
                 if !is_unique_violation(&e) {
                     error!("Failed to create message {}: {}", message.id, e);
                     return Err(DbError::Sqlx(sqlx::Error::Database(e)));

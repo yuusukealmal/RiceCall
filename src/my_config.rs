@@ -1,7 +1,7 @@
+use crate::models::{channel::Channel, message::Message, server::Server, user::User};
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
 use std::{env, path::PathBuf};
-use crate::models::{channel::Channel, message::Message, server::Server, user::User};
 
 #[derive(Debug, Deserialize)]
 pub struct ServerConfig {
@@ -11,7 +11,7 @@ pub struct ServerConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct Database {
-    pub url: String
+    pub url: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -29,7 +29,6 @@ pub struct InitialData {
     pub messages: Vec<Message>,
     pub servers: Vec<Server>,
 }
-
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
@@ -65,4 +64,4 @@ impl Settings {
 
         Ok(s.try_deserialize()?)
     }
-} 
+}

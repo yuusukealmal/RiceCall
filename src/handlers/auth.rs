@@ -1,17 +1,13 @@
+use crate::handlers::{ApiError, ApiResult};
 use crate::{
     db::{Database, DbError},
     models::user::{User, UserGender, UserState},
 };
-use crate::handlers::{ApiResult, ApiError};
-use axum::{
-    extract::State,
-    http::StatusCode,
-    Json,
-};
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use axum::{extract::State, http::StatusCode, Json};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 #[derive(Deserialize)]
 pub struct LoginRequest {
@@ -60,7 +56,10 @@ pub async fn handle_login<D: Database>(
 ) -> ApiResult<AuthResponse> {
     // 驗證必填欄位
     if payload.account.is_empty() || payload.password.is_empty() {
-        return Err(ApiError(StatusCode::BAD_REQUEST, "Missing credentials".into()));
+        return Err(ApiError(
+            StatusCode::BAD_REQUEST,
+            "Missing credentials".into(),
+        ));
     }
 
     // 從資料庫獲取用戶
@@ -78,9 +77,8 @@ pub async fn handle_login<D: Database>(
     };
 
     // 驗證密碼
-    let password_matches = verify(payload.password, user.password.as_str()).map_err(|_| {
-        ApiError(StatusCode::INTERNAL_SERVER_ERROR, "密碼驗證失敗".into())
-    })?;
+    let password_matches = verify(payload.password, user.password.as_str())
+        .map_err(|_| ApiError(StatusCode::INTERNAL_SERVER_ERROR, "密碼驗證失敗".into()))?;
 
     if !password_matches {
         return Err(ApiError(StatusCode::UNAUTHORIZED, "密碼錯誤".into()));
@@ -129,19 +127,12 @@ pub async fn handle_register<D: Database>(
 
     // 檢查帳號是否已存在
     if let Ok(_) = db.get_user_by_account(&payload.account).await {
-        return Err(ApiError(
-            StatusCode::CONFLICT,
-            "此帳號已被註冊".into(),
-        ));
+        return Err(ApiError(StatusCode::CONFLICT, "此帳號已被註冊".into()));
     }
 
     // 對密碼進行加密
-    let hashed_password = hash(payload.password.as_bytes(), DEFAULT_COST).map_err(|_| {
-        ApiError(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "密碼加密失敗".into(),
-        )
-    })?;
+    let hashed_password = hash(payload.password.as_bytes(), DEFAULT_COST)
+        .map_err(|_| ApiError(StatusCode::INTERNAL_SERVER_ERROR, "密碼加密失敗".into()))?;
 
     // 創建新用戶
     let user = User {
@@ -233,4 +224,4 @@ pub async fn handle_update_user<D: Database>(
             last_login_at: user.last_login_at,
         },
     }))
-} 
+}

@@ -61,4 +61,4 @@ impl User {
             current_channel_id: None,
         }
     }
-} 
+}

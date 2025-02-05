@@ -1,27 +1,27 @@
+use axum::{
+    routing::{patch, post},
+    Router,
+};
+use clap::Parser;
+use config as config_lib;
+use db::{init_database, Database, SqliteDatabase};
+use http::header::{HeaderName, HeaderValue};
 use socketioxide::{
     extract::{Data, SocketRef},
     SocketIoBuilder,
 };
-use axum::{
-    routing::{post, patch},
-    Router,
-};
-use tower_http::cors::CorsLayer;
-use tracing::{info, error};
-use db::{Database, SqliteDatabase, init_database};
-use std::sync::Arc;
 use std::path::PathBuf;
-use clap::Parser;
-use config as config_lib;
-use http::header::{HeaderName, HeaderValue};
+use std::sync::Arc;
+use tower_http::cors::CorsLayer;
+use tracing::{error, info};
 
-mod models;
-mod handlers;
 mod db;
+mod handlers;
+mod models;
 mod my_config;
 
-use my_config::Settings;
 use config_lib::ConfigError;
+use my_config::Settings;
 
 /// Chat server application
 #[derive(Parser, Debug)]
@@ -77,93 +77,168 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Socket.IO
-    let (layer, io) = SocketIoBuilder::new().with_state(database.clone()).build_layer();
-    io.ns("/", |socket: SocketRef| {
-        async move {
-            info!("Socket connected: {}", socket.id);
-            
-            socket.on("connectServer", |data: Data<handlers::socket::ConnectServerData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| {
+    let (layer, io) = SocketIoBuilder::new()
+        .with_state(database.clone())
+        .build_layer();
+    io.ns("/", |socket: SocketRef| async move {
+        info!("Socket connected: {}", socket.id);
+
+        socket.on(
+            "connectServer",
+            |data: Data<handlers::socket::ConnectServerData>,
+             db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>,
+             socket: SocketRef| {
                 let db = db_state.0.clone();
                 async move {
-                    if let Err(e) = handlers::socket::handle_connect_server::<SqliteDatabase>(socket, data, db).await {
+                    if let Err(e) =
+                        handlers::socket::handle_connect_server::<SqliteDatabase>(socket, data, db)
+                            .await
+                    {
                         error!("Error handling connect server: {}", e);
                     }
                 }
-            });
+            },
+        );
 
-            socket.on("connectUser", |data: Data<handlers::socket::ConnectUserData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+        socket.on(
+            "connectUser",
+            |data: Data<handlers::socket::ConnectUserData>,
+             db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>,
+             socket: SocketRef| async move {
                 info!("connectUser: {}", socket.id);
                 let db = db_state.0.clone();
-                if let Err(e) = handlers::socket::handle_connect_user::<SqliteDatabase>(socket, data, db).await {
+                if let Err(e) =
+                    handlers::socket::handle_connect_user::<SqliteDatabase>(socket, data, db).await
+                {
                     error!("Error handling connect user: {}", e);
                 }
-            });
+            },
+        );
 
-            socket.on("chatMessage", |data: Data<handlers::socket::ChatMessageData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+        socket.on(
+            "chatMessage",
+            |data: Data<handlers::socket::ChatMessageData>,
+             db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>,
+             socket: SocketRef| async move {
                 let db = db_state.0.clone();
-                if let Err(e) = handlers::socket::handle_chat_message::<SqliteDatabase>(socket, data, db).await {
+                if let Err(e) =
+                    handlers::socket::handle_chat_message::<SqliteDatabase>(socket, data, db).await
+                {
                     error!("Error handling chat message: {}", e);
                 }
-            });
+            },
+        );
 
-            socket.on("addChannel", |data: Data<handlers::socket::ChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+        socket.on(
+            "addChannel",
+            |data: Data<handlers::socket::ChannelData>,
+             db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>,
+             socket: SocketRef| async move {
                 let db = db_state.0.clone();
-                if let Err(e) = handlers::socket::handle_add_channel::<SqliteDatabase>(socket, data, db).await {
+                if let Err(e) =
+                    handlers::socket::handle_add_channel::<SqliteDatabase>(socket, data, db).await
+                {
                     error!("Error handling add channel: {}", e);
                 }
-            }); 
+            },
+        );
 
-            socket.on("editChannel", |data: Data<handlers::socket::ChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+        socket.on(
+            "editChannel",
+            |data: Data<handlers::socket::ChannelData>,
+             db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>,
+             socket: SocketRef| async move {
                 let db = db_state.0.clone();
-                if let Err(e) = handlers::socket::handle_edit_channel::<SqliteDatabase>(socket, data, db).await {
+                if let Err(e) =
+                    handlers::socket::handle_edit_channel::<SqliteDatabase>(socket, data, db).await
+                {
                     error!("Error handling edit channel: {}", e);
                 }
-            }); 
+            },
+        );
 
-            socket.on("deleteChannel", |data: Data<handlers::socket::DeleteChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+        socket.on(
+            "deleteChannel",
+            |data: Data<handlers::socket::DeleteChannelData>,
+             db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>,
+             socket: SocketRef| async move {
                 let db = db_state.0.clone();
-                if let Err(e) = handlers::socket::handle_delete_channel::<SqliteDatabase>(socket, data, db).await {
+                if let Err(e) =
+                    handlers::socket::handle_delete_channel::<SqliteDatabase>(socket, data, db)
+                        .await
+                {
                     error!("Error handling delete channel: {}", e);
                 }
-            });
+            },
+        );
 
-            socket.on("joinChannel", |data: Data<handlers::socket::JoinChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+        socket.on(
+            "joinChannel",
+            |data: Data<handlers::socket::JoinChannelData>,
+             db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>,
+             socket: SocketRef| async move {
                 let db = db_state.0.clone();
-                if let Err(e) = handlers::socket::handle_join_channel::<SqliteDatabase>(socket, data, db).await {
+                if let Err(e) =
+                    handlers::socket::handle_join_channel::<SqliteDatabase>(socket, data, db).await
+                {
                     error!("Error handling join channel: {}", e);
                 }
-            });
+            },
+        );
 
-            socket.on("leaveChannel", |data: Data<handlers::socket::LeaveChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+        socket.on(
+            "leaveChannel",
+            |data: Data<handlers::socket::LeaveChannelData>,
+             db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>,
+             socket: SocketRef| async move {
                 let db = db_state.0.clone();
-                if let Err(e) = handlers::socket::handle_leave_channel::<SqliteDatabase>(socket, data, db).await {
+                if let Err(e) =
+                    handlers::socket::handle_leave_channel::<SqliteDatabase>(socket, data, db).await
+                {
                     error!("Error handling leave channel: {}", e);
                 }
-            });
+            },
+        );
 
-            info!("Socket handlers registered: {}", socket.id);
-        }
+        info!("Socket handlers registered: {}", socket.id);
     });
 
     // CORS
     let mut cors = CorsLayer::new()
-        .allow_methods(settings.cors.allowed_methods.iter().map(|s| s.parse().unwrap()).collect::<Vec<_>>())
+        .allow_methods(
+            settings
+                .cors
+                .allowed_methods
+                .iter()
+                .map(|s| s.parse().unwrap())
+                .collect::<Vec<_>>(),
+        )
         .allow_credentials(settings.cors.allow_credentials);
 
     if settings.cors.allowed_origins.contains(&"*".to_string()) {
         cors = cors.allow_origin(tower_http::cors::Any);
     } else {
-        cors = cors.allow_origin(settings.cors.allowed_origins.iter()
-            .map(|s| s.parse::<HeaderValue>().unwrap())
-            .collect::<Vec<HeaderValue>>());
+        cors = cors.allow_origin(
+            settings
+                .cors
+                .allowed_origins
+                .iter()
+                .map(|s| s.parse::<HeaderValue>().unwrap())
+                .collect::<Vec<HeaderValue>>(),
+        );
     }
 
     if settings.cors.allowed_headers.contains(&"*".to_string()) {
         cors = cors.allow_headers(tower_http::cors::Any);
     } else {
-        cors = cors.allow_headers(settings.cors.allowed_headers.iter()
-            .map(|s| s.parse::<HeaderName>().unwrap())
-            .collect::<Vec<HeaderName>>());
+        cors = cors.allow_headers(
+            settings
+                .cors
+                .allowed_headers
+                .iter()
+                .map(|s| s.parse::<HeaderName>().unwrap())
+                .collect::<Vec<HeaderName>>(),
+        );
     }
 
     // HTTP Handler
@@ -182,4 +257,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     axum::serve(listener, app).await.unwrap();
 
     Ok(())
-} 
+}
