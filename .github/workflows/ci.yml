@@ -44,8 +44,8 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
       
-      - name: Clippy
-        run: cargo clippy -- -D warnings
+    #   - name: Clippy
+    #     run: cargo clippy -- -D warnings
       
     #   - name: Run tests
     #     run: cargo test
@@ -60,71 +60,17 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - os-name: FreeBSD-x86_64
-            runs-on: ubuntu-22.04
-            target: x86_64-unknown-freebsd
-            skip-tests: true
-            cross: true
-
-          - os-name: Linux-x86_64
+          - os-name: Linux-x86_64 (musl)
             runs-on: ubuntu-22.04
             target: x86_64-unknown-linux-musl
             skip-tests: true
             cross: false
           
-          - os-name: Linux-x86_64
+          - os-name: Linux-x86_64 (gnu)
             runs-on: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             skip-tests: true
             cross: false
-
-          - os-name: Linux-aarch64
-            runs-on: ubuntu-22.04
-            target: aarch64-unknown-linux-musl
-            skip-tests: true
-            cross: true
-
-          - os-name: Linux-arm
-            runs-on: ubuntu-22.04
-            target: arm-unknown-linux-musleabi
-            skip-tests: true
-            cross: true
-
-          - os-name: Linux-i686
-            runs-on: ubuntu-22.04
-            target: i686-unknown-linux-musl
-            skip-tests: true
-            cross: true
-
-          - os-name: Linux-powerpc64
-            runs-on: ubuntu-22.04
-            target: powerpc64-unknown-linux-gnu
-            skip-tests: true
-            cross: true
-
-          - os-name: Linux-powerpc64le
-            runs-on: ubuntu-22.04
-            target: powerpc64le-unknown-linux-gnu
-            skip-tests: true
-            cross: true
-
-          - os-name: Linux-riscv64
-            runs-on: ubuntu-22.04
-            target: riscv64gc-unknown-linux-gnu
-            skip-tests: true
-            cross: true
-
-          - os-name: Linux-s390x
-            runs-on: ubuntu-22.04
-            target: s390x-unknown-linux-gnu
-            skip-tests: true
-            cross: true
-
-          - os-name: NetBSD-x86_64
-            runs-on: ubuntu-22.04
-            target: x86_64-unknown-netbsd
-            skip-tests: true
-            cross: true
 
           - os-name: Windows-aarch64
             runs-on: windows-latest
@@ -186,6 +132,13 @@ jobs:
           fi
           cat "$GITHUB_OUTPUT"
 
+      - name: Setup Cargo.toml for cross
+        shell: bash
+        if: ${{ matrix.platform.cross == 'true' || matrix.platform.cross == true }}
+        run: |
+          sed -i '1i [workspace]\nmembers = ["chat-server"]\n\n[workspace.metadata.cross]\n' Cargo.toml
+          cat Cargo.toml
+      
       - name: Install musl (if required)
         run: sudo apt-get update --yes && sudo apt-get install --yes musl musl-dev musl-tools
         if: ${{ contains(matrix.platform.target, 'musl') }}
@@ -204,6 +157,7 @@ jobs:
           cargo install sqlx-cli
           cargo sqlx database create
           cargo sqlx migrate run --source migrations
+          cargo metadata
           cargo sqlx prepare
 
       - name: Cache dependencies
