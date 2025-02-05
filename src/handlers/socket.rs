@@ -11,12 +11,15 @@ use serde_json::json;
 
 #[derive(Deserialize)]
 pub struct ConnectServerData {
+    #[serde(rename = "serverId")]
     server_id: String,
+    #[serde(rename = "userId")]
     user_id: String,
 }
 
 #[derive(Deserialize)]
 pub struct ChatMessageData {
+    #[serde(rename = "serverId")]
     server_id: String,
     message: ChatMessage,
 }
@@ -30,6 +33,7 @@ pub struct ChatMessage {
 
 #[derive(Deserialize)]
 pub struct ChannelData {
+    #[serde(rename = "serverId")]
     server_id: String,
     channel: Channel,
 }
@@ -37,15 +41,23 @@ pub struct ChannelData {
 
 #[derive(Deserialize)]
 pub struct DeleteChannelData {
+    #[serde(rename = "serverId")]
     server_id: String,
+    #[serde(rename = "channelId")]
     channel_id: String,
 }
 
 
+#[derive(Debug, Deserialize)]
+pub struct ConnectUserData {
+    #[serde(rename = "userId")]
+    pub user_id: String,
+}
+
 pub async fn handle_connect_server<D: Database>(
     socket: SocketRef,
     Data(data): Data<ConnectServerData>,
-    State(db): State<Arc<D>>,
+    db: Arc<D>,
 ) -> Result<(), String> {
     if data.server_id.is_empty() || data.user_id.is_empty() {
         error!("Invalid server data");
@@ -148,10 +160,35 @@ pub async fn handle_connect_server<D: Database>(
     Ok(())
 }
 
+pub async fn handle_connect_user<D: Database>(
+    socket: SocketRef,
+    data: Data<ConnectUserData>,
+    db: Arc<D>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Log data
+    info!("User({}) connected", data.user_id);
+
+    // 從資料庫取得使用者資料
+    let user = match db.get_user_by_id(data.user_id.as_str()).await {
+        Ok(user) => user,
+        Err(e) => {
+            error!("Failed to get user: {}", e);
+            socket.emit("error", &json!({"message": "Failed to get user"})).ok();
+            return Ok(());
+        }
+    };
+
+    // 發送使用者資料回客戶端
+    socket.emit("user", &user).ok();
+    info!("User({}) connected", user.id);
+    Ok(())
+}
+
+
 pub async fn handle_chat_message<D: Database>(
     socket: SocketRef,
     Data(data): Data<ChatMessageData>,
-    State(db): State<Arc<D>>,
+    db: Arc<D>,
 ) -> Result<(), String> {
     let message = Message {
         id: Uuid::new_v4().to_string(),
@@ -215,7 +252,7 @@ pub async fn handle_chat_message<D: Database>(
 pub async fn handle_add_channel<D: Database>(
     socket: SocketRef,
     Data(data): Data<ChannelData>,
-    State(db): State<Arc<D>>,
+    db: Arc<D>,
 ) -> Result<(), String> {
     // 驗證頻道資料
     if data.channel.name.is_empty() {
@@ -282,7 +319,7 @@ pub async fn handle_add_channel<D: Database>(
 pub async fn handle_edit_channel<D: Database>(
     socket: SocketRef,
     Data(data): Data<ChannelData>,
-    State(db): State<Arc<D>>,
+    db: Arc<D>,
 ) -> Result<(), String> {
     // 驗證頻道資料
     if data.channel.name.is_empty() {
@@ -339,7 +376,7 @@ pub async fn handle_edit_channel<D: Database>(
 pub async fn handle_delete_channel<D: Database>(
     socket: SocketRef,
     Data(data): Data<DeleteChannelData>,
-    State(db): State<Arc<D>>,
+    db: Arc<D>,
 ) -> Result<(), String> {
     // 獲取伺服器
     let mut server = match db.get_server(&data.server_id).await {
@@ -381,7 +418,7 @@ pub async fn handle_delete_channel<D: Database>(
             socket.emit("error", &json!({
                 "message": "Failed to get channels"
             })).ok();
-            
+
             return Ok(());
         }
     };

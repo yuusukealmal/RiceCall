@@ -66,7 +66,26 @@ impl Database for SqliteDatabase {
             gender: row.gender,
             permissions: serde_json::from_str(&row.permissions).unwrap(),
         })
+    }
 
+    async fn get_user_by_id(&self, id: &str) -> DbResult<User> {
+        let row = sqlx::query!(
+            r#"
+            SELECT * FROM users WHERE id = ?
+            "#,
+            id 
+        )
+        .fetch_one(&self.pool)
+        .await?;
+        
+        Ok(User {
+            id: row.id.expect("id is null"),
+            name: row.name,
+            account: row.account,
+            password: row.password,
+            gender: row.gender,
+            permissions: serde_json::from_str(&row.permissions).unwrap(),
+        })
     }
     
     async fn get_user_by_account(&self, account: &str) -> DbResult<User> {

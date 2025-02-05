@@ -28,9 +28,10 @@ pub trait Database: Send + Sync + 'static {
     async fn create_user(&self, user: &User) -> DbResult<()>;
     async fn get_user(&self, id: &str) -> DbResult<User>;
     async fn get_user_by_account(&self, account: &str) -> DbResult<User>;
+    async fn get_user_by_id(&self, id: &str) -> DbResult<User>;
     async fn update_user(&self, user: &User) -> DbResult<()>;
     async fn get_users_list(&self) -> DbResult<Vec<User>>;
-    
+
     // Server operations
     async fn create_server(&self, server: &Server) -> DbResult<()>;
     async fn get_server(&self, id: &str) -> DbResult<Server>;

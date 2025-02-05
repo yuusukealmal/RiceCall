@@ -75,46 +75,56 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Socket.IO
     let (layer, io) = SocketIoBuilder::new().with_state(database.clone()).build_layer();
-    io.ns("/", move |socket: SocketRef| {
+    io.ns("/", |socket: SocketRef| {
         async move {
             info!("Socket connected: {}", socket.id);
-
-            socket.on("connectServer", move |data: Data<handlers::socket::ConnectServerData>, state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
-                let _db = state.clone();
-                if let Err(e) = handlers::socket::handle_connect_server(socket, data, socketioxide::extract::State(_db)).await {
-                    error!("Error handling connect server: {}", e);
+            
+            socket.on("connectServer", |data: Data<handlers::socket::ConnectServerData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| {
+                let db = db_state.0.clone();
+                async move {
+                    if let Err(e) = handlers::socket::handle_connect_server::<SqliteDatabase>(socket, data, db).await {
+                        error!("Error handling connect server: {}", e);
+                    }
                 }
             });
 
-            socket.on("chatMessage", move |data: Data<handlers::socket::ChatMessageData>, state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
-                let _db = state.clone();
-                if let Err(e) = handlers::socket::handle_chat_message(socket, data, socketioxide::extract::State(_db)).await {
+            socket.on("connectUser", |data: Data<handlers::socket::ConnectUserData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+                info!("connectUser: {}", socket.id);
+                let db = db_state.0.clone();
+                if let Err(e) = handlers::socket::handle_connect_user::<SqliteDatabase>(socket, data, db).await {
+                    error!("Error handling connect user: {}", e);
+                }
+            });
+
+            socket.on("chatMessage", |data: Data<handlers::socket::ChatMessageData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+                let db = db_state.0.clone();
+                if let Err(e) = handlers::socket::handle_chat_message::<SqliteDatabase>(socket, data, db).await {
                     error!("Error handling chat message: {}", e);
                 }
             });
 
-            socket.on("addChannel", move |data: Data<handlers::socket::ChannelData>, state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
-                let _db = state.clone();
-                if let Err(e) = handlers::socket::handle_add_channel(socket, data, socketioxide::extract::State(_db)).await {
+            socket.on("addChannel", |data: Data<handlers::socket::ChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+                let db = db_state.0.clone();
+                if let Err(e) = handlers::socket::handle_add_channel::<SqliteDatabase>(socket, data, db).await {
                     error!("Error handling add channel: {}", e);
                 }
             }); 
 
-
-            socket.on("editChannel", move |data: Data<handlers::socket::ChannelData>, state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
-                let _db = state.clone();
-                if let Err(e) = handlers::socket::handle_edit_channel(socket, data, socketioxide::extract::State(_db)).await {
+            socket.on("editChannel", |data: Data<handlers::socket::ChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+                let db = db_state.0.clone();
+                if let Err(e) = handlers::socket::handle_edit_channel::<SqliteDatabase>(socket, data, db).await {
                     error!("Error handling edit channel: {}", e);
                 }
             }); 
 
-            socket.on("deleteChannel", move |data: Data<handlers::socket::DeleteChannelData>, state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
-                let _db = state.clone();
-                if let Err(e) = handlers::socket::handle_delete_channel(socket, data, socketioxide::extract::State(_db)).await {
+            socket.on("deleteChannel", |data: Data<handlers::socket::DeleteChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+                let db = db_state.0.clone();
+                if let Err(e) = handlers::socket::handle_delete_channel::<SqliteDatabase>(socket, data, db).await {
                     error!("Error handling delete channel: {}", e);
                 }
             });
 
+            info!("Socket handlers registered: {}", socket.id);
         }
     });
 
