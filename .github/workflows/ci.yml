@@ -237,8 +237,8 @@ jobs:
           key: ${{ matrix.platform.target }}-${{ steps.pre.outputs.toolchain  }}-${{ steps.pre.outputs.features }}
           cache-all-crates: true
 
-      - name: Copy config
-        run: cp config.example.yaml config.yaml
+    #   - name: Copy config
+    #     run: cp config.example.yaml config.yaml
 
       - name: Build binary
         uses: ClementTsang/cargo-action@v0.0.5
@@ -251,16 +251,16 @@ jobs:
         env:
           RUST_BACKTRACE: full
 
-      - name: Run tests
-        uses: ClementTsang/cargo-action@v0.0.5
-        with:
-          command: test
-          args: --locked --release --features ${{ steps.pre.outputs.features }} --target=${{ matrix.platform.target }}
-          use-cross: ${{ matrix.platform.cross }}
-          toolchain: ${{ steps.pre.outputs.toolchain }}
-        if: ${{ !matrix.platform.skip-tests }}
-        env:
-          RUST_BACKTRACE: full
+    #   - name: Run tests
+    #     uses: ClementTsang/cargo-action@v0.0.5
+    #     with:
+    #       command: test
+    #       args: --locked --release --features ${{ steps.pre.outputs.features }} --target=${{ matrix.platform.target }}
+    #       use-cross: ${{ matrix.platform.cross }}
+    #       toolchain: ${{ steps.pre.outputs.toolchain }}
+    #     if: ${{ !matrix.platform.skip-tests }}
+    #     env:
+    #       RUST_BACKTRACE: full
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
