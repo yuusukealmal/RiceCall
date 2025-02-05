@@ -1,0 +1,111 @@
+server:
+  host: "0.0.0.0"
+  port: 4500
+
+database:
+  url: "sqlite:data/db.sqlite3"
+
+cors:
+  allowed_origins: ["http://localhost:8080", "http://localhost:3000"]
+  allowed_methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+  allowed_headers: ["Content-Type", "Authorization"]
+  allow_credentials: true
+
+initial_data:
+  users:
+    - id: "2d29f304-b9c4-47f4-b3ed-502d80c425ea"
+      name: "example user"
+      account: "example_user"
+      password: "$2a$12$QVhO8JeLxjVIvTiPMb08..R6/qDx3jcpc7BFE3bqxW3yTd56dMaqy"
+      gender: "Male"
+      permissions:
+        "123456789": 4
+
+    - id: "612a7797-f970-4f23-9983-f08d863d9552"
+      name: "Whydog"
+      account: "Whydog"
+      password: "$2a$12$qix38GS8fumdblXMfWqJd.4PovKiNv5YATGqkEkSeSJGeowagWF0K"
+      gender: "Male"
+      permissions:
+        "123456789": 1
+
+    - id: "a73af1d2-689e-4d7d-9426-3421cce3ade4"
+      name: "yeci"
+      account: "yeci226"
+      password: "$2a$12$QMDO51r7lStgRISqilCCr.GT1nduZBunUqlC76ek/bmnRagmSL2pW"
+      gender: "Male"
+      permissions:
+        "123456789": 1
+
+  channels:
+    - id: "1234567890"
+      name: "example home"
+      permission: "public"
+      is_lobby: true
+      is_category: false
+      users: []
+      parent_id: null
+
+    - id: "1234567891"
+      name: "example category"
+      permission: "public"
+      is_lobby: false
+      is_category: true
+      users: []
+      parent_id: null
+
+    - id: "1234567892"
+      name: "example channel"
+      permission: "public"
+      is_lobby: false
+      is_category: false
+      users: []
+      parent_id: null
+
+    - id: "12345678911"
+      name: "example sub-channel"
+      permission: "private"
+      is_lobby: false
+      is_category: false
+      users: ["2d29f304-b9c4-47f4-b3ed-502d80c425ea"]
+      parent_id: "1234567891"
+
+    - id: "12345678912"
+      name: "example sub-category"
+      permission: "private"
+      is_lobby: false
+      is_category: true
+      users: []
+      parent_id: "1234567891"
+
+    - id: "123456789111"
+      name: "example sub-sub-channel"
+      permission: "private"
+      is_lobby: false
+      is_category: false
+      users: ["2d29f304-b9c4-47f4-b3ed-502d80c425ea"]
+      parent_id: "12345678912"
+
+  messages:
+    - id: "c57538d2-976c-456a-a4e0-d4aab7b799ac"
+      sender: "2d29f304-b9c4-47f4-b3ed-502d80c425ea"
+      content: "example message"
+      timestamp: 1738234723000
+
+  servers:
+    - id: "123456789"
+      name: "543隨你聊"
+      announcement: "Example Aassnnouncement"
+      icon: "https://preview.redd.it/the-context-behind-the-2015-jsal-pfp-also-the-images-are-in-v0-huyzsah41x8c1.jpg?width=640&crop=smart&auto=webp&s=bffb81c9d6a4a40896acd6e1b72bb82c0a73b03c"
+      users:
+        - "2d29f304-b9c4-47f4-b3ed-502d80c425ea"
+        - "612a7797-f970-4f23-9983-f08d863d9552"
+        - "a73af1d2-689e-4d7d-9426-3421cce3ade4"
+      channels:
+        - "1234567890"
+        - "1234567891"
+        - "1234567892"
+        - "12345678911"
+        - "12345678912"
+        - "123456789111"
+      messages: ["c57538d2-976c-456a-a4e0-d4aab7b799ac"] 

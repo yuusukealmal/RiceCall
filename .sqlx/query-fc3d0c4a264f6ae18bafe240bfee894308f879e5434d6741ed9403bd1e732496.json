@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT * FROM channels WHERE id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "permission",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "is_lobby",
+        "ordinal": 3,
+        "type_info": "Bool"
+      },
+      {
+        "name": "is_category",
+        "ordinal": 4,
+        "type_info": "Bool"
+      },
+      {
+        "name": "users",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "parent_id",
+        "ordinal": 6,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "fc3d0c4a264f6ae18bafe240bfee894308f879e5434d6741ed9403bd1e732496"
+}
