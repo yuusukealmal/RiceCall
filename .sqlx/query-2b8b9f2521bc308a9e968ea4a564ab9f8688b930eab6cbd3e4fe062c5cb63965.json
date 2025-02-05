@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT * FROM users\n            ",
+  "query": "SELECT * FROM channels WHERE id = ?",
   "describe": {
     "columns": [
       {
@@ -14,37 +14,43 @@
         "type_info": "Text"
       },
       {
-        "name": "account",
+        "name": "permission",
         "ordinal": 2,
         "type_info": "Text"
       },
       {
-        "name": "password",
+        "name": "is_lobby",
         "ordinal": 3,
-        "type_info": "Text"
+        "type_info": "Bool"
       },
       {
-        "name": "gender",
+        "name": "is_category",
         "ordinal": 4,
+        "type_info": "Bool"
+      },
+      {
+        "name": "parent_id",
+        "ordinal": 5,
         "type_info": "Text"
       },
       {
-        "name": "permissions",
-        "ordinal": 5,
+        "name": "server_id",
+        "ordinal": 6,
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       true,
       false,
-      true,
-      true,
+      false,
+      false,
+      false,
       true,
       false
     ]
   },
-  "hash": "3c4fb214380b4a0a378f895741b10dec5b81c2e1a032b7bfd75234887a4963e3"
+  "hash": "2b8b9f2521bc308a9e968ea4a564ab9f8688b930eab6cbd3e4fe062c5cb63965"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT * FROM messages\n            ",
+  "query": "SELECT * FROM messages WHERE id = ?",
   "describe": {
     "columns": [
       {
@@ -9,30 +9,42 @@
         "type_info": "Text"
       },
       {
-        "name": "sender",
+        "name": "sender_id",
         "ordinal": 1,
         "type_info": "Text"
       },
       {
-        "name": "content",
+        "name": "channel_id",
         "ordinal": 2,
         "type_info": "Text"
       },
       {
-        "name": "timestamp",
+        "name": "content",
         "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "timestamp",
+        "ordinal": 4,
         "type_info": "Integer"
+      },
+      {
+        "name": "type",
+        "ordinal": 5,
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       true,
+      true,
+      false,
       false,
       false,
       false
     ]
   },
-  "hash": "7eec04fadb3e9b5dcd7f1431bffe0d57690135ced0afac617127b13c0660050f"
+  "hash": "f6b1a882ed06ff993f7f5332a33292839c9bd20192c68f4f735f64df16cb9826"
 }

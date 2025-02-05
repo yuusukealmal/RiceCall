@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT * FROM servers WHERE id = ?\n            ",
+  "query": "\n            SELECT * FROM messages \n            WHERE channel_id = ?\n            ORDER BY timestamp DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -9,33 +9,28 @@
         "type_info": "Text"
       },
       {
-        "name": "name",
+        "name": "sender_id",
         "ordinal": 1,
         "type_info": "Text"
       },
       {
-        "name": "announcement",
+        "name": "channel_id",
         "ordinal": 2,
         "type_info": "Text"
       },
       {
-        "name": "icon",
+        "name": "content",
         "ordinal": 3,
         "type_info": "Text"
       },
       {
-        "name": "users",
+        "name": "timestamp",
         "ordinal": 4,
-        "type_info": "Text"
+        "type_info": "Integer"
       },
       {
-        "name": "channels",
+        "name": "type",
         "ordinal": 5,
-        "type_info": "Text"
-      },
-      {
-        "name": "messages",
-        "ordinal": 6,
         "type_info": "Text"
       }
     ],
@@ -44,13 +39,12 @@
     },
     "nullable": [
       true,
+      true,
       false,
-      true,
-      true,
       false,
       false,
       false
     ]
   },
-  "hash": "c3a00b4239dc45d8fda35c6ba57285264a8b573a3a492ef20c9b518600cfa201"
+  "hash": "6537e27aad4ed0128ea7af8c0aa1f5a845679853464a5994563c155c11726eb5"
 }

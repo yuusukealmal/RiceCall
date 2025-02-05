@@ -13,99 +13,156 @@ cors:
 
 initial_data:
   users:
-    - id: "2d29f304-b9c4-47f4-b3ed-502d80c425ea"
-      name: "example user"
-      account: "example_user"
-      password: "$2a$12$QVhO8JeLxjVIvTiPMb08..R6/qDx3jcpc7BFE3bqxW3yTd56dMaqy"
+    - id: "system"
+      name: "System"
+      account: "system"
+      password: "system"
       gender: "Male"
-      permissions:
-        "123456789": 4
+      level: 999999
+      state: "online"
+      currentChannelId: null
+      createdAt: 1577836800000
 
     - id: "612a7797-f970-4f23-9983-f08d863d9552"
       name: "Whydog"
       account: "Whydog"
-      password: "$2a$12$qix38GS8fumdblXMfWqJd.4PovKiNv5YATGqkEkSeSJGeowagWF0K"
+      password: "$2a$12$k28oBDg20kygFAsYiAjYB.qtw5uX/h6Q6rvOT5HBYJlBBReTRLBee"
       gender: "Male"
-      permissions:
-        "123456789": 1
+      level: 100
+      state: "online"
+      currentChannelId: null
+      createdAt: 1738234723000
 
     - id: "a73af1d2-689e-4d7d-9426-3421cce3ade4"
       name: "yeci"
       account: "yeci226"
-      password: "$2a$12$QMDO51r7lStgRISqilCCr.GT1nduZBunUqlC76ek/bmnRagmSL2pW"
+      password: "$2a$12$KXz0VagSeJGKmu.bXDxlG.M/rx0dXyo4A/8PqgQbap8SMhF6KrEp6"
       gender: "Male"
-      permissions:
-        "123456789": 1
+      level: 100
+      state: "online"
+      currentChannelId: null
+      createdAt: 1738234723000
+
+    - id: "a66af1d2-689e-4d7d-9426-3421cce3ada5"
+      name: "miso"
+      account: "miso"
+      password: "$2a$12$iAn2Va8y0h4YcWF75oySmuR3T3zjGOZlSSN/F1F8wLXn0xShiTjde"
+      gender: "Female"
+      level: 10000
+      state: "online"
+      currentChannelId: null
+      createdAt: 1738234723000
+
+    - id: "f1571db7-211d-40f8-b5cc-fe8d1d360372"
+      name: "asdmi"
+      account: "asdmi"
+      password: "$2a$12$E6l3bRuUcAOT61h7QmA5cewXJ/LGLC66ZKPYe.4yfA/8.JvyhNZbe"
+      gender: "Female"
+      level: 10
+      state: "online"
+      currentChannelId: null
+      createdAt: 1738234723000
 
   channels:
     - id: "1234567890"
       name: "example home"
       permission: "public"
-      is_lobby: true
-      is_category: false
-      users: []
-      parent_id: null
+      isLobby: true
+      isCategory: false
+      userIds: []
+      messageIds: ["info"]
+      parentId: null
+      serverId: "123456789"
 
     - id: "1234567891"
       name: "example category"
       permission: "public"
-      is_lobby: false
-      is_category: true
-      users: []
-      parent_id: null
+      isLobby: false
+      isCategory: true
+      userIds: []
+      messageIds: []
+      parentId: null
+      serverId: "123456789"
 
     - id: "1234567892"
       name: "example channel"
       permission: "public"
-      is_lobby: false
-      is_category: false
-      users: []
-      parent_id: null
+      isLobby: false
+      isCategory: false
+      userIds: []
+      messageIds: []
+      parentId: null
+      serverId: "123456789"
 
     - id: "12345678911"
       name: "example sub-channel"
       permission: "private"
-      is_lobby: false
-      is_category: false
-      users: ["2d29f304-b9c4-47f4-b3ed-502d80c425ea"]
-      parent_id: "1234567891"
+      isLobby: false
+      isCategory: false
+      userIds: 
+        - "a73af1d2-689e-4d7d-9426-3421cce3ade4"
+      messageIds: []
+      parentId: "1234567891"
+      serverId: "123456789"
 
     - id: "12345678912"
       name: "example sub-category"
       permission: "private"
-      is_lobby: false
-      is_category: true
-      users: []
-      parent_id: "1234567891"
+      isLobby: false
+      isCategory: true
+      userIds: 
+        - "a73af1d2-689e-4d7d-9426-3421cce3ade4"
+      messageIds: []
+      parentId: "1234567891"
+      serverId: "123456789"
 
     - id: "123456789111"
       name: "example sub-sub-channel"
       permission: "private"
-      is_lobby: false
-      is_category: false
-      users: ["2d29f304-b9c4-47f4-b3ed-502d80c425ea"]
-      parent_id: "12345678912"
+      isLobby: false
+      isCategory: false
+      userIds: 
+        - "a73af1d2-689e-4d7d-9426-3421cce3ade4"
+      messageIds: []
+      parentId: "12345678912"
+      serverId: "123456789"
 
   messages:
-    - id: "c57538d2-976c-456a-a4e0-d4aab7b799ac"
-      sender: "2d29f304-b9c4-47f4-b3ed-502d80c425ea"
-      content: "example message"
+    - id: "info"
+      senderId: "system"
+      content: "此頻道已被設為自由發言"
       timestamp: 1738234723000
+      type: "info"
 
   servers:
     - id: "123456789"
       name: "543隨你聊"
-      announcement: "Example Aassnnouncement"
+      announcement: "Example Announcement"
       icon: "https://preview.redd.it/the-context-behind-the-2015-jsal-pfp-also-the-images-are-in-v0-huyzsah41x8c1.jpg?width=640&crop=smart&auto=webp&s=bffb81c9d6a4a40896acd6e1b72bb82c0a73b03c"
-      users:
-        - "2d29f304-b9c4-47f4-b3ed-502d80c425ea"
+      level: 0
+      createdAt: 1738234723000
+      userIds:
         - "612a7797-f970-4f23-9983-f08d863d9552"
-        - "a73af1d2-689e-4d7d-9426-3421cce3ade4"
-      channels:
+      channelIds:
         - "1234567890"
         - "1234567891"
         - "1234567892"
         - "12345678911"
         - "12345678912"
         - "123456789111"
-      messages: ["c57538d2-976c-456a-a4e0-d4aab7b799ac"] 
+      permissions:
+        "612a7797-f970-4f23-9983-f08d863d9552": 7
+        "a73af1d2-689e-4d7d-9426-3421cce3ade4": 8
+        "a66af1d2-689e-4d7d-9426-3421cce3ada5": 6
+      joinDate:
+        "612a7797-f970-4f23-9983-f08d863d9552": 1738234723000
+        "a73af1d2-689e-4d7d-9426-3421cce3ade4": 1738234723000
+        "a66af1d2-689e-4d7d-9426-3421cce3ada5": 1738234723000
+      applications:
+        "f1571db7-211d-40f8-b5cc-fe8d1d360372": "I want to join this server"
+      nicknames: {}
+      contributions: 
+        "612a7797-f970-4f23-9983-f08d863d9552": 20
+        "f1571db7-211d-40f8-b5cc-fe8d1d360372": 5
+        "a73af1d2-689e-4d7d-9426-3421cce3ade4": 2
+        "a66af1d2-689e-4d7d-9426-3421cce3ada5": 5

@@ -29,8 +29,33 @@
         "type_info": "Text"
       },
       {
-        "name": "permissions",
+        "name": "avatar",
         "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "level",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "last_login_at",
+        "ordinal": 8,
+        "type_info": "Integer"
+      },
+      {
+        "name": "state",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "current_channel_id",
+        "ordinal": 10,
         "type_info": "Text"
       }
     ],
@@ -42,8 +67,13 @@
       false,
       true,
       true,
+      false,
       true,
-      false
+      false,
+      false,
+      true,
+      false,
+      true
     ]
   },
   "hash": "a383b9d53cb71d579097db4ade2d24e21e2d124883be80cdab5a9495ce102bb4"

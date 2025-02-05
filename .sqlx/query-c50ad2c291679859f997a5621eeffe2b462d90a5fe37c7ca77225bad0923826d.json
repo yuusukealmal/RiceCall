@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT * FROM users WHERE account = ?\n            ",
+  "query": "\n            SELECT u.* FROM users u\n            JOIN channel_users cu ON u.id = cu.user_id\n            WHERE cu.channel_id = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -76,5 +76,5 @@
       true
     ]
   },
-  "hash": "ed9bd5ede602dcb8f246acf1fecd01f80efa5d577d4c679bbc05874783869e9a"
+  "hash": "c50ad2c291679859f997a5621eeffe2b462d90a5fe37c7ca77225bad0923826d"
 }

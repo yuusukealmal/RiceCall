@@ -1,10 +1,8 @@
 use crate::{
     db::{Database, DbError},
-    models::user::User,
+    models::user::{User, UserGender, UserState},
 };
-use crate::handlers::ApiResult;
-use crate::handlers::ApiError;
-
+use crate::handlers::{ApiResult, ApiError};
 use axum::{
     extract::State,
     http::StatusCode,
@@ -13,6 +11,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use bcrypt::{hash, verify, DEFAULT_COST};
+use chrono::Utc;
 
 #[derive(Deserialize)]
 pub struct LoginRequest {
@@ -25,22 +24,28 @@ pub struct RegisterRequest {
     username: String,
     account: String,
     password: String,
-    gender: Option<String>,
+    gender: Option<UserGender>,
 }
 
 #[derive(Deserialize)]
 pub struct UpdateUserRequest {
     user_id: String,
     name: String,
-    gender: Option<String>,
+    gender: Option<UserGender>,
 }
 
 #[derive(Serialize)]
 pub struct UserResponse {
     id: String,
     name: String,
-    account: Option<String>,
-    gender: Option<String>,
+    account: String,
+    gender: UserGender,
+    avatar: Option<String>,
+    level: i64,
+    state: UserState,
+    current_channel_id: Option<String>,
+    created_at: i64,
+    last_login_at: Option<i64>,
 }
 
 #[derive(Serialize)]
@@ -73,16 +78,24 @@ pub async fn handle_login<D: Database>(
     };
 
     // 驗證密碼
-    let stored_hash = user.password.as_deref().ok_or_else(|| {
-        ApiError(StatusCode::INTERNAL_SERVER_ERROR, "密碼資料錯誤".into())
-    })?;
-    
-    let password_matches = verify(payload.password, stored_hash).map_err(|_| {
+    let password_matches = verify(payload.password, user.password.as_str()).map_err(|_| {
         ApiError(StatusCode::INTERNAL_SERVER_ERROR, "密碼驗證失敗".into())
     })?;
 
     if !password_matches {
         return Err(ApiError(StatusCode::UNAUTHORIZED, "密碼錯誤".into()));
+    }
+
+    // 更新用戶的最後登入時間和狀態
+    let mut user = user;
+    user.last_login_at = Some(Utc::now().timestamp_millis());
+    user.state = UserState::Online;
+
+    if let Err(e) = db.update_user(&user).await {
+        return Err(ApiError(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to update user state: {}", e),
+        ));
     }
 
     Ok(Json(AuthResponse {
@@ -92,6 +105,12 @@ pub async fn handle_login<D: Database>(
             name: user.name,
             account: user.account,
             gender: user.gender,
+            avatar: user.avatar,
+            level: user.level,
+            state: user.state,
+            current_channel_id: user.current_channel_id,
+            created_at: user.created_at,
+            last_login_at: user.last_login_at,
         },
     }))
 }
@@ -125,18 +144,24 @@ pub async fn handle_register<D: Database>(
     })?;
 
     // 創建新用戶
-    let user = User::new(
-        payload.username,
-        Some(payload.account),
-        Some(hashed_password),
-        payload.gender,
-    );
+    let user = User {
+        id: uuid::Uuid::new_v4().to_string(),
+        name: payload.username,
+        account: payload.account,
+        password: hashed_password,
+        gender: payload.gender.unwrap_or(UserGender::Male),
+        avatar: None,
+        level: 0,
+        created_at: Utc::now().timestamp_millis(),
+        last_login_at: None,
+        state: UserState::Online,
+        current_channel_id: None,
+    };
 
-    // 儲存到資料庫
-    if let Err(_) = db.create_user(&user).await {
+    if let Err(e) = db.create_user(&user).await {
         return Err(ApiError(
             StatusCode::INTERNAL_SERVER_ERROR,
-            "Registration failed".into(),
+            format!("Registration failed: {}", e),
         ));
     }
 
@@ -147,6 +172,12 @@ pub async fn handle_register<D: Database>(
             name: user.name,
             account: user.account,
             gender: user.gender,
+            avatar: user.avatar,
+            level: user.level,
+            state: user.state,
+            current_channel_id: user.current_channel_id,
+            created_at: user.created_at,
+            last_login_at: user.last_login_at,
         },
     }))
 }
@@ -176,13 +207,14 @@ pub async fn handle_update_user<D: Database>(
 
     // 更新用戶資料
     user.name = payload.name;
-    user.gender = payload.gender;
+    if let Some(gender) = payload.gender {
+        user.gender = gender;
+    }
 
-    // 儲存回資料庫
-    if let Err(_) = db.update_user(&user).await {
+    if let Err(e) = db.update_user(&user).await {
         return Err(ApiError(
             StatusCode::INTERNAL_SERVER_ERROR,
-            "更新失敗".into(),
+            format!("Update failed: {}", e),
         ));
     }
 
@@ -193,6 +225,12 @@ pub async fn handle_update_user<D: Database>(
             name: user.name,
             account: user.account,
             gender: user.gender,
+            avatar: user.avatar,
+            level: user.level,
+            state: user.state,
+            current_channel_id: user.current_channel_id,
+            created_at: user.created_at,
+            last_login_at: user.last_login_at,
         },
     }))
 } 

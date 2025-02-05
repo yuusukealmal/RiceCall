@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO server_applications (server_id, user_id, message)\n            VALUES (?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "893a15da364ce5969bdb90d6bb1a32a617c469d31828187e036ddcec24e77ff6"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT * FROM servers\n            ",
+  "query": "SELECT * FROM users",
   "describe": {
     "columns": [
       {
@@ -14,28 +14,48 @@
         "type_info": "Text"
       },
       {
-        "name": "announcement",
+        "name": "account",
         "ordinal": 2,
         "type_info": "Text"
       },
       {
-        "name": "icon",
+        "name": "password",
         "ordinal": 3,
         "type_info": "Text"
       },
       {
-        "name": "users",
+        "name": "gender",
         "ordinal": 4,
         "type_info": "Text"
       },
       {
-        "name": "channels",
+        "name": "avatar",
         "ordinal": 5,
         "type_info": "Text"
       },
       {
-        "name": "messages",
+        "name": "level",
         "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "last_login_at",
+        "ordinal": 8,
+        "type_info": "Integer"
+      },
+      {
+        "name": "state",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "current_channel_id",
+        "ordinal": 10,
         "type_info": "Text"
       }
     ],
@@ -48,9 +68,13 @@
       true,
       true,
       false,
+      true,
       false,
-      false
+      false,
+      true,
+      false,
+      true
     ]
   },
-  "hash": "3931e154f3a4e16cfdcda6b274bb92cbb9eae0792c391836ea4cd078f8383bc3"
+  "hash": "26e7e05427bc7dabcd7815d27764fda2baf4cfe60a2d2d6ee2a1f773dccbbce2"
 }

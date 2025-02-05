@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE channels \n            SET name = ?, permission = ?, is_lobby = ?, \n                is_category = ?, parent_id = ?\n            WHERE id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "72a7baee9fc169ee069fd94bfbef09b2d0429b9a72debae699e3f6175f109c9d"
+}

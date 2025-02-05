@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO channels (\n                id, name, permission, is_lobby, is_category, \n                parent_id, server_id\n            )\n            VALUES (?, ?, ?, ?, ?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "9178976c7feb7ab447c658a723114bbeb7a428ab0e3056bda90c9f1c32a744d8"
+}

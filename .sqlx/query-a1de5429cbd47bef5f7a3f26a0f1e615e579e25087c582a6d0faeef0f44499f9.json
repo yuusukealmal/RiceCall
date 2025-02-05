@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT * FROM users WHERE account = ?\n            ",
+  "query": "\n            SELECT u.* \n            FROM users u\n            JOIN server_users su ON u.id = su.user_id\n            WHERE su.server_id = ?\n            ",
   "describe": {
     "columns": [
       {
@@ -76,5 +76,5 @@
       true
     ]
   },
-  "hash": "ed9bd5ede602dcb8f246acf1fecd01f80efa5d577d4c679bbc05874783869e9a"
+  "hash": "a1de5429cbd47bef5f7a3f26a0f1e615e579e25087c582a6d0faeef0f44499f9"
 }

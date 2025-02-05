@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT * FROM channels WHERE id = ?\n            ",
+  "query": "\n            SELECT c.*, \n                   GROUP_CONCAT(cu.user_id) as user_ids,\n                   GROUP_CONCAT(m.id) as message_ids\n            FROM channels c\n            LEFT JOIN channel_users cu ON c.id = cu.channel_id\n            LEFT JOIN messages m ON c.id = m.channel_id\n            WHERE c.server_id = ?\n            GROUP BY c.id\n            ",
   "describe": {
     "columns": [
       {
@@ -29,13 +29,23 @@
         "type_info": "Bool"
       },
       {
-        "name": "users",
+        "name": "parent_id",
         "ordinal": 5,
         "type_info": "Text"
       },
       {
-        "name": "parent_id",
+        "name": "server_id",
         "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_ids",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "message_ids",
+        "ordinal": 8,
         "type_info": "Text"
       }
     ],
@@ -48,9 +58,11 @@
       false,
       false,
       false,
+      true,
       false,
+      true,
       true
     ]
   },
-  "hash": "fc3d0c4a264f6ae18bafe240bfee894308f879e5434d6741ed9403bd1e732496"
+  "hash": "8787dfb089a692def1650861db08d396b5f66c39771d34571359f96b4374900e"
 }

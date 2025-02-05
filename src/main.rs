@@ -66,10 +66,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("Failed to connect to database"),
     );
 
-    database.init().await.expect("Failed to initialize database");
+    // 先執行 migrations
+    info!("Running migrations...");
+    database.init().await.expect("Failed to run migrations");
 
-    // 只在有 --init 參數時執行資料初始化
+    // 然後再執行資料初始化
     if args.init {
+        info!("Initializing database data...");
         init_database(&*database, &settings).await?;
     }
 
@@ -121,6 +124,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let db = db_state.0.clone();
                 if let Err(e) = handlers::socket::handle_delete_channel::<SqliteDatabase>(socket, data, db).await {
                     error!("Error handling delete channel: {}", e);
+                }
+            });
+
+            socket.on("joinChannel", |data: Data<handlers::socket::JoinChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+                let db = db_state.0.clone();
+                if let Err(e) = handlers::socket::handle_join_channel::<SqliteDatabase>(socket, data, db).await {
+                    error!("Error handling join channel: {}", e);
+                }
+            });
+
+            socket.on("leaveChannel", |data: Data<handlers::socket::LeaveChannelData>, db_state: socketioxide::extract::State<Arc<db::sqlite::SqliteDatabase>>, socket: SocketRef| async move {
+                let db = db_state.0.clone();
+                if let Err(e) = handlers::socket::handle_leave_channel::<SqliteDatabase>(socket, data, db).await {
+                    error!("Error handling leave channel: {}", e);
                 }
             });
 
