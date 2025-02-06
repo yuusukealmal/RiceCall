@@ -1,12 +1,4 @@
-import { getPermissionText } from '@/utils/formatters';
-import { ChevronDown, ChevronUp, Search } from 'lucide-react';
-import React, { ChangeEvent, memo, useCallback, useState } from 'react';
-
-// Components
-import MarkdownViewer from './MarkdownViewer';
-
-// Types
-import type { MenuItem, Server, User, UserList } from '@/types';
+import React, { memo, useCallback } from 'react';
 
 interface CreateServerPageProps {
   onClose: () => void;

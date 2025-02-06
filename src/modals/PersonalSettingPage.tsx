@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 // Service
-import userService from '@/service/user.service';
+import userService from '@/services/user.service';
 
 // Components
 import Modal from '@/components/Modal';

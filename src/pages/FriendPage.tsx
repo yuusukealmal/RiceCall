@@ -1,16 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  ChevronDown,
-  ChevronRight,
-  Users,
-  History,
-  Search,
-  UserPlus,
-  FolderPlus,
-} from 'lucide-react';
+import { Users, History, Search, UserPlus, FolderPlus } from 'lucide-react';
 
 // Components
-import FriendListViewer from './FriendListViewer';
+import FriendListViewer from '@/components/FriendListViewer';
 
 // Types
 import { User } from '../types';

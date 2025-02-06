@@ -2,8 +2,8 @@ import React, { ChangeEvent, memo, useCallback, useState } from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 
 // Components
-import MarkdownViewer from './MarkdownViewer';
-import Modal from './Modal';
+import MarkdownViewer from '@/components/MarkdownViewer';
+import Modal from '@/components/Modal';
 
 // Types
 import type { Server, User, UserList, ModalTabItem } from '@/types';

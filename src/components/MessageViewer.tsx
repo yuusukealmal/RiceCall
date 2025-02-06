@@ -1,7 +1,13 @@
-import type { Message, MessageType, Server, User, UserList } from '@/types';
-import { formatTimestamp } from '@/utils/formatters';
 import { memo, useLayoutEffect, useMemo, useRef, useEffect } from 'react';
-import MarkdownViewer from './MarkdownViewer';
+
+// Components
+import MarkdownViewer from '@/components/MarkdownViewer';
+
+// Types
+import type { Message, MessageType, Server, User, UserList } from '@/types';
+
+// Util
+import { formatTimestamp } from '@/utils/formatters';
 
 interface MessageGroup {
   id: string;

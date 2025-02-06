@@ -1,22 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  Plus,
-  Minus,
-  Dot,
-  House,
-  MoreVertical,
-  Edit,
-  Trash,
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Minus, MoreVertical } from 'lucide-react';
 
 // Types
-import type {
-  Channel,
-  ChannelPermission,
-  Server,
-  User,
-  UserList,
-} from '@/types';
+import type { User } from '@/types';
 
 interface ContextMenuPosState {
   x: number;

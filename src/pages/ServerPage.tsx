@@ -13,10 +13,10 @@ import {
 } from 'lucide-react';
 
 // Components
-import EmojiGrid from './EmojiGrid';
-import MarkdownViewer from './MarkdownViewer';
-import MessageViewer from './MessageViewer';
-import ChannelViewer from './ChannelViewer';
+import EmojiGrid from '@/components/EmojiGrid';
+import MarkdownViewer from '@/components/MarkdownViewer';
+import MessageViewer from '@/components/MessageViewer';
+import ChannelViewer from '@/components/ChannelViewer';
 
 // Types
 import type { User, Server, Channel, Message, UserList } from '@/types';
