@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-ENV DATABASE_URL=sqlite:/tmp/bot.db
+ENV DATABASE_URL=sqlite:/tmp/db.sqlite3
 RUN cargo install sqlx-cli && \
     sqlx database create && \
     sqlx migrate run --source migrations

@@ -60,8 +60,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // DB
+    std::env::set_var("DATABASE_URL", settings.database.url.clone());
     let database = Arc::new(
-        SqliteDatabase::new(&settings.database.url)
+        SqliteDatabase::new(&settings.database.url, settings.database.max_connections)
             .await
             .expect("Failed to connect to database"),
     );

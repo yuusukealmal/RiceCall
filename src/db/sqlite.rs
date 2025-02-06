@@ -9,9 +9,9 @@ pub struct SqliteDatabase {
 }
 
 impl SqliteDatabase {
-    pub async fn new(database_url: &str) -> DbResult<Self> {
+    pub async fn new(database_url: &str, max_connections: u32) -> DbResult<Self> {
         let pool = SqlitePoolOptions::new()
-            .max_connections(5)
+            .max_connections(max_connections)
             .connect(database_url)
             .await?;
 

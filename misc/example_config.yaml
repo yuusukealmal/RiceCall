@@ -4,6 +4,7 @@ server:
 
 database:
   url: "sqlite:data/db.sqlite3"
+  max_connections: 5
 
 cors:
   allowed_origins: ["http://localhost:8080", "http://localhost:3000"]

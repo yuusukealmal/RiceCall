@@ -1,7 +1,5 @@
 pub mod auth;
 pub mod socket;
-// pub mod channel;
-// pub mod message;
 
 use axum::{
     http::StatusCode,

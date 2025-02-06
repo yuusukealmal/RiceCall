@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎫 RiceCall (Backend)
+# 📞 RiceCall (Backend)
 *RiceCall backend, now written in Rust*
 
 [![Rust](https://img.shields.io/badge/rust-1.83+-93450a.svg?style=flat-square&logo=rust)](https://www.rust-lang.org)
@@ -26,14 +26,16 @@ git checkout WebSocket
 
 ```bash
 mkdir data
-cp config/default.yaml data/config.yaml
+cp misc/example_config.yaml data/config.yaml
+cp misc/example.db data/db.sqlite3
 # Edit config.yaml with your settings
 ```
+
 
 3. Run the server:
 
 ```bash
-DATABASE_URL=sqlite:data/db.sqlite3 cargo run --release -- -c data/config.yaml --init
+cargo run --release -- -c data/config.yaml --init
 ```
 
 ## 🛠️ Configuration
