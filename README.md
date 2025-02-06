@@ -14,11 +14,33 @@
 
 ## 🚀 Quick Start
 
+<details>
+<summary><h3>👨‍💻 User</h3></summary>
+
+1. Download the latest release from the [releases page](https://github.com/Nerdy-Home-ReOpen/rc-voice/releases).
+  
+    Download the `chat-server` binary and the `example_config.yaml` and `example.db` file.
+
+2. Configure the server with the config file and database file.
+
+3. Run the server:
+
+```bash
+./chat-server -c config.yaml
+```
+
+</details>
+
+<details>
+<summary><h3>🛠️ Developer</h3></summary>
+
 1. Clone the repository:
 
 ```bash
+
 git clone https://github.com/Nerdy-Home-ReOpen/rc-voice rc-voice-backend
 cd rc-voice-backend
+
 git checkout WebSocket
 ```
 
@@ -31,12 +53,13 @@ cp misc/example.db data/db.sqlite3
 # Edit config.yaml with your settings
 ```
 
-
 3. Run the server:
 
 ```bash
 cargo run --release -- -c data/config.yaml --init
 ```
+
+</details>
 
 ## 🛠️ Configuration
 

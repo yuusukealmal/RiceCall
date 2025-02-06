@@ -240,9 +240,13 @@ jobs:
 
           done
 
+          cp misc/example_config.yaml release/
+          cp misc/example.db release/
+
           ls -la release
       
       - name: Create release (pre-release)
+
         uses: softprops/action-gh-release@v2
         if: ${{ !startsWith(github.ref, 'refs/tags/backend-v') }}
         with:
