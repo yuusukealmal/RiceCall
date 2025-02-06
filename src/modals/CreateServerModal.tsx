@@ -1,10 +1,10 @@
 import React, { memo, useCallback } from 'react';
 
-interface CreateServerPageProps {
+interface CreateServerModalProps {
   onClose: () => void;
 }
 
-const CreateServerPage = memo(({ onClose }: CreateServerPageProps) => {
+const CreateServerModal = memo(({ onClose }: CreateServerModalProps) => {
   const renderContent = useCallback(() => {
     return (
       <>
@@ -95,6 +95,6 @@ const CreateServerPage = memo(({ onClose }: CreateServerPageProps) => {
   );
 });
 
-CreateServerPage.displayName = 'CreateServerPage';
+CreateServerModal.displayName = 'CreateServerModal';
 
-export default CreateServerPage;
+export default CreateServerModal;

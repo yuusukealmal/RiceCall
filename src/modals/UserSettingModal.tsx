@@ -11,13 +11,13 @@ import type { User, MenuItem, ModalTabItem } from '@/types';
 
 const TABS: ModalTabItem[] = [{ id: '基本資料', label: '基本資料' }];
 
-interface PersonalSettingPageProps {
+interface UserSettingModal {
   onClose: () => void;
   onLogout: () => void;
   user: User;
 }
 
-const PersonalSettingPage: React.FC<PersonalSettingPageProps> = ({
+const PersonalSettingPage: React.FC<UserSettingModal> = ({
   onClose,
   onLogout,
   user,

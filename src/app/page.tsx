@@ -12,9 +12,9 @@ import HomePage from '@/pages/HomePage';
 import FriendPage from '@/pages/FriendPage';
 import ServerPage from '@/pages/ServerPage';
 
-import CreateServerPage from '@/modals/CreateServerPage';
-import SettingPage from '@/modals/SettingPage';
-import PersonalSettingPage from '@/modals/PersonalSettingPage';
+import CreateServerModal from '@/modals/CreateServerModal';
+import ServerSettingModalProps from '@/modals/ServerSettingModal';
+import UserSettingModal from '@/modals/UserSettingModal';
 
 // Components
 import Tabs from '@/components/Tabs';
@@ -163,6 +163,16 @@ export default function Home() {
     },
     [socket],
   );
+  const handleCreateServer = useCallback(
+    (server: Server): void => {
+      try {
+        socket?.emit('createServer', server);
+      } catch (error) {
+        console.error('創建伺服器失敗:', error);
+      }
+    },
+    [socket],
+  );
 
   const handleLoginSuccess = (user: User): void => {
     localStorage.setItem('userId', user.id);
@@ -254,17 +264,17 @@ export default function Home() {
     <div className="h-screen flex flex-col bg-background font-['SimSun'] overflow-hidden">
       {/* Can we move all the page to here ?? -> I tried*/}
       {showCreateServer && (
-        <CreateServerPage onClose={() => setShowCreateServer(false)} />
+        <CreateServerModal onClose={() => setShowCreateServer(false)} />
       )}
       {showUserSetting && user && (
-        <PersonalSettingPage
+        <UserSettingModal
           onClose={() => setShowUserSetting(false)}
           onLogout={handleLogout}
           user={users[user.id]}
         />
       )}
       {showServerSetting && server && (
-        <SettingPage
+        <ServerSettingModalProps
           onClose={() => setShowServerSetting(false)}
           server={server}
           users={users}
