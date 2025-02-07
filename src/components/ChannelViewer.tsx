@@ -80,7 +80,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(({ category }) => {
     <div key={category.id} className="mb">
       {/* Category View */}
       <div
-        className="p-1 pl-3 items-center justify-between hover:bg-gray-100 group select-none"
+        className="flex p-1 pl-3 items-center justify-between hover:bg-gray-100 group select-none"
         onClick={() =>
           setExpanded((prevExpanded) => {
             return category.permission != 'readonly' ? !prevExpanded : false;
@@ -93,7 +93,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(({ category }) => {
           setShowContextMenu(true);
         }}
       >
-        <div className="items-center flex-1 min-w-0">
+        <div className="flex items-center flex-1 min-w-0">
           <div
             className={`min-w-3.5 min-h-3.5 rounded-sm flex items-center justify-center outline outline-1 outline-gray-200 mr-1 ${getPermissionStyle(
               category.permission,
@@ -418,7 +418,6 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user }) => {
             left: floatingBlock.x,
             top: floatingBlock.y,
           }}
-
         />
       )}
 
