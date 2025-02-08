@@ -22,12 +22,9 @@ import ServerPage from '@/pages/ServerPage';
 
 // Modals
 import CreateServerModal from '@/modals/CreateServerModal';
-import ServerSettingModalProps from '@/modals/ServerSettingModal';
-import UserSettingModal from '@/modals/UserSettingModal';
 
 // Components
 import Tabs from '@/components/Tabs';
-import Modal from '@/components/Modal';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // Utils
@@ -154,6 +151,11 @@ const Home = () => {
   const user = useSelector((state: { user: User }) => state.user);
   const server = useSelector((state: { server: Server }) => state.server);
 
+  useEffect(() => {
+    if (server) setSelectedTabId(3);
+    else setSelectedTabId(1);
+  }, [server]);
+
   const handleError = (_error: unknown) => {
     const error = standardizedError(_error);
     alert(`錯誤: ${error.message}`);
@@ -172,70 +174,58 @@ const Home = () => {
     }
   };
 
-  const handleSendMessage = useCallback(
-    (serverId: string, channelId: string, message: Message): void => {
-      try {
-        socket?.emit('chatMessage', { serverId, channelId, message });
-        socket?.on('error', handleError);
-      } catch (error) {
-        const appError = standardizedError(error);
-        console.error('發送消息失敗:', appError.message);
-      }
-    },
-    [socket],
-  );
-  const handleAddChannel = useCallback(
-    (serverId: string, channel: Channel): void => {
-      try {
-        socket?.emit('addChannel', { serverId, channel });
-        socket?.on('error', handleError);
-      } catch (error) {
-        const appError = standardizedError(error);
-        console.error('新增頻道失敗:', appError.message);
-      }
-    },
-    [socket],
-  );
-  const handleEditChannel = useCallback(
-    (serverId: string, channelId: string, channel: Partial<Channel>): void => {
-      try {
-        socket?.emit('editChannel', { serverId, channelId, channel });
-        socket?.on('error', handleError);
-      } catch (error) {
-        const appError = standardizedError(error);
-        console.error('編輯頻道/類別失敗:', appError.message);
-      }
-    },
-    [socket],
-  );
-  const handleDeleteChannel = useCallback(
-    (serverId: string, channelId: string): void => {
-      try {
-        socket?.emit('deleteChannel', { serverId, channelId });
-        socket?.on('error', handleError);
-      } catch (error) {
-        const appError = standardizedError(error);
-        console.error('刪除頻道/類別失敗:', appError.message);
-      }
-    },
-    [socket],
-  );
-  const handleJoinChannel = useCallback(
-    (serverId: string, userId: string, channelId: string): void => {
-      try {
-        socket?.emit('joinChannel', {
-          serverId,
-          userId,
-          channelId,
-        });
-        socket?.on('error', handleError);
-      } catch (error) {
-        const appError = standardizedError(error);
-        console.error('加入頻道失敗:', appError.message);
-      }
-    },
-    [socket],
-  );
+  // const handleAddChannel = useCallback(
+  //   (serverId: string, channel: Channel): void => {
+  //     try {
+  //       socket?.emit('addChannel', { serverId, channel });
+  //       socket?.on('error', handleError);
+  //     } catch (error) {
+  //       const appError = standardizedError(error);
+  //       console.error('新增頻道失敗:', appError.message);
+  //     }
+  //   },
+  //   [socket],
+  // );
+  // const handleEditChannel = useCallback(
+  //   (serverId: string, channelId: string, channel: Partial<Channel>): void => {
+  //     try {
+  //       socket?.emit('editChannel', { serverId, channelId, channel });
+  //       socket?.on('error', handleError);
+  //     } catch (error) {
+  //       const appError = standardizedError(error);
+  //       console.error('編輯頻道/類別失敗:', appError.message);
+  //     }
+  //   },
+  //   [socket],
+  // );
+  // const handleDeleteChannel = useCallback(
+  //   (serverId: string, channelId: string): void => {
+  //     try {
+  //       socket?.emit('deleteChannel', { serverId, channelId });
+  //       socket?.on('error', handleError);
+  //     } catch (error) {
+  //       const appError = standardizedError(error);
+  //       console.error('刪除頻道/類別失敗:', appError.message);
+  //     }
+  //   },
+  //   [socket],
+  // );
+  // const handleJoinChannel = useCallback(
+  //   (serverId: string, userId: string, channelId: string): void => {
+  //     try {
+  //       socket?.emit('joinChannel', {
+  //         serverId,
+  //         userId,
+  //         channelId,
+  //       });
+  //       socket?.on('error', handleError);
+  //     } catch (error) {
+  //       const appError = standardizedError(error);
+  //       console.error('加入頻道失敗:', appError.message);
+  //     }
+  //   },
+  //   [socket],
+  // );
   const handleLeaveServer = useCallback(
     (serverId: string, userId: string) => {
       try {
@@ -269,36 +259,11 @@ const Home = () => {
     setShowCreateServer(false);
   };
 
-  // const handleCreateServer = async () => {
-  //   if (!validateForm() || isSubmitting) return;
-  //   try {
-  //     setIsSubmitting(true);
-  //     const newServer = await serverService
-  //       .createServer({
-  //         name: formData.name,
-  //         description: formData.description,
-  //         avatar: formData.avatar,
-  //       })
-  //       .finally(() => {
-  //         onClose();
-  //       });
-
-  //     onServerCreated(newServer.id);
-  //   } catch (error) {
-  //     console.error('Failed to create server:', error);
-  //     alert('創建群組失敗：' + (error as Error).message);
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
   // Tab Control
   const [selectedTabId, setSelectedTabId] = useState<number>(1);
 
   // Page Control
   const [showCreateServer, setShowCreateServer] = useState<boolean>(false);
-  const [showUserSetting, setShowUserSetting] = useState<boolean>(false);
-  const [showServerSetting, setShowServerSetting] = useState<boolean>(false);
 
   // Latency Control
   const [latency, setLatency] = useState<string | null>('0');
@@ -328,17 +293,7 @@ const Home = () => {
         return <FriendPage />;
       case 3:
         if (!server) return;
-        return (
-          <ServerPage
-            onAddChannel={handleAddChannel}
-            onDeleteChannel={handleDeleteChannel}
-            onEditChannel={handleEditChannel}
-            onJoinChannel={handleJoinChannel}
-            onSendMessage={handleSendMessage}
-            onOpenUserSetting={() => setShowUserSetting(true)}
-            onOpenServerSetting={() => setShowServerSetting(true)}
-          />
-        );
+        return <ServerPage />;
     }
   };
 
@@ -350,15 +305,6 @@ const Home = () => {
           onClose={() => setShowCreateServer(false)}
           onServerCreated={handleServerCreated}
         />
-      )}
-      {showUserSetting && user && (
-        <UserSettingModal
-          onClose={() => setShowUserSetting(false)}
-          onLogout={handleLogout}
-        />
-      )}
-      {showServerSetting && server && (
-        <ServerSettingModalProps onClose={() => setShowServerSetting(false)} />
       )}
       <div className="h-screen flex flex-col bg-background font-['SimSun'] overflow-hidden">
         {/* Top Navigation */}

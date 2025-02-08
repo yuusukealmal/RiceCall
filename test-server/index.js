@@ -210,7 +210,7 @@ const server = http.createServer((req, res) => {
             await db.set('serverList', serverList);
             await db.set('channelList', channelList);
 
-            new Logger('Server').success(
+            new Logger('Websocket').success(
               `New server created: ${serverId} by user ${userId}`,
             );
 
@@ -521,7 +521,6 @@ io.on('connection', async (socket) => {
         }
       }
 
-
       // if (!server.permissions) {
       user.currentChannelId = channelList[server.lobbyId].id;
       channelList[server.lobbyId].userIds.push(user.id);
@@ -679,6 +678,7 @@ io.on('connection', async (socket) => {
       const messageList = (await db.get('messageList')) || {};
       const serverList = (await db.get('serverList')) || {};
       const channelList = (await db.get('channelList')) || {};
+      const usersList = (await db.get('usersList')) || {};
 
       // Validate data
       const message = data.message;
@@ -703,14 +703,26 @@ io.on('connection', async (socket) => {
         });
         return;
       }
-      const channel = channelList[data.channelId];
-      if (!channel) {
-        new Logger('WebSocket').error('Invalid channel data');
+      const user = usersList[data.userId];
+      if (!user) {
+        new Logger('WebSocket').error(`User(${data.userId}) not found`);
         socket.emit('error', {
-          message: 'Invalid channel data',
+          message: `User(${data.userId}) not found`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+      }
+      const channel = channelList[user.currentChannelId];
+      if (!channel) {
+        new Logger('WebSocket').error(
+          `Channel(${user.currentChannelId}) not found`,
+        );
+        socket.emit('error', {
+          message: `Channel(${user.currentChannelId}) not found`,
           part: 'CHATMESSAGE',
           tag: 'CHANNEL_ERROR',
-          status_code: 400,
+          status_code: 404,
         });
         return;
       }

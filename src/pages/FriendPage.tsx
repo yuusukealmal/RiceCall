@@ -165,71 +165,57 @@ const FriendPage = () => {
   const userLevel = Math.min(56, Math.ceil(user.level / 5)); // 56 is max level
 
   return (
-    <Flex direction="column" className="flex-1">
-      {/* Header */}
-      <Flex className="bg-white shadow-sm border-b">
-        <Flex align="center" justify="between" className="p-2 pr-[40%]">
+    <div className="flex flex-1 flex-col">
+      <header className="bg-white shadow-sm border-b">
+        <div className="flex items-center justify-between space-x-16 p-2 pr-[40%]">
           {/* User Profile */}
-          <Flex align="center" gap="2">
-            <img
-              className="w-14 h-14 bg-gray-200"
-              src={user.avatar ?? '/pfp/default.png'}
-              alt={user.avatar ?? '/pfp/default.png'}
-            />
-            <Box>
-              <Flex align="center" gap="1">
+          <div className="flex items-center space-x-2">
+            <div className="w-14 h-14 bg-gray-200"></div>
+            <div>
+              <div className="flex items-center space-x-1">
                 <img src="/im/LV.png" alt="LV" />
                 <img
                   src={`/usergrade_${userLevel}.png`}
                   alt={`/usergrade_${userLevel}`}
                   className="select-none"
                 />
-              </Flex>
-              <Flex align="center" gap="1">
-                <Text size="5" weight="bold">
-                  {user.name}
-                </Text>
-              </Flex>
-            </Box>
-          </Flex>
-          {/* User Status */}
-          <Flex className="flex-1">
-            <Text className="text-center">點擊更改簽名</Text>
-          </Flex>
-        </Flex>
-      </Flex>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="text-lg font-bold">{user.name}</span>
+              </div>
+            </div>
+          </div>
 
-      {/* Main Content */}
-      <Flex minHeight="0" className="flex-1">
+          {/* User Status */}
+          <div className="flex-1 text-center">點擊更改簽名</div>
+        </div>
+      </header>
+      <main className="flex flex-1 min-h-0">
         {/* Left Sidebar */}
-        <Flex
-          direction="column"
-          minHeight="0"
-          minWidth="0"
-          className="bg-white border-r text-sm"
+        <div
+          className="flex flex-col min-h-0 min-w-0 w-64 bg-white border-r text-sm"
           style={{ width: `${sidebarWidth}px` }}
         >
+          {/* Friend List */}
           <FriendListViewer />
-        </Flex>
-
+        </div>
         {/* Resize Handle */}
-        <Flex
-          width="0.5px"
-          className="cursor-col-resize bg-gray-200 transition-colors"
+        <div
+          className="w-0.5 cursor-col-resize bg-gray-200 transition-colors"
           onMouseDown={startResizing}
         />
 
         {/* Main Content Area */}
-        <Flex direction="column" className="flex-1">
-          <Flex p="4" justify="center" align="start" className="flex-1"></Flex>
-          <Flex p="2">
-            <Button variant="ghost" color="blue">
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 p-4 flex justify-center items-start"></div>
+          <div className="p-2 text-center">
+            <button className="text-blue-500 hover:underline">
               查看更多 ›
-            </Button>
-          </Flex>
-        </Flex>
-      </Flex>
-    </Flex>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 };
 

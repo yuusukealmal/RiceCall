@@ -19,26 +19,15 @@ import MarkdownViewer from '@/components/MarkdownViewer';
 import MessageViewer from '@/components/MessageViewer';
 import ChannelViewer from '@/components/ChannelViewer';
 
+// Modals
+import ServerSettingModal from '@/modals/ServerSettingModal';
+import UserSettingModal from '@/modals/UserSettingModal';
+
 // Types
 import type { User, Server, Channel, Message, UserList } from '@/types';
 
-interface ServerPageProps {
-  onAddChannel: (serverId: string, channel: Channel) => void;
-  onEditChannel: (
-    serverId: string,
-    channelId: string,
-    channel: Channel,
-  ) => void;
-  onDeleteChannel: (serverId: string, channelId: string) => void;
-  onJoinChannel: (serverId: string, userId: string, channelId: string) => void;
-  onSendMessage: (
-    serverId: string,
-    channelId: string,
-    message: Message,
-  ) => void;
-  onOpenServerSetting: () => void;
-  onOpenUserSetting: () => void;
-}
+// Socket
+import { useSocket } from '@/hooks/SocketProvider';
 
 const getStoredBoolean = (key: string, defaultValue: boolean): boolean => {
   const stored = localStorage.getItem(key);
@@ -46,15 +35,19 @@ const getStoredBoolean = (key: string, defaultValue: boolean): boolean => {
   return stored === 'true';
 };
 
-const ServerPage: React.FC<ServerPageProps> = ({
-  onAddChannel,
-  onEditChannel,
-  onDeleteChannel,
-  onJoinChannel,
-  onSendMessage,
-  onOpenServerSetting,
-  onOpenUserSetting,
-}) => {
+interface ServerPageProps {}
+
+const ServerPage: React.FC<ServerPageProps> = ({}) => {
+  // Socket
+  const socket = useSocket();
+
+  const handleSendMessage = useCallback(
+    (serverId: string, userId: string, message: Message): void => {
+      socket?.emit('chatMessage', { serverId, userId, message });
+    },
+    [socket],
+  );
+
   // Redux
   const user = useSelector((state: { user: User }) => state.user);
   const server = useSelector((state: { server: Server }) => state.server);
@@ -64,23 +57,32 @@ const ServerPage: React.FC<ServerPageProps> = ({
   const messages = useSelector(
     (state: { messages: Message[] }) => state.messages,
   );
-  const users = useSelector(
+  const serverUserList = useSelector(
     (state: { serverUserList: UserList }) => state.serverUserList,
   );
 
+  // Input Control
+  const [messageInput, setMessageInput] = useState<string>('');
+  const maxContentLength = 2000;
+
   // Volume Control
-  const [volume, setVolume] = useState<number>(100);
   const [showVolumeSlider, setShowVolumeSlider] = useState<boolean>(false);
-  const volumeRef = useRef<HTMLDivElement>(null);
+  const [volume, setVolume] = useState<number>(100);
+  const volumeSliderRef = useRef<HTMLDivElement>(null);
 
   const handleCloseVolumeSlider = (event: MouseEvent) => {
     if (
-      volumeRef.current &&
-      !volumeRef.current.contains(event.target as Node)
+      volumeSliderRef.current &&
+      !volumeSliderRef.current.contains(event.target as Node)
     ) {
-      setShowVolumeSlider(false);
+      toggleVolumeSlider(false);
     }
   };
+
+  const toggleVolumeSlider = useCallback(
+    (state?: boolean) => setShowVolumeSlider(state ?? !showVolumeSlider),
+    [],
+  );
 
   useEffect(() => {
     document.addEventListener('mousedown', handleCloseVolumeSlider);
@@ -122,41 +124,66 @@ const ServerPage: React.FC<ServerPageProps> = ({
     };
   }, [resize, stopResizing]);
 
-  // Input Control
-  const [messageInput, setMessageInput] = useState<string>('');
-  const maxContentLength = 2000;
-
   // Notification Control
   const [notification, setNotification] = useState<boolean>(() =>
     getStoredBoolean('notification', true),
   );
+
+  const toggleNotification = useCallback(
+    (state?: boolean) => setNotification(state ?? !notification),
+    [],
+  );
+
+  useEffect(() => {
+    localStorage.setItem('notification', notification.toString());
+  }, [notification]);
 
   // Mic Control
   const [isMicOn, setIsMicOn] = useState<boolean>(() =>
     getStoredBoolean('mic', false),
   );
 
-  // Emoji Picker Control
-  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
-
-  useEffect(() => {
-    localStorage.setItem('notification', notification.toString());
-  }, [notification]);
+  const toggleMic = useCallback(
+    (state?: boolean) => setIsMicOn(state ?? !isMicOn),
+    [],
+  );
 
   useEffect(() => {
     localStorage.setItem('mic', isMicOn.toString());
   }, [isMicOn]);
 
-  const toggleNotification = useCallback(() => {
-    setNotification((prev) => !prev);
-  }, []);
+  // Emoji Picker Control
+  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
 
-  const toggleMic = useCallback(() => {
-    setIsMicOn((prev) => !prev);
-  }, []);
+  const toggleEmojiPicker = useCallback(
+    (state: boolean) => setShowEmojiPicker(state ?? !showEmojiPicker),
+    [],
+  );
+
+  // User Setting Control
+  const [showUserSetting, setShowUserSetting] = useState<boolean>(false);
+
+  const toggleUserSetting = useCallback(
+    (state: boolean) => setShowUserSetting(state ?? !showUserSetting),
+    [],
+  );
+
+  // Server Setting Control
+  const [showServerSetting, setShowServerSetting] = useState<boolean>(false);
+
+  const toggleServerSetting = useCallback(
+    (state: boolean) => setShowServerSetting(state ?? !showUserSetting),
+    [],
+  );
 
   return (
     <>
+      {showUserSetting && user && (
+        <UserSettingModal onClose={() => toggleUserSetting(false)} />
+      )}
+      {showServerSetting && server && (
+        <ServerSettingModal onClose={() => toggleServerSetting(false)} />
+      )}
       {/* Left Sidebar */}
       <div
         className="flex flex-col min-h-0 min-w-0 w-64 bg-white border-r text-sm"
@@ -187,13 +214,13 @@ const ServerPage: React.FC<ServerPageProps> = ({
                   className="w-3.5 h-3.5 select-none"
                 />
                 <div className="text-xs text-gray-500 select-none">
-                  {Object.keys(users).length ?? ''}
+                  {Object.keys(serverUserList).length ?? ''}
                 </div>
 
                 {server.permissions?.[user.id] >= 5 && (
                   <button
                     className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-                    onClick={onOpenServerSetting}
+                    onClick={() => toggleServerSetting}
                   >
                     <Settings size={16} className="text-gray-500" />
                   </button>
@@ -219,20 +246,12 @@ const ServerPage: React.FC<ServerPageProps> = ({
           </div>
         )}
         {/* Messages Area */}
-        {messages && (
-          <MessageViewer
-            messages={messages}
-            users={users}
-            server={server}
-            user={user}
-            notification={notification}
-          />
-        )}
+        {messages && <MessageViewer />}
         {/* Input Area */}
         <div className="flex flex-[1] p-3">
           <div className="flex flex-1 flex-row justify-flex-start p-1 border rounded-lg">
             <button
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              onClick={() => toggleEmojiPicker}
               className="w-7 h-7 p-1 hover:bg-gray-100 rounded transition-colors z-10"
             >
               <img src="/channel/FaceButton_5_18x18.png" alt="Emoji" />
@@ -242,7 +261,7 @@ const ServerPage: React.FC<ServerPageProps> = ({
                   const content = messageInput + emojiTag;
                   if (content.length > maxContentLength) return;
                   setMessageInput(content);
-                  setShowEmojiPicker(false);
+                  toggleEmojiPicker(false);
                   const input = document.querySelector('textarea');
                   if (input) input.focus();
                 }}
@@ -261,10 +280,9 @@ const ServerPage: React.FC<ServerPageProps> = ({
                 setMessageInput(input);
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key === 'Enter' && !e.shiftKey && !messageInput.trim()) {
                   e.preventDefault();
-                  if (!messageInput.trim() || !user.currentChannelId) return;
-                  onSendMessage(server.id, user.currentChannelId, {
+                  handleSendMessage(server.id, user.id, {
                     id: '',
                     senderId: user.id,
                     content: messageInput,
@@ -299,7 +317,7 @@ const ServerPage: React.FC<ServerPageProps> = ({
               </button>
             </div>
             <button
-              onClick={() => setIsMicOn(!isMicOn)}
+              onClick={() => toggleMic}
               className={`outline outline-2 outline-gray-300 rounded flex items-center justify-between p-2 hover:bg-foreground/10 transition-colors w-32`}
             >
               <img
@@ -320,7 +338,7 @@ const ServerPage: React.FC<ServerPageProps> = ({
             </button>
             <div className="flex items-center space-x-2 p-5">
               <button
-                onClick={toggleNotification}
+                onClick={() => toggleNotification}
                 className="p-1 hover:bg-gray-100 rounded"
               >
                 {notification ? (
@@ -329,10 +347,10 @@ const ServerPage: React.FC<ServerPageProps> = ({
                   <BellOff size={16} className="text-foreground" />
                 )}
               </button>
-              <div className="relative" ref={volumeRef}>
+              <div className="relative" ref={volumeSliderRef}>
                 <button
                   className="p-1 hover:bg-gray-100 rounded"
-                  onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+                  onClick={() => toggleVolumeSlider}
                 >
                   {volume === 0 && (
                     <VolumeX size={16} className="text-foreground" />
@@ -378,7 +396,7 @@ const ServerPage: React.FC<ServerPageProps> = ({
                 )}
               </div>
               <button
-                onClick={toggleMic}
+                onClick={() => toggleMic}
                 className="p-1 hover:bg-gray-100 rounded"
               >
                 {isMicOn ? (
@@ -388,7 +406,7 @@ const ServerPage: React.FC<ServerPageProps> = ({
                 )}
               </button>
               <button
-                onClick={onOpenUserSetting}
+                onClick={() => toggleUserSetting}
                 className="p-1 hover:bg-gray-100 rounded"
               >
                 <Settings size={16} className="text-foreground" />

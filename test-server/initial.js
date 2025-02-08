@@ -43,6 +43,7 @@ const serverList = {
     nicknames: {},
     level: 0,
     createdAt: 1738758855886,
+    displayId: 543,
   },
 };
 
@@ -83,6 +84,8 @@ const userList = {
       },
     ],
     signature: 'Im cool.',
+    recommendedServers: {},
+    joinedServers: {},
   },
   'a73af1d2-689e-4d7d-9426-3421cce3ade4': {
     id: 'a73af1d2-689e-4d7d-9426-3421cce3ade4',
@@ -97,6 +100,8 @@ const userList = {
     friendIds: [],
     friendGroups: [],
     signature: 'Im gay.',
+    recommendedServers: {},
+    joinedServers: {},
   },
   'a66af1d2-689e-4d7d-9426-3421cce3ada5': {
     id: 'a66af1d2-689e-4d7d-9426-3421cce3ada5',
@@ -111,6 +116,8 @@ const userList = {
     friendIds: [],
     friendGroups: [],
     signature: 'Im misu.',
+    recommendedServers: {},
+    joinedServers: {},
   },
   'vvvf-vs': {
     id: 'vvvf-vs',
@@ -125,6 +132,8 @@ const userList = {
     friendIds: [],
     friendGroups: [],
     signature: 'Im vvvf.',
+    recommendedServers: {},
+    joinedServers: {},
   },
 };
 

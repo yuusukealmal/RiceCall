@@ -365,7 +365,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user }) => {
   });
   const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
 
-  const userPermission = server.permissions[user.id] ?? 1; // ERROR: Sometime _user is undefined and it will throw an error
+  const userPermission = server.permissions[user.id] ?? 1; // ERROR: Sometime user is undefined and it will throw an error
   const userLevel = Math.min(56, Math.ceil(user.level / 5)); // 56 is max level
 
   const [floatingBlock, setFloatingBlock] = useState<FloatingBlockState>({

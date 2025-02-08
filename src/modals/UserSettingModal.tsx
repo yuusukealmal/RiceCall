@@ -12,15 +12,11 @@ import { useSelector } from 'react-redux';
 
 const TABS: ModalTabItem[] = [{ id: '基本資料', label: '基本資料' }];
 
-interface UserSettingModal {
+interface UserSettingModalProps {
   onClose: () => void;
-  onLogout: () => void;
 }
 
-const PersonalSettingPage: React.FC<UserSettingModal> = ({
-  onClose,
-  onLogout,
-}) => {
+const UserSettingModal: React.FC<UserSettingModalProps> = ({ onClose }) => {
   // Redux
   const user = useSelector((state: { user: User }) => state.user);
 
@@ -32,6 +28,10 @@ const PersonalSettingPage: React.FC<UserSettingModal> = ({
   const [preview, setPreview] = useState('/im/IMLogo.png');
   const [userName, setUserName] = useState(user?.name || '');
   const [selectedGender, setSelectedGender] = useState(user?.gender || 'Male');
+
+  const handleLogout = () => {
+    // TODO: Implement logout
+  };
 
   const handleSave = async () => {
     if (userName !== user.name || selectedGender !== user.gender) {
@@ -126,9 +126,7 @@ const PersonalSettingPage: React.FC<UserSettingModal> = ({
                   <div className="flex justify-center select-none">
                     <button
                       className="px-6 py-1 mt-5 bg-red-600 text-white rounded hover:bg-red-700"
-                      onClick={() => {
-                        onLogout();
-                      }}
+                      onClick={() => handleLogout}
                     >
                       登出
                     </button>
@@ -167,6 +165,7 @@ const PersonalSettingPage: React.FC<UserSettingModal> = ({
   return (
     <Modal
       title="個人資料設定"
+      submitText="保存"
       tabs={TABS}
       onSelectTab={(tab) => setActiveTab(tab)}
       onClose={onClose}
@@ -177,6 +176,6 @@ const PersonalSettingPage: React.FC<UserSettingModal> = ({
   );
 };
 
-PersonalSettingPage.displayName = 'PersonalSettingPage';
+UserSettingModal.displayName = 'UserSettingModal';
 
-export default PersonalSettingPage;
+export default UserSettingModal;

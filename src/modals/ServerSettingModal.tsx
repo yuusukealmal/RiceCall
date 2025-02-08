@@ -538,6 +538,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
     <Modal
       title={server.name}
       tabs={TABS}
+      submitText="保存"
       onClose={onClose}
       onSubmit={onClose}
       onSelectTab={(tab) => setActiveTab(tab)}
