@@ -4,7 +4,7 @@ const db = new QuickDB();
 const { Server } = require('socket.io');
 const chalk = require('chalk');
 const { v4: uuidv4 } = require('uuid');
-const multer = require('multer');
+const formidable = require('formidable');
 const path = require('path');
 const _ = require('lodash');
 const fs = require('fs').promises;
@@ -70,21 +70,8 @@ const MessageTypes = {
 const userSessions = new Map();
 
 // File Upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/serverAvatars/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB 限制
-  },
-});
+const uploadDir = path.join(__dirname, 'uploads/serverAvatars');
+fs.mkdir(uploadDir, { recursive: true }).catch(console.error);
 
 // Send Error/Success Response
 const sendError = (res, statusCode, message) => {
@@ -113,122 +100,139 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/servers') {
-    try {
-      upload.single('avatar')(req, res, async function (err) {
-        if (err) {
-          sendError(res, 400, err.message);
+    const form = new formidable.IncomingForm({
+      uploadDir: uploadDir,
+      keepExtensions: true,
+      maxFileSize: 5 * 1024 * 1024, // 限制 5MB
+      multiples: false,
+      allowEmptyFiles: false,
+    });
+
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        sendError(res, 400, '檔案上傳失敗');
+        return;
+      }
+
+      console.log(fields, files);
+      try {
+        const userId = fields.userId;
+        if (!userId) {
+          sendError(res, 400, '缺少使用者ID');
+          return;
+        }
+        const name = fields.name;
+        const description = fields.description || '';
+
+        // 驗證必要欄位
+        if (!name || !userId) {
+          sendError(res, 400, '缺少必要欄位');
           return;
         }
 
-        try {
-          let body = '';
-          req.on('data', (chunk) => {
-            body += chunk.toString();
-          });
+        // 獲取資料庫
+        const serverList = (await db.get('serverList')) || {};
+        const channelList = (await db.get('channelList')) || {};
+        const usersList = (await db.get('usersList')) || {};
+        const serverMembers = (await db.get('serverMembers')) || {};
 
-          req.on('end', async () => {
-            const userId = req.headers['userid'];
-            if (!userId) {
-              res.writeHead(400, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: '缺少用戶 ID' }));
-              return;
-            }
-
-            const data = JSON.parse(body);
-
-            // 驗證必要欄位
-            if (!data.name || !userId) {
-              sendError(res, 400, '缺少必要欄位');
-              return;
-            }
-
-            // 獲取資料庫
-            const serverList = (await db.get('serverList')) || {};
-            const channelList = (await db.get('channelList')) || {};
-            const usersList = (await db.get('usersList')) || {};
-
-            // 檢查用戶是否存在
-            const user = usersList[userId];
-            if (!user) {
-              sendError(res, 404, '用戶不存在');
-              return;
-            }
-
-            // 檢查用戶創建的伺服器數量
-            const userServers = Object.values(serverList).filter(
-              (server) => server.ownerId === userId,
-            );
-            if (userServers.length >= 3) {
-              sendError(res, 400, '已達到最大創建伺服器數量限制');
-              return;
-            }
-
-            // 創建新伺服器
-            const serverId = uuidv4();
-            const lobbyId = uuidv4();
-
-            // 創建新伺服器
-            const newServer = {
-              id: serverId,
-              displayId: generateUniqueDisplayId(serverList),
-              name: data.name,
-              announcement: data.description || '',
-              icon: req.file
-                ? `/uploads/serverAvatars/${req.file.filename}`
-                : '/logo_server_def.png',
-              userIds: [userId],
-              channelIds: [lobbyId],
-              lobbyId: lobbyId,
-              permissions: {
-                [userId]: 6, // 6 = 群組擁有者
-              },
-              contributions: {
-                [userId]: 0,
-              },
-              joinDate: {
-                [userId]: Date.now().valueOf(),
-              },
-              applications: {},
-              nicknames: {},
-              level: 0,
-              createdAt: Date.now().valueOf(),
-            };
-
-            // 保存到資料庫
-            serverList[serverId] = newServer;
-            channelList[lobbyId] = {
-              id: lobbyId,
-              name: '大廳',
-              permission: 'public',
-              isLobby: true,
-              isCategory: false,
-              userIds: [],
-              messageIds: [],
-              parentId: null,
-            };
-
-            await db.set('serverList', serverList);
-            await db.set('channelList', channelList);
-
-            new Logger('Websocket').success(
-              `New server created: ${serverId} by user ${userId}`,
-            );
-
-            // 返回成功
-            sendSuccess(res, {
-              message: '伺服器創建成功',
-              server: newServer,
-            });
-          });
-        } catch (error) {
-          new Logger('Server').error(`Create server error: ${error.message}`);
-          sendError(res, 500, '伺服器創建失敗');
+        // 檢查用戶是否存在
+        const user = usersList[userId];
+        if (!user) {
+          sendError(res, 404, '用戶不存在');
+          return;
         }
-      });
-    } catch (error) {
-      new Logger('Server').error(`Create server error: ${error.message}`);
-      sendError(res, 500, '伺服器創建失敗');
-    }
+
+        // 檢查用戶創建的伺服器數量
+        const userOwnedServerCount = Object.values(serverList).filter(
+          (server) => server.ownerId === userId,
+        ).length;
+        if (userOwnedServerCount >= 3) {
+          sendError(res, 400, '已達到最大擁有伺服器數量限制');
+          return;
+        }
+
+        // 獲取上傳的文件
+        let avatarPath = '/logo_server_def.png';
+        if (files.avatar) {
+          avatarPath = `/uploads/serverAvatars/${path.basename(
+            files.avatar[0].filepath,
+          )}`;
+        }
+
+        // 創建新伺服器
+        const serverId = uuidv4();
+        const lobbyId = uuidv4();
+        const membershipId = uuidv4();
+
+        // 創建新伺服器
+        const newServer = {
+          id: serverId,
+          displayId: generateUniqueDisplayId(serverList),
+          name: name,
+          announcement: description || '',
+          icon: avatarPath,
+          userIds: [userId],
+          channelIds: [lobbyId],
+          lobbyId: lobbyId,
+          permissions: {
+            [userId]: 6, // 6 = 群組擁有者
+          },
+          contributions: {
+            [userId]: 0,
+          },
+          joinDate: {
+            [userId]: Date.now().valueOf(),
+          },
+          applications: {},
+          nicknames: {},
+          level: 0,
+          createdAt: Date.now().valueOf(),
+        };
+
+        // 保存到資料庫
+        serverList[serverId] = newServer;
+        channelList[lobbyId] = {
+          id: lobbyId,
+          name: '大廳',
+          permission: 'public',
+          isLobby: true,
+          isCategory: false,
+          userIds: [],
+          messageIds: [],
+          parentId: null,
+        };
+
+        // 更新用戶的伺服器成員資格
+        serverMembers[membershipId] = {
+          id: membershipId,
+          serverId: serverId,
+          userId: userId,
+          nickname: user.name,
+          permission: 6,
+          managedChannels: [],
+          contribution: 0,
+          joinedAt: Date.now().valueOf(),
+        };
+
+        await db.set('serverList', serverList);
+        await db.set('channelList', channelList);
+        await db.set('serverMembers', serverMembers);
+
+        new Logger('Server').success(
+          `New server created: ${serverId} by user ${userId}`,
+        );
+
+        // 返回成功
+        sendSuccess(res, {
+          message: '伺服器創建成功',
+          server: newServer,
+        });
+      } catch (error) {
+        new Logger('Server').error(`Create server error: ${error.message}`);
+        sendError(res, 500, '伺服器創建失敗');
+      }
+    });
     return;
   }
 
@@ -242,34 +246,29 @@ const server = http.createServer((req, res) => {
         const data = JSON.parse(body);
 
         // Get database
-        const usersList = (await db.get(`usersList`)) || {};
+        const users = (await db.get(`users`)) || {};
 
         // Validate data
         if (!data.name || !data.gender) {
           sendError(res, 400, 'Missing required fields');
           return;
         }
-        const exists = Object.values(usersList).find(
-          (user) => user.id === data.id,
-        );
+        const exists = Object.values(users).find((user) => user.id === data.id);
         if (!exists) {
           sendError(res, 401, '找不到此帳號');
           return;
         }
 
-        usersList[data.id] = {
-          ...usersList[data.id],
+        users[data.id] = {
+          ...users[data.id],
           name: data.name,
           gender: data.gender,
         };
 
         // Save to database
-        await db.set(`usersList`, usersList);
+        await db.set(`users`, users);
 
         new Logger('User').success(`User data updated: ${data.id}`);
-
-        // Return success with user info (excluding password)
-        const { password, ...userInfo } = user;
         sendSuccess(res, {
           message: 'Update successful',
           user: userInfo,
@@ -290,45 +289,64 @@ const server = http.createServer((req, res) => {
     req.on('end', async () => {
       try {
         const data = JSON.parse(body);
+        // data = {
+        //   "password": "123456",
+        //   "account": "test",
+        // }
+        console.log(data);
 
-        // Get database from database
-        const usersList = (await db.get(`usersList`)) || {};
+        // Get database
+        const userAccPwdList = (await db.get(`account_password`)) || {};
+        const users = (await db.get(`users`)) || {};
+        const presenceStates = (await db.get(`presenceStates`)) || {};
 
         // Validate data
-        if (!data.account || !data.password) {
-          sendError(res, 400, 'Missing credentials');
+        const account = data.account;
+        const password = data.password;
+        if (!account || !password) {
+          sendError(res, 400, '無效的帳號或密碼');
           return;
         }
-        const user = Object.values(usersList).find(
-          (user) => user.account === data.account,
+        const exist = userAccPwdList[account];
+        if (!exist) {
+          sendError(res, 401, '帳號或密碼錯誤');
+          return;
+        }
+        if (password !== userAccPwdList[account]) {
+          sendError(res, 401, '帳號或密碼錯誤');
+          return;
+        }
+
+        const user = Object.values(users).find(
+          (user) => user.account === account,
         );
-        if (!user) {
-          sendError(res, 401, '找不到此帳號');
-          return;
-        }
-        if (user.password !== data.password) {
-          sendError(res, 401, '密碼錯誤');
-          return;
-        }
+
+        // Create user presence
+        const presenceId = `presence_${user.id}`;
+        const presence = {
+          ...presenceStates[presenceId],
+          currentServerId: null,
+          currentChannelId: null,
+          status: 'online',
+          lastActiveAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        await db.set(`presenceStates.${presenceId}`, presence);
 
         // Generate session token
-        // const sessionToken = uuidv4();
-        // userSessions.set(sessionToken, user.id);
+        const sessionToken = uuidv4();
+        userSessions.set(sessionToken, user.id);
 
-        new Logger('Auth').success(`User logged in: ${data.account}`);
-
-        // Return success with user id and token
-        const { password, ..._user } = user;
+        new Logger('Auth').success(`User logged in: ${account}`);
         sendSuccess(res, {
-          message: 'Login successful',
-          user: _user,
-          // token: sessionToken,
+          message: '登入成功',
+          token: sessionToken,
         });
       } catch (error) {
-        new Logger('Auth').error(`Login error: ${error.message}`);
         sendError(res, 500, 'Login failed');
       }
     });
+    return;
   }
 
   if (req.method == 'POST' && req.url == '/register') {
@@ -339,77 +357,91 @@ const server = http.createServer((req, res) => {
     req.on('end', async () => {
       try {
         const data = JSON.parse(body);
+        // data = {
+        //   "account": "test",
+        //   "password": "123456",
+        //   "username": "test",
+        // }
+        console.log(data);
 
         // Get database
-        const usersList = (await db.get(`usersList`)) || {};
+        const userAccPwdList = (await db.get(`account_password`)) || {};
+        const presenceStates = (await db.get(`presenceStates`)) || {};
 
         // Validate data
-        if (!data.account || !data.password || !data.username) {
-          sendError(res, 400, 'Missing required fields');
+        const account = data.account;
+        const password = data.password;
+        if (!account || !password) {
+          sendError(res, 400, '無效的帳號或密碼');
           return;
         }
-        const exists = Object.values(usersList).find(
-          (user) => user.account === data.account,
-        );
+        const username = data.username;
+        if (!username) {
+          sendError(res, 400, '無效的使用者名稱');
+          return;
+        }
+        const exists = userAccPwdList[data.account];
         if (exists) {
-          sendError(res, 409, '此帳號已被註冊');
+          sendError(res, 400, '帳號已存在');
           return;
         }
 
+        // Create user data
         const userId = uuidv4();
         const user = {
           id: userId,
-          name: data.username,
-          account: data.account,
-          password: data.password,
-          currentChannelId: null,
-          gender: data.gender,
-          level: 0,
-          createdAt: Date.now().valueOf(),
+          name: username,
+          account: account,
+          password: password,
+          gender: data.gender || 'unknown',
+          level: 1,
+          signature: '',
+          createdAt: Date.now(),
+          badges: [
+            {
+              id: 'nerd',
+              name: '超級書呆子',
+              description: '官方認證的超級書呆子',
+            },
+          ],
+          settings: {
+            theme: 'light',
+            notifications: true,
+          },
         };
-        usersList[userId] = user;
+        await db.set(`users.${userId}`, user);
+
+        // Create user presence
+        const presenceId = `presence_${user.id}`;
+        const presence = {
+          id: presenceId,
+          userId: user.id,
+          currentServerId: null,
+          currentChannelId: null,
+          status: 'offline',
+          customStatus: '',
+          lastActiveAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        presenceStates[presenceId] = presence;
+        await db.set(`presenceStates.${presenceId}`, presence);
 
         // Save to database
-        await db.set(`usersList`, usersList);
+        await db.set(`account_password.${account}`, password);
 
-        new Logger('Auth').success(`New user registered: ${data.account}`);
-
-        // Return success with user id
-        const { password, ..._user } = user;
-        sendSuccess(res, {
-          message: 'Registration successful',
-          user: _user,
-        });
+        new Logger('Auth').success(`User registered: ${account}`);
+        sendSuccess(res, { message: '註冊成功' });
       } catch (error) {
-        new Logger('Auth').error(`Registration error: ${error.message}`);
-        sendError(res, 500, 'Registration failed');
+        new Logger('Auth').error(`Register error: ${error.message}`);
+        sendError(res, 500, '註冊失敗');
       }
     });
+    return;
   }
+
+  sendSuccess(res, { message: 'Hello World!' });
+  return;
 });
-
-const getRecommendedServers = (serverList = {}, currentUserId, limit = 10) => {
-  if (!serverList || !currentUserId) return {};
-  const notJoinedServers = Object.entries(serverList).reduce(
-    (acc, [id, server]) => {
-      if (server && !server.userIds?.includes(currentUserId)) {
-        acc[id] = server;
-      }
-      return acc;
-    },
-    {},
-  );
-
-  const sampledServers = _.sampleSize(Object.values(notJoinedServers), limit);
-  if (!sampledServers || sampledServers.length === 0) return {};
-
-  return sampledServers.reduce((acc, server) => {
-    if (server && server.id) {
-      acc[server.id] = server;
-    }
-    return acc;
-  }, {});
-};
 
 const io = new Server(server, {
   cors: {
@@ -418,19 +450,43 @@ const io = new Server(server, {
   },
 });
 io.on('connection', async (socket) => {
-  socket.on('disconnect', () => {});
+  socket.on('disconnect', () => {
+    // FIXME: Handle user disconnection
+  });
 
   socket.on('connectUser', async (data) => {
+    // Get database
+    const users = (await db.get('users')) || {};
+
     try {
-      // Get database
-      const usersList = (await db.get(`usersList`)) || {};
+      // data = {
+      //   sessionId: '123456',
+      // }
+      console.log(data);
 
       // Validate data
-      const user = usersList[data.userId];
-      if (!user) {
-        new Logger('WebSocket').error(`User(${data.userId}) not found`);
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        // Emit error data (only to the user)
+        io.to(socket.id).emit('disconnectUser');
+
+        new Logger('WebSocket').error(`Invalid session ID(${userSessions})`);
         socket.emit('error', {
-          message: `User(${data.userId}) not found`,
+          message: `無效的 session ID`,
+          part: 'CONNECTUSER',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const user = users[userId];
+      if (!user) {
+        // Emit error data (only to the user)
+        io.to(socket.id).emit('disconnectUser', null);
+
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
           part: 'CONNECTUSER',
           tag: 'USER_ERROR',
           status_code: 404,
@@ -438,36 +494,24 @@ io.on('connection', async (socket) => {
         return;
       }
 
-      const serverList = (await db.get('serverList')) || {};
-      const recommendedServers = getRecommendedServers(serverList, user.id);
-      const joinedServers = Object.entries(serverList).reduce(
-        (acc, [id, server]) => {
-          if (server.userIds.includes(user.id)) {
-            acc[id] = server;
-          }
-          return acc;
-        },
-        {},
-      );
-
-      const userResponse = {
-        ...user,
-        recommendedServers,
-        joinedServers,
-      };
-
-      // Emit updated data (only to the user)
-      io.to(socket.id).emit('user', userResponse);
-      io.to(socket.id).emit('serverList', serverList);
-      io.to(socket.id).emit('friendList', getFriendList(usersList, user));
+      // Emit data (only to the user)
+      io.to(socket.id).emit('connectUser', {
+        ...(await getUser(user.id)),
+        ...(await getJoinRecServers(user.id)),
+        friendCategories: await getFriendCategories(user.id),
+        members: await getUserMembers(user.id),
+      });
 
       new Logger('WebSocket').success(`User(${user.id}) connected`);
     } catch (error) {
+      // Emit error data (only to the user)
+      io.to(socket.id).emit('disconnectUser', null);
+
       new Logger('WebSocket').error(
         `Error getting user data: ${error.message}`,
       );
       socket.emit('error', {
-        message: `Error getting user data: ${error.message}`,
+        message: `取得使用者時發生錯誤: ${error.message}`,
         part: 'CONNECTUSER',
         tag: 'EXCEPTION_ERROR',
         status_code: 500,
@@ -475,113 +519,187 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('connectServer', async (data) => {
-    try {
-      // Get database
-      const usersList = (await db.get(`usersList`)) || {};
-      const channelList = (await db.get('channelList')) || {};
-      const messageList = (await db.get('messageList')) || {};
-      const serverList = (await db.get('serverList')) || {};
+  socket.on('disconnectUser', async (data) => {
+    // Get database
+    const users = (await db.get('users')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
 
+    try {
       // Validate data
-      const server = serverList[data.serverId];
-      if (!server) {
-        new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
+      // data = {
+      //   sessionId: '123456',
+      // }
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        // Emit error data (only to the user)
+        io.to(socket.id).emit('disconnectUser');
+
+        new Logger('WebSocket').error(`Invalid session ID(${userSessions})`);
         socket.emit('error', {
-          message: `Server(${data.serverId}) not found`,
-          part: 'CONNECTSERVER',
-          tag: 'SERVER_ERROR',
+          message: `無效的 session ID`,
+          part: 'CONNECTUSER',
+          tag: 'USER_ERROR',
           status_code: 404,
         });
         return;
       }
-      const user = usersList[data.userId];
+      const user = users[userId];
       if (!user) {
         new Logger('WebSocket').error(`User(${data.userId}) not found`);
         socket.emit('error', {
-          message: `User(${data.userId}) not found`,
-          part: 'CONNECTSERVER',
+          message: `使用者不存在`,
+          part: 'DISCONNECTUSER',
           tag: 'USER_ERROR',
           status_code: 404,
         });
         return;
       }
 
-      if (!server.userIds.includes(user.id)) {
-        server.userIds.push(user.id);
-        new Logger('WebSocket').info(
-          `User(${user.id}) has been added to server(${server.id})`,
-        );
+      // Update user presence
+      const presenceId = `presence_${user.id}`;
+      const presence = {
+        ...presenceStates[presenceId],
+        currentServerId: null,
+        currentChannelId: null,
+        status: 'offline',
+        lastActiveAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      presenceStates[presenceId] = presence;
+      await db.set(`userPresence.${presenceId}`, presence);
 
-        if (!server.permissions[user.id]) {
-          server.permissions[user.id] = 1;
-          new Logger('WebSocket').info(
-            `User(${user.id}) has been set Permission(1) in server(${server.id})`,
-          );
-        }
+      // Emit data (only to the user)
+      io.to(socket.id).emit('disconnectUser');
+
+      new Logger('WebSocket').success(`User(${data.userId}) disconnected`);
+    } catch (error) {
+      new Logger('WebSocket').error(
+        `Error disconnecting user: ${error.message}`,
+      );
+      socket.emit('error', {
+        message: `登出時發生錯誤: ${error.message}`,
+        part: 'DISCONNECTUSER',
+        tag: 'EXCEPTION_ERROR',
+        status_code: 500,
+      });
+    }
+  });
+
+  socket.on('connectServer', async (data) => {
+    // Get database
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const members = (await db.get('members')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
+
+    try {
+      // Validate data
+      // data = {
+      //   sessionId:
+      //   serverId:
+      // }
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        // Emit error data (only to the user)
+        io.to(socket.id).emit('disconnectServer');
+
+        new Logger('WebSocket').error(`Invalid session ID(${data.sessionId})`);
+        socket.emit('error', {
+          message: `無效的 session ID`,
+          part: 'CONNECTSERVER',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const user = users[userId];
+      if (!user) {
+        // Emit error data (only to the user)
+        io.to(socket.id).emit('disconnectServer');
+
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
+          part: 'CONNECTSERVER',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const server = servers[data.serverId];
+      if (!server) {
+        // Emit error data (only to the user)
+        io.to(socket.id).emit('disconnectServer');
+
+        new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
+        socket.emit('error', {
+          message: `伺服器不存在`,
+          part: 'CONNECTSERVER',
+          tag: 'SERVER_ERROR',
+          status_code: 404,
+        });
+        return;
       }
 
-      // if (!server.permissions) {
-      user.currentChannelId = channelList[server.lobbyId].id;
-      channelList[server.lobbyId].userIds.push(user.id);
-
-      // Save updated data
-      await db.set('serverList', serverList);
-      await db.set('usersList', usersList);
-      await db.set('channelList', channelList);
-
-      const recommendedServers = getRecommendedServers(serverList, user.id);
-      const joinedServers = Object.entries(serverList).reduce(
-        (acc, [id, server]) => {
-          if (server.userIds.includes(user.id)) {
-            acc[id] = server;
-          }
-          return acc;
-        },
-        {},
+      // Check if user is already exists in the server
+      const exists = Object.values(members).find(
+        (member) => member.serverId === server.id && member.userId === user.id,
       );
+      if (!exists) {
+        // Create new membership
+        const memberId = uuidv4();
+        const member = {
+          id: memberId,
+          serverId: server.id,
+          userId: user.id,
+          nickname: user.name,
+          permission: 1,
+          managedChannels: [],
+          contribution: 0,
+          joinedAt: Date.now(),
+        };
+        members[memberId] = member;
+        await db.set(`members.${memberId}`, member);
+      }
 
-      const userResponse = {
-        ...user,
-        recommendedServers,
-        joinedServers,
+      // Update user presence
+      const presenceId = `presence_${user.id}`;
+      const presence = {
+        ...presenceStates[presenceId],
+        currentServerId: server.id,
+        lastActiveAt: Date.now(),
+        updatedAt: Date.now(),
       };
+      presenceStates[presenceId] = presence;
+      await db.set(`presenceStates.${presenceId}`, presence);
 
-      // Join server and lobby channel
-      if (user.currentChannelId)
-        socket.join(`server_${server.id}_${server.lobbyId}`);
+      // Join the server
       socket.join(`server_${server.id}`);
 
-      // Emit updated data (only to the user)
-      io.to(socket.id).emit('server', server);
-      io.to(socket.id).emit('channels', getChannels(channelList, server));
-      io.to(socket.id).emit('users', getServerUserList(usersList, server));
-      io.to(socket.id).emit(
-        'messages',
-        getMessages(messageList, channelList[server.lobbyId]),
-      );
-      io.to(socket.id).emit('user', userResponse);
-
-      // Emit updated data (to all users in the server)
-      io.to(`server_${server.id}`).emit(
-        'users',
-        getServerUserList(usersList, server),
-      );
-      io.to(`server_${server.id}`).emit(
-        'channels',
-        getChannels(channelList, server),
-      );
-      io.to(`server_${server.id}`).emit('server', server);
+      // Emit data (only to the user)
+      io.to(socket.id).emit('userPresenceUpdate', {
+        ...(await getPresenceState(user.id)),
+      });
+      io.to(socket.id).emit('connectServer', {
+        ...(await getServer(server.id)),
+      });
 
       new Logger('WebSocket').success(
         `User(${user.id}) connected to server(${server.id})`,
       );
     } catch (error) {
+      // Emit error data (only to the user)
+      io.to(socket.id).emit('disconnectServer');
+
       new Logger('WebSocket').error(
         `Error getting server data: ${error.message}`,
       );
       socket.emit('error', {
-        message: `Error getting server data: ${error.message}`,
+        message: `加入伺服器時發生錯誤: ${error.message}`,
         part: 'CONNECTSERVER',
         tag: 'EXCEPTION_ERROR',
         status_code: 500,
@@ -590,71 +708,73 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('disconnectServer', async (data) => {
-    try {
-      // Get database
-      const usersList = (await db.get(`usersList`)) || {};
-      const serverList = (await db.get('serverList')) || {};
-      const channelList = (await db.get('channelList')) || {};
+    // Get database
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
 
+    try {
       // Validate data
-      const server = serverList[data.serverId];
-      if (!server) {
-        new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
+      // data = {
+      //   sessionId: '123456',
+      // }
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        new Logger('WebSocket').error(`Invalid session ID(${data.sessionId})`);
         socket.emit('error', {
-          message: `Server(${data.serverId}) not found`,
-          part: 'DISCONNECTSERVER',
-          tag: 'SERVER_ERROR',
-          status_code: 404,
-        });
-        return;
-      }
-      const user = usersList[data.userId];
-      if (!server) {
-        new Logger('WebSocket').error(`User(${data.userId}) not found`);
-        socket.emit('error', {
-          message: `User(${data.userId}) not found`,
+          message: `無效的 session ID`,
           part: 'DISCONNECTSERVER',
           tag: 'USER_ERROR',
           status_code: 404,
         });
         return;
       }
+      const user = users[userId];
+      if (!user) {
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
+          part: 'DISCONNECTSERVER',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const server =
+        servers[presenceStates[`presence_${user.id}`].currentServerId];
+      if (!server) {
+        new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
+        socket.emit('error', {
+          message: `伺服器不存在`,
+          part: 'DISCONNECTSERVER',
+          tag: 'SERVER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
 
-      // Leave server and channel
-      if (user.currentChannelId)
-        socket.leave(`server_${server.id}_${user.currentChannelId}`);
+      // Update user presence
+      const presenceId = `presence_${user.id}`;
+      const presence = {
+        ...presenceStates[presenceId],
+        currentServerId: null,
+        currentChannelId: null,
+        lastActiveAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      presenceStates[presenceId] = presence;
+      await db.set(`userPresence.${presenceId}`, presence);
+
+      // Leave the server
       socket.leave(`server_${server.id}`);
 
-      const prevChannel = channelList[user.currentChannelId];
-      if (prevChannel)
-        prevChannel.userIds = prevChannel.userIds.filter(
-          (userId) => userId != user.id,
-        );
-      user.currentChannelId = null;
-      server.userIds = server.userIds.filter((userId) => userId != user.id);
-
-      // Save updated data
-      await db.set('serverList', serverList);
-      await db.set('usersList', usersList);
-      await db.set('channelList', channelList);
-
-      // Emit updated data (only to the user)
-      io.to(socket.id).emit('server', null);
-      io.to(socket.id).emit('channels', []);
-      io.to(socket.id).emit('users', {});
-      io.to(socket.id).emit('messages', []);
-      io.to(socket.id).emit('user', user);
-
-      // Emit updated data (to all users in the server)
-      io.to(`server_${server.id}`).emit('server', server);
-      io.to(`server_${server.id}`).emit(
-        'users',
-        getServerUserList(usersList, server),
-      );
-      io.to(`server_${server.id}`).emit(
-        'channels',
-        getChannels(channelList, server),
-      );
+      // Emit data (only to the user)
+      io.to(socket.id).emit('disconnectServer');
+      io.to(socket.id).emit('userPresenceUpdate', {
+        ...(await getPresenceState(user.id)),
+      });
 
       new Logger('WebSocket').success(
         `User(${user.id}) disconnected from server(${server.id})`,
@@ -664,7 +784,7 @@ io.on('connection', async (socket) => {
         `Error disconnecting from server: ${error.message}`,
       );
       socket.emit('error', {
-        message: `Error disconnecting from server: ${error.message}`,
+        message: `離開伺服器時發生錯誤: ${error.message}`,
         part: 'DISCONNECTSERVER',
         tag: 'EXCEPTION_ERROR',
         status_code: 500,
@@ -673,53 +793,66 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('chatMessage', async (data) => {
-    try {
-      // Get database
-      const messageList = (await db.get('messageList')) || {};
-      const serverList = (await db.get('serverList')) || {};
-      const channelList = (await db.get('channelList')) || {};
-      const usersList = (await db.get('usersList')) || {};
+    // Get database
+    const users = (await db.get('users')) || {};
+    const messages = (await db.get('messages')) || {};
+    const channels = (await db.get('channels')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
 
+    try {
       // Validate data
-      const message = data.message;
-      if (!message) {
+      // data = {
+      //   sessionId: '123456',
+      //   message: {
+      //     senderId: "",
+      //     content: "",
+      //   }
+      // };
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        new Logger('WebSocket').error(`Invalid session ID(${data.sessionId})`);
+        socket.emit('error', {
+          message: `無效的 session ID`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const user = users[userId];
+      if (!user) {
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const _message = data.message;
+      if (!_message) {
         new Logger('WebSocket').error('Invalid data (message missing)');
         socket.emit('error', {
-          message: 'Invalid data (message missing)',
+          message: '無效的訊息資料',
           part: 'CHATMESSAGE',
           tag: 'MESSAGE_ERROR',
           status_code: 400,
         });
         return;
       }
-      const server = serverList[data.serverId];
-      if (!server) {
-        new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
-        socket.emit('error', {
-          message: `Server(${data.serverId}) not found`,
-          part: 'CHATMESSAGE',
-          tag: 'SERVER_ERROR',
-          status_code: 404,
-        });
-        return;
-      }
-      const user = usersList[data.userId];
-      if (!user) {
-        new Logger('WebSocket').error(`User(${data.userId}) not found`);
-        socket.emit('error', {
-          message: `User(${data.userId}) not found`,
-          part: 'CHATMESSAGE',
-          tag: 'USER_ERROR',
-          status_code: 404,
-        });
-      }
-      const channel = channelList[user.currentChannelId];
+      const channel =
+        channels[presenceStates[`presence_${user.id}`].currentChannelId];
       if (!channel) {
         new Logger('WebSocket').error(
-          `Channel(${user.currentChannelId}) not found`,
+          `Channel(${
+            presenceStates[`presence_${user.id}`].currentChannelId
+          }) not found`,
         );
         socket.emit('error', {
-          message: `Channel(${user.currentChannelId}) not found`,
+          message: `頻道不存在`,
           part: 'CHATMESSAGE',
           tag: 'CHANNEL_ERROR',
           status_code: 404,
@@ -727,20 +860,26 @@ io.on('connection', async (socket) => {
         return;
       }
 
-      message.id = uuidv4();
-      message.timestamp = Date.now().valueOf();
-      messageList[message.id] = message;
-      channel.messageIds.push(message.id);
+      // Create new message
+      const messageId = uuidv4();
+      const message = {
+        ..._message,
+        id: messageId,
+        timestamp: Date.now().valueOf(),
+      };
+      messages[messageId] = message;
+      await db.set(`messages.${messageId}`, message);
 
-      // Save updated data
-      await db.set('channelList', channelList);
-      await db.set('messageList', messageList);
+      channel.messageIds.push(messageId);
+      await db.set(`channels.${channel.id}`, channel);
 
-      // Emit updated data
-      const channels = getChannels(channelList, server);
-      const messages = getMessages(messageList, channel);
-      io.to(`server_${server.id}`).emit('channels', channels);
-      io.to(`server_${server.id}_${channel.id}`).emit('messages', messages);
+      // Emit updated data (to all users in the channel)
+      // io.to(`server_${channel.id}`).emit('sendMessage', {
+      //   messages: getMessages(messages, channel),
+      // });
+      io.to(`channel_${channel.id}`).emit('serverUpdate', {
+        ...(await getServer(channel.serverId)),
+      });
 
       new Logger('WebSocket').info(
         `User(${message.senderId}) sent ${message.content} to channel(${channel.id})`,
@@ -748,7 +887,7 @@ io.on('connection', async (socket) => {
     } catch (error) {
       new Logger('WebSocket').error(error.message);
       socket.emit('error', {
-        message: `Error sending message from server: ${error.message}`,
+        message: `傳送訊息時發生錯誤: ${error.message}`,
         part: 'CHATMESSAGE',
         tag: 'EXCEPTION_ERROR',
         status_code: 500,
@@ -757,28 +896,63 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('addChannel', async (data) => {
-    try {
-      // Get database
-      const channelList = (await db.get('channelList')) || {};
-      const serverList = (await db.get('serverList')) || {};
+    // Get database
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const channels = (await db.get('channels')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
 
+    try {
       // Validate data
-      const channel = data.channel;
-      if (!channel) {
+      // d = {
+      //   sessionId: '123456',
+      //   channel: {
+      //     name: '',
+      //     permission: 'public',
+      //     isLobby: false,
+      //     isCategory: false,
+      //   },
+      // }
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        new Logger('WebSocket').error(`Invalid session ID(${data.sessionId})`);
+        socket.emit('error', {
+          message: `無效的 session ID`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const user = users[userId];
+      if (!user) {
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+      }
+      const _channel = data.channel;
+      if (!_channel) {
         new Logger('WebSocket').error('Invalid data (channel missing)');
         socket.emit('error', {
-          message: 'Invalid data (channel missing)',
+          message: '無效的頻道資料',
           part: 'ADDCHANNEL',
           tag: 'CHANNEL_ERROR',
           status_code: 400,
         });
         return;
       }
-      const server = serverList[data.serverId];
+      const server =
+        servers[presenceStates[`presence_${user.id}`].currentServerId];
       if (!server) {
         new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
         socket.emit('error', {
-          message: `Server(${data.serverId}) not found`,
+          message: `伺服器不存在`,
           part: 'ADDCHANNEL',
           tag: 'SERVER_ERROR',
           status_code: 404,
@@ -786,19 +960,24 @@ io.on('connection', async (socket) => {
         return;
       }
 
-      channel.id = uuidv4();
-      channelList[channel.id] = channel;
-      server.channelIds.push(channel.id);
+      // Create new channel
+      const channelId = uuidv4();
+      const channel = {
+        ..._channel,
+        id: channelId,
+        createdAt: Date.now().valueOf(),
+      };
+      channels[channelId] = channel;
+      await db.set(`channels.${channelId}`, channel);
 
-      // Save updated data
-      await db.set('serverList', serverList);
-      await db.set('channelList', channelList);
+      // Add channel to server
+      server.channelIds.push(channel.id);
+      await db.set(`servers.${server.id}`, server);
 
       // Emit updated data (to all users in the server)
-      io.to(`server_${server.id}`).emit(
-        'channels',
-        getChannels(channelList, server),
-      );
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        ...(await getServer(server.id)),
+      });
 
       new Logger('WebSocket').info(
         `Adding new channel(${channel.id}) to server(${server.id})`,
@@ -806,7 +985,7 @@ io.on('connection', async (socket) => {
     } catch (error) {
       new Logger('WebSocket').error(error.message);
       socket.emit('error', {
-        message: `Error adding from server: ${error.message}`,
+        message: `新增頻道時發生錯誤: ${error.message}`,
         part: 'ADDCHANNEL',
         tag: 'EXCEPTION_ERROR',
         status_code: 500,
@@ -815,39 +994,74 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('editChannel', async (data) => {
-    try {
-      // Get database
-      const channelList = (await db.get('channelList')) || {};
-      const serverList = (await db.get('serverList')) || {};
+    // Get database
+    const users = (await db.get('users')) || {};
+    const channels = (await db.get('channels')) || {};
+    const servers = (await db.get('servers')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
 
+    try {
       // Validate data
-      const channel = data.channel;
-      if (!channel) {
-        new Logger('WebSocket').error('Invalid data (channel missing)');
+      // data = {
+      //   sessionId: '123456',
+      //   channel: {
+      //     id:
+      //     name:
+      //     permission:
+      //     isCategory:
+      //   },
+      // };
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        new Logger('WebSocket').error(`Invalid session ID(${data.sessionId})`);
         socket.emit('error', {
-          message: 'Invalid data (channel missing)',
-          part: 'EDITCHANNEL',
-          tag: 'CHANNEL_ERROR',
-          status_code: 400,
+          message: `無效的 session ID`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
         });
         return;
       }
-      const oldChannel = channelList[data.channelId];
+      const user = users[userId];
+      if (!user) {
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+      }
+      const oldChannel = channels[data.channel.id];
       if (!oldChannel) {
         new Logger('WebSocket').error(`Channel(${data.channelId}) not found`);
         socket.emit('error', {
-          message: `Channel(${data.channelId}) not found`,
+          message: `頻道不存在`,
           part: 'EDITCHANNEL',
           tag: 'CHANNEL_ERROR',
           status_code: 404,
         });
         return;
       }
-      const server = serverList[data.serverId];
+      const channel = data.channel;
+      if (!channel) {
+        new Logger('WebSocket').error('Invalid data (channel missing)');
+        socket.emit('error', {
+          message: '無效的頻道資料',
+          part: 'EDITCHANNEL',
+          tag: 'CHANNEL_ERROR',
+          status_code: 400,
+        });
+        return;
+      }
+      const server =
+        servers[presenceStates[`presence_${user.id}`].currentServerId];
       if (!server) {
         new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
         socket.emit('error', {
-          message: `Server(${data.serverId}) not found`,
+          message: `伺服器不存在`,
           part: 'EDITCHANNEL',
           tag: 'SERVER_ERROR',
           status_code: 404,
@@ -855,17 +1069,12 @@ io.on('connection', async (socket) => {
         return;
       }
 
-      channelList[data.channelId] = channel;
-
-      // Save updated data
-      await db.set('serverList', serverList);
-      await db.set('channelList', channelList);
+      await db.set(`channel.${channel.id}`, channel);
 
       // Emit updated data (to all users in the server)
-      io.to(`server_${server.id}`).emit(
-        'channels',
-        getChannels(channelList, server),
-      );
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        ...(await getServer(server.id)),
+      });
 
       new Logger('WebSocket').info(
         `Edit channel(${channel.id}) in server(${server.id})`,
@@ -873,7 +1082,7 @@ io.on('connection', async (socket) => {
     } catch (error) {
       new Logger('WebSocket').error(error.message);
       socket.emit('error', {
-        message: `Error editing channel from server: ${error.message}`,
+        message: `編輯頻道時發生錯誤: ${error.message}`,
         part: 'EDITCHANNEL',
         tag: 'EXCEPTION_ERROR',
         status_code: 500,
@@ -882,49 +1091,78 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('deleteChannel', async (data) => {
-    try {
-      // Get database
-      const channelList = (await db.get('channelList')) || {};
-      const serverList = (await db.get('serverList')) || {};
+    // Get database
+    const users = (await db.get('users')) || {};
+    const channels = (await db.get('channels')) || {};
+    const servers = (await db.get('servers')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
 
+    try {
       // Validate data
-      const channel = channelList[data.channelId];
+      // data = {
+      //   sessionId: '123456',
+      //   channelId: '123456',
+      // }
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        new Logger('WebSocket').error(`Invalid session ID(${data.sessionId})`);
+        socket.emit('error', {
+          message: `無效的 session ID`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const user = users[userId];
+      if (!user) {
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+      }
+      const channel = channels[data.channelId];
       if (!channel) {
         new Logger('WebSocket').error(`Channel(${data.channelId}) not found`);
         socket.emit('error', {
-          message: `Channel(${data.channelId}) not found`,
+          message: `頻道不存在`,
           part: 'DELETECHANNEL',
           tag: 'CHANNEL_ERROR',
           status_code: 404,
         });
         return;
       }
-      const server = serverList[data.serverId];
+      const server =
+        servers[presenceStates[`presence_${user.id}`].currentServerId];
       if (!server) {
         new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
         socket.emit('error', {
-          message: `Server(${data.serverId}) not found`,
-          part: 'DELETECHANNEL',
+          message: `伺服器不存在`,
+          part: 'EDITCHANNEL',
           tag: 'SERVER_ERROR',
           status_code: 404,
         });
         return;
       }
 
-      delete channelList[channel.id];
+      // Delete channel
       server.channelIds = server.channelIds.filter(
         (channelId) => channelId != channel.id,
       );
+      await db.set(`servers.${server.id}`, server);
 
-      // Save updated data
-      await db.set('serverList', serverList);
-      await db.set('channelList', channelList);
+      // await db.set('serverList', serverList);
+      // await db.set('channelList', channelList);
 
       // Emit updated data (to all users in the server)
-      io.to(`server_${server.id}`).emit(
-        'channels',
-        getChannels(channelList, server),
-      );
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        ...(await getServer(server.id)),
+      });
 
       new Logger('WebSocket').info(
         `Remove channel(${channel.id}) from server(${server.id})`,
@@ -940,16 +1178,43 @@ io.on('connection', async (socket) => {
     }
   });
 
-  socket.on('joinChannel', async (data) => {
-    try {
-      // Get database
-      const channelList = (await db.get('channelList')) || {};
-      const serverList = (await db.get('serverList')) || {};
-      const usersList = (await db.get('usersList')) || {};
-      const messageList = (await db.get('messageList')) || {};
+  socket.on('connectChannel', async (data) => {
+    // 獲取資料庫
+    const servers = (await db.get('servers')) || {};
+    const channels = (await db.get('channels')) || {};
+    const users = (await db.get('users')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
 
-      // Validate data
-      const channel = channelList[data.channelId];
+    try {
+      // validate data
+      // data = {
+      //   sessionId: '123456',
+      //   channelId: '123456',
+      // }
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        new Logger('WebSocket').error(`Invalid session ID(${data.sessionId})`);
+        socket.emit('error', {
+          message: `無效的 session ID`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const user = users[userId];
+      if (!user) {
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
+          part: 'CHATMESSAGE',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+      }
+      const channel = channels[data.channelId];
       if (!channel && data.channelId) {
         new Logger('WebSocket').error(`Channel(${data.channelId}) not found`);
         socket.emit('error', {
@@ -960,82 +1225,178 @@ io.on('connection', async (socket) => {
         });
         return;
       }
-      const server = serverList[data.serverId];
+      const server =
+        servers[presenceStates[`presence_${user.id}`].currentServerId];
       if (!server) {
         new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
         socket.emit('error', {
-          message: `Server(${data.serverId}) not found`,
-          part: 'JOINCHANNEL',
+          message: `伺服器不存在`,
+          part: 'EDITCHANNEL',
           tag: 'SERVER_ERROR',
           status_code: 404,
         });
         return;
       }
-      const user = usersList[data.userId];
-      if (!user) {
-        new Logger('WebSocket').error(`User(${data.userId}) not found`);
+      if (channel.permission === 'private') {
+        new Logger('WebSocket').error(`Permission denied`);
         socket.emit('error', {
-          message: `User(${data.userId}) not found`,
+          message: '權限不足',
           part: 'JOINCHANNEL',
+          tag: 'PERMISSION_ERROR',
+          status_code: 403,
+        });
+        return;
+      }
+
+      // Update user presence
+      const presenceId = `presence_${user.id}`;
+      const presence = {
+        ...presenceStates[presenceId],
+        currentServerId: server.id,
+        currentChannelId: channel.id,
+        updatedAt: Date.now(),
+      };
+      await db.set(`presenceStates.${presenceId}`, presence);
+
+      // Update channel
+      channel.userIds.push(user.id);
+      await db.set(`channels.${channel.id}`, channel);
+
+      // Join the channel
+      socket.join(`channel_${channel.id}`);
+
+      // Emit updated data (only to the user)
+      io.to(socket.id).emit('userPresenceUpdate', {
+        ...(await getPresenceState(user.id)),
+      });
+      io.to(socket.id).emit('connectChannel', {
+        // ...(await getChannel(channel.id)),
+      });
+
+      // Emit updated data (to all users in the channel)
+      io.to(`channel_${channel.id}`).emit('userJoinChannel');
+
+      // Emit updated data (to all users in the server)
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        ...(await getServer(server.id)),
+      });
+
+      new Logger('WebSocket').success(
+        `User(${data.userId}) connected to channel(${channel.id})`,
+      );
+    } catch (error) {
+      // Emit error data (only to the user)
+      io.to(socket.id).emit('disconnectChannel');
+
+      new Logger('WebSocket').error(
+        `Error connecting to channel: ${error.message}`,
+      );
+      socket.emit('error', {
+        message: `加入頻道失敗`,
+        part: 'JOINCHANNEL',
+        tag: 'EXCEPTION_ERROR',
+        status_code: 500,
+      });
+    }
+  });
+
+  socket.on('disconnectChannel', async (data) => {
+    // Get database
+    const users = (await db.get('users')) || {};
+    const channels = (await db.get('channels')) || {};
+    const servers = (await db.get('servers')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
+
+    try {
+      // Validate data
+      // data = {
+      //   sessionId: '123456',
+      // }
+      console.log(data);
+
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) {
+        new Logger('WebSocket').error(`Invalid session ID(${data.sessionId})`);
+        socket.emit('error', {
+          message: `無效的 session ID`,
+          part: 'DISCONNECTCHANNEL',
           tag: 'USER_ERROR',
           status_code: 404,
         });
         return;
       }
-      if (user.currentChannelId === channel?.id) return;
-
-      if (user.currentChannelId) {
-        socket.leave(`server_${server.id}_${user.currentChannelId}`);
-        io.to(`server_${server.id}_${user.currentChannelId}`).emit(
-          'channel_leave',
-        );
+      const user = users[userId];
+      if (!user) {
+        new Logger('WebSocket').error(`User(${userId}) not found`);
+        socket.emit('error', {
+          message: `使用者不存在`,
+          part: 'DISCONNECTCHANNEL',
+          tag: 'USER_ERROR',
+          status_code: 404,
+        });
+      }
+      const channel =
+        channels[presenceStates[`presence_${user.id}`].currentChannelId];
+      if (!channel) {
+        new Logger('WebSocket').error(`Channel(${data.channelId}) not found`);
+        socket.emit('error', {
+          message: `頻道不存在`,
+          part: 'DISCONNECTCHANNEL',
+          tag: 'CHANNEL_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
+      const server =
+        servers[presenceStates[`presence_${user.id}`].currentServerId];
+      if (!server) {
+        new Logger('WebSocket').error(`Server(${data.serverId}) not found`);
+        socket.emit('error', {
+          message: `伺服器不存在`,
+          part: 'DISCONNECTCHANNEL',
+          tag: 'SERVER_ERROR',
+          status_code: 404,
+        });
+        return;
       }
 
-      const prevChannel = channelList[user.currentChannelId];
-      if (prevChannel)
-        prevChannel.userIds = prevChannel.userIds.filter(
-          (userId) => userId != user.id,
-        );
-      user.currentChannelId = channel?.id ?? null;
-      if (channel) channel.userIds.push(user.id);
+      // Update user presence
+      const presenceId = `presence_${user.id}`;
+      const presence = {
+        ...presenceStates[presenceId],
+        currentChannelId: null,
+        updatedAt: Date.now(),
+      };
+      presenceStates[presenceId] = presence;
+      await db.set(`presenceStates.${presenceId}`, presence);
 
-      // Save updated data
-      await db.set('channelList', channelList);
-      await db.set('usersList', usersList);
+      // Update channel
+      channel.userIds = channel.userIds.filter((id) => id !== user.id);
+      await db.set(`channels.${channel.id}`, channel);
 
-      // Join channel
-      if (user.currentChannelId) {
-        socket.join(`server_${server.id}_${user.currentChannelId}`);
-        io.to(`server_${server.id}_${user.currentChannelId}`).emit(
-          'channel_join',
-        );
-      }
+      // Leave the channel
+      socket.leave(`channel_${channel.id}`);
 
       // Emit updated data (only to the user)
-      io.to(socket.id).emit(
-        'messages',
-        getMessages(messageList, channelList[user.currentChannelId]),
-      );
-      io.to(socket.id).emit('user', user);
+      io.to(socket.id).emit('disconnectChannel');
+      io.to(socket.id).emit('userPresenceUpdate', {
+        ...(await getPresenceState(user.id)),
+      });
+
+      // Emit updated data (to all users in the channel)
+      io.to(`channel_${channel.id}`).emit('userLeaveChannel');
 
       // Emit updated data (to all users in the server)
-      io.to(`server_${server.id}`).emit(
-        'channels',
-        getChannels(channelList, server),
-      );
-      io.to(`server_${server.id}`).emit(
-        'users',
-        getServerUserList(usersList, server),
-      );
-
-      new Logger('WebSocket').info(
-        `User(${user.id}) joined channel(${channel.id}) in server(${server.id})`,
-      );
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        ...(await getServer(server.id)),
+      });
     } catch (error) {
-      new Logger('WebSocket').error(error.message);
+      new Logger('WebSocket').error(
+        `Error disconnecting from channel: ${error.message}`,
+      );
       socket.emit('error', {
-        message: `Error joining channel from server: ${error.message}`,
-        part: 'JOINCHANNEL',
+        message: `離開頻道時發生錯誤: ${error.message}`,
+        part: 'DISCONNECTCHANNEL',
         tag: 'EXCEPTION_ERROR',
         status_code: 500,
       });
@@ -1062,41 +1423,170 @@ server.listen(port, () => {
 });
 
 // Functions
-const getServerUserList = (usersList, server) => {
-  return (
-    server?.userIds
-      .map((userId) => usersList[userId])
-      .filter((_) => _)
-      .reduce((acc, user) => {
-        acc[user.id] = user;
-        return acc;
-      }, {}) ?? {}
-  );
+const getServer = async (serverId) => {
+  const servers = (await db.get('servers')) || {};
+  const server = servers[serverId];
+  if (!server) return null;
+  const members = await getServerMembers(serverId);
+  const channels = (
+    await Promise.all(
+      server.channelIds.map(async (channelId) => await getChannels(channelId)),
+    )
+  ).filter((channel) => channel);
+  const lobby = await getChannels(server.lobbyId);
+  const owner = await getUser(server.ownerId);
+  return {
+    ...server,
+    members: members,
+    channels: channels,
+    lobby: lobby,
+    owner: owner,
+  };
 };
-const getChannels = (channelList, server) => {
-  return (
-    server?.channelIds
-      .map((channelId) => channelList[channelId])
-      .filter((_) => _) ?? []
-  );
+const getChannels = async (channelId) => {
+  const _channels = (await db.get('channels')) || {};
+  const channel = _channels[channelId];
+  if (!channel) return null;
+  const users = (
+    await Promise.all(
+      channel.userIds.map(async (userId) => await getUser(userId)),
+    )
+  ).filter((user) => user);
+  const messages = (
+    await Promise.all(
+      channel.messageIds.map(async (messageId) => await getMessages(messageId)),
+    )
+  ).filter((message) => message);
+  return {
+    ...channel,
+    users: users,
+    messages: messages,
+  };
 };
-const getMessages = (messageList, channel) => {
-  return (
-    channel?.messageIds
-      .map((messageId) => messageList[messageId])
-      .filter((_) => _) ?? []
-  );
+const getMessages = async (messageId) => {
+  const _messages = (await db.get('messages')) || {};
+  const message = _messages[messageId];
+  if (!message) return null;
+  const sender = await getUser(message.senderId);
+  return {
+    ...message,
+    sender: sender,
+  };
 };
-const getFriendList = (usersList, user) => {
-  return (
-    user?.friendIds
-      .map((friendId) => usersList[friendId])
-      .filter((_) => _)
-      .reduce((acc, user) => {
-        acc[user.id] = user;
-        return acc;
-      }, {}) ?? {}
+const getUser = async (userId) => {
+  const _users = (await db.get('users')) || {};
+  const user = _users[userId];
+  if (!user) return null;
+  const presence = await getPresenceState(userId);
+  const badges = await getUserBadges(userId);
+
+  return {
+    id: user.id,
+    name: user.name,
+    gender: user.gender,
+    level: user.level,
+    signature: user.signature,
+    badges,
+    presence,
+  };
+};
+const getUserBadges = async (userId) => {
+  const _badges = (await db.get('badgeList')) || {};
+  const userBadges = Object.values(_badges)
+    .filter((badge) => badge.ownedBy.includes(userId))
+    .map(({ ownedBy, ...badgeWithoutOwners }) => badgeWithoutOwners);
+
+  return userBadges;
+};
+const getPresenceState = async (userId) => {
+  const _presenceStates = (await db.get('presenceStates')) || {};
+  const userPresenceState = Object.values(_presenceStates).find(
+    (presence) => presence.userId === userId,
   );
+  if (!userPresenceState) return null;
+  return {
+    ...userPresenceState,
+  };
+};
+const getUserMembers = async (userId) => {
+  const _members = (await db.get('members')) || {};
+  const members = Object.values(_members).reduce((result, member) => {
+    if (member?.userId === userId) {
+      result[member.serverId] = member;
+    }
+    return result;
+  }, {});
+  // if (!members) return null;
+  return {
+    ...members,
+  };
+};
+const getServerMembers = async (serverId) => {
+  const _members = (await db.get('members')) || {};
+  const members = Object.values(_members).reduce((result, member) => {
+    if (member?.serverId === serverId) {
+      result[member.userId] = member;
+    }
+    return result;
+  }, {});
+  // if (!members) return null;
+  return {
+    ...members,
+  };
+};
+const getFriendCategories = async (userId) => {
+  const _friendCategories = (await db.get('friendCategories')) || {};
+  const userFriendCategories = Object.values(_friendCategories).filter(
+    (fs) => fs.userId === userId,
+  );
+  console.log(userFriendCategories);
+  if (!userFriendCategories) return null;
+  const friendCategories = (
+    await Promise.all(
+      userFriendCategories.map(
+        async (category) => await getFriendCategory(category.id),
+      ),
+    )
+  ).filter((category) => category);
+  return [...friendCategories];
+};
+const getFriendCategory = async (categoryId) => {
+  const _friendCategories = (await db.get('friendCategories')) || {};
+  const category = _friendCategories[categoryId];
+  if (!category) return null;
+  const friends = (
+    await Promise.all(
+      category.friendIds.map(async (friendId) => await getUser(friendId)),
+    )
+  ).filter((friend) => friend);
+  return {
+    ...category,
+    friends: friends,
+  };
+};
+const getJoinRecServers = async (userId, limit = 10) => {
+  const _servers = (await db.get('servers')) || {};
+  const _members = (await db.get('members')) || {};
+  const { joinedServers, notJoinedServers } = Object.values(_servers).reduce(
+    (result, server) => {
+      const member = Object.values(_members).find(
+        (member) => member.userId === userId && member.serverId === server.id,
+      );
+      if (member) {
+        result.joinedServers.push(server);
+      } else {
+        result.notJoinedServers.push(server);
+      }
+      return result;
+    },
+    { joinedServers: [], notJoinedServers: [] },
+  );
+  const recommendedServers = _.sampleSize(notJoinedServers, limit) ?? [];
+
+  return {
+    joinedServers: joinedServers,
+    recommendedServers: recommendedServers,
+  };
 };
 const generateUniqueDisplayId = (serverList, baseId = 20000000) => {
   let displayId = baseId + Object.keys(serverList).length;
