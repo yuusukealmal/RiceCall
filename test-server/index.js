@@ -919,6 +919,7 @@ io.on('connection', async (socket) => {
   socket.on('chatMessage', async (data) => {
     // Get database
     const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
     const messages = (await db.get('messages')) || {};
     const channels = (await db.get('channels')) || {};
     const presenceStates = (await db.get('presenceStates')) || {};
@@ -983,6 +984,22 @@ io.on('connection', async (socket) => {
         });
         return;
       }
+      const server =
+        servers[presenceStates[`presence_${user.id}`].currentServerId];
+      if (!server) {
+        new Logger('WebSocket').error(
+          `Server(${
+            presenceStates[`presence_${user.id}`].currentServerId
+          }) not found`,
+        );
+        socket.emit('error', {
+          message: `伺服器不存在`,
+          part: 'ADDCHANNEL',
+          tag: 'SERVER_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
 
       // Create new message
       const messageId = uuidv4();
@@ -1000,7 +1017,7 @@ io.on('connection', async (socket) => {
 
       // Emit updated data (to all users in the channel)
       io.to(`channel_${channel.id}`).emit('serverUpdate', {
-        ...(await getServer(channel.serverId)),
+        ...(await getServer(server.id)),
       });
 
       new Logger('WebSocket').info(
