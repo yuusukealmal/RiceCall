@@ -315,7 +315,7 @@ const server = http.createServer((req, res) => {
         //   "password": "123456",
         //   "account": "test",
         // }
-        console.log(data);
+        // console.log(data);
 
         // Get database
         const userAccPwdList = (await db.get(`account_password`)) || {};
@@ -384,7 +384,7 @@ const server = http.createServer((req, res) => {
         //   "password": "123456",
         //   "username": "test",
         // }
-        console.log(data);
+        // console.log(data);
 
         // Get database
         const userAccPwdList = (await db.get(`account_password`)) || {};
@@ -555,7 +555,7 @@ io.on('connection', async (socket) => {
         await db.set(`channels.${channel.id}`, channel);
 
         // Emit data (to all users in the channel)
-        io.to(`channel_${server.id}`).emit('serverUpdate', {
+        io.to(`server_${server.id}`).emit('serverUpdate', {
           ...(await getServer(channel.serverId)),
         });
       }
@@ -582,7 +582,7 @@ io.on('connection', async (socket) => {
       // data = {
       //   sessionId: '123456',
       // }
-      console.log(data);
+      // console.log(data);
 
       // Validate data
       const userId = userSessions.get(data.sessionId);
@@ -652,7 +652,7 @@ io.on('connection', async (socket) => {
       // data = {
       //   sessionId: '123456',
       // }
-      console.log(data);
+      // console.log(data);
 
       const userId = userSessions.get(data.sessionId);
       if (!userId) {
@@ -720,7 +720,7 @@ io.on('connection', async (socket) => {
       //   sessionId:
       //   serverId:
       // }
-      console.log(data);
+      // console.log(data);
 
       const userId = userSessions.get(data.sessionId);
       if (!userId) {
@@ -777,7 +777,7 @@ io.on('connection', async (socket) => {
           serverId: server.id,
           userId: user.id,
           nickname: user.name,
-          permission: 1,
+          permissionLevel: 1,
           managedChannels: [],
           contribution: 0,
           joinedAt: Date.now(),
@@ -838,7 +838,7 @@ io.on('connection', async (socket) => {
       // data = {
       //   sessionId: '123456',
       // }
-      console.log(data);
+      // console.log(data);
 
       const userId = userSessions.get(data.sessionId);
       if (!userId) {
@@ -895,10 +895,10 @@ io.on('connection', async (socket) => {
       socket.leave(`server_${server.id}`);
 
       // Emit data (only to the user)
+      io.to(socket.id).emit('disconnectServer');
       io.to(socket.id).emit('userPresenceUpdate', {
         ...(await getPresenceState(user.id)),
       });
-      io.to(socket.id).emit('disconnectServer');
 
       new Logger('WebSocket').success(
         `User(${user.id}) disconnected from server(${server.id})`,
@@ -932,7 +932,7 @@ io.on('connection', async (socket) => {
       //     content: "",
       //   }
       // };
-      console.log(data);
+      // console.log(data);
 
       const _message = data.message;
       if (!_message) {
@@ -1035,7 +1035,7 @@ io.on('connection', async (socket) => {
       //     isCategory: false,
       //   },
       // }
-      console.log(data);
+      // console.log(data);
 
       const _channel = data.channel;
       if (!_channel) {
@@ -1137,7 +1137,7 @@ io.on('connection', async (socket) => {
       //     isCategory:
       //   },
       // };
-      console.log(data);
+      // console.log(data);
 
       const channel = data.channel;
       if (!channel) {
@@ -1223,7 +1223,7 @@ io.on('connection', async (socket) => {
       //   sessionId: '123456',
       //   channelId: '123456',
       // }
-      console.log(data);
+      // console.log(data);
 
       const channel = channels[data.channelId];
       if (!channel) {
@@ -1312,7 +1312,7 @@ io.on('connection', async (socket) => {
       //   sessionId: '123456',
       //   channelId: '123456',
       // }
-      console.log(data);
+      // console.log(data);
 
       const channel = channels[data.channelId];
       if (!channel && data.channelId) {
@@ -1387,6 +1387,9 @@ io.on('connection', async (socket) => {
       channel.userIds.push(user.id);
       await db.set(`channels.${channel.id}`, channel);
 
+      // Play sound
+      io.to(`channel_${channel.id}`).emit('playSound', 'join');
+
       // Join the channel
       socket.join(`channel_${channel.id}`);
 
@@ -1398,16 +1401,13 @@ io.on('connection', async (socket) => {
         ...(await getPresenceState(user.id)),
       });
 
-      // Emit updated data (to all users in the channel)
-      io.to(`channel_${channel.id}`).emit('userJoinChannel');
-
       // Emit updated data (to all users in the server)
       io.to(`server_${server.id}`).emit('serverUpdate', {
         ...(await getServer(server.id)),
       });
 
       new Logger('WebSocket').success(
-        `User(${data.userId}) connected to channel(${channel.id})`,
+        `User(${user.id}) connected to channel(${channel.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
@@ -1437,7 +1437,7 @@ io.on('connection', async (socket) => {
       // data = {
       //   sessionId: '123456',
       // }
-      console.log(data);
+      // console.log(data);
 
       const userId = userSessions.get(data.sessionId);
       if (!userId) {
@@ -1511,18 +1511,18 @@ io.on('connection', async (socket) => {
       socket.leave(`channel_${channel.id}`);
 
       // Emit updated data (only to the user)
+      io.to(socket.id).emit('disconnectChannel');
       io.to(socket.id).emit('userPresenceUpdate', {
         ...(await getPresenceState(user.id)),
       });
-      io.to(socket.id).emit('disconnectChannel');
-
-      // Emit updated data (to all users in the channel)
-      io.to(`channel_${channel.id}`).emit('userLeaveChannel');
 
       // Emit updated data (to all users in the server)
       io.to(`server_${server.id}`).emit('serverUpdate', {
         ...(await getServer(server.id)),
       });
+
+      // Play sound
+      io.to(`channel_${channel.id}`).emit('playSound', 'leave');
 
       new Logger('WebSocket').success(
         `User(${user.id}) disconnected from channel(${channel.id})`,
