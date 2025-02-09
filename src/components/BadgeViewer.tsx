@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
-
-// Types
 import type { Badge } from '@/types';
 
 interface BadgeViewerProps {
@@ -8,15 +6,15 @@ interface BadgeViewerProps {
   maxDisplay?: number;
 }
 
-interface BadgeImageProps {
-  badge: Badge;
-}
+const failedImageCache = new Set<string>();
 
-// Memoized BadgeImage component
-const BadgeImage = memo(({ badge }: BadgeImageProps) => {
-  const [imageError, setImageError] = useState(false);
+// BadgeImage Component
+const BadgeImage = memo(({ badge }: { badge: Badge }) => {
+  const [shouldShowFallback, setShouldShowFallback] = useState(() => {
+    const imageUrl = `/badge/${badge.id.trim()}.png`;
+    return failedImageCache.has(imageUrl);
+  });
 
-  // 生成首字母頭像的顏色（基於徽章ID或名稱）
   const getInitialColor = () => {
     const colors = [
       'bg-blue-500',
@@ -34,161 +32,194 @@ const BadgeImage = memo(({ badge }: BadgeImageProps) => {
     return colors[index];
   };
 
-  // 獲取顯示的文字（取首字）
   const getDisplayText = () => {
     const name = badge.name || badge.id;
     return name.slice(0, 1).toUpperCase();
   };
 
-  return imageError ? (
-    <div
-      className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-medium text-white ${getInitialColor()}`}
-    >
-      {getDisplayText()}
-    </div>
-  ) : (
+  if (shouldShowFallback) {
+    return (
+      <div
+        className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-medium text-white ${getInitialColor()}`}
+      >
+        {getDisplayText()}
+      </div>
+    );
+  }
+
+  return (
     <img
       src={`/badge/${badge.id.trim()}.png`}
       alt={`${badge.name} Badge`}
       className="select-none w-4 h-4 rounded-full"
       onError={(e) => {
-        e.currentTarget.onerror = null;
-        setImageError(true);
+        const imageUrl = `/badge/${badge.id.trim()}.png`;
+        failedImageCache.add(imageUrl);
+        setShouldShowFallback(true);
       }}
       loading="lazy"
       referrerPolicy="no-referrer"
     />
   );
 });
+
 BadgeImage.displayName = 'BadgeImage';
 
-// Memoized Tooltip component
-const BadgeTooltip = memo(
-  ({ badge, tooltipClass }: { badge: Badge; tooltipClass: string }) => (
-    <div
-      className={`absolute z-50 w-36 px-2 py-1 text-sm bg-gray-800 text-white rounded-md shadow-lg pointer-events-none top-full mt-1 ${tooltipClass}`}
-    >
+// Tooltip Component
+const Tooltip = memo(
+  ({
+    badge,
+    position,
+  }: {
+    badge: Badge;
+    position: { top: number; left: number; placement: 'top' | 'bottom' };
+  }) => {
+    const tooltipContent = (
+      <>
+        <div className="flex flex-row items-center justify-center space-x-2">
+          <BadgeImage badge={badge} />
+          <div className="font-medium text-center">{badge.name}</div>
+        </div>
+        <div className="text-xs text-center text-gray-400 mt-1">
+          {badge.description}
+        </div>
+      </>
+    );
+
+    const arrowClass =
+      position.placement === 'top'
+        ? 'top-full border-t-gray-800'
+        : 'bottom-full border-b-gray-800';
+
+    return (
       <div
-        className={`absolute bottom-full -translate-x-1/2 border-4 border-transparent border-b-gray-800 ${
-          tooltipClass.includes('right-0')
-            ? 'right-4'
-            : tooltipClass.includes('left-0')
-            ? 'left-4'
-            : 'left-1/2'
-        }`}
-      />
-      <div className="flex flex-row items-center justify-center space-x-2">
-        <BadgeImage badge={badge} />
-        <div className="font-medium text-center">{badge.name}</div>
+        className="fixed z-50 w-36 px-2 py-1 text-sm bg-gray-800 text-white rounded-md shadow-lg pointer-events-none"
+        style={{
+          top: position.top,
+          left: position.left,
+        }}
+      >
+        <div
+          className={`absolute -translate-x-1/2 left-1/2 border-4 border-transparent ${arrowClass}`}
+        />
+        {tooltipContent}
       </div>
-      <div className="text-xs text-center text-gray-400 mt-1">
-        {badge.description}
-      </div>
-    </div>
-  ),
+    );
+  },
 );
 
-BadgeTooltip.displayName = 'BadgeTooltip';
+Tooltip.displayName = 'Tooltip';
 
-// Memoized Badge container component
+// Badge Container Component
 const BadgeContainer = memo(
   ({
     badge,
-    isActive,
-    tooltipClass,
     onMouseEnter,
     onMouseLeave,
-    containerRef,
-    tooltipRef,
+    showTooltip,
   }: {
     badge: Badge;
-    isActive: boolean;
-    tooltipClass: string;
-    onMouseEnter: () => void;
+    onMouseEnter: (rect: DOMRect) => void;
     onMouseLeave: () => void;
-    containerRef: (el: HTMLDivElement | null) => void;
-    tooltipRef: React.RefObject<HTMLDivElement>;
-  }) => (
-    <div
-      ref={containerRef}
-      className="relative inline-block select-none"
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-    >
-      <BadgeImage badge={badge} />
-      {isActive && (
-        <div ref={tooltipRef}>
-          <BadgeTooltip badge={badge} tooltipClass={tooltipClass} />
-        </div>
-      )}
-    </div>
-  ),
+    showTooltip: boolean;
+  }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const handleMouseEnter = () => {
+      if (containerRef.current) {
+        onMouseEnter(containerRef.current.getBoundingClientRect());
+      }
+    };
+
+    return (
+      <div
+        ref={containerRef}
+        className="relative inline-block select-none"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        <BadgeImage badge={badge} />
+      </div>
+    );
+  },
 );
 
 BadgeContainer.displayName = 'BadgeContainer';
 
-// Main BadgeViewer component
+// Main BadgeViewer Component
 const BadgeViewer: React.FC<BadgeViewerProps> = memo(
   ({ badges, maxDisplay = 99 }) => {
-    const [activeTooltipId, setActiveTooltipId] = useState<string | null>(null);
-    const [tooltipClass, setTooltipClass] = useState<string>('');
-    const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-    const tooltipRef = useRef<HTMLDivElement>(
-      null,
-    ) as React.RefObject<HTMLDivElement>;
+    const [activeTooltip, setActiveTooltip] = useState<{
+      badge: Badge;
+      position: { top: number; left: number; placement: 'top' | 'bottom' };
+    } | null>(null);
 
-    // 確保排序不會影響原陣列
+    const calculateTooltipPosition = (
+      rect: DOMRect,
+    ): { top: number; left: number; placement: 'top' | 'bottom' } => {
+      const TOOLTIP_WIDTH = 144; // w-36 = 9rem = 144px
+      const TOOLTIP_HEIGHT = 76; // 預估高度
+      const SPACING = 8; // 間距
+
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      // 計算水平位置
+      let left = rect.left + rect.width / 2 - TOOLTIP_WIDTH / 2;
+      left = Math.max(
+        SPACING,
+        Math.min(left, windowWidth - TOOLTIP_WIDTH - SPACING),
+      );
+
+      // 決定是否顯示在上方或下方
+      const spaceBelow = windowHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const placement =
+        spaceBelow >= TOOLTIP_HEIGHT + SPACING || spaceBelow >= spaceAbove
+          ? 'bottom'
+          : 'top';
+
+      const top =
+        placement === 'bottom'
+          ? rect.bottom + SPACING
+          : rect.top - TOOLTIP_HEIGHT - SPACING;
+
+      return { top, left, placement };
+    };
+
+    const handleMouseEnter = (badge: Badge) => (rect: DOMRect) => {
+      const position = calculateTooltipPosition(rect);
+      setActiveTooltip({ badge, position });
+    };
+
+    const handleMouseLeave = () => {
+      setActiveTooltip(null);
+    };
+
     const sortedBadges = [...badges]
       .sort((a, b) => (b.order ?? 0) - (a.order ?? 0))
       .slice(0, maxDisplay);
 
-    useEffect(() => {
-      if (
-        activeTooltipId &&
-        containerRefs.current.get(activeTooltipId) &&
-        tooltipRef.current
-      ) {
-        const containerRect = containerRefs.current
-          .get(activeTooltipId)!
-          .getBoundingClientRect();
-        const tooltipRect = tooltipRef.current.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-
-        const centerPosition = containerRect.left + containerRect.width / 2;
-        const tooltipHalfWidth = tooltipRect.width / 2;
-        const wouldOverflowRight =
-          centerPosition + tooltipHalfWidth > windowWidth;
-        const wouldOverflowLeft = centerPosition - tooltipHalfWidth < 0;
-
-        if (wouldOverflowRight) {
-          setTooltipClass('right-0 translate-x-4');
-        } else if (wouldOverflowLeft) {
-          setTooltipClass('left-0 -translate-x-4');
-        } else {
-          setTooltipClass('left-1/2 -translate-x-1/2');
-        }
-      }
-    }, [activeTooltipId]);
-
     return (
-      <div className="flex space-x-2">
-        {sortedBadges.map((badge) => (
-          <BadgeContainer
-            key={badge.id}
-            badge={badge}
-            isActive={activeTooltipId === badge.id}
-            tooltipClass={tooltipClass}
-            onMouseEnter={() => setActiveTooltipId(badge.id)}
-            onMouseLeave={() => setActiveTooltipId(null)}
-            containerRef={(el) => {
-              if (el) {
-                containerRefs.current.set(badge.id, el);
-              }
-            }}
-            tooltipRef={tooltipRef}
+      <>
+        <div className="flex space-x-1">
+          {sortedBadges.map((badge) => (
+            <BadgeContainer
+              key={badge.id}
+              badge={badge}
+              onMouseEnter={handleMouseEnter(badge)}
+              onMouseLeave={handleMouseLeave}
+              showTooltip={activeTooltip?.badge.id === badge.id}
+            />
+          ))}
+        </div>
+        {activeTooltip && (
+          <Tooltip
+            badge={activeTooltip.badge}
+            position={activeTooltip.position}
           />
-        ))}
-      </div>
+        )}
+      </>
     );
   },
 );
