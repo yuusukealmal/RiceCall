@@ -347,8 +347,6 @@ const server = http.createServer((req, res) => {
         const presenceId = `presence_${user.id}`;
         const presence = {
           ...presenceStates[presenceId],
-          currentServerId: null,
-          currentChannelId: null,
           status: 'online',
           lastActiveAt: Date.now(),
           updatedAt: Date.now(),
@@ -536,6 +534,9 @@ io.on('connection', async (socket) => {
         });
       }
 
+      // Remove user socket connection
+      userSockets.delete(socket.id);
+
       // Update user presence
       const presenceId = `presence_${user.id}`;
       const presence = {
@@ -549,14 +550,14 @@ io.on('connection', async (socket) => {
       presenceStates[presenceId] = presence;
       await db.set(`userPresence.${presenceId}`, presence);
 
-      if (server && channel) {
+      if (channel) {
         // Update channel
         channel.userIds = channel.userIds.filter((id) => id !== user.id);
         await db.set(`channels.${channel.id}`, channel);
 
         // Emit data (to all users in the channel)
         io.to(`server_${server.id}`).emit('serverUpdate', {
-          ...(await getServer(channel.serverId)),
+          ...(await getServer(server.id)),
         });
       }
 
@@ -614,6 +615,18 @@ io.on('connection', async (socket) => {
         return;
       }
 
+      // Check if user is already connected
+      for (const [key, value] of userSockets) {
+        if (value === user.id) {
+          new Logger('WebSocket').error(
+            `User(${user.id}) already connected from another socket`,
+          );
+          io.to(key).emit('forceDisconnect');
+          userSockets.delete(key);
+          break;
+        }
+      }
+
       // Save user socket connection
       userSockets.set(socket.id, user.id);
 
@@ -645,6 +658,8 @@ io.on('connection', async (socket) => {
   socket.on('disconnectUser', async (data) => {
     // Get database
     const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const channels = (await db.get('channels')) || {};
     const presenceStates = (await db.get('presenceStates')) || {};
 
     try {
@@ -676,6 +691,39 @@ io.on('connection', async (socket) => {
         });
         return;
       }
+      const server =
+        servers[presenceStates[`presence_${user.id}`].currentServerId];
+      if (!server) {
+        new Logger('WebSocket').error(
+          `Server(${
+            presenceStates[`presence_${user.id}`].currentServerId
+          }) not found`,
+        );
+        socket.emit('error', {
+          message: `伺服器不存在`,
+          part: 'DISCONNECTSERVER',
+          tag: 'SERVER_ERROR',
+          status_code: 404,
+        });
+      }
+      const channel =
+        channels[presenceStates[`presence_${user.id}`].currentChannelId];
+      if (!channel) {
+        new Logger('WebSocket').error(
+          `Channel(${
+            presenceStates[`presence_${user.id}`].currentChannelId
+          }) not found`,
+        );
+        socket.emit('error', {
+          message: `頻道不存在`,
+          part: 'DISCONNECTCHANNEL',
+          tag: 'CHANNEL_ERROR',
+          status_code: 404,
+        });
+      }
+
+      // Remove user socket connection
+      userSockets.delete(socket.id);
 
       // Update user presence
       const presenceId = `presence_${user.id}`;
@@ -689,6 +737,31 @@ io.on('connection', async (socket) => {
       };
       presenceStates[presenceId] = presence;
       await db.set(`userPresence.${presenceId}`, presence);
+
+      if (channel) {
+        // Update channel
+        channel.userIds = channel.userIds.filter((id) => id !== user.id);
+        await db.set(`channels.${channel.id}`, channel);
+
+        // leave the channel
+        socket.leave(`channel_${channel.id}`);
+
+        // Emit data (only to the user)
+        io.to(socket.id).emit('disconnectChannel');
+
+        // Emit data (to all users in the channel)
+        io.to(`server_${server.id}`).emit('serverUpdate', {
+          ...(await getServer(server.id)),
+        });
+      }
+
+      if (server) {
+        // leave the server
+        socket.leave(`server_${server.id}`);
+
+        // Emit data (only to the user)
+        io.to(socket.id).emit('disconnectServer');
+      }
 
       // Emit data (only to the user)
       io.to(socket.id).emit('disconnectUser');
@@ -831,6 +904,7 @@ io.on('connection', async (socket) => {
     // Get database
     const users = (await db.get('users')) || {};
     const servers = (await db.get('servers')) || {};
+    const channels = (await db.get('channels')) || {};
     const presenceStates = (await db.get('presenceStates')) || {};
 
     try {
@@ -878,6 +952,22 @@ io.on('connection', async (socket) => {
         });
         return;
       }
+      const channel =
+        channels[presenceStates[`presence_${user.id}`].currentChannelId];
+      if (!channel) {
+        new Logger('WebSocket').error(
+          `Channel(${
+            presenceStates[`presence_${user.id}`].currentChannelId
+          }) not found`,
+        );
+        socket.emit('error', {
+          message: `頻道不存在`,
+          part: 'DISCONNECTSERVER',
+          tag: 'CHANNEL_ERROR',
+          status_code: 404,
+        });
+        return;
+      }
 
       // Update user presence
       const presenceId = `presence_${user.id}`;
@@ -890,6 +980,23 @@ io.on('connection', async (socket) => {
       };
       presenceStates[presenceId] = presence;
       await db.set(`userPresence.${presenceId}`, presence);
+
+      if (channel) {
+        // Update channel
+        channel.userIds = channel.userIds.filter((id) => id !== user.id);
+        await db.set(`channels.${channel.id}`, channel);
+
+        // leave the channel
+        socket.leave(`channel_${channel.id}`);
+
+        // Emit data (only to the user)
+        io.to(socket.id).emit('disconnectChannel');
+
+        // Emit data (to all users in the channel)
+        io.to(`server_${server.id}`).emit('serverUpdate', {
+          ...(await getServer(server.id)),
+        });
+      }
 
       // Leave the server
       socket.leave(`server_${server.id}`);
@@ -1398,6 +1505,7 @@ io.on('connection', async (socket) => {
         currentChannelId: channel.id,
         updatedAt: Date.now(),
       };
+      presenceStates[presenceId] = presence;
       await db.set(`presenceStates.${presenceId}`, presence);
 
       // Update channel
