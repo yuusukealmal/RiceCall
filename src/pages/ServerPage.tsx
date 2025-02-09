@@ -18,6 +18,7 @@ import EmojiGrid from '@/components/EmojiGrid';
 import MarkdownViewer from '@/components/MarkdownViewer';
 import MessageViewer from '@/components/MessageViewer';
 import ChannelViewer from '@/components/ChannelViewer';
+import ServerIcon from '@/components/ServerIcon';
 
 // Modals
 import ServerSettingModal from '@/modals/ServerSettingModal';
@@ -166,11 +167,7 @@ const ServerPage: React.FC = () => {
         {/* Server image and info */}
         <div className="flex items-center justify-between p-2 border-b mb-4">
           <div className="flex items-center space-x-3">
-            <img
-              src={server?.iconUrl ?? '/logo_server_def.png'}
-              alt="User Profile"
-              className="w-14 h-14 shadow border-2 border-[#A2A2A2] select-none"
-            />
+            <ServerIcon iconPath={server?.icon} />
             <div>
               <div className="text-gray-700">{server?.name ?? ''} </div>
               <div className="flex flex-row items-center gap-1">

@@ -87,6 +87,20 @@ const sendSuccess = (res, data) => {
   res.end(JSON.stringify(data));
 };
 
+const MIME_TYPES = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+};
+
+// Update upload directory
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+
+// Ensure uploads directory exists
+fs.mkdir(UPLOADS_DIR, { recursive: true }).catch(console.error);
+
 // HTTP Server with CORS
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -100,6 +114,46 @@ const server = http.createServer((req, res) => {
     res.writeHead(200);
     res.end();
     return;
+  }
+
+  if (req.method === 'GET' && req.url.startsWith('/uploads/')) {
+    try {
+      // Get the file path relative to uploads directory
+      const relativePath = req.url.replace('/uploads/', '');
+      const filePath = path.join(UPLOADS_DIR, relativePath);
+
+      // Validate file path to prevent directory traversal
+      if (!filePath.startsWith(UPLOADS_DIR)) {
+        sendError(res, 403, '無權限存取此檔案');
+        return;
+      }
+
+      // Get file extension and MIME type
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+      // Read and serve the file
+      fs.readFile(filePath)
+        .then((data) => {
+          res.writeHead(200, {
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+            'Access-Control-Allow-Origin': '*', // 允許跨域存取
+          });
+          res.end(data);
+        })
+        .catch((error) => {
+          if (error.code === 'ENOENT') {
+            sendError(res, 404, '找不到檔案');
+          } else {
+            sendError(res, 500, '讀取檔案失敗');
+          }
+        });
+      return;
+    } catch (error) {
+      sendError(res, 500, '伺服器錯誤');
+      return;
+    }
   }
 
   if (req.method === 'POST' && req.url === '/servers') {

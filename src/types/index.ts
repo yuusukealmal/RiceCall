@@ -64,7 +64,7 @@ export const enum ServerPermission {
 export interface Server {
   id: string;
   name: string;
-  iconUrl: string | null;
+  icon: string | null;
   announcement: string;
   level: number;
   createdAt: number;
