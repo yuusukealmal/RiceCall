@@ -9,6 +9,7 @@ import Modal from '@/components/Modal';
 
 // Types
 import type { User, ModalTabItem } from '@/types';
+import { useSocket } from '@/hooks/SocketProvider';
 
 const TABS: ModalTabItem[] = [
   { id: '基本資料', label: '基本資料', onClick: () => {} },
@@ -21,6 +22,12 @@ interface UserSettingModalProps {
 const UserSettingModal: React.FC<UserSettingModalProps> = ({ onClose }) => {
   // Redux
   const user = useSelector((state: { user: User }) => state.user);
+  const sessionId = useSelector(
+    (state: { sessionToken: string }) => state.sessionToken,
+  );
+
+  // Socket
+  const socket = useSocket();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,9 +40,11 @@ const UserSettingModal: React.FC<UserSettingModalProps> = ({ onClose }) => {
 
   const handleLogout = () => {
     // TODO: Implement logout
-    console.log('Logout');
-    localStorage.removeItem('sessionToken');
-    window.location.reload();
+    const serverId = user.presence?.currentServerId;
+    const channelId = user.presence?.currentChannelId;
+    if (serverId) socket?.emit('disconnectServer', { serverId, sessionId });
+    if (channelId) socket?.emit('disconnectChannel', { channelId, sessionId });
+    if (serverId) socket?.emit('disconnectUser', { sessionId });
   };
 
   const handleSubmit = async () => {

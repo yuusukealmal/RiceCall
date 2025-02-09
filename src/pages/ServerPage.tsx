@@ -46,12 +46,9 @@ const ServerPage: React.FC = () => {
   // Socket
   const socket = useSocket();
 
-  const handleSendMessage = useCallback(
-    (message: Message): void => {
-      socket?.emit('chatMessage', { sessionId, message });
-    },
-    [socket],
-  );
+  const handleSendMessage = (message: Message): void => {
+    socket?.emit('chatMessage', { sessionId, message });
+  };
 
   // Input Control
   const [messageInput, setMessageInput] = useState<string>('');
@@ -84,9 +81,11 @@ const ServerPage: React.FC = () => {
     mouseDownEvent.preventDefault();
     setIsResizing(true);
   }, []);
+
   const stopResizing = useCallback(() => {
     setIsResizing(false);
   }, []);
+
   const resize = useCallback(
     (mouseMoveEvent: MouseEvent) => {
       if (isResizing) {

@@ -69,10 +69,8 @@ const InputField: React.FC<InputFieldProps> = React.memo(
   }) => {
     const [showPassword, setShowPassword] = useState(false);
 
-    const toggleShowPassword = useCallback(
-      (state?: boolean) => setShowPassword(state ?? !showPassword),
-      [],
-    );
+    const toggleShowPassword = (state?: boolean) =>
+      setShowPassword(state ?? !showPassword);
 
     const isPasswordField = name === 'password'; // 確認是否為密碼欄位
 
@@ -328,8 +326,14 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo(
 
       if (!accountError && !passwordError && !usernameError) {
         try {
-          await authService.register(formData);
-          onRegisterSuccess();
+          const data = await authService.register(formData);
+          if (data) {
+            onRegisterSuccess();
+          } else {
+            setErrors({
+              general: data.message,
+            });
+          }
         } catch (error) {
           setErrors({
             general: error instanceof Error ? error.message : '註冊失敗',
@@ -410,9 +414,7 @@ const AuthPage: React.FC<AuthPageProps> = () => {
   // State
   const [isLogin, setIsLogin] = useState<boolean>(true);
 
-  const toggleIsLogin = useCallback((state?: boolean) => {
-    setIsLogin(state ?? !isLogin);
-  }, []);
+  const toggleIsLogin = (state?: boolean) => setIsLogin(state ?? !isLogin);
 
   return (
     <>
@@ -422,7 +424,7 @@ const AuthPage: React.FC<AuthPageProps> = () => {
         {isLogin ? (
           <LoginForm />
         ) : (
-          <RegisterForm onRegisterSuccess={() => toggleIsLogin(false)} />
+          <RegisterForm onRegisterSuccess={() => toggleIsLogin(true)} />
         )}
 
         <div className="flex justify-between w-full max-w-sm mt-4">

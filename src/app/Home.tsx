@@ -28,8 +28,8 @@ import { useSocket } from '@/hooks/SocketProvider';
 // Redux
 import store from '@/redux/store';
 import { clearServer, setServer } from '@/redux/serverSlice';
-import { setUser } from '@/redux/userSlice';
-import { clearSessionToken } from '@/redux/sessionTokenSlice';
+import { clearUser, setUser } from '@/redux/userSlice';
+import { clearSessionToken, setSessionToken } from '@/redux/sessionTokenSlice';
 
 const STATE_ICON = {
   online: '/online.png',
@@ -63,7 +63,9 @@ const Home = () => {
       store.getState().sessionToken ?? localStorage.getItem('sessionToken');
     if (!socket || !token) return;
     console.log('Connect to socket with token:', token);
-    socket?.emit('connectUser', { sessionId: token });
+    store.dispatch(setSessionToken(token));
+    localStorage.setItem('sessionToken', token);
+    socket.emit('connectUser', { sessionId: token });
   }, [socket, sessionId]);
 
   useEffect(() => {
@@ -75,11 +77,13 @@ const Home = () => {
     const handleDisconnectUser = () => {
       console.log('User disconnected');
       store.dispatch(clearSessionToken());
+      store.dispatch(clearUser());
+      localStorage.removeItem('sessionToken');
     };
     const handleConnectServer = (server: Server) => {
       console.log('Server connected: ', server);
-      socket.emit('connectChannel', { sessionId, channelId: server.lobbyId });
       store.dispatch(setServer(server));
+      socket.emit('connectChannel', { sessionId, channelId: server.lobbyId });
     };
     const handleDisconnectServer = () => {
       console.log('Server disconnected');
