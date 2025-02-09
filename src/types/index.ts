@@ -94,6 +94,7 @@ export interface Channel {
   permission: ChannelPermission;
   isCategory: boolean;
   isLobby: boolean;
+  serverId: string;
   userIds: string[];
   users: User[];
   messageIds: string[];
