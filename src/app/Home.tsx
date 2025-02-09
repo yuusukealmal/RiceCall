@@ -108,6 +108,18 @@ const Home = () => {
       console.log('Server update: ', server);
       store.dispatch(setServer(server));
     };
+    const handlePlaySound = (sound: 'join' | 'leave') => {
+      switch (sound) {
+        case 'join':
+          console.log('Play join sound');
+          joinSoundRef.current?.play();
+          break;
+        case 'leave':
+          console.log('Play leave sound');
+          leaveSoundRef.current?.play();
+          break;
+      }
+    };
 
     socket.on('connectUser', handleConnectUser);
     socket.on('disconnectUser', handleDisconnectUser);
@@ -117,6 +129,7 @@ const Home = () => {
     socket.on('disconnectChannel', handleDisconnectChannel);
     socket.on('userPresenceUpdate', handleUpdateUserPresence);
     socket.on('serverUpdate', handleServerUpdate);
+    socket.on('playSound', handlePlaySound);
 
     return () => {
       socket.off('connectUser', handleConnectUser);
@@ -127,6 +140,7 @@ const Home = () => {
       socket.off('disconnectChannel', handleDisconnectChannel);
       socket.off('userPresenceUpdate', handleUpdateUserPresence);
       socket.off('serverUpdate', handleServerUpdate);
+      socket.off('playSound', handlePlaySound);
     };
   }, [sessionId, user, server]);
 
