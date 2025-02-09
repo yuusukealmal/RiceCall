@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux';
 
 // Hooks
 import { useSocket } from '@/hooks/SocketProvider';
+import { errorHandler } from '@/utils/errorHandler';
 
 // ServerCard Component
 interface ServerCardProps {
@@ -32,6 +33,9 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
 
   const handleServerSelect = (serverId: string) => {
     sokcet?.emit('connectServer', { serverId, sessionId });
+    errorHandler.handle = () => {
+      console.log('error');
+    };
   };
 
   return (

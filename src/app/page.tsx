@@ -9,8 +9,8 @@ import { SocketProvider } from '@/hooks/SocketProvider';
 // Redux
 import store from '@/redux/store';
 
-// Components
 import Home from './Home';
+
 
 const Page = () => {
   return (
