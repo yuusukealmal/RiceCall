@@ -112,55 +112,59 @@ const server = http.createServer((req, res) => {
     });
 
     form.parse(req, async (err, fields, files) => {
-      if (err) {
-        sendError(res, 400, '檔案上傳失敗');
-        return;
-      }
+      // 用於追蹤上傳的檔案路徑
+      let uploadedFilePath = null;
 
-      console.log(fields, files);
       try {
-        const userId = fields.userId;
-        if (!userId) {
-          sendError(res, 400, '缺少使用者ID');
+        if (err) {
+          sendError(res, 400, '檔案上傳失敗');
           return;
         }
+
+        // 保存上傳的檔案路徑以便需要時刪除
+        if (files.icon && files.icon[0]) {
+          uploadedFilePath = files.icon[0].filepath;
+        }
+
+        // 處理頭像路徑
+        let iconPath = '/logo_server_def.png';
+        if (uploadedFilePath) {
+          iconPath = `/uploads/serverAvatars/${path.basename(
+            uploadedFilePath,
+          )}`;
+        }
+
+        const userId = fields.userId;
+        if (!userId) {
+          throw new Error('缺少使用者ID');
+        }
+
         const name = fields.name;
         const description = fields.description || '';
 
         // 驗證必要欄位
         if (!name || !userId) {
-          sendError(res, 400, '缺少必要欄位');
-          return;
+          throw new Error('缺少必要欄位');
         }
 
         // 獲取資料庫
-        const serverList = (await db.get('serverList')) || {};
-        const channelList = (await db.get('channelList')) || {};
-        const usersList = (await db.get('usersList')) || {};
-        const serverMembers = (await db.get('serverMembers')) || {};
+        const servers = (await db.get('servers')) || {};
+        const channels = (await db.get('channels')) || {};
+        const users = (await db.get('users')) || {};
+        const members = (await db.get('members')) || {};
 
         // 檢查用戶是否存在
-        const user = usersList[userId];
+        const user = users[userId];
         if (!user) {
-          sendError(res, 404, '用戶不存在');
-          return;
+          throw new Error('用戶不存在');
         }
 
         // 檢查用戶創建的伺服器數量
-        const userOwnedServerCount = Object.values(serverList).filter(
+        const userOwnedServerCount = Object.values(servers).filter(
           (server) => server.ownerId === userId,
         ).length;
         if (userOwnedServerCount >= 3) {
-          sendError(res, 400, '已達到最大擁有伺服器數量限制');
-          return;
-        }
-
-        // 獲取上傳的文件
-        let avatarPath = '/logo_server_def.png';
-        if (files.avatar) {
-          avatarPath = `/uploads/serverAvatars/${path.basename(
-            files.avatar[0].filepath,
-          )}`;
+          throw new Error('已達到最大擁有伺服器數量限制');
         }
 
         // 創建新伺服器
@@ -168,13 +172,12 @@ const server = http.createServer((req, res) => {
         const lobbyId = uuidv4();
         const membershipId = uuidv4();
 
-        // 創建新伺服器
         const newServer = {
           id: serverId,
-          displayId: generateUniqueDisplayId(serverList),
+          displayId: generateUniqueDisplayId(servers),
           name: name,
           announcement: description || '',
-          icon: avatarPath,
+          icon: iconPath,
           userIds: [userId],
           channelIds: [lobbyId],
           lobbyId: lobbyId,
@@ -193,9 +196,9 @@ const server = http.createServer((req, res) => {
           createdAt: Date.now().valueOf(),
         };
 
-        // 保存到資料庫
-        serverList[serverId] = newServer;
-        channelList[lobbyId] = {
+        // 儲存到資料庫
+        servers[serverId] = newServer;
+        channels[lobbyId] = {
           id: lobbyId,
           name: '大廳',
           permission: 'public',
@@ -207,7 +210,7 @@ const server = http.createServer((req, res) => {
         };
 
         // 更新用戶的伺服器成員資格
-        serverMembers[membershipId] = {
+        members[membershipId] = {
           id: membershipId,
           serverId: serverId,
           userId: userId,
@@ -218,22 +221,38 @@ const server = http.createServer((req, res) => {
           joinedAt: Date.now().valueOf(),
         };
 
-        await db.set('serverList', serverList);
-        await db.set('channelList', channelList);
-        await db.set('serverMembers', serverMembers);
+        console.log('Created a new server', {
+          server: servers[serverId],
+          channels: channels[lobbyId],
+          members: members[membershipId],
+        });
+
+        await db.set('servers', servers);
+        await db.set('channels', channels);
+        await db.set('members', members);
 
         new Logger('Server').success(
           `New server created: ${serverId} by user ${userId}`,
         );
 
-        // 返回成功
         sendSuccess(res, {
           message: '伺服器創建成功',
           server: newServer,
         });
       } catch (error) {
+        // 刪除上傳的檔案
+        if (uploadedFilePath) {
+          fs.unlink(uploadedFilePath).catch((err) => {
+            new Logger('Server').error(`Error deleting file: ${err.message}`);
+          });
+        }
+
         new Logger('Server').error(`Create server error: ${error.message}`);
-        sendError(res, 500, '伺服器創建失敗');
+        sendError(
+          res,
+          error.message === '用戶不存在' ? 404 : 400,
+          error.message,
+        );
       }
     });
     return;
