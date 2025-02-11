@@ -47,7 +47,7 @@ const Tabs: React.FC<TabsProps> = React.memo(({ selectedId, onSelect }) => {
             className="min-w-32 text-center -mb-2 select-none"
           >
             <div
-              className={`p-2 h-8 cursor-pointer font-medium ${
+              className={`p-3 h-8 cursor-pointer font-medium ${
                 TabId === selectedId
                   ? 'bg-white text-blue-500 rounded-t-xl  text-based'
                   : 'bg-blue-600 hover:bg-blue-700 text-white rounded-t-xl text-center'
