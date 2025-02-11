@@ -17,6 +17,9 @@ import { useSelector } from 'react-redux';
 import { useSocket } from '@/hooks/SocketProvider';
 import { errorHandler } from '@/utils/errorHandler';
 
+// Services
+import { API_URL } from '@/services/api.service';
+
 // ServerCard Component
 interface ServerCardProps {
   server: Server;
@@ -38,7 +41,9 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
     };
   };
 
-  const serverIcon = server.iconUrl ?? '/logo_server_def.png';
+  const serverIcon = server.iconUrl
+    ? API_URL + server.iconUrl
+    : '/logo_server_def.png';
   const serverName = server.name ?? '';
   const serverDisplayId = server.displayId ?? '';
   const serverAnnouncement = server.announcement ?? '';

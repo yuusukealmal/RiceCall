@@ -29,6 +29,9 @@ import type { User, Server, Message } from '@/types';
 // Socket
 import { useSocket } from '@/hooks/SocketProvider';
 
+// Services
+import { API_URL } from '@/services/api.service';
+
 const getStoredBoolean = (key: string, defaultValue: boolean): boolean => {
   const stored = localStorage.getItem(key);
   if (stored === null) return defaultValue;
@@ -152,7 +155,9 @@ const ServerPage: React.FC = () => {
 
   const userPermission = server.members?.[user.id].permissionLevel ?? 1;
   const serverChannels = server.channels ?? [];
-  const serverIcon = server.iconUrl ?? '/logo_server_def.png';
+  const serverIcon = server.iconUrl
+    ? API_URL + server.iconUrl
+    : '/logo_server_def.png';
   const serverName = server.name ?? '';
   const serverDisplayId = server.displayId ?? '';
   const serverAnnouncement = server.announcement ?? '';
