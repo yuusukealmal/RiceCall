@@ -1928,3 +1928,55 @@ const generateUniqueDisplayId = (serverList, baseId = 20000000) => {
 
   return displayId;
 };
+
+const cleanupUnusedAvatars = async () => {
+  const logger = new Logger('Cleanup');
+  try {
+    // Get all avatar files from directory
+    const files = await fs.readdir(uploadDir);
+
+    // Get all servers from database
+    const servers = (await db.get('servers')) || {};
+
+    // Get list of active avatar URLs
+    const activeAvatars = new Set(
+      Object.values(servers)
+        .map((server) => server.iconUrl)
+        .filter((url) => url && !url.includes('logo_server_def.png'))
+        .map((url) => path.basename(url)),
+    );
+
+    // Find unused avatar files
+    const unusedFiles = files.filter((file) => {
+      // Skip non-image files
+      if (!Object.keys(MIME_TYPES).some((ext) => file.endsWith(ext))) {
+        return false;
+      }
+      // Check if file is not used by any server
+      return !activeAvatars.has(file);
+    });
+
+    // Delete unused files
+    for (const file of unusedFiles) {
+      try {
+        await fs.unlink(path.join(uploadDir, file));
+        logger.success(`Deleted unused avatar: ${file}`);
+      } catch (error) {
+        logger.error(`Error deleting file ${file}: ${error.message}`);
+      }
+    }
+
+    logger.info(
+      `Cleanup complete. Removed ${unusedFiles.length} unused avatar files`,
+    );
+  } catch (error) {
+    logger.error(`Avatar cleanup failed: ${error.message}`);
+  }
+};
+
+// Run cleanup every 24 hours
+const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+setInterval(cleanupUnusedAvatars, CLEANUP_INTERVAL);
+
+// Run initial cleanup on server start
+cleanupUnusedAvatars().catch(console.error);
