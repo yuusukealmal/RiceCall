@@ -18,7 +18,6 @@ import EmojiGrid from '@/components/EmojiGrid';
 import MarkdownViewer from '@/components/MarkdownViewer';
 import MessageViewer from '@/components/MessageViewer';
 import ChannelViewer from '@/components/ChannelViewer';
-import ServerIcon from '@/components/ServerIcon';
 
 // Modals
 import ServerSettingModal from '@/modals/ServerSettingModal';
@@ -153,7 +152,7 @@ const ServerPage: React.FC = () => {
 
   const userPermission = server.members?.[user.id].permissionLevel ?? 1;
   const serverChannels = server.channels ?? [];
-  const serverIcon = server.icon ?? '';
+  const serverIcon = server.iconUrl ?? '/logo_server_def.png';
   const serverName = server.name ?? '';
   const serverDisplayId = server.displayId ?? '';
   const serverAnnouncement = server.announcement ?? '';
@@ -174,7 +173,7 @@ const ServerPage: React.FC = () => {
         {/* Server image and info */}
         <div className="flex items-center justify-between p-2 border-b mb-4">
           <div className="flex items-center space-x-3">
-            <ServerIcon iconPath={serverIcon} />
+            <img src={serverIcon} alt="Server Icon" className="w-14 h-14" />
             <div>
               <div className="text-gray-700">{serverName} </div>
               <div className="flex flex-row items-center gap-1">
@@ -272,11 +271,11 @@ const ServerPage: React.FC = () => {
                 e.preventDefault();
                 handleSendMessage({
                   id: '',
-                  senderId: user.id,
-                  sender: user,
                   content: messageInput,
-                  timestamp: 0,
                   type: 'general',
+                  channelId: user.presence?.currentChannelId ?? '',
+                  senderId: user.id,
+                  timestamp: 0,
                 });
                 setMessageInput('');
               }}
