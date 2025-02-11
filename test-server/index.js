@@ -223,18 +223,18 @@ const server = http.createServer((req, res) => {
 
         // 創建新伺服器
         const serverId = uuidv4();
-        const lobbyId = uuidv4();
+        const channelId = uuidv4();
         const membershipId = uuidv4();
 
-        const newServer = {
+        const server = {
           id: serverId,
           displayId: generateUniqueDisplayId(servers),
           name: name,
           announcement: description || '',
           icon: iconPath,
           userIds: [userId],
-          channelIds: [lobbyId],
-          lobbyId: lobbyId,
+          channelIds: [channelId],
+          lobbyId: channelId,
           permissions: {
             [userId]: 6, // 6 = 群組擁有者
           },
@@ -251,9 +251,8 @@ const server = http.createServer((req, res) => {
         };
 
         // 儲存到資料庫
-        servers[serverId] = newServer;
-        channels[lobbyId] = {
-          id: lobbyId,
+        const channel = {
+          id: channelId,
           name: '大廳',
           permission: 'public',
           isLobby: true,
@@ -264,7 +263,7 @@ const server = http.createServer((req, res) => {
         };
 
         // 更新用戶的伺服器成員資格
-        members[membershipId] = {
+        const member = {
           id: membershipId,
           serverId: serverId,
           userId: userId,
@@ -275,23 +274,17 @@ const server = http.createServer((req, res) => {
           joinedAt: Date.now().valueOf(),
         };
 
-        console.log('Created a new server', {
-          server: servers[serverId],
-          channels: channels[lobbyId],
-          members: members[membershipId],
-        });
-
-        await db.set('servers', servers);
-        await db.set('channels', channels);
-        await db.set('members', members);
+        await db.set(`servers.${serverId}`, server);
+        await db.set(`channels.${channelId}`, channel);
+        await db.set(`members.${membershipId}`, member);
 
         new Logger('Server').success(
           `New server created: ${serverId} by user ${userId}`,
         );
 
         sendSuccess(res, {
-          message: '伺服器創建成功',
-          server: newServer,
+          message: 'success',
+          serverId: serverId,
         });
       } catch (error) {
         // 刪除上傳的檔案
