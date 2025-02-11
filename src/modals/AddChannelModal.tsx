@@ -97,6 +97,8 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
         submitText="新增"
         onClose={onClose}
         onSubmit={handleSubmit}
+        width="400px"
+        height="300px"
       >
         <input
           type="text"

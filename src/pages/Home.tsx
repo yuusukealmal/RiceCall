@@ -196,9 +196,9 @@ const Home = () => {
     <>
       <div className="h-screen flex flex-col bg-background font-['SimSun'] overflow-hidden">
         {/* Top Navigation */}
-        <div className="bg-blue-600 p-2 flex items-center justify-between text-white text-sm flex-none h-12 gap-3 min-w-max">
+        <div className="bg-blue-600 flex items-center justify-between text-white text-sm flex-none h-12 gap-3 min-w-max">
           {/* User State Display */}
-          <div className="flex items-center space-x-2 min-w-max">
+          <div className="flex items-center space-x-2 min-w-max m-2">
             <img
               src="/rc_logo_small.png"
               alt="RiceCall"
@@ -247,7 +247,7 @@ const Home = () => {
               onSelect={(tabId) => setSelectedTabId(tabId)}
             />
           )}
-          <div className="flex items-center space-x-2 min-w-max">
+          <div className="flex items-center space-x-2 min-w-max m-2">
             <button className="hover:bg-blue-700 p-2 rounded">
               <Minus size={16} />
             </button>

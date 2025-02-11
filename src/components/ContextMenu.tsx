@@ -30,15 +30,18 @@ const ContextMenu: React.FC<ContextMenuProps> = React.memo(
 
     return (
       <div
-        className="fixed bg-white shadow-lg rounded border py-1 z-50"
+        className="fixed bg-white shadow-lg rounded border z-50"
         style={{ top: y, left: x }}
         ref={ref}
       >
         {items.map((item, index) => (
           <button
             key={index}
-            className="flex w-full px-4 py-2 text-left hover:bg-gray-100"
+            className={`flex w-full px-4 py-2 text-left hover:bg-gray-100 ${
+              item.disabled ? 'bg-gray-100 cursor-not-allowed' : ''
+            }`}
             onClick={item.onClick}
+            disabled={item.disabled ?? false}
           >
             {item.icon}
             {item.label}
