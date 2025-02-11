@@ -181,7 +181,7 @@ const server = http.createServer((req, res) => {
         }
 
         // 處理頭像路徑
-        let iconPath = '/logo_server_def.png';
+        let iconPath = null;
         if (uploadedFilePath) {
           iconPath = `/uploads/serverAvatars/${path.basename(
             uploadedFilePath,
