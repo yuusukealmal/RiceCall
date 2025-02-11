@@ -188,13 +188,18 @@ const server = http.createServer((req, res) => {
           )}`;
         }
 
-        const userId = fields.userId;
+        const _userId = fields.userId;
+        const userId = _userId ? _userId.toString() : null;
         if (!userId) {
           throw new Error('缺少使用者ID');
         }
 
-        const name = fields.name;
-        const description = fields.description || '';
+        const name = fields.name
+          ? fields.name.toString().trim().substring(0, 30)
+          : 'Untitled Server';
+        const description = fields.description
+          ? fields.description.toString().substring(0, 200)
+          : '';
 
         // 驗證必要欄位
         if (!name || !userId) {
@@ -203,9 +208,7 @@ const server = http.createServer((req, res) => {
 
         // 獲取資料庫
         const servers = (await db.get('servers')) || {};
-        const channels = (await db.get('channels')) || {};
         const users = (await db.get('users')) || {};
-        const members = (await db.get('members')) || {};
 
         // 檢查用戶是否存在
         const user = users[userId];
@@ -232,7 +235,7 @@ const server = http.createServer((req, res) => {
           name: name,
           announcement: description || '',
           icon: iconPath,
-          userIds: [userId],
+          userIds: [],
           channelIds: [channelId],
           lobbyId: channelId,
           permissions: {
@@ -1884,28 +1887,37 @@ const getFriendCategory = async (categoryId) => {
   };
 };
 const getJoinRecServers = async (userId, limit = 10) => {
-  const _servers = (await db.get('servers')) || {};
-  const _members = (await db.get('members')) || {};
-  const { joinedServers, notJoinedServers } = Object.values(_servers).reduce(
-    (result, server) => {
-      const member = Object.values(_members).find(
-        (member) => member.userId === userId && member.serverId === server.id,
-      );
-      if (member) {
-        result.joinedServers.push(server);
-      } else {
-        result.notJoinedServers.push(server);
-      }
-      return result;
-    },
-    { joinedServers: [], notJoinedServers: [] },
-  );
-  const recommendedServers = _.sampleSize(notJoinedServers, limit) ?? [];
+  try {
+    const [_servers = {}, _members = {}] = await Promise.all([
+      db.get('servers'),
+      db.get('members'),
+    ]);
 
-  return {
-    joinedServers: joinedServers,
-    recommendedServers: recommendedServers,
-  };
+    const userServerIds = new Set(
+      Object.values(_members)
+        .filter((member) => member.userId === userId)
+        .map((member) => member.serverId),
+    );
+
+    const { joinedServers, notJoinedServers } = Object.values(_servers).reduce(
+      (result, server) => {
+        if (userServerIds.has(server.id)) result.joinedServers.push(server);
+        else result.notJoinedServers.push(server);
+        return result;
+      },
+      { joinedServers: [], notJoinedServers: [] },
+    );
+
+    const recommendedServers = _.sampleSize(notJoinedServers, limit) ?? [];
+
+    return {
+      joinedServers,
+      recommendedServers,
+    };
+  } catch (error) {
+    console.error('Error in getJoinRecServers:', error);
+    throw new Error('Failed to get recommended servers');
+  }
 };
 const generateUniqueDisplayId = (serverList, baseId = 20000000) => {
   let displayId = baseId + Object.keys(serverList).length;
