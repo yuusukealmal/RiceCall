@@ -10,8 +10,8 @@
 
 | branch        | role                 |
 | ------------- | -------------------- |
-| `ts-refactor` | client / test-server |
-| `Websocket`   | server               |
+| [ts-refactor](https://github.com/Nerdy-Home-ReOpen/rc-voice/tree/ts-refactor) | client / test-server |
+| [backend](https://github.com/Nerdy-Home-ReOpen/rc-voice/tree/Websocket)   | server               |
 
 ## 如何啟動
 
