@@ -25,6 +25,7 @@ const EmojiGrid: React.FC<EmojiGridProps> = ({ onEmojiSelect, isOpen }) => {
               onClick={() => {
                 onEmojiSelect?.(`[emoji_${emoji.id}]`);
               }}
+              key={emoji.id}
               title={emoji.alt}
             >
               <img
