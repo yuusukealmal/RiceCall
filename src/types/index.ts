@@ -144,8 +144,8 @@ export interface Message {
   senderId: string;
   timestamp: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  channel: Channel | null;
-  sender: User | null;
+  channel?: Channel | null;
+  sender?: User | null;
 }
 export interface MessageList {
   [messageId: string]: Message;
@@ -160,5 +160,6 @@ export interface ContextMenuItem {
   id: string;
   icon: React.ReactNode;
   label: string;
+  disabled?: boolean;
   onClick: () => void;
 }

@@ -82,6 +82,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(({ category }) => {
         }
         onContextMenu={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           setContentMenuPos({ x: e.pageX, y: e.pageY });
           setShowContextMenu(true);
         }}
@@ -104,6 +105,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(({ category }) => {
         <div
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             setShowAddChannelModal(true);
           }}
           className="opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-1 rounded"
@@ -140,7 +142,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(({ category }) => {
               label: '編輯',
               onClick: () => {
                 setShowContextMenu(false);
-                setShowAddChannelModal(true);
+                setShowEditChannelModal(true);
               },
             },
             {
@@ -222,6 +224,12 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(({ channel }) => {
           onDoubleClick={() => {
             channelVisibility !== 'readonly' && handleJoinChannel(channel.id);
           }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setContentMenuPos({ x: e.pageX, y: e.pageY });
+            setShowContextMenu(true);
+          }}
         >
           <div className="flex items-center flex-1 min-w-0">
             <div className="min-w-3.5 min-h-3.5 rounded-sm flex items-center justify-center outline outline-1 outline-gray-200 mr-1">
@@ -241,6 +249,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(({ channel }) => {
           }}
           onContextMenu={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             setContentMenuPos({ x: e.pageX, y: e.pageY });
             setShowContextMenu(true);
           }}
@@ -270,6 +279,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(({ channel }) => {
             className="opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-1 rounded"
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               setContentMenuPos({ x: e.pageX, y: e.pageY });
               setShowContextMenu(true);
             }}
@@ -308,6 +318,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(({ channel }) => {
               id: 'delete',
               icon: <Trash size={14} className="w-5 h-5 mr-2" />,
               label: '刪除',
+              disabled: channel.isLobby,
               onClick: () => {
                 setShowContextMenu(false);
                 // Open Delete Channel Modal
@@ -373,11 +384,13 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user }) => {
         data-user-id={user.id}
         onDoubleClick={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           setContentMenuPos({ x: e.pageX, y: e.pageY });
           setShowInfoBlock(true);
         }}
         onContextMenu={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           setContentMenuPos({ x: e.pageX, y: e.pageY });
           setShowContextMenu(true);
         }}
@@ -490,16 +503,7 @@ const ChannelViewer: React.FC = () => {
             {
               id: 'addChannel',
               icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-              label: '新增頻道',
-              onClick: () => {
-                setShowContextMenu(false);
-                setShowAddChannelModal(true);
-              },
-            },
-            {
-              id: 'addCategory',
-              icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-              label: '新增類別',
+              label: '新增',
               onClick: () => {
                 setShowContextMenu(false);
                 setShowAddChannelModal(true);
@@ -531,6 +535,7 @@ const ChannelViewer: React.FC = () => {
         className="p-2 flex items-center justify-between text-gray-400 text-xs select-none"
         onContextMenu={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           setContentMenuPos({ x: e.pageX, y: e.pageY });
           setShowContextMenu(true);
         }}

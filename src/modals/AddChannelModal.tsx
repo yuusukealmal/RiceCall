@@ -118,7 +118,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
           onChange={(e) =>
             setFormData((prev) => ({
               ...prev,
-              permission: e.target.value as Visibility,
+              visibility: e.target.value as Visibility,
             }))
           }
           className="w-full p-2 border rounded mb-4"

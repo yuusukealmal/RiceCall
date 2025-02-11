@@ -20,7 +20,6 @@ const validateName = (name: string): string => {
 interface ChannelFormData {
   name: string;
   visibility: Visibility;
-  isCategory: boolean;
 }
 
 interface FormErrors {
@@ -46,7 +45,6 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const [formData, setFormData] = useState<ChannelFormData>({
       name: channel.name,
       visibility: channel.settings.visibility,
-      isCategory: channel.isCategory,
     });
     const [errors, setErrors] = useState<FormErrors>({});
 
@@ -59,22 +57,25 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
       });
 
       const editedChannel: Channel = {
-        ...formData,
         ...channel,
+        name: formData.name,
+        settings: {
+          ...channel.settings,
+          visibility: formData.visibility,
+        },
       };
 
       if (!nameError) {
-        try {
-          socket?.emit('editChannel', {
-            sessionId: sessionId,
-            channel: editedChannel,
-          });
-          onClose();
-        } catch (error) {
+        socket?.emit('editChannel', {
+          sessionId: sessionId,
+          channel: editedChannel,
+        });
+        socket?.on('error', (error: { message: string }) => {
           setErrors({
-            general: error instanceof Error ? error.message : '編輯失敗',
+            general: error.message,
           });
-        }
+        });
+        onClose();
       }
     };
 
@@ -84,6 +85,8 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
         submitText="確定"
         onClose={onClose}
         onSubmit={handleSubmit}
+        width="400px"
+        height="300px"
       >
         <input
           type="text"
@@ -103,7 +106,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
           onChange={(e) =>
             setFormData((prev) => ({
               ...prev,
-              permission: e.target.value as Visibility,
+              visibility: e.target.value as Visibility,
             }))
           }
           className="w-full p-2 border rounded mb-4"

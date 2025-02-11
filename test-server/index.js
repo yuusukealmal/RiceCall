@@ -244,6 +244,8 @@ const server = http.createServer((req, res) => {
           },
           createdAt: Date.now().valueOf(),
         };
+        await db.set(`servers.${serverId}`, server);
+
         const channel = {
           id: channelId,
           name: '大廳',
@@ -261,6 +263,7 @@ const server = http.createServer((req, res) => {
           },
           createdAt: Date.now().valueOf(),
         };
+        await db.set(`channels.${channelId}`, channel);
 
         // Create new member
         const memberId = uuidv4();
@@ -274,9 +277,6 @@ const server = http.createServer((req, res) => {
           permissionLevel: 6,
           joinedAt: Date.now().valueOf(),
         };
-
-        await db.set(`servers.${serverId}`, server);
-        await db.set(`channels.${channelId}`, channel);
         await db.set(`members.${memberId}`, member);
 
         new Logger('Server').success(
@@ -1240,6 +1240,7 @@ io.on('connection', async (socket) => {
           tag: 'USER_ERROR',
           status_code: 404,
         });
+        return;
       }
       const server =
         servers[presenceStates[`presence_${user.id}`].currentServerId];
@@ -1342,6 +1343,7 @@ io.on('connection', async (socket) => {
           tag: 'USER_ERROR',
           status_code: 404,
         });
+        return;
       }
       const server =
         servers[presenceStates[`presence_${user.id}`].currentServerId];
@@ -1361,7 +1363,7 @@ io.on('connection', async (socket) => {
       }
 
       // Update channel
-      await db.set(`channel.${channel.id}`, channel);
+      await db.set(`channels.${channel.id}`, channel);
 
       // Emit updated data (to all users in the server)
       io.to(`server_${server.id}`).emit('serverUpdate', {
@@ -1428,6 +1430,7 @@ io.on('connection', async (socket) => {
           tag: 'USER_ERROR',
           status_code: 404,
         });
+        return;
       }
       const server =
         servers[presenceStates[`presence_${user.id}`].currentServerId];
@@ -1517,6 +1520,7 @@ io.on('connection', async (socket) => {
           tag: 'USER_ERROR',
           status_code: 404,
         });
+        return;
       }
       const server =
         servers[presenceStates[`presence_${user.id}`].currentServerId];
@@ -1643,6 +1647,7 @@ io.on('connection', async (socket) => {
           tag: 'USER_ERROR',
           status_code: 404,
         });
+        return;
       }
       const channel =
         channels[presenceStates[`presence_${user.id}`].currentChannelId];
