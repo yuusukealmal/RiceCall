@@ -13,8 +13,11 @@ const userSlice = createSlice({
     clearUser: (state) => {
       return null;
     },
+    updateUser: (state, action: { payload: Partial<User> }) => {
+      if (state) Object.assign(state, action.payload);
+    },
   },
 });
 
-export const { setUser, clearUser } = userSlice.actions;
+export const { setUser, clearUser, updateUser } = userSlice.actions;
 export default userSlice.reducer;

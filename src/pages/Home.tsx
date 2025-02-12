@@ -27,7 +27,7 @@ import { useSocket } from '@/hooks/SocketProvider';
 // Redux
 import store from '@/redux/store';
 import { clearServer, setServer } from '@/redux/serverSlice';
-import { clearUser, setUser } from '@/redux/userSlice';
+import { clearUser, setUser, updateUser } from '@/redux/userSlice';
 import { clearSessionToken, setSessionToken } from '@/redux/sessionTokenSlice';
 
 const STATE_ICON = {
@@ -51,11 +51,11 @@ const Home = () => {
   }, []);
 
   // Redux
+  const user = useSelector((state: { user: User }) => state.user);
+  const server = useSelector((state: { server: Server }) => state.server);
   const sessionId = useSelector(
     (state: { sessionToken: string }) => state.sessionToken,
   );
-  const user = useSelector((state: { user: User }) => state.user);
-  const server = useSelector((state: { server: Server }) => state.server);
 
   useEffect(() => {
     const token =
@@ -120,6 +120,10 @@ const Home = () => {
       console.log('Server update: ', server);
       store.dispatch(setServer(server));
     };
+    const handleLevelUp = (user: User) => {
+      console.log('Level up!: ', user.level);
+      store.dispatch(updateUser({ level: user.level }));
+    };
     const handlePlaySound = (sound: 'join' | 'leave') => {
       switch (sound) {
         case 'join':
@@ -143,6 +147,7 @@ const Home = () => {
     socket.on('disconnectChannel', handleDisconnectChannel);
     socket.on('userPresenceUpdate', handleUpdateUserPresence);
     socket.on('serverUpdate', handleServerUpdate);
+    socket.on('levelUp', handleLevelUp);
     socket.on('playSound', handlePlaySound);
 
     return () => {
@@ -156,6 +161,7 @@ const Home = () => {
       socket.off('disconnectChannel', handleDisconnectChannel);
       socket.off('userPresenceUpdate', handleUpdateUserPresence);
       socket.off('serverUpdate', handleServerUpdate);
+      socket.off('levelUp', handleLevelUp);
       socket.off('playSound', handlePlaySound);
     };
   }, [sessionId, server, user]);
@@ -252,8 +258,7 @@ const Home = () => {
             <button className="hover:bg-blue-700 p-2 rounded">
               <Minus size={16} />
             </button>
-            <FullscreenSquare className="hover:bg-blue-700 p-2 rounded">
-            </FullscreenSquare>
+            <FullscreenSquare className="hover:bg-blue-700 p-2 rounded"></FullscreenSquare>
             <button className="hover:bg-blue-700 p-2 rounded">
               <X size={16} />
             </button>

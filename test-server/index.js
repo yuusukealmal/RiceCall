@@ -9,6 +9,8 @@ const path = require('path');
 const _ = require('lodash');
 const fs = require('fs').promises;
 
+// TODO: Separate disconnect logic to avoid code duplication (disconnectUser, disconnectServer, disconnectChannel)
+
 // Logger
 class Logger {
   constructor(origin) {
@@ -67,10 +69,13 @@ const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' };
 // };
 
 // User Sessions
-const userSessions = new Map();
+const userSessions = new Map(); // sessionToken -> userId
 
 // User Socket Connections
-const userSockets = new Map();
+const userSockets = new Map(); // socket.id -> userId
+
+// User Contributions Interval
+const contributionInterval = new Map(); // socket.id -> interval
 
 // File Upload
 const uploadDir = path.join(__dirname, 'uploads/serverAvatars');
@@ -582,6 +587,9 @@ io.on('connection', async (socket) => {
         });
       }
 
+      // Clear user contribution interval
+      clearContributionInterval(socket.id);
+
       // Remove user socket connection
       userSockets.delete(socket.id);
 
@@ -596,7 +604,7 @@ io.on('connection', async (socket) => {
         updatedAt: Date.now(),
       };
       presenceStates[presenceId] = presence;
-      await db.set(`userPresence.${presenceId}`, presence);
+      await db.set(`presenceStates.${presenceId}`, presence);
 
       if (channel) {
         // Update channel
@@ -784,9 +792,12 @@ io.on('connection', async (socket) => {
         updatedAt: Date.now(),
       };
       presenceStates[presenceId] = presence;
-      await db.set(`userPresence.${presenceId}`, presence);
+      await db.set(`presenceStates.${presenceId}`, presence);
 
       if (channel) {
+        // Clear user contribution interval
+        clearContributionInterval(socket.id);
+
         // Update channel
         channel.userIds = channel.userIds.filter((id) => id !== user.id);
         await db.set(`channels.${channel.id}`, channel);
@@ -1027,9 +1038,12 @@ io.on('connection', async (socket) => {
         updatedAt: Date.now(),
       };
       presenceStates[presenceId] = presence;
-      await db.set(`userPresence.${presenceId}`, presence);
+      await db.set(`presenceStates.${presenceId}`, presence);
 
       if (channel) {
+        // Clear user contribution interval
+        clearContributionInterval(socket.id);
+
         // Update channel
         channel.userIds = channel.userIds.filter((id) => id !== user.id);
         await db.set(`channels.${channel.id}`, channel);
@@ -1295,7 +1309,6 @@ io.on('connection', async (socket) => {
   socket.on('editChannel', async (data) => {
     // Get database
     const users = (await db.get('users')) || {};
-    const channels = (await db.get('channels')) || {};
     const servers = (await db.get('servers')) || {};
     const presenceStates = (await db.get('presenceStates')) || {};
 
@@ -1550,14 +1563,24 @@ io.on('connection', async (socket) => {
       }
 
       // check if user is already in a channel, if so, disconnect the channel
-      const oldChannelId =
-        presenceStates[`presence_${user.id}`]?.currentChannelId;
-      if (oldChannelId && channels[oldChannelId]) {
-        const oldChannel = channels[oldChannelId];
-        oldChannel.userIds = oldChannel.userIds.filter((id) => id !== user.id);
-        await db.set(`channels.${oldChannel.id}`, oldChannel);
-        socket.leave(`channel_${oldChannel.id}`);
-        io.to(`channel_${oldChannel.id}`).emit('playSound', 'leave');
+      const prevChannel =
+        channels[presenceStates[`presence_${user.id}`]?.currentChannelId];
+
+      if (prevChannel) {
+        // Update Channel
+        prevChannel.userIds = prevChannel.userIds.filter(
+          (id) => id !== user.id,
+        );
+        await db.set(`channels.${prevChannel.id}`, prevChannel);
+
+        // Leave the channel
+        socket.leave(`channel_${prevChannel.id}`);
+
+        // Play sound
+        io.to(`channel_${prevChannel.id}`).emit('playSound', 'leave');
+      } else {
+        // Setup user interval for accumulate contribution
+        setupContributionInterval(socket.id, user.id);
       }
 
       // Update user presence
@@ -1681,6 +1704,9 @@ io.on('connection', async (socket) => {
         });
         return;
       }
+
+      // Clear user contribution interval
+      clearContributionInterval(socket.id);
 
       // Update user presence
       const presenceId = `presence_${user.id}`;
@@ -1932,6 +1958,30 @@ const generateUniqueDisplayId = (serverList, baseId = 20000000) => {
   }
 
   return displayId;
+};
+const setupContributionInterval = (socketId, userId) => {
+  const interval = setInterval(async () => {
+    // Get database
+    const _user = (await db.get(`users.${userId}`)) || {};
+
+    // Update user level per minute
+    const user = {
+      ..._user,
+      level: _user.level + 1,
+    };
+    await db.set(`users.${user.id}`, user);
+
+    // Emit updated data (only to the user)
+    io.to(socketId).emit('levelUp', {
+      ...(await getUser(user.id)),
+    });
+
+    new Logger('WebSocket').info(`User(${user.id}) level up to ${user.level}`);
+  }, 10000);
+  contributionInterval.set(socketId, interval);
+};
+const clearContributionInterval = (socketId) => {
+  clearInterval(contributionInterval.get(socketId));
 };
 
 const cleanupUnusedAvatars = async () => {
