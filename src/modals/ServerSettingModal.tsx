@@ -1,4 +1,11 @@
-import React, { ChangeEvent, memo, useCallback, useState } from 'react';
+import React, {
+  ChangeEvent,
+  memo,
+  useCallback,
+  useRef,
+  useState,
+  useEffect,
+} from 'react';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 
 // Components
@@ -65,11 +72,17 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   // Redux
   const server = useSelector((state: { server: Server }) => state.server);
 
+  const setServerIcon = useRef<HTMLInputElement>(null);
+
   const [activeTab, setActiveTab] = useState<ModalTabItem>(TABS[0]);
 
   const [searchText, setSearchText] = useState<string>('');
+  const [blockPage, setBlockPage] = useState<number>(1);
 
-  // const [page, setPage] = useState<number>(1);
+  const [editingServerData, setEditingServerData] = useState<Server>({
+    ...server,
+  });
+  const [changeState, setChangeState] = useState<string[]>([]);
 
   const [sortState, setSortState] = useState<SortState>({
     field: 'permission',
@@ -104,7 +117,6 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   // const togglePreview = (): void => setIsPreviewMode(!isPreviewMode);
 
   // const [markdownContent, setMarkdownContent] = useState<string>('');
-
   // const usersList = useCallback((): UserList => {
   //   if (!server?.members || !users) return {};
   //   return Object.values(server.members)
@@ -116,6 +128,51 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   //       return acc;
   //     }, {} as UserList);
   // }, [server?.members, users]);
+
+  useEffect(() => {
+    const findDifferencesDeep = (
+      obj1: Record<string, any>,
+      obj2: Record<string, any>,
+      prefix = '',
+    ): string[] => {
+      return Object.keys(obj1).reduce((acc, key) => {
+        const fullKey = prefix ? `${prefix}.${key}` : key; // 若為巢狀結構，則 key 會變成 "parent.child"
+
+        if (
+          typeof obj1[key] === 'object' &&
+          obj1[key] !== null &&
+          typeof obj2[key] === 'object' &&
+          obj2[key] !== null
+        ) {
+          // 若 key 對應的值是物件，則遞迴處理
+          acc.push(...findDifferencesDeep(obj1[key], obj2[key], fullKey));
+        } else if (obj1[key] !== obj2[key]) {
+          // 若值不同，則記錄變更的 key
+          acc.push(fullKey);
+        }
+        return acc;
+      }, [] as string[]);
+    };
+    const dif = findDifferencesDeep(server, editingServerData);
+    setChangeState(
+      dif.map((key) => {
+        switch (key) {
+          case 'name':
+            return '名稱';
+          case 'slogan':
+            return '口號';
+          case 'type':
+            return '類型';
+          case 'intro':
+            return '介紹';
+          case 'settings.visibility':
+            return '訪問許可權';
+          default:
+            return '';
+        } //need add more key
+      }),
+    );
+  }, [editingServerData]);
 
   const renderContent = (): React.ReactElement | null => {
     switch (activeTab.id) {
@@ -129,11 +186,16 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                     <label className="w-20 text-right text-sm">名稱</label>
                     <input
                       type="text"
-                      value={server.name}
+                      value={editingServerData.name}
                       className="flex-1 p-1 border rounded text-sm"
                       onChange={
                         /* 處理名稱變更 */
-                        () => {}
+                        (e) => {
+                          setEditingServerData({
+                            ...editingServerData,
+                            name: e.target.value,
+                          });
+                        }
                       }
                     />
                   </div>
@@ -148,17 +210,43 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                   </div>
                   <div className="flex items-start gap-4 mb-2">
                     <label className="w-20 text-right text-sm">口號</label>
-                    <textarea className="flex-1 p-2 border rounded text-sm h-20" />
+                    <textarea
+                      className="flex-1 p-2 border rounded text-sm h-20"
+                      // value={editingServerData.slogan || ''}
+                      // onChange={(e) => {
+                      //   setEditingServerData({
+                      //     ...editingServerData,
+                      //     slogan: e.target.value,
+                      //   });
+                      // }}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-4">
                     <label className="w-20 text-right text-sm">類型</label>
-                    <select className="p-1 border rounded text-sm">
-                      <option>遊戲</option>
-                      <option>音樂</option>
-                      <option>原神</option>
+                    <select
+                      className="p-1 border rounded text-sm"
+                      // onChange={(e) => {
+                      //   setEditingServerData({
+                      //     ...editingServerData,
+                      //     type: e.target.value,
+                      //   });
+                      // }}
+                    >
+                      {/* {(server?.type ?? ['遊戲', '音樂', '原神']).map(
+                        (type: string) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ),
+                      )} */}
+                      {['遊戲', '音樂', '原神'].map((type: string) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="flex items-center gap-4">
@@ -174,7 +262,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                     <label className="w-20 text-right text-sm">創建時間</label>
                     <input
                       type="text"
-                      value="2014-10-11 19:15:44"
+                      value={server.createdAt}
                       className="w-48 p-1 border rounded text-sm"
                       disabled
                     />
@@ -203,9 +291,21 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                   alt="Icon"
                   className="w-32 h-32 border-2 border-gray-300 mb-2"
                 />
-                <button className="px-4 py-1 bg-blue-50 hover:bg-blue-100 rounded text-sm">
+                <button
+                  className="px-4 py-1 bg-blue-50 hover:bg-blue-100 rounded text-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setServerIcon.current?.click();
+                  }}
+                >
                   更換頭像
                 </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={setServerIcon}
+                />
               </div>
             </div>
 
@@ -213,7 +313,15 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm mb-1">介紹</label>
-                <textarea className="w-full h-32 p-2 border rounded text-sm" />
+                <textarea
+                  className="w-full h-32 p-2 border rounded text-sm"
+                  // onChange={(e) => {
+                  //   setEditingServerData({
+                  //     ...editingServerData,
+                  //     intro: e.target.value,
+                  //   });
+                  // }}
+                />
               </div>
             </div>
           </>
@@ -228,7 +336,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                 onClick={togglePreview}
                 className="px-3 py-1 text-sm bg-blue-50 hover:bg-blue-100 rounded"
               >
-                {isPreviewMode ? '編輯' : '預覽'}
+                {isPreviewMode ? '編輯' : '預覽'}  
               </button> */}
             </div>
 
@@ -466,6 +574,17 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                     name="permission"
                     value="public"
                     className="mr-3"
+                    checked={editingServerData.settings.visibility === 'public'}
+                    onChange={(e) => {
+                      if (e.target.checked)
+                        setEditingServerData({
+                          ...editingServerData,
+                          settings: {
+                            ...editingServerData.settings,
+                            visibility: 'public',
+                          },
+                        });
+                    }}
                   />
                   <label htmlFor="public">公開群</label>
                 </div>
@@ -477,6 +596,19 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                     name="permission"
                     value="members"
                     className="mr-3"
+                    checked={
+                      editingServerData.settings.visibility === 'private'
+                    }
+                    onChange={(e) => {
+                      if (e.target.checked)
+                        setEditingServerData({
+                          ...editingServerData,
+                          settings: {
+                            ...editingServerData.settings,
+                            visibility: 'private',
+                          },
+                        });
+                    }}
                   />
                   <div>
                     <label htmlFor="members">半公開群</label>
@@ -493,7 +625,19 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                     name="permission"
                     value="private"
                     className="mr-3"
-                    defaultChecked
+                    checked={
+                      editingServerData.settings.visibility === 'invisible'
+                    }
+                    onChange={(e) => {
+                      if (e.target.checked)
+                        setEditingServerData({
+                          ...editingServerData,
+                          settings: {
+                            ...editingServerData.settings,
+                            visibility: 'invisible',
+                          },
+                        });
+                    }}
                   />
                   <div>
                     <label htmlFor="private">私密群</label>
@@ -598,6 +742,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
             </div>
           </div>
         );
+
       case '黑名單管理':
         const blockAccountList = {
           '1': { name: 'test1' },
@@ -666,44 +811,45 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
             </div>
           </div>
         );
+
         const blockIpPage = <div></div>;
 
         return (
           <div>
             <div className="flex flex-col items-center">
-              {/* <div className="flex flex-row items-center justify-start mb-2">
+              <div className="flex flex-row items-center justify-start mb-2">
                 <div className="flex flex-row border rounded text-sm font-medium">
                   <div
                     className={`p-2 bg-${
-                      page == 1 ? 'gray-200' : 'white'
-                    } cursor-pointer hover:bg-gray-200`}
+                      blockPage == 1 ? 'gray-200' : 'white'
+                    } cursor-pointer hover:bg-gray-200 w-20 text-center`}
                     onClick={() => {
-                      setPage(1);
+                      setBlockPage(1);
                     }}
                   >
                     封鎖帳號
                   </div>
                   <div
                     className={`p-2 bg-${
-                      page == 1 ? 'white' : 'gray-200'
-                    } cursor-pointer hover:bg-gray-200`}
+                      blockPage == 1 ? 'white' : 'gray-200'
+                    } cursor-pointer hover:bg-gray-200 w-20 text-center`}
                     onClick={() => {
-                      setPage(2);
+                      setBlockPage(2);
                     }}
                   >
                     封鎖IP
                   </div>
                 </div>
-              </div> */}
-              {/* {page === 1 ? blockAccountPage : page === 2 ? blockIpPage : null} */}
-              {blockAccountPage}
-            </div>
-
-            <div className="mt-4 text-right text-sm text-gray-500 select-none">
-              右鍵可以進行處理
+              </div>
+              {blockPage === 1
+                ? blockAccountPage
+                : blockPage === 2
+                ? blockIpPage
+                : null}
             </div>
           </div>
         );
+
       default:
         return <div>{activeTab.id}</div>;
     }
@@ -717,6 +863,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
       onClose={onClose}
       onSubmit={onClose}
       onSelectTab={(tab) => setActiveTab(tab)}
+      changeContent={changeState}
     >
       {renderContent()}
     </Modal>
