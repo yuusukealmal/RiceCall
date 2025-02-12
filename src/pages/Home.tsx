@@ -1,6 +1,6 @@
 'use client';
 
-import { Minus, Square, X } from 'lucide-react';
+import { Minus, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -16,6 +16,7 @@ import ServerPage from '@/pages/ServerPage';
 // Components
 import Tabs from '@/components/Tabs';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import FullscreenSquare from '@/components/FullscreenSquare';
 
 // Utils
 import { measureLatency } from '@/utils/measureLatency';
@@ -251,9 +252,8 @@ const Home = () => {
             <button className="hover:bg-blue-700 p-2 rounded">
               <Minus size={16} />
             </button>
-            <button className="hover:bg-blue-700 p-2 rounded">
-              <Square size={16} />
-            </button>
+            <FullscreenSquare className="hover:bg-blue-700 p-2 rounded">
+            </FullscreenSquare>
             <button className="hover:bg-blue-700 p-2 rounded">
               <X size={16} />
             </button>
