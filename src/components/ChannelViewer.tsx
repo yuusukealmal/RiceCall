@@ -386,7 +386,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user, server }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const mainUserPermission = server.members?.[mainUser.id].permissionLevel ?? 1;
+  const mainUserPermission = server.members?.[user.id].permissionLevel ?? 1;
   const userPermission = server.members?.[user.id].permissionLevel ?? 1;
   const userNickname = server.members?.[user.id].nickname ?? user.name;
   const userLevel = Math.min(56, Math.ceil(user.level / 5)); // 56 is max level
@@ -466,7 +466,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user, server }) => {
               id: 'kick',
               icon: <Trash size={14} className="w-5 h-5 mr-2" />,
               label: '踢出',
-              disabled: mainUser.id == user.id ? true : false,
+              disabled: user.id == user.id ? true : false,
               onClick: () => {
                 setShowContextMenu(false);
                 // Open Kick User Modal
@@ -513,7 +513,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
     useState<boolean>(false);
 
   const userCurrentChannel = channels.find(
-    (_) => _.id == mainUser.presence?.currentChannelId,
+    (_) => _.id == user.presence?.currentChannelId,
   );
   const userCurrentChannelName = userCurrentChannel?.name ?? '';
   const userPermission = server.members?.[user.id].permissionLevel ?? 1;
