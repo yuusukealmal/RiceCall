@@ -1986,6 +1986,9 @@ const setupCleanupInterval = async () => {
   // Run initial cleanup on setup
   cleanupUnusedAvatars().catch(console.error);
 };
+const calculateRequiredXP = (level) => {
+  return Math.floor(100 * Math.pow(1.1, level));
+};
 const createUserIdSocketIdMap = (userId, socketId) => {
   if (!socketToUser.has(socketId) && !userToSocket.has(userId)) {
     socketToUser.set(socketId, userId);
