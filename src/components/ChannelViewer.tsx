@@ -185,7 +185,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
               </Droppable>
             )}
             {/* Context Menu */}
-            {showContextMenu && (
+            {showContextMenu && canEdit && (
               <ContextMenu
                 onClose={() => setShowContextMenu(false)}
                 x={contentMenuPos.x}
@@ -195,7 +195,6 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
                     id: 'edit',
                     icon: <Edit size={14} className="w-5 h-5 mr-2" />,
                     label: '編輯',
-                    disabled: !canEdit,
                     onClick: () => {
                       setShowContextMenu(false);
                       setShowEditChannelModal(true);
@@ -205,7 +204,6 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
                     id: 'delete',
                     icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                     label: '刪除',
-                    disabled: !canEdit,
                     onClick: () => {
                       setShowContextMenu(false);
                       setShowDeleteChannelModal(true);
@@ -252,6 +250,7 @@ interface ChannelTabProps {
 const ChannelTab: React.FC<ChannelTabProps> = React.memo(
   ({ channel, server, user, index }) => {
     // Redux
+    const mainUser = useSelector((state: { user: User }) => state.user);
     const sessionId = useSelector(
       (state: { sessionToken: string }) => state.sessionToken,
     );
@@ -361,12 +360,12 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             {(channel.isLobby || expanded) && channelUsers.length > 0 && (
               <div className="ml-6">
                 {channelUsers.map((user: User) => (
-                  <UserTab key={user.id} user={user} server={server} />
+                  <UserTab key={user.id} user={user} server={server} mainUser={mainUser} />
                 ))}
               </div>
             )}
             {/* Context Menu */}
-            {showContextMenu && (
+            {showContextMenu && canEdit && (
               <ContextMenu
                 onClose={() => setShowContextMenu(false)}
                 x={contentMenuPos.x}
@@ -376,7 +375,6 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
                     id: 'edit',
                     icon: <Edit size={14} className="w-5 h-5 mr-2" />,
                     label: '編輯',
-                    disabled: !canEdit,
                     onClick: () => {
                       setShowContextMenu(false);
                       setShowEditChannelModal(true);
@@ -386,7 +384,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
                     id: 'delete',
                     icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                     label: '刪除',
-                    disabled: channel.isLobby || !canEdit,
+                    disabled: channel.isLobby,
                     onClick: () => {
                       setShowContextMenu(false);
                       setShowDeleteChannelModal(true);
@@ -419,9 +417,10 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 interface UserTabProps {
   user: User;
   server: Server;
+  mainUser: User;
 }
 
-const UserTab: React.FC<UserTabProps> = React.memo(({ user, server }) => {
+const UserTab: React.FC<UserTabProps> = React.memo(({ user, server, mainUser }) => {
   // Context Menu Control
   const [contentMenuPos, setContentMenuPos] = useState<ContextMenuPosState>({
     x: 0,
@@ -442,7 +441,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user, server }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const mainUserPermission = server.members?.[user.id].permissionLevel ?? 1;
+  const mainUserPermission = server.members?.[mainUser.id].permissionLevel ?? 1;
   const userPermission = server.members?.[user.id].permissionLevel ?? 1;
   const userNickname = server.members?.[user.id].nickname ?? user.name;
   const userLevel = Math.min(56, Math.ceil(user.level / 5)); // 56 is max level
@@ -522,7 +521,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user, server }) => {
               id: 'kick',
               icon: <Trash size={14} className="w-5 h-5 mr-2" />,
               label: '踢出',
-              disabled: user.id == user.id ? true : false,
+              disabled: mainUser.id == user.id ? true : false,
               onClick: () => {
                 setShowContextMenu(false);
                 // Open Kick User Modal
@@ -729,7 +728,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
       </DragDropContext>
 
       {/* Context Menu */}
-      {showContextMenu && (
+      {showContextMenu && canEdit && (
         <ContextMenu
           onClose={() => setShowContextMenu(false)}
           x={contentMenuPos.x}
@@ -739,7 +738,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
               id: 'addChannel',
               icon: <Plus size={14} className="w-5 h-5 mr-2" />,
               label: '新增',
-              disabled: !canEdit,
               onClick: () => {
                 setShowContextMenu(false);
                 setShowAddChannelModal(true);
