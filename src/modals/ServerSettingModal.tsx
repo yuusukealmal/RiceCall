@@ -9,11 +9,10 @@ import React, {
 import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 
 // Components
-import MarkdownViewer from '@/components/MarkdownViewer';
 import Modal from '@/components/Modal';
 
 // Types
-import type { Server, User, UserList, ModalTabItem } from '@/types';
+import type { Server } from '@/types';
 
 // Utils
 import { getPermissionText } from '@/utils/formatters';
@@ -31,39 +30,6 @@ interface SortState {
   direction: 'asc' | 'desc';
 }
 
-const TABS: ModalTabItem[] = [
-  {
-    id: '基本資料',
-    label: '基本資料',
-    onClick: () => {},
-  },
-  {
-    id: '公告',
-    label: '公告',
-    onClick: () => {},
-  },
-  {
-    id: '會員管理',
-    label: '會員管理',
-    onClick: () => {},
-  },
-  {
-    id: '訪問許可權',
-    label: '訪問許可權',
-    onClick: () => {},
-  },
-  {
-    id: '會員申請管理',
-    label: '會員申請管理',
-    onClick: () => {},
-  },
-  {
-    id: '黑名單管理',
-    label: '黑名單管理',
-    onClick: () => {},
-  },
-];
-
 interface ServerSettingModalProps {
   onClose: () => void;
 }
@@ -74,7 +40,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
 
   const setServerIcon = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<ModalTabItem>(TABS[0]);
+  const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
 
   const [searchText, setSearchText] = useState<string>('');
   const [blockPage, setBlockPage] = useState<number>(1);
@@ -175,8 +141,8 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   }, [editingServerData]);
 
   const renderContent = (): React.ReactElement | null => {
-    switch (activeTab.id) {
-      case '基本資料':
+    switch (activeTabIndex) {
+      case 0:
         return (
           <>
             <div className="flex mb-8">
@@ -327,7 +293,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
           </>
         );
 
-      case '公告':
+      case 1:
         return (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -369,7 +335,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
           </div>
         );
 
-      case '會員管理':
+      case 2:
         const members = Object.values(server.members || [])
           .filter((member) => {
             const displayName = member.nickname.toLowerCase();
@@ -561,7 +527,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
           </div>
         );
 
-      case '訪問許可權':
+      case 3:
         return (
           <div className="space-y-4">
             <div className="text-sm">
@@ -651,7 +617,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
           </div>
         );
 
-      case '會員申請管理':
+      case 4:
         const applications = (server.applications || []).sort((a, b) => {
           const direction = sortState.direction === 'asc' ? -1 : 1;
 
@@ -743,7 +709,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
           </div>
         );
 
-      case '黑名單管理':
+      case 5:
         const blockAccountList = {
           '1': { name: 'test1' },
           '2': { name: 'test2' },
@@ -851,19 +817,61 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
         );
 
       default:
-        return <div>{activeTab.id}</div>;
+        return null;
     }
   };
 
   return (
     <Modal
       title={server.name}
-      tabs={TABS}
-      submitText="保存"
       onClose={onClose}
       onSubmit={onClose}
-      onSelectTab={(tab) => setActiveTab(tab)}
       changeContent={changeState}
+      tabs={[
+        {
+          id: '基本資料',
+          label: '基本資料',
+          onClick: () => setActiveTabIndex(0),
+        },
+        {
+          id: '公告',
+          label: '公告',
+          onClick: () => setActiveTabIndex(1),
+        },
+        {
+          id: '會員管理',
+          label: '會員管理',
+          onClick: () => setActiveTabIndex(2),
+        },
+        {
+          id: '訪問許可權',
+          label: '訪問許可權',
+          onClick: () => setActiveTabIndex(3),
+        },
+        {
+          id: '會員申請管理',
+          label: '會員申請管理',
+          onClick: () => setActiveTabIndex(4),
+        },
+        {
+          id: '黑名單管理',
+          label: '黑名單管理',
+          onClick: () => setActiveTabIndex(5),
+        },
+      ]}
+      buttons={[
+        {
+          label: '取消',
+          style: 'secondary',
+          onClick: onClose,
+        },
+        {
+          label: '確認',
+          style: 'primary',
+          type: 'submit',
+          onClick: () => {},
+        },
+      ]}
     >
       {renderContent()}
     </Modal>

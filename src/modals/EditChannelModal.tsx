@@ -10,18 +10,6 @@ import { Channel, Visibility } from '@/types';
 // Hooks
 import { useSocket } from '@/hooks/SocketProvider';
 
-// Validation
-const validateName = (name: string): string => {
-  if (!name.trim()) return '請輸入頻道名稱';
-  if (name.length > 30) return '頻道名稱不能超過30個字符';
-  return '';
-};
-
-interface FormErrors {
-  general?: string;
-  name?: string;
-}
-
 interface EditChannelModalProps {
   onClose: () => void;
   channel: Channel;
@@ -46,66 +34,70 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     });
 
     // Error Control
-    const [errors, setErrors] = useState<FormErrors>({});
+    const [error, setError] = useState<string>('');
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<Element>) => {
       e.preventDefault();
-      const nameError = validateName(editedChannel.name ?? '');
-
-      setErrors({
-        name: nameError,
+      socket?.emit('editChannel', {
+        sessionId: sessionId,
+        channel: editedChannel,
       });
-
-      if (!nameError) {
-        socket?.emit('editChannel', {
-          sessionId: sessionId,
-          channel: editedChannel,
-        });
-        socket?.on('error', (error: { message: string }) => {
-          setErrors({
-            general: error.message,
-          });
-        });
-        onClose();
-      }
+      socket?.on('error', (error: { message: string }) => {
+        setError(error.message);
+      });
+      onClose();
     };
 
     return (
       <Modal
         title={`編輯${channel.isCategory ? '類別' : '頻道'}`}
-        submitText="確定"
         onClose={onClose}
         onSubmit={handleSubmit}
-        width="400px"
-        height="300px"
+        width="300px"
+        height="auto"
+        buttons={[
+          {
+            label: '取消',
+            style: 'secondary',
+            onClick: onClose,
+          },
+          {
+            label: '確認',
+            style: 'primary',
+            type: 'submit',
+            onClick: () => {},
+          },
+        ]}
       >
-        <input
-          type="text"
-          value={editedChannel.name}
-          onChange={(e) =>
-            setEditedChannel((prev) => ({
-              ...prev,
-              name: e.target.value,
-            }))
-          }
-          className="w-full p-2 border rounded mb-4"
-          placeholder={`${channel.isCategory ? '類別' : '頻道'}名稱`}
-          required
-        />
-        <select
-          value={editedChannel.settings?.visibility}
-          onChange={(e) =>
-            setEditedChannel((prev) => ({
-              ...prev,
-              visibility: e.target.value as Visibility,
-            }))
-          }
-          className="w-full p-2 border rounded mb-4"
-        >
-          <option value="public">公開</option>
-          <option value="private">會員</option>
-          <option value="readonly">唯讀</option>
-        </select>
+        <div className="p-4 space-y-4">
+          <input
+            type="text"
+            value={editedChannel.name}
+            onChange={(e) =>
+              setEditedChannel((prev) => ({
+                ...prev,
+                name: e.target.value,
+              }))
+            }
+            className="w-full p-2 border rounded"
+            placeholder={`${channel.isCategory ? '類別' : '頻道'}名稱`}
+            required
+          />
+          <select
+            value={editedChannel.settings?.visibility}
+            onChange={(e) =>
+              setEditedChannel((prev) => ({
+                ...prev,
+                visibility: e.target.value as Visibility,
+              }))
+            }
+            className="w-full p-2 border rounded"
+          >
+            <option value="public">公開</option>
+            <option value="private">會員</option>
+            <option value="readonly">唯讀</option>
+          </select>
+        </div>
       </Modal>
     );
   },

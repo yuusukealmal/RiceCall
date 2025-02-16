@@ -61,7 +61,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     // Error Control
     const [errors, setErrors] = useState<FormErrors>({});
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<Element>) => {
       e.preventDefault();
 
       const nameError = validateName(formData.name);
@@ -117,14 +117,25 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
 
     return (
       <Modal
-        onClose={onClose}
-        onSubmit={handleSubmit}
         title="創建語音群"
-        submitText="創建"
+        onSubmit={handleSubmit}
         width="760px"
-        height="80vh"
+        height="auto"
+        buttons={[
+          {
+            label: '取消',
+            style: 'secondary',
+            onClick: onClose,
+          },
+          {
+            label: '確認',
+            style: 'primary',
+            type: 'submit',
+            onClick: () => {},
+          },
+        ]}
       >
-        <div className="flex mb-4 gap-8">
+        <div className="flex p-4 gap-8">
           <div className="flex-1">
             <div className="space-y-6">
               <div

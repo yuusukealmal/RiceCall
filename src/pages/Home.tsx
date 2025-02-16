@@ -1,7 +1,6 @@
 'use client';
 
-import { Minus, X } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 // Types
@@ -16,7 +15,7 @@ import ServerPage from '@/pages/ServerPage';
 // Components
 import Tabs from '@/components/Tabs';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import FullscreenSquare from '@/components/FullscreenSquare';
+import Header from '@/components/common/Header';
 
 // Utils
 import { measureLatency } from '@/utils/measureLatency';
@@ -27,18 +26,9 @@ import { useSocket } from '@/hooks/SocketProvider';
 // Redux
 import store from '@/redux/store';
 import { clearServer, setServer } from '@/redux/serverSlice';
-import { clearUser, setUser, updateUser } from '@/redux/userSlice';
+import { clearUser, setUser } from '@/redux/userSlice';
 import { clearSessionToken, setSessionToken } from '@/redux/sessionTokenSlice';
-
-// Modals
-import UserSettingModal from '@/modals/UserSettingModal';
-
-const STATE_ICON = {
-  online: '/online.png',
-  dnd: '/dnd.png',
-  idle: '/idle.png',
-  gn: '/gn.png',
-} as const;
+import UserStatusDisplay from '@/components/UserStatusDispIay';
 
 const Home = () => {
   // Socket Control
@@ -123,6 +113,9 @@ const Home = () => {
       console.log('User update: ', data);
       store.dispatch(setUser({ ...user, ...data }));
     };
+    const handleDirectMessage = (data: any) => {
+      console.log('Direct message: ', data);
+    };
     const handlePlaySound = (sound: 'join' | 'leave') => {
       switch (sound) {
         case 'join':
@@ -147,6 +140,7 @@ const Home = () => {
     socket.on('userPresenceUpdate', handleUpdateUserPresence);
     socket.on('serverUpdate', handleServerUpdate);
     socket.on('userUpdate', handleUserUpdate);
+    socket.on('directMessage', handleDirectMessage);
     socket.on('playSound', handlePlaySound);
 
     return () => {
@@ -161,6 +155,7 @@ const Home = () => {
       socket.off('userPresenceUpdate', handleUpdateUserPresence);
       socket.off('serverUpdate', handleServerUpdate);
       socket.off('userUpdate', handleUserUpdate);
+      socket.off('directMessage', handleDirectMessage);
       socket.off('playSound', handlePlaySound);
     };
   }, [sessionId, server, user]);
@@ -176,13 +171,13 @@ const Home = () => {
   // Latency Control
   const [latency, setLatency] = useState<string | null>('0');
 
-  useEffect(() => {
-    const _ = setInterval(async () => {
-      const res = await measureLatency();
-      setLatency(res);
-    }, 500);
-    return () => clearInterval(_);
-  }, []);
+  // useEffect(() => {
+  //   const _ = setInterval(async () => {
+  //     const res = await measureLatency();
+  //     setLatency(res);
+  //   }, 500);
+  //   return () => clearInterval(_);
+  // }, []);
 
   const getMainContent = () => {
     if (!socket) return <LoadingSpinner />;
@@ -198,103 +193,19 @@ const Home = () => {
     }
   };
 
-  const handleUpdateStatus = (status: Presence['status']) => {
-    socket?.emit('updatePresence', { sessionId, presence: { status } });
-  };
-
-  const userName = user?.name ?? 'RiceCall';
-  const userPresenceStatus = user?.presence?.status ?? 'online';
-
-  // User Setting Control
-  const [showUserSetting, setShowUserSetting] = useState<boolean>(false);
-
-  const toggleUserSetting = (state?: boolean) =>
-    setShowUserSetting(state ?? !showUserSetting);
-
   return (
     <div className="h-screen flex flex-col bg-background font-['SimSun'] overflow-hidden">
-      {user && showUserSetting && (
-        <UserSettingModal onClose={() => toggleUserSetting(false)} />
-      )}
       {/* Top Navigation */}
-      <div className="bg-blue-600 flex items-center justify-between text-white text-sm flex-none h-12 gap-3 min-w-max">
+      <Header>
         {/* User State Display */}
-        <div className="flex items-center space-x-2 min-w-max m-2">
-          {user && (
-            <>
-              <button
-                onClick={() => toggleUserSetting()}
-                className="p-1 hover:bg-blue-700 rounded"
-              >
-                <img
-                  src="/rc_logo_small.png"
-                  alt="RiceCall"
-                  className="w-6 h-6 select-none"
-                />
-              </button>
-              <span className="text-xs font-bold select-none">{userName}</span>
-              <div className="flex items-center">
-                <img
-                  src={STATE_ICON[userPresenceStatus]}
-                  alt="User State"
-                  className="w-5 h-5 p-1 select-none"
-                />
-                <select
-                  value={userPresenceStatus}
-                  onChange={(e) => {
-                    handleUpdateStatus(e.target.value as Presence['status']);
-                  }}
-                  className="bg-transparent text-white text-xs appearance-none hover:bg-blue-700 p-1 rounded cursor-pointer focus:outline-none select-none"
-                >
-                  <option value="online" className="bg-blue-600">
-                    線上
-                  </option>
-                  <option value="dnd" className="bg-blue-600">
-                    勿擾
-                  </option>
-                  <option value="idle" className="bg-blue-600">
-                    暫離
-                  </option>
-                  <option value="gn" className="bg-blue-600">
-                    離線
-                  </option>
-                </select>
-              </div>
-            </>
-          )}
-          {!user && (
-            <>
-              <div className="p-1">
-                <img
-                  src="/rc_logo_small.png"
-                  alt="RiceCall"
-                  className="w-6 h-6 select-none"
-                />
-              </div>
-              <span className="text-xs font-bold select-none">RiceCall</span>
-            </>
-          )}
-          <div className="px-3 py-1 bg-gray-100 text-xs text-gray-600 select-none">
-            {latency} ms
-          </div>
-        </div>
+        <UserStatusDisplay user={user} />
         {/* Switch page */}
-        {user && (
-          <Tabs
-            selectedId={selectedTabId}
-            onSelect={(tabId) => setSelectedTabId(tabId)}
-          />
-        )}
-        <div className="flex items-center space-x-2 min-w-max m-2">
-          <button className="hover:bg-blue-700 p-2 rounded">
-            <Minus size={16} />
-          </button>
-          <FullscreenSquare className="hover:bg-blue-700 p-2 rounded" />
-          <button className="hover:bg-blue-700 p-2 rounded">
-            <X size={16} />
-          </button>
-        </div>
-      </div>
+        <Tabs
+          selectedId={selectedTabId}
+          onSelect={(tabId) => setSelectedTabId(tabId)}
+          disabled={!user}
+        />
+      </Header>
       {/* Main Content */}
       <div className="flex flex-1 min-h-0">{getMainContent()}</div>
     </div>
