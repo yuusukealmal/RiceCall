@@ -51,6 +51,7 @@ interface CategoryTabProps {
 const CategoryTab: React.FC<CategoryTabProps> = React.memo(({ category }) => {
   // Redux
   const server = useSelector((state: { server: Server }) => state.server);
+  const mainUser = useSelector((state: { user: User }) => state.user);
 
   // Expanded Control
   const [expanded, setExpanded] = useState<boolean>(true);
@@ -71,6 +72,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(({ category }) => {
   const categoryVisibility = category.settings.visibility ?? 'public';
   const categoryName = category.name ?? '';
   const serverChannels = server.channels ?? [];
+  const mainUserPermission = server.members?.[mainUser.id].permissionLevel ?? 1;
 
   return (
     <div key={category.id} className="mb">
@@ -130,7 +132,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(({ category }) => {
       )}
 
       {/* Context Menu */}
-      {showContextMenu && (
+      {showContextMenu && mainUserPermission >= 5 && (
         <ContextMenu
           onClose={() => setShowContextMenu(false)}
           x={contentMenuPos.x}
@@ -183,7 +185,8 @@ interface ChannelTabProps {
 
 const ChannelTab: React.FC<ChannelTabProps> = React.memo(({ channel }) => {
   // Redux
-  const user = useSelector((state: { user: User }) => state.user);
+  const server = useSelector((state: { server: Server }) => state.server);
+  const mainUser = useSelector((state: { user: User }) => state.user);
   const sessionId = useSelector(
     (state: { sessionToken: string }) => state.sessionToken,
   );
@@ -206,11 +209,12 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(({ channel }) => {
     useState<boolean>(false);
 
   const handleJoinChannel = (channelId: string) => {
-    if (user.presence?.currentChannelId !== channelId) {
+    if (mainUser.presence?.currentChannelId !== channelId) {
       socket?.emit('connectChannel', { sessionId, channelId });
     }
   };
 
+  const mainUserPermission = server.members?.[mainUser.id].permissionLevel ?? 1;
   const channelVisibility = channel.settings.visibility ?? 'public';
   const channelName = channel.name ?? '';
   const channelUsers = channel.users ?? [];
@@ -293,13 +297,13 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(({ channel }) => {
       {(channel.isLobby || expanded) && channelUsers.length > 0 && (
         <div className="ml-6">
           {channelUsers.map((user: User) => (
-            <UserTab key={user.id} user={user} />
+            <UserTab key={user.id} user={user} mainUser={mainUser} />
           ))}
         </div>
       )}
 
       {/* Context Menu */}
-      {showContextMenu && (
+      {showContextMenu && mainUserPermission >= 5 && (
         <ContextMenu
           onClose={() => setShowContextMenu(false)}
           x={contentMenuPos.x}
@@ -343,9 +347,10 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(({ channel }) => {
 
 interface UserTabProps {
   user: User;
+  mainUser: User;
 }
 
-const UserTab: React.FC<UserTabProps> = React.memo(({ user }) => {
+const UserTab: React.FC<UserTabProps> = React.memo(({ user, mainUser }) => {
   // Redux
   const server = useSelector((state: { server: Server }) => state.server);
 
@@ -369,6 +374,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const mainUserPermission = server.members?.[mainUser.id].permissionLevel ?? 1;
   const userPermission = server.members?.[user.id].permissionLevel ?? 1;
   const userNickname = server.members?.[user.id].nickname ?? user.name;
   const userLevel = Math.min(56, Math.ceil(user.level / 5)); // 56 is max level
@@ -438,7 +444,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user }) => {
       </div>
 
       {/* Context Menu */}
-      {showContextMenu && (
+      {showContextMenu && mainUserPermission >= 5 && (
         <ContextMenu
           onClose={() => setShowContextMenu(false)}
           x={contentMenuPos.x}
@@ -448,6 +454,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user }) => {
               id: 'kick',
               icon: <Trash size={14} className="w-5 h-5 mr-2" />,
               label: '踢出',
+              disabled: mainUser.id == user.id ? true : false,
               onClick: () => {
                 setShowContextMenu(false);
                 // Open Kick User Modal
@@ -476,7 +483,8 @@ interface ChannelViewerProps {
 
 const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
   // Redux
-  const user = useSelector((state: { user: User }) => state.user);
+  const server = useSelector((state: { server: Server }) => state.server);
+  const mainUser = useSelector((state: { user: User }) => state.user);
 
   const [contentMenuPos, setContentMenuPos] = useState<ContextMenuPosState>({
     x: 0,
@@ -489,14 +497,15 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
     useState<boolean>(false);
 
   const userCurrentChannel = channels.find(
-    (_) => _.id == user.presence?.currentChannelId,
+    (_) => _.id == mainUser.presence?.currentChannelId,
   );
   const userCurrentChannelName = userCurrentChannel?.name ?? '';
+  const mainUserPermission = server.members?.[mainUser.id].permissionLevel ?? 1;
 
   return (
     <>
       {/* Context Menu */}
-      {showContextMenu && (
+      {showContextMenu && mainUserPermission >= 5 && (
         <ContextMenu
           onClose={() => setShowContextMenu(false)}
           x={contentMenuPos.x}
