@@ -268,6 +268,7 @@ const server = http.createServer((req, res) => {
             visibility: 'public',
           },
           createdAt: Date.now().valueOf(),
+          order: 0,
         };
         await db.set(`channels.${channelId}`, channel);
 
@@ -1558,6 +1559,65 @@ io.on('connection', async (socket) => {
     }
   });
 
+  socket.on('updateChannelOrder', async (data) => {
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const channels = (await db.get('channels')) || {};
+
+    try {
+      const userId = userSessions.get(data.sessionId);
+      if (!userId) throw new Error('Invalid session ID');
+
+      const user = users[userId];
+      if (!user) throw new Error('User not found');
+
+      const server = servers[data.serverId];
+      if (!server) throw new Error('Server not found');
+
+      // Check permissions
+      const userPermission = await getPermissionLevel(userId, server.id);
+      if (userPermission < 5) throw new Error('Insufficient permissions');
+
+      // Update channels with new order values
+      for (const updatedChannel of data.updatedChannels) {
+        const channel = channels[updatedChannel.id];
+        if (channel) {
+          channel.order = updatedChannel.order;
+          channel.parentId = updatedChannel.parentId;
+          await db.set(`channels.${channel.id}`, channel);
+        }
+      }
+
+      // Get all channels for this server and sort by order
+      const serverChannels = server.channelIds
+        .map((id) => channels[id])
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+      // Update server's channelIds array to maintain order
+      server.channelIds = serverChannels.map((c) => c.id);
+      await db.set(`servers.${server.id}`, server);
+
+      // Emit updated server data to all clients
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        ...(await getServer(server.id)),
+      });
+
+      new Logger('WebSocket').success(
+        `Channels reordered in server(${server.id})`,
+      );
+    } catch (error) {
+      socket.emit('error', {
+        message: `更新頻道順序時發生錯誤: ${error.message}`,
+        part: 'UPDATECHANNELORDER',
+        tag: 'EXCEPTION_ERROR',
+        status_code: 500,
+      });
+      new Logger('WebSocket').error(
+        `Error updating channel order: ${error.message}`,
+      );
+    }
+  });
+
   socket.on('addChannel', async (data) => {
     // d = {
     //   sessionId: '123456',
@@ -1600,6 +1660,10 @@ io.on('connection', async (socket) => {
       if (!server) {
         throw new Error(`Server(${presence.currentServerId}) not found`);
       }
+
+      // Check permissions
+      const userPermission = await getPermissionLevel(userId, server.id);
+      if (userPermission < 5) throw new Error('Insufficient permissions');
 
       // Create new channel
       const channelId = uuidv4();
@@ -1681,6 +1745,10 @@ io.on('connection', async (socket) => {
       if (!channel) {
         throw new Error(`Channel(${editedChannel.id}) not found`);
       }
+
+      // Check permissions
+      const userPermission = await getPermissionLevel(userId, server.id);
+      if (userPermission < 4) throw new Error('Insufficient permissions');
 
       // Update channel
       channels[channel.id] = {
@@ -1961,6 +2029,14 @@ const getPresenceState = async (userId) => {
   return {
     ...userPresenceState,
   };
+};
+const getPermissionLevel = async (userId, serverId) => {
+  const _members = (await db.get('members')) || {};
+  const member = Object.values(_members).find(
+    (member) => member.userId === userId && member.serverId === serverId,
+  );
+  if (!member) return null;
+  return member.permissionLevel;
 };
 const getUserMembers = async (userId) => {
   const _members = (await db.get('members')) || {};

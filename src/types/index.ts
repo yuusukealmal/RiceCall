@@ -128,6 +128,7 @@ export interface Channel {
   userIds: string[];
   isCategory: boolean;
   isLobby: boolean;
+  order?: number;
   settings: {
     bitrate: number;
     slowmode: boolean;

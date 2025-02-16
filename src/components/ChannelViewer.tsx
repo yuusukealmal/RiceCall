@@ -8,7 +8,9 @@ import {
   MoreVertical,
   Plus,
   Trash,
+  GripVertical,
 } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 // Types
 import type { Channel, Server, User, Visibility } from '@/types';
@@ -28,6 +30,17 @@ import UserInfoBlock from '@/components/UserInfoBlock';
 import AddChannelModal from '@/modals/AddChannelModal';
 import EditChannelModal from '@/modals/EditChannelModal';
 import DeleteChannelModal from '@/modals/DeleteChannelModal';
+
+const reorderChannels = (
+  channels: Channel[],
+  startIndex: number,
+  endIndex: number,
+): Channel[] => {
+  const result = Array.from(channels);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+  return result;
+};
 
 const getVisibilityStyle = (visibility: Visibility): string => {
   switch (visibility) {
@@ -49,10 +62,11 @@ interface CategoryTabProps {
   category: Channel;
   server: Server;
   user: User;
+  index: number;
 }
 
 const CategoryTab: React.FC<CategoryTabProps> = React.memo(
-  ({ category, server, user }) => {
+  ({ category, server, user, index }) => {
     // Expanded Control
     const [expanded, setExpanded] = useState<boolean>(true);
 
@@ -78,129 +92,163 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
     const serverChannels = server.channels ?? [];
 
     return (
-      <div key={category.id} className="mb">
-        {/* Category View */}
-        <div
-          className="flex p-1 pl-3 items-center justify-between hover:bg-gray-100 group select-none"
-          onClick={() =>
-            setExpanded(categoryVisibility != 'readonly' ? !expanded : false)
-          }
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setContentMenuPos({ x: e.pageX, y: e.pageY });
-            setShowContextMenu(true);
-          }}
-        >
-          <div className="flex items-center flex-1 min-w-0">
+      <Draggable
+        draggableId={category.id}
+        index={index}
+        isDragDisabled={!canEdit}
+      >
+        {(provided) => (
+          <div ref={provided.innerRef} {...provided.draggableProps}>
+            {/* Category View */}
             <div
-              className={`min-w-3.5 min-h-3.5 rounded-sm flex items-center justify-center outline outline-1 outline-gray-200 mr-1 
-              ${getVisibilityStyle(categoryVisibility)}`}
-            >
-              {categoryVisibility === 'readonly' ? (
-                <Dot size={12} />
-              ) : expanded ? (
-                <Minus size={12} />
-              ) : (
-                <Plus size={12} />
-              )}
-            </div>
-            <span className="truncate">{categoryName}</span>
-          </div>
-          {canEdit && (
-            <div
-              onClick={(e) => {
+              className="flex p-1 pl-3 items-center justify-between hover:bg-gray-100 group select-none"
+              {...provided.dragHandleProps}
+              onClick={() =>
+                setExpanded(
+                  categoryVisibility != 'readonly' ? !expanded : false,
+                )
+              }
+              onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setShowAddChannelModal(true);
+                setContentMenuPos({ x: e.pageX, y: e.pageY });
+                setShowContextMenu(true);
               }}
-              className="opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-1 rounded"
             >
-              <Plus size={14} />
+              <div className="flex items-center flex-1 min-w-0">
+                <div
+                  className={`min-w-3.5 min-h-3.5 rounded-sm flex items-center justify-center outline outline-1 outline-gray-200 mr-1 
+              ${getVisibilityStyle(categoryVisibility)}`}
+                >
+                  {categoryVisibility === 'readonly' ? (
+                    <Dot size={12} />
+                  ) : expanded ? (
+                    <Minus size={12} />
+                  ) : (
+                    <Plus size={12} />
+                  )}
+                </div>
+                <span className="truncate">{categoryName}</span>
+              </div>
+              <div className="flex items-center">
+                {canEdit && (
+                  <>
+                    <div
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowAddChannelModal(true);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-1 rounded"
+                    >
+                      <Plus size={14} />
+                    </div>
+                    <div
+                      {...provided.dragHandleProps}
+                      className="opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-1 rounded cursor-grab"
+                    >
+                      <GripVertical size={14} />
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Expanded Sections */}
-        {expanded && serverChannels.length > 0 && (
-          <div className="ml-6">
-            {serverChannels
-              .filter((c) => c.parentId === category.id)
-              .map((subChannel) =>
-                subChannel.isCategory ? (
-                  <CategoryTab
-                    key={subChannel.id}
-                    category={subChannel}
-                    server={server}
-                    user={user}
-                  />
-                ) : (
-                  <ChannelTab
-                    key={subChannel.id}
-                    channel={subChannel}
-                    server={server}
-                    user={user}
-                  />
-                ),
-              )}
+            {/* Expanded Sections */}
+            {expanded && serverChannels.length > 0 && (
+              <Droppable
+                droppableId={`category-${category.id}`}
+                type="CHANNEL"
+                isDropDisabled={!canEdit}
+                isCombineEnabled={true}
+                ignoreContainerClipping={true}
+              >
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="ml-6"
+                  >
+                    {serverChannels
+                      .filter((c) => c.parentId === category.id)
+                      .map((subChannel, index) =>
+                        subChannel.isCategory ? (
+                          <CategoryTab
+                            key={subChannel.id}
+                            category={subChannel}
+                            server={server}
+                            user={user}
+                            index={index}
+                          />
+                        ) : (
+                          <ChannelTab
+                            key={subChannel.id}
+                            channel={subChannel}
+                            server={server}
+                            user={user}
+                            index={index}
+                          />
+                        ),
+                      )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            )}
+            {/* Context Menu */}
+            {showContextMenu && (
+              <ContextMenu
+                onClose={() => setShowContextMenu(false)}
+                x={contentMenuPos.x}
+                y={contentMenuPos.y}
+                items={[
+                  {
+                    id: 'edit',
+                    icon: <Edit size={14} className="w-5 h-5 mr-2" />,
+                    label: '編輯',
+                    disabled: !canEdit,
+                    onClick: () => {
+                      setShowContextMenu(false);
+                      setShowEditChannelModal(true);
+                    },
+                  },
+                  {
+                    id: 'delete',
+                    icon: <Trash size={14} className="w-5 h-5 mr-2" />,
+                    label: '刪除',
+                    disabled: !canEdit,
+                    onClick: () => {
+                      setShowContextMenu(false);
+                      setShowDeleteChannelModal(true);
+                    },
+                  },
+                ]}
+              />
+            )}
+            {/* Add Channel Modal */}
+            {showAddChannelModal && (
+              <AddChannelModal
+                onClose={() => setShowAddChannelModal(false)}
+                parentChannel={category}
+              />
+            )}
+            {/* Edit Channel Modal */}
+            {showEditChannelModal && (
+              <EditChannelModal
+                onClose={() => setShowEditChannelModal(false)}
+                channel={category}
+              />
+            )}
+            {/* Delete Channel Modal */}
+            {showDeleteChannelModal && (
+              <DeleteChannelModal
+                onClose={() => setShowDeleteChannelModal(false)}
+                channel={category}
+              />
+            )}
           </div>
         )}
-
-        {/* Context Menu */}
-        {showContextMenu && (
-          <ContextMenu
-            onClose={() => setShowContextMenu(false)}
-            x={contentMenuPos.x}
-            y={contentMenuPos.y}
-            items={[
-              {
-                id: 'edit',
-                icon: <Edit size={14} className="w-5 h-5 mr-2" />,
-                label: '編輯',
-                disabled: !canEdit,
-                onClick: () => {
-                  setShowContextMenu(false);
-                  setShowEditChannelModal(true);
-                },
-              },
-              {
-                id: 'delete',
-                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
-                label: '刪除',
-                disabled: !canEdit,
-                onClick: () => {
-                  setShowContextMenu(false);
-                  setShowDeleteChannelModal(true);
-                },
-              },
-            ]}
-          />
-        )}
-
-        {/* Add Channel Modal */}
-        {showAddChannelModal && (
-          <AddChannelModal
-            onClose={() => setShowAddChannelModal(false)}
-            parentChannel={category}
-          />
-        )}
-
-        {/* Edit Channel Modal */}
-        {showEditChannelModal && (
-          <EditChannelModal
-            onClose={() => setShowEditChannelModal(false)}
-            channel={category}
-          />
-        )}
-
-        {/* Delete Channel Modal */}
-        {showDeleteChannelModal && (
-          <DeleteChannelModal
-            onClose={() => setShowDeleteChannelModal(false)}
-            channel={category}
-          />
-        )}
-      </div>
+      </Draggable>
     );
   },
 );
@@ -209,10 +257,11 @@ interface ChannelTabProps {
   channel: Channel;
   server: Server;
   user: User;
+  index: number;
 }
 
 const ChannelTab: React.FC<ChannelTabProps> = React.memo(
-  ({ channel, server, user }) => {
+  ({ channel, server, user, index }) => {
     // Redux
     const sessionId = useSelector(
       (state: { sessionToken: string }) => state.sessionToken,
@@ -250,112 +299,130 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     const canEdit = userPermission >= 5;
 
     return (
-      <div key={channel.id}>
-        {/* Channel View */}
-        <div
-          className="flex p-1 pl-3 items-center justify-between hover:bg-gray-100 group select-none"
-          onDoubleClick={() => {
-            channelVisibility !== 'readonly' && handleJoinChannel(channel.id);
-          }}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setContentMenuPos({ x: e.pageX, y: e.pageY });
-            setShowContextMenu(true);
-          }}
-        >
-          <div className="flex items-center flex-1 min-w-0">
+      <Draggable
+        draggableId={channel.id}
+        index={index}
+        isDragDisabled={!canEdit}
+      >
+        {(provided) => (
+          <div ref={provided.innerRef} {...provided.draggableProps}>
+            {/* Channel View */}
             <div
-              className={`min-w-3.5 min-h-3.5 rounded-sm flex items-center justify-center outline outline-1 outline-gray-200 mr-1 cursor-pointer 
-                ${getVisibilityStyle(channelVisibility)}`}
-              onClick={() =>
-                setExpanded(channelVisibility != 'readonly' ? !expanded : false)
-              }
+              className="flex p-1 pl-3 items-center justify-between hover:bg-gray-100 group select-none"
+              onDoubleClick={() => {
+                channelVisibility !== 'readonly' &&
+                  handleJoinChannel(channel.id);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setContentMenuPos({ x: e.pageX, y: e.pageY });
+                setShowContextMenu(true);
+              }}
             >
-              {channel.isLobby ? (
-                <House size={12} />
-              ) : channelVisibility === 'readonly' ? (
-                <Dot size={12} />
-              ) : expanded ? (
-                <Minus size={12} />
-              ) : (
-                <Plus size={12} />
+              <div className="flex items-center flex-1 min-w-0">
+                <div
+                  className={`min-w-3.5 min-h-3.5 rounded-sm flex items-center justify-center outline outline-1 outline-gray-200 mr-1 cursor-pointer 
+                ${getVisibilityStyle(channelVisibility)}`}
+                  onClick={() =>
+                    setExpanded(
+                      channelVisibility != 'readonly' ? !expanded : false,
+                    )
+                  }
+                >
+                  {channel.isLobby ? (
+                    <House size={12} />
+                  ) : channelVisibility === 'readonly' ? (
+                    <Dot size={12} />
+                  ) : expanded ? (
+                    <Minus size={12} />
+                  ) : (
+                    <Plus size={12} />
+                  )}
+                </div>
+                <span className={`truncate`}>{channelName}</span>
+                <span className="ml-1 text-gray-500 text-sm">
+                  {channelVisibility !== 'readonly' &&
+                    `(${channelUsers.length})`}
+                </span>
+              </div>
+              {canEdit && (
+                <>
+                  <div
+                    {...provided.dragHandleProps}
+                    className="opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-1 rounded cursor-grab"
+                  >
+                    <GripVertical size={14} />
+                  </div>
+                  <button
+                    className="opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-1 rounded"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setContentMenuPos({ x: e.pageX, y: e.pageY });
+                      setShowContextMenu(true);
+                    }}
+                  >
+                    <MoreVertical size={14} />
+                  </button>
+                </>
               )}
             </div>
-            <span className={`truncate`}>{channelName}</span>
-            <span className="ml-1 text-gray-500 text-sm">
-              {channelVisibility !== 'readonly' && `(${channelUsers.length})`}
-            </span>
+            {/* Expanded Sections */}
+            {(channel.isLobby || expanded) && channelUsers.length > 0 && (
+              <div className="ml-6">
+                {channelUsers.map((user: User) => (
+                  <UserTab key={user.id} user={user} server={server} />
+                ))}
+              </div>
+            )}
+            {/* Context Menu */}
+            {showContextMenu && (
+              <ContextMenu
+                onClose={() => setShowContextMenu(false)}
+                x={contentMenuPos.x}
+                y={contentMenuPos.y}
+                items={[
+                  {
+                    id: 'edit',
+                    icon: <Edit size={14} className="w-5 h-5 mr-2" />,
+                    label: '編輯',
+                    disabled: !canEdit,
+                    onClick: () => {
+                      setShowContextMenu(false);
+                      setShowEditChannelModal(true);
+                    },
+                  },
+                  {
+                    id: 'delete',
+                    icon: <Trash size={14} className="w-5 h-5 mr-2" />,
+                    label: '刪除',
+                    disabled: channel.isLobby || !canEdit,
+                    onClick: () => {
+                      setShowContextMenu(false);
+                      setShowDeleteChannelModal(true);
+                    },
+                  },
+                ]}
+              />
+            )}
+            {/* Edit Channel Modal */}
+            {showEditChannelModal && (
+              <EditChannelModal
+                onClose={() => setShowEditChannelModal(false)}
+                channel={channel}
+              />
+            )}
+            {/* Delete Channel Modal */}
+            {showDeleteChannelModal && (
+              <DeleteChannelModal
+                onClose={() => setShowDeleteChannelModal(false)}
+                channel={channel}
+              />
+            )}
           </div>
-          <button
-            className="opacity-0 group-hover:opacity-100 hover:bg-gray-200 p-1 rounded"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setContentMenuPos({ x: e.pageX, y: e.pageY });
-              setShowContextMenu(true);
-            }}
-          >
-            <MoreVertical size={14} />
-          </button>
-        </div>
-
-        {/* Expanded Sections */}
-        {(channel.isLobby || expanded) && channelUsers.length > 0 && (
-          <div className="ml-6">
-            {channelUsers.map((user: User) => (
-              <UserTab key={user.id} user={user} server={server} />
-            ))}
-          </div>
         )}
-
-        {/* Context Menu */}
-        {showContextMenu && (
-          <ContextMenu
-            onClose={() => setShowContextMenu(false)}
-            x={contentMenuPos.x}
-            y={contentMenuPos.y}
-            items={[
-              {
-                id: 'edit',
-                icon: <Edit size={14} className="w-5 h-5 mr-2" />,
-                label: '編輯',
-                disabled: !canEdit,
-                onClick: () => {
-                  setShowContextMenu(false);
-                  setShowEditChannelModal(true);
-                },
-              },
-              {
-                id: 'delete',
-                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
-                label: '刪除',
-                disabled: channel.isLobby || !canEdit,
-                onClick: () => {
-                  setShowContextMenu(false);
-                  setShowDeleteChannelModal(true);
-                },
-              },
-            ]}
-          />
-        )}
-
-        {/* Edit Channel Modal */}
-        {showEditChannelModal && (
-          <EditChannelModal
-            onClose={() => setShowEditChannelModal(false)}
-            channel={channel}
-          />
-        )}
-
-        {/* Delete Channel Modal */}
-        {showDeleteChannelModal && (
-          <DeleteChannelModal
-            onClose={() => setShowDeleteChannelModal(false)}
-            channel={channel}
-          />
-        )}
-      </div>
+      </Draggable>
     );
   },
 );
@@ -502,6 +569,9 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
   const user = useSelector((state: { user: User }) => state.user);
   const server = useSelector((state: { server: Server }) => state.server);
 
+  // Socket Control
+  const socket = useSocket();
+
   const [contentMenuPos, setContentMenuPos] = useState<ContextMenuPosState>({
     x: 0,
     y: 0,
@@ -519,6 +589,89 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
   const userPermission = server.members?.[user.id].permissionLevel ?? 1;
   const canEdit = userPermission >= 5;
 
+  const handleDragEnd = (result: any) => {
+    const { destination, source, draggableId } = result;
+
+    // Drop was cancelled or dropped outside valid area
+    if (!destination) return;
+
+    // Item was dropped in the same position
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    // Get the channel being moved
+    const movedChannel = channels?.find((c) => c.id === draggableId);
+    if (!movedChannel) return;
+
+    // Get the source and destination parent IDs
+    const sourceParentId =
+      source.droppableId === 'root'
+        ? null
+        : source.droppableId.replace('category-', '');
+    const destParentId =
+      destination.droppableId === 'root'
+        ? null
+        : destination.droppableId.replace('category-', '');
+
+    // Get all channels in the destination category
+    const destCategoryChannels = channels
+      ?.filter((c) => {
+        if (destParentId === null) {
+          return c.parentId === null;
+        }
+        return c.parentId === destParentId;
+      })
+      .filter((c) => c.id !== draggableId) // Remove the moved channel
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    // Create new array with moved channel at new position
+    const newChannelArray = [...destCategoryChannels];
+    newChannelArray.splice(destination.index, 0, movedChannel);
+
+    // Update orders for all channels
+    const updatedChannels = newChannelArray.map((channel, index) => ({
+      ...channel,
+      order: index,
+      parentId: destParentId,
+    }));
+
+    // Emit socket event to update channel order
+    socket?.emit('updateChannelOrder', {
+      sessionId: store.getState().sessionToken,
+      serverId: server.id,
+      parentId: destParentId,
+      updatedChannels: updatedChannels,
+    });
+
+    // If moving between categories, we also need to update the source category
+    if (sourceParentId !== destParentId) {
+      const sourceChannels = channels
+        ?.filter((c) => {
+          if (sourceParentId === null) {
+            return c.parentId === null;
+          }
+          return c.parentId === sourceParentId;
+        })
+        .filter((c) => c.id !== draggableId)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map((channel, index) => ({
+          ...channel,
+          order: index,
+        }));
+
+      socket?.emit('updateChannelOrder', {
+        sessionId: store.getState().sessionToken,
+        serverId: server.id,
+        parentId: sourceParentId,
+        updatedChannels: sourceChannels,
+      });
+    }
+  };
+
   return (
     <>
       {/* Current Channel */}
@@ -531,7 +684,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
         <div className="text-gray-500">{userCurrentChannelName}</div>
       </div>
 
-      {/* Channel List */}
       <div
         className="p-2 flex items-center justify-between text-gray-400 text-xs select-none"
         onContextMenu={(e) => {
@@ -543,27 +695,49 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
       >
         所有頻道
       </div>
-      <div className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar-thumb]:bg-transparent scrollbar-none">
-        {[...channels]
-          .filter((c) => !c.parentId)
-          .map((channel) =>
-            channel.isCategory ? (
-              <CategoryTab
-                key={channel.id}
-                category={channel}
-                server={server}
-                user={user}
-              />
-            ) : (
-              <ChannelTab
-                key={channel.id}
-                channel={channel}
-                server={server}
-                user={user}
-              />
-            ),
+
+      {/* Channel List */}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable
+          droppableId="root"
+          type="CATEGORY"
+          ignoreContainerClipping={true}
+          isDropDisabled={!canEdit}
+          isCombineEnabled={true}
+        >
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar-thumb]:bg-transparent scrollbar-none"
+            >
+              {channels
+                ?.filter((c) => !c.parentId)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                .map((channel, index) =>
+                  channel.isCategory ? (
+                    <CategoryTab
+                      key={channel.id}
+                      category={channel}
+                      server={server}
+                      user={user}
+                      index={index}
+                    />
+                  ) : (
+                    <ChannelTab
+                      key={channel.id}
+                      channel={channel}
+                      server={server}
+                      user={user}
+                      index={index}
+                    />
+                  ),
+                )}
+              {provided.placeholder}
+            </div>
           )}
-      </div>
+        </Droppable>
+      </DragDropContext>
 
       {/* Context Menu */}
       {showContextMenu && (

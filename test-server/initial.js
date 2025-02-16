@@ -124,6 +124,7 @@ const channels = {
       visibility: 'public',
     },
     createdAt: 1738758855886,
+    order: 0,
   },
   '4d7d-9426-689e-a73af1d3': {
     id: '4d7d-9426-689e-a73af1d3',
@@ -141,6 +142,7 @@ const channels = {
       visibility: 'public',
     },
     createdAt: 1738758855886,
+    order: 1,
   },
 };
 const messages = {};
