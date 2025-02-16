@@ -1967,9 +1967,13 @@ const setupCleanupInterval = async () => {
         }
       }
 
-      new Logger('Cleanup').info(
-        `Cleanup complete. Removed ${unusedFiles.length} unused avatar files`,
-      );
+      if (!unusedFiles.length) {
+        new Logger('Cleanup').info('No unused avatars to delete');
+      } else {
+        new Logger('Cleanup').info(
+          `Deleted ${unusedFiles.length} unused avatars`,
+        );
+      }
     } catch (error) {
       new Logger('Cleanup').error(`Avatar cleanup failed: ${error.message}`);
     }
