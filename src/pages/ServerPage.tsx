@@ -227,7 +227,7 @@ const ServerPageComponent: React.FC = () => {
         </div>
         {/* Messages Area */}
         <div className="flex flex-[5] p-3">
-          <MessageViewer messages={messages} />
+          <MessageViewer messages={messages} server={server} />
         </div>
         {/* Input Area */}
         <div className="flex flex-[1] p-3">

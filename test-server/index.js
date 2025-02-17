@@ -18,7 +18,7 @@ const XP_SYSTEM = {
   BASE_XP: 5, // Base XP required for level 2
   GROWTH_RATE: 1.02, // XP requirement increases by 2% per level
   XP_PER_HOUR: 1, // XP gained per hour in voice channel
-  INTERVAL_MS: 3600000, // 1 hour in milliseconds
+  INTERVAL_MS: 60 * 60 * 1000, // 1 hour in milliseconds
 };
 
 // Logger
@@ -2116,23 +2116,6 @@ io.on('connection', async (socket) => {
 });
 
 // Functions
-// Check if user can level up
-const checkLevelUp = async (userId) => {
-  const user = await db.get(`users.${userId}`);
-  if (!user) return false;
-
-  const requiredXP = calculateRequiredXP(user.level);
-  if (user.xp >= requiredXP) {
-    // Level up
-    user.level += 1;
-    user.xp -= requiredXP; // Remaining XP carries over
-    await db.set(`users.${userId}`, user);
-    return true;
-  }
-  return false;
-};
-
-// Modified setupContributionInterval
 const setupContributionInterval = (socketId, userId) => {
   try {
     const interval = setInterval(async () => {
@@ -2158,7 +2141,15 @@ const setupContributionInterval = (socketId, userId) => {
       }
 
       // Check for level up
-      const didLevelUp = await checkLevelUp(userId);
+      const requiredXP = calculateRequiredXP(user.level);
+      if (user.xp >= requiredXP) {
+        user.level += 1; // Level up
+        user.xp -= requiredXP; // Remaining XP carries over
+
+        new Logger('WebSocket').info(
+          `User(${userId}) leveled up to ${user.level}`,
+        );
+      }
 
       // Save changes
       await db.set(`users.${userId}`, user);
@@ -2167,14 +2158,8 @@ const setupContributionInterval = (socketId, userId) => {
       io.to(socketId).emit('userUpdate', {
         level: user.level,
         xp: user.xp,
-        nextLevelXP: calculateRequiredXP(user.level),
+        requiredXP: calculateRequiredXP(user.level),
       });
-
-      if (didLevelUp) {
-        new Logger('WebSocket').info(
-          `User(${userId}) leveled up to ${user.level}`,
-        );
-      }
     }, XP_SYSTEM.INTERVAL_MS);
     contributionInterval.set(socketId, interval);
   } catch (error) {
@@ -2248,7 +2233,7 @@ const setupCleanupInterval = async () => {
   cleanupUnusedAvatars().catch(console.error);
 };
 const calculateRequiredXP = (level) => {
-  return Math.floor(100 * Math.pow(1.1, level));
+  return Math.floor(XP_SYSTEM.BASE_XP * Math.pow(XP_SYSTEM.GROWTH_RATE, level));
 };
 const createUserIdSocketIdMap = (userId, socketId) => {
   if (!socketToUser.has(socketId) && !userToSocket.has(userId)) {
@@ -2409,14 +2394,6 @@ const getPresenceState = async (userId) => {
     ...userPresenceState,
   };
 };
-const getMember = async (userId, serverId) => {
-  const _members = (await db.get('members')) || {};
-  const member = Object.values(_members).find(
-    (member) => member.userId === userId && member.serverId === serverId,
-  );
-  if (!member) return null;
-  return member;
-};
 const getPermissionLevel = async (userId, serverId) => {
   const _members = (await db.get('members')) || {};
   const member = Object.values(_members).find(
@@ -2424,6 +2401,14 @@ const getPermissionLevel = async (userId, serverId) => {
   );
   if (!member) return null;
   return member.permissionLevel;
+};
+const getMember = async (userId, serverId) => {
+  const _members = (await db.get('members')) || {};
+  const member = Object.values(_members).find(
+    (member) => member.userId === userId && member.serverId === serverId,
+  );
+  if (!member) return null;
+  return member;
 };
 const getUserMembers = async (userId) => {
   const _members = (await db.get('members')) || {};
