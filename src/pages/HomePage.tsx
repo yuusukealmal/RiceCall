@@ -8,12 +8,13 @@ import { Search } from 'lucide-react';
 
 // Components
 import CreateServerModal from '@/modals/CreateServerModal';
+import ServerApplicationModal from '@/modals/ServerApplicationModal';
 
 // Utils
 import { calculateSimilarity } from '@/utils/searchServers';
 
 // Type
-import type { Server, User } from '@/types';
+import type { Server } from '@/types';
 
 // Redux
 import { useSelector } from 'react-redux';
@@ -35,12 +36,22 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
   const sessionId = useSelector(
     (state: { sessionToken: string }) => state.sessionToken,
   );
+  const user = useSelector((state: { user: any }) => state.user);
 
   // Socket Control
   const socket = useSocket();
 
+  const [showPrivateModal, setShowPrivateModal] = useState(false);
+  const userPermission = server.members?.[user.id].permissionLevel ?? 1;
+
   const handleServerSelect = (serverId: string) => {
     if (typeof window === 'undefined') return;
+
+    if (server.settings.visibility === 'invisible' && userPermission < 2) {
+      setShowPrivateModal(true);
+      return;
+    }
+
     socket?.emit('connectServer', { serverId, sessionId });
     errorHandler.handle = () => {
       console.log('error');
@@ -52,24 +63,34 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
     : '/logo_server_def.png';
   const serverName = server.name ?? '';
   const serverDisplayId = server.displayId ?? '';
-  const serverAnnouncement = server.announcement ?? '';
+  const serverSlogan = server.slogan ?? '';
 
   return (
-    <button
-      className="flex items-start gap-3 p-3 border border-gray-200 rounded bg-white hover:bg-gray-50 w-full"
-      onClick={() => handleServerSelect(server.id)}
-    >
-      <img src={serverIcon} alt="Server Icon" className="w-14 h-14" />
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-medium text-[#4A6B9D] text-start truncate">
-          {serverName}
-        </h3>
-        <p className="text-xs text-gray-500 text-start">ID:{serverDisplayId}</p>
-        <p className="text-xs text-gray-500 text-start truncate">
-          {serverAnnouncement}
-        </p>
-      </div>
-    </button>
+    <>
+      {showPrivateModal && (
+        <ServerApplicationModal
+          server={server}
+          onClose={() => setShowPrivateModal(false)}
+        />
+      )}
+      <button
+        className="flex items-start gap-3 p-3 border border-gray-200 rounded bg-white hover:bg-gray-50 w-full"
+        onClick={() => handleServerSelect(server.id)}
+      >
+        <img src={serverIcon} alt="Server Icon" className="w-14 h-14" />
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-medium text-[#4A6B9D] text-start truncate">
+            {serverName}
+          </h3>
+          <p className="text-xs text-gray-500 text-start">
+            ID:{serverDisplayId}
+          </p>
+          <p className="text-xs text-gray-500 text-start truncate mt-2">
+            {serverSlogan}
+          </p>
+        </div>
+      </button>
+    </>
   );
 });
 
@@ -216,7 +237,7 @@ const HomePageComponent: React.FC = React.memo(() => {
             <ServerGrid servers={recommendedServers} />
           </section>
           <section>
-            <h2 className="text-lg font-bold mb-3">我的語音群</h2>
+            <h2 className="text-lg font-bold mb-3">最近語音群</h2>
             <ServerGrid servers={joinedServers} />
           </section>
         </div>
