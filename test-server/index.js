@@ -2207,24 +2207,30 @@ const getJoinRecServers = async (userId, limit = 10) => {
     db.get('servers') || {},
     db.get('members') || {},
   ]);
+
   const userServerIds = new Set(
     Object.values(_members)
       .filter((member) => member.userId === userId)
       .map((member) => member.serverId),
   );
+
   const { joinedServers, notJoinedServers } = Object.values(_servers).reduce(
     (result, server) => {
-      if (userServerIds.has(server.id)) result.joinedServers.push(server);
-      else result.notJoinedServers.push(server);
+      if (userServerIds.has(server.id)) {
+        result.joinedServers.push(server);
+      } else if (server.settings.visibility !== 'invisible') {
+        result.notJoinedServers.push(server);
+      }
       return result;
     },
     { joinedServers: [], notJoinedServers: [] },
   );
+
   const recommendedServers = _.sampleSize(notJoinedServers, limit) ?? [];
 
   return {
-    joinedServers,
-    recommendedServers,
+    joinedServers, // Contains all joined servers including invisible ones
+    recommendedServers, // Contains only non-invisible servers
   };
 };
 const getDisplayId = async (baseId = 20000000) => {
