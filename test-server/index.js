@@ -240,33 +240,12 @@ const server = http.createServer((req, res) => {
           throw new Error('已達到最大擁有伺服器數量限制');
         }
 
-        // Create new server and channel
-        const serverId = uuidv4();
+        // Create main channel
         const channelId = uuidv4();
-        const server = {
-          id: serverId,
-          name: name,
-          iconUrl: iconPath,
-          level: 0,
-          announcement: description || '',
-          channelIds: [channelId],
-          displayId: getDisplayId(servers),
-          lobbyId: channelId,
-          ownerId: userId,
-          settings: {
-            allowDirectMessage: true,
-            visibility: 'public',
-            defaultChannelId: channelId,
-          },
-          createdAt: Date.now().valueOf(),
-        };
-        await db.set(`servers.${serverId}`, server);
-
         const channel = {
           id: channelId,
           name: '大廳',
           messageIds: [],
-          serverId: serverId,
           parentId: null,
           userIds: [],
           isCategory: false,
@@ -281,6 +260,28 @@ const server = http.createServer((req, res) => {
           order: 0,
         };
         await db.set(`channels.${channelId}`, channel);
+
+        // Create new server
+        const displayId = await getDisplayId();
+        const serverId = uuidv4();
+        const server = {
+          id: serverId,
+          name: name,
+          iconUrl: iconPath,
+          level: 0,
+          announcement: description || '',
+          channelIds: [channelId],
+          displayId: displayId,
+          lobbyId: channelId,
+          ownerId: userId,
+          settings: {
+            allowDirectMessage: true,
+            visibility: 'public',
+            defaultChannelId: channelId,
+          },
+          createdAt: Date.now().valueOf(),
+        };
+        await db.set(`servers.${serverId}`, server);
 
         // Create new member
         const memberId = uuidv4();
@@ -2235,6 +2236,7 @@ const getJoinRecServers = async (userId, limit = 10) => {
 };
 const getDisplayId = async (baseId = 20000000) => {
   const servers = (await db.get('servers')) || {};
+  console.log(baseId);
   let displayId = baseId + Object.keys(servers).length;
   // Ensure displayId is unique
   while (
