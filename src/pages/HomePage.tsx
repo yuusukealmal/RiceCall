@@ -14,7 +14,7 @@ import ServerApplicationModal from '@/modals/ServerApplicationModal';
 import { calculateSimilarity } from '@/utils/searchServers';
 
 // Type
-import type { Server } from '@/types';
+import type { Server, User } from '@/types';
 
 // Redux
 import { useSelector } from 'react-redux';
@@ -36,13 +36,13 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
   const sessionId = useSelector(
     (state: { sessionToken: string }) => state.sessionToken,
   );
-  const user = useSelector((state: { user: any }) => state.user);
+  const user = useSelector((state: { user: User }) => state.user);
 
   // Socket Control
   const socket = useSocket();
 
   const [showPrivateModal, setShowPrivateModal] = useState(false);
-  const userPermission = server.members?.[user.id].permissionLevel ?? 1;
+  const userPermission = user.members?.[server.id]?.permissionLevel ?? 0;
 
   const handleServerSelect = (serverId: string) => {
     if (typeof window === 'undefined') return;
