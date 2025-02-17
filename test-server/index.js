@@ -988,9 +988,6 @@ io.on('connection', async (socket) => {
         ...(await getServer(serverId)),
       });
 
-      // Send success response back to the client
-      socket.emit('serverUpdateSuccess');
-
       new Logger('Server').success(
         `Server(${serverId}) updated by user(${userId})`,
       );
@@ -2263,8 +2260,8 @@ const getUser = async (userId) => {
   if (!user) return null;
   const { account, ...restUser } = user;
   const xpInfo = {
-    currentXP: user.xp || 0,
-    requiredXP: calculateRequiredXP(user.level),
+    xp: user.xp || 0,
+    required: calculateRequiredXP(user.level),
     progress: ((user.xp || 0) / calculateRequiredXP(user.level)) * 100,
   };
 
