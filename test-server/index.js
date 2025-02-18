@@ -1408,6 +1408,147 @@ io.on('connection', async (socket) => {
     }
   });
 
+  // Add these socket event handlers in your server code
+
+  socket.on('getApplications', async (data) => {
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const applications = (await db.get('serverApplications')) || {};
+
+    try {
+      const { sessionId, serverId } = data;
+      if (!sessionId || !serverId) {
+        throw new Error('Missing required fields');
+      }
+
+      const userId = userSessions.get(sessionId);
+      if (!userId) throw new Error('Invalid session ID');
+
+      const user = users[userId];
+      if (!user) throw new Error('User not found');
+
+      const server = servers[serverId];
+      if (!server) throw new Error('Server not found');
+
+      // Check if user has permission to view applications
+      const userPermission = await getPermissionLevel(userId, server.id);
+      if (userPermission < 5) throw new Error('Insufficient permissions');
+
+      // Get all applications for this server
+      const serverApplications = Object.values(applications)
+        .filter((app) => app.serverId === serverId)
+        .map(async (app) => ({
+          ...app,
+          user: await getUser(app.userId),
+        }));
+
+      const resolvedApplications = await Promise.all(serverApplications);
+
+      socket.emit('applications', resolvedApplications);
+
+      new Logger('Applications').success(
+        `Applications fetched for server(${serverId})`,
+      );
+    } catch (error) {
+      socket.emit('error', {
+        message: `獲取申請列表時發生錯誤: ${error.message}`,
+        part: 'GETAPPLICATIONS',
+        tag: 'EXCEPTION_ERROR',
+        status_code: 500,
+      });
+      new Logger('Applications').error(
+        `Error getting applications: ${error.message}`,
+      );
+    }
+  });
+
+  socket.on('handleApplication', async (data) => {
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const members = (await db.get('members')) || {};
+    const applications = (await db.get('serverApplications')) || {};
+
+    try {
+      const { sessionId, serverId, applicationId, action } = data;
+      if (!sessionId || !serverId || !applicationId || !action) {
+        throw new Error('Missing required fields');
+      }
+
+      const userId = userSessions.get(sessionId);
+      if (!userId) throw new Error('Invalid session ID');
+
+      const user = users[userId];
+      if (!user) throw new Error('User not found');
+
+      const server = servers[serverId];
+      if (!server) throw new Error('Server not found');
+
+      // Check if user has permission to handle applications
+      const userPermission = await getPermissionLevel(userId, server.id);
+      if (userPermission < 5) throw new Error('Insufficient permissions');
+
+      const application = applications[applicationId];
+      if (!application) throw new Error('Application not found');
+
+      if (action === 'accept') {
+        // Create new membership if it doesn't exist
+        const exists = Object.values(members).find(
+          (member) =>
+            member.serverId === server.id &&
+            member.userId === application.userId,
+        );
+
+        if (!exists) {
+          const memberId = uuidv4();
+          const member = {
+            id: memberId,
+            serverId: server.id,
+            userId: application.userId,
+            nickname: users[application.userId].name,
+            permissionLevel: 2,
+            managedChannels: [],
+            contribution: 0,
+            joinedAt: Date.now(),
+          };
+          await db.set(`members.${memberId}`, member);
+        } else {
+          // Update existing membership
+          exists.joinedAt = Date.now();
+          if (exists.permissionLevel < 2) exists.permissionLevel = 2;
+          await db.set(`members.${exists.id}`, exists);
+        }
+      }
+
+      // Delete application
+      await db.delete(`serverApplications.${applicationId}`);
+
+      // Emit updated applications list to admin
+      const updatedApplications = await getServerApplications(serverId);
+      socket.emit('applications', updatedApplications);
+
+      // If accepted, emit server update to all users
+      if (action === 'accept') {
+        io.to(`server_${serverId}`).emit('serverUpdate', {
+          ...(await getServer(serverId)),
+        });
+      }
+
+      new Logger('Applications').success(
+        `Application(${applicationId}) ${action}ed for server(${serverId})`,
+      );
+    } catch (error) {
+      socket.emit('error', {
+        message: `處理申請時發生錯誤: ${error.message}`,
+        part: 'HANDLEAPPLICATION',
+        tag: 'EXCEPTION_ERROR',
+        status_code: 500,
+      });
+      new Logger('Applications').error(
+        `Error handling application: ${error.message}`,
+      );
+    }
+  });
+
   socket.on('applyServerMembership', async (data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -1465,6 +1606,102 @@ io.on('connection', async (socket) => {
         success: false,
         message: `申請失敗: ${error.message}`,
       });
+    }
+  });
+
+  socket.on('userKicked', async (data) => {
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const channels = (await db.get('channels')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
+
+    try {
+      const { sessionId, serverId, userId, targetId } = data;
+      if (!sessionId || !serverId || !userId || !targetId) {
+        throw new Error('Missing required fields');
+      }
+
+      const user = users[userId];
+      const target = users[targetId];
+      if (!user || !target) {
+        throw new Error(`User(${userId} or ${targetId}) not found`);
+      }
+
+      const presence = presenceStates[`presence_${targetId}`];
+      if (!presence) {
+        throw new Error(`Presence(${`presence_${targetId}`}) not found`);
+      }
+
+      const server = servers[serverId];
+      if (!server) {
+        throw new Error(`Server(${serverId}) not found`);
+      }
+
+      const channel = channels[presence.currentChannelId];
+      if (!channel) {
+        throw new Error(`Channel(${presence.currentChannelId}) not found`);
+      }
+
+      // 檢查權限
+      const userPermission = await getPermissionLevel(userId, server.id);
+      if (userPermission < 3) {
+        throw new Error('Insufficient permissions');
+      }
+
+      // 獲取被踢用戶的 socket.id
+      const targetSocketId = userToSocket.get(targetId);
+      if (!targetSocketId) {
+        throw new Error(`User(${targetId}) is not connected`);
+      }
+
+      // 從頻道移除
+      channel.userIds = channel.userIds.filter((id) => id !== targetId);
+      await db.set(`channels.${channel.id}`, channel);
+
+      // 更新 Presence 狀態
+      presenceStates[presence.id] = {
+        ...presence,
+        currentChannelId: null,
+        lastActiveAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await db.set(
+        `presenceStates.${presence.id}`,
+        presenceStates[presence.id],
+      );
+
+      // TODO: Let target user leave the channel
+
+      // 向被踢用戶發送事件，讓客戶端處理 UI 變更
+      io.to(targetSocketId).emit('channelDisconnect');
+      io.to(targetSocketId).emit('userPresenceUpdate', {
+        ...(await getPresenceState(targetId)),
+      });
+
+      // 0.5 秒後強制斷開連線
+      setTimeout(() => {
+        io.sockets.sockets.get(targetSocketId)?.disconnect(true);
+      }, 500);
+
+      // 發送通知給所有用戶
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        ...(await getServer(server.id)),
+      });
+
+      new Logger('WebSocket').success(
+        `User(${targetId}) kicked from channel(${channel.id}) by user(${userId})`,
+      );
+    } catch (error) {
+      io.to(socket.id).emit('error', {
+        message: `踢出使用者時發生錯誤: ${error.message}`,
+        part: 'KICKUSERFROMCHANNEL',
+        tag: 'EXCEPTION_ERROR',
+        status_code: 500,
+      });
+
+      new Logger('WebSocket').error(
+        `Error kicking user from channel: ${error.message}`,
+      );
     }
   });
 
