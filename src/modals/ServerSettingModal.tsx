@@ -10,14 +10,15 @@ import React, {
   useState,
   useEffect,
 } from 'react';
-import { ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Check, X } from 'lucide-react';
 
 // Components
 import Modal from '@/components/Modal';
 import MarkdownViewer from '@/components/MarkdownViewer';
+import ContextMenu from '@/components/ContextMenu';
 
 // Types
-import type { Server } from '@/types';
+import type { Application, Server } from '@/types';
 
 // Utils
 import { getPermissionText } from '@/utils/formatters';
@@ -64,7 +65,12 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   } | null>(null);
 
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
-
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    application: any;
+  } | null>(null);
   const [searchText, setSearchText] = useState<string>('');
   const [blockPage, setBlockPage] = useState<number>(1);
 
@@ -152,6 +158,74 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
     } catch (error) {
       console.error('讀取檔案時發生錯誤:', error);
     }
+  };
+
+  useEffect(() => {
+    if (activeTabIndex === 4 && socket) {
+      // Emit getApplications event
+      socket.emit('getApplications', {
+        sessionId: sessionId,
+        serverId: server.id,
+      });
+
+      // Set up listener for applications response
+      const handleApplications = (data: any) => {
+        setApplications(data);
+      };
+
+      // Add listener
+      socket.on('applications', handleApplications);
+
+      // Cleanup function
+      return () => {
+        socket.off('applications', handleApplications);
+      };
+    }
+  }, [activeTabIndex, socket, sessionId, server.id]);
+
+  const handleContextMenu = (e: React.MouseEvent, application: any) => {
+    e.preventDefault();
+
+    // Get the scroll container element (table body)
+    const scrollContainer = e.currentTarget.closest('.overflow-y-auto');
+
+    // Calculate scroll offsets
+    const scrollOffset = scrollContainer
+      ? {
+          x: scrollContainer.scrollLeft,
+          y: scrollContainer.scrollTop,
+        }
+      : { x: 0, y: 0 };
+
+    // Get the container's position relative to viewport
+    const containerRect = scrollContainer?.getBoundingClientRect() || {
+      left: 0,
+      top: 0,
+    };
+
+    // Add offset to position menu below cursor
+    const MENU_OFFSET = { x: 150, y: 110 }; // Small offset for visual balance
+
+    // Calculate final coordinates
+    const x = e.clientX - containerRect.left + scrollOffset.x + MENU_OFFSET.x;
+    const y = e.clientY - containerRect.top + scrollOffset.y + MENU_OFFSET.y;
+
+    setContextMenu({
+      x,
+      y,
+      application,
+    });
+  };
+
+  const handleApplicationAction = (action: 'accept' | 'reject') => {
+    if (!contextMenu?.application) return;
+
+    socket?.emit('handleApplication', {
+      sessionId: sessionId,
+      serverId: server.id,
+      applicationId: contextMenu.application.id,
+      action: action,
+    });
   };
 
   const handleSubmit = useCallback(async () => {
@@ -344,10 +418,6 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   }, [editingServerData, pendingIconFile, markdownContent]);
 
   const renderContent = (): React.ReactElement | null => {
-    const serverIcon = server.iconUrl
-      ? API_URL + server.iconUrl
-      : '/logo_server_def.png';
-
     switch (activeTabIndex) {
       case 0:
         return (
@@ -860,89 +930,121 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
         );
 
       case 4:
-        const applications = (server.applications || []).sort((a, b) => {
+        const sortedApplications = [...applications].sort((a, b) => {
           const direction = sortState.direction === 'asc' ? -1 : 1;
 
-          const contribA = server.members?.[a.userId].contribution || 0;
-          const contribB = server.members?.[b.userId].contribution || 0;
+          const contribA = server.members?.[a.userId]?.contribution || 0;
+          const contribB = server.members?.[b.userId]?.contribution || 0;
           return direction * (contribB - contribA);
         });
 
         return (
-          <div className="flex flex-col h-full p-4">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-sm font-medium">
-                申請人數: {applications.length}
-              </span>
-              <button
-                className="text-sm text-blue-400 hover:underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                }}
-              >
-                申請設定
-              </button>
-            </div>
+          <>
+            {contextMenu && (
+              <ContextMenu
+                x={contextMenu.x}
+                y={contextMenu.y}
+                onClose={() => setContextMenu(null)}
+                items={[
+                  {
+                    label: '接受申請',
+                    onClick: () => handleApplicationAction('accept'),
+                    icon: <Check size={16} className="text-green-500" />,
+                    className: 'text-green-600 hover:bg-green-50',
+                  },
+                  {
+                    label: '拒絕申請',
+                    onClick: () => handleApplicationAction('reject'),
+                    icon: <X size={16} className="text-red-500" />,
+                    className: 'text-red-600 hover:bg-red-50',
+                  },
+                ]}
+              />
+            )}
+            <div className="flex flex-col h-full p-4">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-sm font-medium">
+                  申請人數: {sortedApplications.length}
+                </span>
+                <button
+                  className="text-sm text-blue-400 hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  申請設定
+                </button>
+              </div>
 
-            <div className="flex flex-col border rounded-lg overflow-hidden">
-              <div className="max-h-[500px] overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-gray-50 text-gray-600 select-none">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100">
-                        暱稱
-                      </th>
-                      <th
-                        className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('applyContribution')}
-                      >
-                        <div className="flex items-center relative pr-6">
-                          貢獻值
-                          <span className="absolute right-0">
-                            {sortState.field === 'applyContribution' &&
-                              (sortState.direction === 'asc' ? (
-                                <ChevronUp size={16} />
-                              ) : (
-                                <ChevronDown size={16} />
-                              ))}
-                          </span>
-                        </div>
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100">
-                        申請說明
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {applications.map((application, index) => {
-                      const user = application.user;
-                      const member = server.members?.[user?.id || ''] ?? null;
-                      const userNickname = member?.nickname ?? null;
-                      const userContributions = member?.contribution ?? 0;
-                      const applicationDesc =
-                        application.description || '該使用者未填寫訊息';
+              <div className="flex flex-col border rounded-lg overflow-hidden">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-50 text-gray-600 select-none">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 w-32">
+                          <div className="whitespace-nowrap">暱稱</div>
+                        </th>
+                        <th
+                          className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 w-24"
+                          onClick={() => handleSort('applyContribution')}
+                        >
+                          <div className="flex items-center relative pr-6 whitespace-nowrap">
+                            貢獻值
+                            <span className="absolute right-0">
+                              {sortState.field === 'applyContribution' &&
+                                (sortState.direction === 'asc' ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </div>
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 min-w-[300px]">
+                          <div className="whitespace-nowrap">申請說明</div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedApplications.map((application, index) => {
+                        const user = application.user;
+                        const member = server.members?.[user?.id || ''] ?? null;
+                        const userNickname =
+                          member?.nickname ?? user?.name ?? '未知使用者';
+                        const userContributions = member?.contribution ?? 0;
+                        const applicationDesc =
+                          application.description || '該使用者未填寫訊息';
 
-                      return (
-                        <tr key={index} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 truncate">
-                            <p className="font-medium text-gray-900">
-                              {userNickname}
-                            </p>
-                          </td>
-                          <td className="px-4 py-3">{userContributions}</td>
-                          <td className="px-4 py-3">{applicationDesc}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        return (
+                          <tr
+                            key={index}
+                            className="border-b hover:bg-gray-50"
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleContextMenu(e, application);
+                            }}
+                          >
+                            <td className="px-4 py-3 truncate">
+                              <p className="font-medium text-gray-900">
+                                {userNickname}
+                              </p>
+                            </td>
+                            <td className="px-4 py-3">{userContributions}</td>
+                            <td className="px-4 py-3">{applicationDesc}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="mt-4 text-right text-sm text-gray-500 select-none">
+                右鍵可以進行處理
               </div>
             </div>
-
-            <div className="mt-4 text-right text-sm text-gray-500 select-none">
-              右鍵可以進行處理
-            </div>
-          </div>
+          </>
         );
 
       case 5:

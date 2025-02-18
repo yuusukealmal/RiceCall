@@ -1,59 +1,68 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-import React, { useEffect } from 'react';
+import React, { useEffect, ReactNode } from 'react';
 
-// Types
-import { ContextMenuItem } from '@/types';
-
-interface ContextMenuProps {
-  items: ContextMenuItem[] | null;
-  x?: number;
-  y?: number;
-  onClose?: () => void;
+interface MenuItem {
+  id?: string;
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  icon?: ReactNode;
+  className?: string;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = React.memo(
-  ({ onClose, x, y, items }) => {
-    if (!items) return null;
+interface ContextMenuProps {
+  x: number;
+  y: number;
+  onClose: () => void;
+  items: MenuItem[];
+}
 
-    // Ref
-    const ref = React.useRef<HTMLDivElement>(null);
+const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, items }) => {
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('.context-menu')) {
+        onClose();
+      }
+    };
 
-    useEffect(() => {
-      const handleClick = (e: MouseEvent) => {
-        if (!ref.current?.contains(e.target as Node)) onClose?.();
-      };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
 
-      window.addEventListener('click', handleClick);
-      // window.addEventListener('contextmenu', handleClick);
-      return () => {
-        window.removeEventListener('click', handleClick);
-        // window.addEventListener('contextmenu', handleClick);
-      };
-    }, [onClose]);
+    document.addEventListener('click', handleClick);
+    document.addEventListener('keydown', handleKeyDown);
 
-    return (
-      <div
-        className="fixed bg-white shadow-lg rounded border z-50"
-        style={{ top: y, left: x }}
-        ref={ref}
-      >
-        {items.map((item, index) => (
-          <button
-            key={index}
-            className={`flex w-full px-4 py-2 text-left hover:bg-gray-100 ${
-              item.disabled ? 'bg-gray-100 cursor-not-allowed' : ''
-            }`}
-            onClick={item.onClick}
-            disabled={item.disabled ?? false}
-          >
-            {item.icon}
-            {item.label}
-          </button>
-        ))}
-      </div>
-    );
-  },
-);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed bg-white shadow-lg rounded border z-50"
+      style={{ top: y, left: x }}
+    >
+      {items.map((item, index) => (
+        <button
+          key={item.id || index}
+          onClick={() => {
+            item.onClick();
+            onClose();
+          }}
+          disabled={item.disabled ?? false}
+          className={`flex w-full px-4 py-2 text-left hover:bg-gray-100 ${
+            item.disabled ? 'bg-gray-100 cursor-not-allowed' : ''
+          }`}
+        >
+          {item.icon}
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 ContextMenu.displayName = 'ContextMenu';
 
