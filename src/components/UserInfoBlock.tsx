@@ -2,9 +2,14 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { ArrowUp } from 'lucide-react';
+
+// Components
+import BadgeViewer from './BadgeViewer';
 
 // Types
 import type { User, Server } from '@/types';
+import { getPermissionText } from '@/utils/formatters';
 
 interface UserInfoBlockProps {
   user: User | null;
@@ -39,6 +44,8 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
     const userGender = user.gender;
     const userPermission = server.members?.[user.id].permissionLevel ?? 1;
     const userLevel = Math.min(56, Math.ceil(user.level / 5));
+    const userXpProgress = user.xpInfo?.progress ?? 0;
+    const userBadges = user.badges ?? [];
 
     return (
       <div
@@ -63,14 +70,48 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
             {/* Right Info */}
             <div className="flex-1 ml-3 relative">
               <div className="flex justify-between items-start">
-                <span className="font-medium truncate">{user.name}</span>
-                {user.level > 1 && (
-                  <img
-                    src={`/UserGrade_${userLevel}.png`}
-                    alt={`/UserGrade_${userLevel}`}
-                    className="select-none"
-                  />
+                <div className="flex items-center min-w-0 mr-2">
+                  <span className="truncate">{user.name}</span>
+                  {user.level && (
+                    <img
+                      src={`/UserGrade_${userLevel + 5}.png`}
+                      alt={`/UserGrade_${userLevel}`}
+                      className="select-none ml-1 mt-0.5"
+                    />
+                  )}
+                </div>
+
+                {userBadges.length > 0 && (
+                  <div className="select-none mt-0.5 flex-shrink-0">
+                    <BadgeViewer badges={userBadges} maxDisplay={3} />
+                  </div>
                 )}
+              </div>
+              {/** Show xp progress */}
+              <div className="h-[6px] bg-gray-200 rounded-sm mt-2">
+                <div
+                  className="h-full bg-blue-500 rounded-sm"
+                  style={{
+                    width: `${userXpProgress}%`,
+                  }}
+                />
+                {/** Xp */}
+                <div className="absolute flex justify-between w-full text-xs">
+                  <div>0</div>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${userXpProgress}%`,
+                      transform: 'translateX(-50%) scale(0.8)',
+                      bottom: '-25px',
+                    }}
+                    className="flex flex-col items-center"
+                  >
+                    <ArrowUp size={12} className="text-blue-500" />
+                    <span>{user.xpInfo?.xp}</span>
+                  </div>
+                  <div>{user.xpInfo?.required}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -85,8 +126,13 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
                   alt={`${userGender}_${userPermission}`}
                   className="select-none"
                 />
+                <div className="text-xs ml-1 text-gray-500">
+                  {getPermissionText(userPermission)}
+                </div>
               </div>
-              <div className="mt-1">貢獻：{0}</div>
+              <div className="mt-1">
+                貢獻：{server.members?.[user.id].contribution}
+              </div>
             </div>
           </div>
         </div>
