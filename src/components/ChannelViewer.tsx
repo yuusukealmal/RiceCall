@@ -442,6 +442,9 @@ interface UserTabProps {
 
 const UserTab: React.FC<UserTabProps> = React.memo(
   ({ user, server, mainUser }) => {
+    // Socket Control
+    const socket = useSocket();
+
     // Context Menu Control
     const [contentMenuPos, setContentMenuPos] = useState<ContextMenuPosState>({
       x: 0,
@@ -470,6 +473,17 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     const userLevel = Math.min(56, Math.ceil(user.level / 5)); // 56 is max level
     const userGender = user.gender;
     const userBadges = user.badges ?? [];
+
+    const handleKickUser = (targetId: string) => {
+      if (mainUserPermission >= 5) {
+        socket?.emit('userKicked', {
+          sessionId: store.getState().sessionToken,
+          serverId: server.id,
+          userId: mainUser.id,
+          targetId: targetId,
+        });
+      }
+    };
 
     return (
       <div key={user.id}>
@@ -547,7 +561,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 disabled: mainUser.id == user.id ? true : false,
                 onClick: () => {
                   setShowContextMenu(false);
-                  // Open Kick User Modal
+                  handleKickUser(user.id);
                 },
               },
             ]}
