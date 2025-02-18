@@ -1018,30 +1018,6 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
 
         return (
           <div className="flex flex-col items-center p-4">
-            <div className="flex flex-row items-center justify-start mb-2">
-              <div className="flex flex-row border rounded text-sm font-medium">
-                <div
-                  className={`p-2 bg-${
-                    blockPage == 1 ? 'gray-200' : 'white'
-                  } cursor-pointer hover:bg-gray-200 w-20 text-center`}
-                  onClick={() => {
-                    setBlockPage(1);
-                  }}
-                >
-                  封鎖帳號
-                </div>
-                <div
-                  className={`p-2 bg-${
-                    blockPage == 1 ? 'white' : 'gray-200'
-                  } cursor-pointer hover:bg-gray-200 w-20 text-center`}
-                  onClick={() => {
-                    setBlockPage(2);
-                  }}
-                >
-                  封鎖IP
-                </div>
-              </div>
-            </div>
             {blockPage === 1
               ? blockAccountPage
               : blockPage === 2
