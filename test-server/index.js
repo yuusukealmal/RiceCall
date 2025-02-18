@@ -2233,7 +2233,7 @@ const setupCleanupInterval = async () => {
   cleanupUnusedAvatars().catch(console.error);
 };
 const calculateRequiredXP = (level) => {
-  return Math.floor(XP_SYSTEM.BASE_XP * Math.pow(XP_SYSTEM.GROWTH_RATE, level));
+  return Math.ceil(XP_SYSTEM.BASE_XP * Math.pow(XP_SYSTEM.GROWTH_RATE, level));
 };
 const createUserIdSocketIdMap = (userId, socketId) => {
   if (!socketToUser.has(socketId) && !userToSocket.has(userId)) {
