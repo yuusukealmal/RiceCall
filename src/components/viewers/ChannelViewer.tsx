@@ -23,14 +23,14 @@ import store from '@/redux/store';
 import { useSocket } from '@/hooks/SocketProvider';
 
 // Components
-import BadgeViewer from '@/components/BadgeViewer';
+import BadgeViewer from '@/components/viewers/BadgeViewer';
 import ContextMenu from '@/components/ContextMenu';
 import UserInfoBlock from '@/components/UserInfoBlock';
 
 // Modals
-import AddChannelModal from '@/modals/AddChannelModal';
-import EditChannelModal from '@/modals/EditChannelModal';
-import DeleteChannelModal from '@/modals/DeleteChannelModal';
+import AddChannelModal from '@/components/modals/AddChannelModal';
+import EditChannelModal from '@/components/modals/EditChannelModal';
+import DeleteChannelModal from '@/components/modals/DeleteChannelModal';
 
 const getVisibilityStyle = (visibility: Visibility): string => {
   switch (visibility) {
@@ -651,7 +651,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
           {userCurrentChannelName}
         </div>
       </div>
-
       {/* Mic Queue */}
       <div className={styles['sectionTitle']}>麥序</div>
       <div className={styles['micQueueBox']}>
@@ -666,7 +665,8 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
           ))}
         </div>
       </div>
-
+      {/* Saperator */}
+      <div className={styles['saperator-2']} />
       {/* All Channels */}
       <div
         className={styles['sectionTitle']}
@@ -679,7 +679,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
       >
         所有頻道
       </div>
-
       {/* Channel List */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable
@@ -722,7 +721,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
           )}
         </Droppable>
       </DragDropContext>
-
       {/* Context Menu */}
       {showContextMenu && canEdit && (
         <ContextMenu
@@ -742,7 +740,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
           ]}
         />
       )}
-
       {/* Add Channel Modal */}
       {showAddChannelModal && (
         <AddChannelModal
