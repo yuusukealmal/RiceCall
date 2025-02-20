@@ -152,7 +152,14 @@ const ServerPageComponent: React.FC = () => {
         >
           {/* Server image and info */}
           <div className={styles['sidebarHeader']}>
-            <div className={styles['avatarPicture']} />
+            <div
+              className={styles['avatarPicture']}
+              style={{
+                background: `url(${serverIcon})`,
+                backgroundSize: 'contain',
+                backgroundPosition: '0 0',
+              }}
+            />
 
             <div className={styles['baseInfoBox']}>
               <div className={styles['container']}>
