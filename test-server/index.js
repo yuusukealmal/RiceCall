@@ -2654,7 +2654,6 @@ io.on('connection', async (socket) => {
         );
       }
 
-      // Check permissions
       const userPermission = await getPermissionLevel(userId, server.id);
       if (userPermission < 5) {
         throw new SocketError(
@@ -2665,26 +2664,32 @@ io.on('connection', async (socket) => {
         );
       }
 
-      // Update channels with new order values
       for (const updatedChannel of data.updatedChannels) {
         const channel = channels[updatedChannel.id];
         if (channel) {
-          channel.order = updatedChannel.order;
-          channel.parentId = updatedChannel.parentId;
-          await db.set(`channels.${channel.id}`, channel);
+          const hasChildren = Object.values(channels).some(
+            (c) => c.parentId === channel.id,
+          );
+
+          channels[channel.id] = {
+            ...channel,
+            order: updatedChannel.order,
+            parentId: updatedChannel.parentId,
+            isCategory: hasChildren,
+          };
+
+          await db.set(`channels.${channel.id}`, channels[channel.id]);
         }
       }
 
-      // Get all channels for this server and sort by order
       const serverChannels = server.channelIds
         .map((id) => channels[id])
+        .filter((channel) => channel)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-      // Update server's channelIds array to maintain order
       server.channelIds = serverChannels.map((c) => c.id);
       await db.set(`servers.${server.id}`, server);
 
-      // Emit updated server data to all clients
       io.to(`server_${server.id}`).emit('serverUpdate', {
         ...(await getServer(server.id)),
       });
@@ -2927,6 +2932,7 @@ io.on('connection', async (socket) => {
         ...newChannel,
         id: channelId,
         createdAt: Date.now().valueOf(),
+        order: server.channelIds.length,
       };
       channels[channelId] = channel;
       await db.set(`channels.${channelId}`, channel);
@@ -3392,16 +3398,30 @@ const getServer = async (serverId) => {
   const servers = (await db.get('servers')) || {};
   const server = servers[serverId];
   if (!server) return null;
+
+  // Get all channels including child channels
+  const allChannels = await Promise.all(
+    server.channelIds.map(async (channelId) => await getChannels(channelId)),
+  );
+
+  // Filter out any null channels and ensure hierarchy is preserved
+  const channels = allChannels
+    .filter((channel) => channel)
+    .map((channel) => {
+      // Preserve parent-child relationships
+      if (channel.parentId) {
+        const parent = allChannels.find((c) => c.id === channel.parentId);
+        if (parent) {
+          parent.isCategory = true;
+        }
+      }
+      return channel;
+    });
+
   return {
     ...server,
     members: await getServerMembers(serverId),
-    channels: (
-      await Promise.all(
-        server.channelIds.map(
-          async (channelId) => await getChannels(channelId),
-        ),
-      )
-    ).filter((channel) => channel),
+    channels: channels,
     lobby: await getChannels(server.lobbyId),
     owner: await getUser(server.ownerId),
   };

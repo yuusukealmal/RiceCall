@@ -172,21 +172,21 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
                     },
                   },
                   {
-                    id: 'delete',
-                    icon: <Trash size={14} className="w-5 h-5 mr-2" />,
-                    label: '刪除',
-                    onClick: () => {
-                      setShowContextMenu(false);
-                      setShowDeleteChannelModal(true);
-                    },
-                  },
-                  {
                     id: 'add',
                     icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                     label: '新增',
                     onClick: () => {
                       setShowContextMenu(false);
                       setShowAddChannelModal(true);
+                    },
+                  },
+                  {
+                    id: 'delete',
+                    icon: <Trash size={14} className="w-5 h-5 mr-2" />,
+                    label: '刪除',
+                    onClick: () => {
+                      setShowContextMenu(false);
+                      setShowDeleteChannelModal(true);
                     },
                   },
                 ]}
@@ -250,6 +250,8 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 
     // Modal Control
     const [showEditChannelModal, setShowEditChannelModal] =
+      useState<boolean>(false);
+    const [showAddChannelModal, setShowAddChannelModal] =
       useState<boolean>(false);
     const [showDeleteChannelModal, setShowDeleteChannelModal] =
       useState<boolean>(false);
@@ -341,6 +343,16 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
                     },
                   },
                   {
+                    id: 'add',
+                    icon: <Plus size={14} className="w-5 h-5 mr-2" />,
+                    label: '新增',
+                    disabled: channel.isLobby,
+                    onClick: () => {
+                      setShowContextMenu(false);
+                      setShowAddChannelModal(true);
+                    },
+                  },
+                  {
                     id: 'delete',
                     icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                     label: '刪除',
@@ -351,6 +363,13 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
                     },
                   },
                 ]}
+              />
+            )}
+            {/* Add Channel Modal */}
+            {showAddChannelModal && (
+              <AddChannelModal
+                onClose={() => setShowAddChannelModal(false)}
+                parentChannel={channel}
               />
             )}
             {/* Edit Channel Modal */}
@@ -475,39 +494,43 @@ const UserTab: React.FC<UserTabProps> = React.memo(
             onClose={() => setShowContextMenu(false)}
             x={contentMenuPos.x}
             y={contentMenuPos.y}
-            items={canEdit ? [
-              {
-                id: 'kick',
-                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
-                label: '踢出',
-                disabled: mainUser.id == user.id ? true : false,
-                onClick: () => {
-                  setShowContextMenu(false);
-                  handleKickUser(user.id);
-                },
-              },
-              {
-                id: 'addFriend',
-                icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-                label: '新增好友',
-                disabled: mainUser.id == user.id ? true : false,
-                onClick: () => {
-                  setShowContextMenu(false);
-                  handleaddFriend(user.id);
-                },
-              },
-            ] : [
-              {
-                id: 'addFriend',
-                icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-                label: '新增好友',
-                disabled: mainUser.id == user.id ? true : false,
-                onClick: () => {
-                  setShowContextMenu(false);
-                  handleaddFriend(user.id);
-                },
-              },
-            ]}
+            items={
+              canEdit
+                ? [
+                    {
+                      id: 'kick',
+                      icon: <Trash size={14} className="w-5 h-5 mr-2" />,
+                      label: '踢出',
+                      disabled: mainUser.id == user.id ? true : false,
+                      onClick: () => {
+                        setShowContextMenu(false);
+                        handleKickUser(user.id);
+                      },
+                    },
+                    {
+                      id: 'addFriend',
+                      icon: <Plus size={14} className="w-5 h-5 mr-2" />,
+                      label: '新增好友',
+                      disabled: mainUser.id == user.id ? true : false,
+                      onClick: () => {
+                        setShowContextMenu(false);
+                        handleaddFriend(user.id);
+                      },
+                    },
+                  ]
+                : [
+                    {
+                      id: 'addFriend',
+                      icon: <Plus size={14} className="w-5 h-5 mr-2" />,
+                      label: '新增好友',
+                      disabled: mainUser.id == user.id ? true : false,
+                      onClick: () => {
+                        setShowContextMenu(false);
+                        handleaddFriend(user.id);
+                      },
+                    },
+                  ]
+            }
           />
         )}
 
@@ -537,6 +560,9 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
   // Redux
   const user = useSelector((state: { user: User }) => state.user);
   const server = useSelector((state: { server: Server }) => state.server);
+  const sessionId = useSelector(
+    (state: { sessionToken: string }) => state.sessionToken,
+  );
 
   // Socket Control
   const socket = useSocket();
@@ -560,24 +586,70 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
   const canEdit = userPermission >= 5;
 
   const handleDragEnd = (result: any) => {
-    const { destination, source, draggableId } = result;
+    const { destination, source, draggableId, combine } = result;
+    const sessionId = store.getState().sessionToken;
 
-    // Drop was cancelled or dropped outside valid area
-    if (!destination) return;
+    // Helper：封裝更新頻道順序的 socket 發送
+    const emitUpdate = (updatedChannels: any[]) => {
+      if (updatedChannels && updatedChannels.length > 0) {
+        socket?.emit('updateChannelOrder', {
+          sessionId,
+          serverId: server.id,
+          updatedChannels,
+        });
+      }
+    };
 
-    // Item was dropped in the same position
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
+    // 如果是合併操作（拖到另一個頻道上）
+    if (combine) {
+      const movedChannel = channels?.find((c) => c.id === draggableId);
+      const targetChannel = channels?.find((c) => c.id === combine.draggableId);
+      if (
+        !movedChannel ||
+        !targetChannel ||
+        targetChannel.isLobby ||
+        movedChannel.isLobby
+      )
+        return;
+
+      // 將目標頻道更新為 category
+      const updatedTarget = { ...targetChannel, isCategory: true };
+      // 將移動頻道設定為 target 的子頻道，order 依當前子頻道數計算
+      const childCount =
+        channels?.filter((c) => c.parentId === targetChannel.id).length || 0;
+      const updatedMoved = {
+        ...movedChannel,
+        parentId: targetChannel.id,
+        order: childCount,
+      };
+
+      emitUpdate([updatedTarget, updatedMoved]);
+
+      // 同時更新來源父層頻道的排序
+      const sourceParentId = movedChannel.parentId;
+      const sourceChannels = channels
+        ?.filter((c) => c.parentId === sourceParentId && c.id !== draggableId)
+        .map((channel, index) => ({ ...channel, order: index }));
+      emitUpdate(sourceChannels || []);
+
       return;
     }
 
-    // Get the channel being moved
+    // 如果沒有指定目標則返回
+    if (!destination) return;
+    // 如果位置沒有改變則返回
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    )
+      return;
+
     const movedChannel = channels?.find((c) => c.id === draggableId);
     if (!movedChannel) return;
+    // 大廳頻道只能在 root 內移動
+    if (movedChannel.isLobby && destination.droppableId !== 'root') return;
 
-    // Get the source and destination parent IDs
+    // 取得來源與目標父層 ID，若 droppableId 為 'root' 則代表 parentId 為 null
     const sourceParentId =
       source.droppableId === 'root'
         ? null
@@ -586,61 +658,76 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
       destination.droppableId === 'root'
         ? null
         : destination.droppableId.replace('category-', '');
+    const destChannel = destParentId
+      ? channels?.find((c) => c.id === destParentId)
+      : null;
 
-    // Get all channels in the destination category
-    const destCategoryChannels = channels
-      ?.filter((c) => {
-        if (destParentId === null) {
-          return c.parentId === null;
-        }
-        return c.parentId === destParentId;
-      })
-      .filter((c) => c.id !== draggableId) // Remove the moved channel
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    // 取得目標層級中的所有頻道（如果在 root 層，則 parentId 為 null）
+    const channelsAtDest =
+      channels?.filter((c) =>
+        destParentId ? c.parentId === destParentId : c.parentId === null,
+      ) || [];
 
-    // Create new array with moved channel at new position
-    const newChannelArray = [...destCategoryChannels];
-    newChannelArray.splice(destination.index, 0, movedChannel);
-
-    // Update orders for all channels
-    const updatedChannels = newChannelArray.map((channel, index) => ({
-      ...channel,
-      order: index,
+    // 移除被拖曳的頻道
+    const channelsWithoutMoved = channelsAtDest.filter(
+      (c) => c.id !== draggableId,
+    );
+    // 在新的位置插入被拖曳的頻道（更新其 parentId 為目標父層）
+    const newChannelsOrder = [...channelsWithoutMoved];
+    newChannelsOrder.splice(destination.index, 0, {
+      ...movedChannel,
       parentId: destParentId,
-    }));
-
-    // Emit socket event to update channel order
-    socket?.emit('updateChannelOrder', {
-      sessionId: store.getState().sessionToken,
-      serverId: server.id,
-      parentId: destParentId,
-      updatedChannels: updatedChannels,
     });
 
-    // If moving between categories, we also need to update the source category
-    if (sourceParentId !== destParentId) {
-      const sourceChannels = channels
-        ?.filter((c) => {
-          if (sourceParentId === null) {
-            return c.parentId === null;
-          }
-          return c.parentId === sourceParentId;
-        })
-        .filter((c) => c.id !== draggableId)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-        .map((channel, index) => ({
-          ...channel,
-          order: index,
-        }));
+    // 若目標是頻道而非類別，則將其更新為 category
+    if (destChannel && !destChannel.isCategory) {
+      const updatedDestChannel = { ...destChannel, isCategory: true };
+      newChannelsOrder.push(updatedDestChannel);
+    }
 
-      socket?.emit('updateChannelOrder', {
-        sessionId: store.getState().sessionToken,
-        serverId: server.id,
-        parentId: sourceParentId,
-        updatedChannels: sourceChannels,
-      });
+    // 重新計算順序
+    const updatedChannels = newChannelsOrder.map((channel, index) => ({
+      ...channel,
+      order: index,
+      // 若是移動的頻道，更新其 parentId；其他保持原狀
+      parentId: channel.id === draggableId ? destParentId : channel.parentId,
+      // 移動頻道進入新層後設為非 category（除大廳外）
+      isCategory: channel.id === draggableId ? false : channel.isCategory,
+    }));
+
+    emitUpdate(updatedChannels);
+
+    // 若來源與目標層不同，需要更新來源層級的排序
+    if (sourceParentId !== destParentId) {
+      const sourceList = channels
+        ?.filter((c) => c.parentId === sourceParentId && c.id !== draggableId)
+        .map((channel, index) => ({ ...channel, order: index }));
+      if (sourceList && sourceList.length > 0) {
+        emitUpdate(sourceList);
+      } else if (sourceParentId) {
+        // 如果來源父頻道下已無其他子頻道，將其更新為非類別
+        const sourceCategory = channels?.find((c) => c.id === sourceParentId);
+        if (sourceCategory) {
+          emitUpdate([{ ...sourceCategory, isCategory: false }]);
+        }
+      }
     }
   };
+
+  useEffect(() => {
+    const currentChannel = server.channels?.find(
+      (c) => c.id === user.presence?.currentChannelId,
+    );
+    if (currentChannel && currentChannel.isCategory) {
+      const lobbyChannel = server.channels?.find((c) => c.isLobby);
+      if (lobbyChannel && lobbyChannel.id !== user.presence?.currentChannelId) {
+        socket?.emit('connectChannel', {
+          sessionId,
+          channelId: lobbyChannel.id,
+        });
+      }
+    }
+  }, [server.channels, user.presence?.currentChannelId, sessionId, socket]);
 
   // FOR TESTING
   const micQueueUsers: User[] = [
@@ -712,7 +799,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable
           droppableId="root"
-          type="CATEGORY"
+          type="CHANNEL" // Always accept CHANNEL type items
           ignoreContainerClipping={true}
           isDropDisabled={!canEdit}
           isCombineEnabled={true}

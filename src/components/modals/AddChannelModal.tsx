@@ -36,7 +36,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
       serverId: server.id,
       userIds: [],
       messageIds: [],
-      parentId: parentChannel?.id ?? null,
+      parentId: parentChannel?.isLobby ? null : parentChannel?.id ?? null,
       createdAt: 0,
       settings: {
         bitrate: 0,
@@ -63,7 +63,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
 
     return (
       <Modal
-        title={`新增頻道`}
+        title="新增頻道"
         onSubmit={handleSubmit}
         onClose={onClose}
         width="300px"
@@ -93,7 +93,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
               }))
             }
             className="w-full p-1 border rounded"
-            placeholder={`頻道名稱`}
+            placeholder="頻道名稱"
             required
           />
           <select
@@ -115,19 +115,6 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
             <option value="public">公開</option>
             <option value="private">會員</option>
             <option value="readonly">唯讀</option>
-          </select>
-          <select
-            value={newChannel.isCategory.toString()}
-            onChange={(e) =>
-              setNewChannel((prev) => ({
-                ...prev,
-                isCategory: e.target.value === 'true',
-              }))
-            }
-            className="w-full p-1 border rounded"
-          >
-            <option value="false">頻道</option>
-            <option value="true">類別</option>
           </select>
         </div>
       </Modal>

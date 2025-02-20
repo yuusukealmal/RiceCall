@@ -131,7 +131,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ onSearch }) => {
           <div className={styles['forwardBtn']} />
           <div className={styles['searchBar']}>
             <input
-              type="text"
+              type="search"
               placeholder="輸入群ID或群名稱"
               data-placeholder="60021"
               className={styles['searchInput']}
