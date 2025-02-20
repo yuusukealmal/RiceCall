@@ -2197,6 +2197,71 @@ io.on('connection', async (socket) => {
     }
   });
 
+  socket.on('userAddFriend', async (data) => {
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const messages = (await db.get('messages')) || {};
+    const friends = (await db.get('friends')) || {};
+
+    try {
+      const { sessionId, serverId, userId, targetId } = data;
+      if (!sessionId || !serverId || !userId || !targetId) {
+        throw new Error('Missing required fields');
+      }
+
+      const user = users[userId];
+      const target = users[targetId];
+      if (!user || !target) {
+        throw new Error(`User(${userId} or ${targetId}) not found`);
+      }
+
+      const server = servers[serverId];
+      if (!server) {
+        throw new Error(`Server(${serverId}) not found`);
+      }
+
+      // Find direct message and update (if not exists, create one)
+      const friend = await getFriend(userId, targetId);
+      if (!friend) {
+        // Create new message
+        const messageId = uuidv4();
+        const messageTemp = {
+          id: messageId,
+          timestamp: Date.now().valueOf(),
+        };
+        messages[messageId] = messageTemp;
+        await db.set(`messages.${messageId}`, messageTemp);
+
+        const friendId = uuidv4();
+        friends[friendId] = {
+          id: friendId,
+          status: 'pending',
+          userIds: [userId, targetId],
+          messageIds: [messageId],
+          createdAt: Date.now(),
+        };
+        await db.set(`friends.${friendId}`, friends[friendId]);
+      } else if (friend) {
+        throw new Error(`target friend(${targetId}) is found`);
+      }
+
+      new Logger('WebSocket').success(
+        `User(${targetId}) add friend from server(${server.id}) by user(${userId})`,
+      );
+    } catch (error) {
+      io.to(socket.id).emit('error', {
+        message: `新增好友時發生錯誤: ${error.message}`,
+        part: 'ADDFRIENDFROMCHANNEL',
+        tag: 'EXCEPTION_ERROR',
+        status_code: 500,
+      });
+
+      new Logger('WebSocket').error(
+        `Error add friend from channel: ${error.message}`,
+      );
+    }
+  });
+
   socket.on('disconnectChannel', async (data) => {
     // data = {
     //   sessionId: '123456',

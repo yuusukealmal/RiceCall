@@ -457,12 +457,17 @@ const HomeComponent = () => {
     }
   };
 
+  const onClose = () => {
+    alert("這裡是關不掉的喔");
+  };
+
   return (
     <>
       {/* Top Navigation */}
       <Header
         selectedId={selectedTabId}
         onSelect={(tabId) => setSelectedTabId(tabId)}
+        onClose={onClose}
       />
       {/* Main Content */}
       <div className="content">{getMainContent()}</div>
