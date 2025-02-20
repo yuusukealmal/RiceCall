@@ -1,10 +1,17 @@
-import React, { ChangeEvent, FocusEvent, FormEvent, useState } from 'react';
+import React, {
+  ChangeEvent,
+  FocusEvent,
+  FormEvent,
+  useState,
+  useEffect,
+} from 'react';
 
 // CSS
 import styles from '@/styles/loginPage.module.css';
 
 // Utils
 import { validateAccount, validatePassword } from '@/utils/validators';
+import { base64encode } from '@/utils/base64encode';
 
 // Services
 import { authService } from '@/services/auth.service';
@@ -36,6 +43,21 @@ interface LoginPageProps {
   onRegisterClick: () => void;
 }
 
+const STORAGE_KEYS = {
+  REMEMBER_ACCOUNT: 'rememberAccount',
+  AUTO_LOGIN: 'autoLogin',
+  ACCOUNT: 'savedAccount',
+  ENCRYPTED_PASSWORD: 'encryptedPassword', // 應該使用更安全的方式存儲密碼
+};
+
+const encryptPassword = (password: string): string => {
+  return base64encode(password);
+};
+
+const decryptPassword = (encrypted: string): string => {
+  return atob(encrypted);
+};
+
 const LoginPage: React.FC<LoginPageProps> = React.memo(
   ({ onLoginSuccess, onRegisterClick }) => {
     const [formData, setFormData] = useState<LoginPageData>({
@@ -45,6 +67,82 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(
       autoLogin: false,
     });
     const [errors, setErrors] = useState<FormErrors>({});
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+      const savedRememberAccount =
+        localStorage.getItem(STORAGE_KEYS.REMEMBER_ACCOUNT) === 'true';
+      const savedAutoLogin =
+        localStorage.getItem(STORAGE_KEYS.AUTO_LOGIN) === 'true';
+
+      let savedAccount = '';
+      if (savedRememberAccount)
+        savedAccount = localStorage.getItem(STORAGE_KEYS.ACCOUNT) || '';
+
+      setFormData((prev) => ({
+        ...prev,
+        account: savedAccount,
+        rememberAccount: savedRememberAccount,
+        autoLogin: savedAutoLogin,
+      }));
+
+      // 如果啟用了自動登入，嘗試自動登入
+      if (savedAutoLogin && savedAccount) {
+        const savedPassword = localStorage.getItem(
+          STORAGE_KEYS.ENCRYPTED_PASSWORD,
+        );
+        if (savedPassword) {
+          // 添加延遲避免初始渲染時立即登入
+          const timer = setTimeout(() => {
+            attemptAutoLogin(savedAccount, decryptPassword(savedPassword));
+          }, 500);
+          return () => clearTimeout(timer);
+        }
+      }
+    }, []);
+
+    const attemptAutoLogin = async (account: string, password: string) => {
+      setIsLoading(true);
+      try {
+        // 先檢查本地保存的 sessionToken 是否有效
+        const existingToken = localStorage.getItem('sessionToken');
+        if (existingToken) {
+          const isValid = await authService.validateToken(existingToken);
+          if (isValid) {
+            store.dispatch(setSessionToken(existingToken));
+            onLoginSuccess();
+            return;
+          }
+        }
+
+        // 如果 token 無效或不存在，使用保存的憑證重新登入
+        const loginData = {
+          account,
+          password,
+          rememberAccount: formData.rememberAccount,
+          autoLogin: formData.autoLogin,
+        };
+
+        const response = await authService.login(loginData);
+
+        // 檢查是否直接返回 sessionId 或在 data 屬性中
+        const sessionId =
+          response.sessionId || (response.data && response.data.sessionId);
+
+        if (sessionId) {
+          localStorage.setItem('sessionToken', sessionId);
+          store.dispatch(setSessionToken(sessionId));
+          onLoginSuccess();
+        } else {
+          console.error('自動登入回應格式:', response);
+          throw new Error('無法從回應中獲取 sessionId');
+        }
+      } catch (error) {
+        console.error('自動登入失敗:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
       const { name, value, type, checked } = e.target;
@@ -82,16 +180,56 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(
       });
 
       if (!accountError && !passwordError) {
+        setIsLoading(true);
         try {
-          const data = await authService.login(formData);
-          console.log(data);
-          localStorage.setItem('sessionToken', data.sessionId);
-          store.dispatch(setSessionToken(data.sessionId));
-          onLoginSuccess();
+          const response = await authService.login(formData);
+
+          // 檢查是否直接返回 sessionId 或在 data 屬性中
+          const sessionId =
+            response.sessionId || (response.data && response.data.sessionId);
+
+          if (sessionId) {
+            // 儲存 session token
+            localStorage.setItem('sessionToken', sessionId);
+            store.dispatch(setSessionToken(sessionId));
+
+            // 根據用戶選擇保存登入相關設置
+            localStorage.setItem(
+              STORAGE_KEYS.REMEMBER_ACCOUNT,
+              formData.rememberAccount.toString(),
+            );
+            localStorage.setItem(
+              STORAGE_KEYS.AUTO_LOGIN,
+              formData.autoLogin.toString(),
+            );
+
+            if (formData.rememberAccount) {
+              localStorage.setItem(STORAGE_KEYS.ACCOUNT, formData.account);
+            } else {
+              localStorage.removeItem(STORAGE_KEYS.ACCOUNT);
+            }
+
+            // TODO: 應該使用更安全的方式保存密碼
+            if (formData.autoLogin) {
+              localStorage.setItem(
+                STORAGE_KEYS.ENCRYPTED_PASSWORD,
+                encryptPassword(formData.password),
+              );
+            } else {
+              localStorage.removeItem(STORAGE_KEYS.ENCRYPTED_PASSWORD);
+            }
+
+            onLoginSuccess();
+          } else {
+            console.error('登入回應格式:', response);
+            throw new Error('無法從回應中獲取 sessionId');
+          }
         } catch (error) {
           setErrors({
             general: error instanceof Error ? error.message : '登入失敗',
           });
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -103,6 +241,9 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(
           <form onSubmit={handleSubmit} className={styles['formWrapper']}>
             {errors.general && (
               <div className={styles['errorBox']}>{errors.general}</div>
+            )}
+            {isLoading && (
+              <div className={styles['loadingIndicator']}>登入中...</div>
             )}
             <div className={styles['inputBox']}>
               <label className={styles['label']}>{'帳號'}</label>

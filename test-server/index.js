@@ -434,6 +434,37 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method == 'POST' && req.url == '/validateToken') {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+    req.on('end', async () => {
+      try {
+        const data = JSON.parse(body);
+        // data = {
+        //   "sessionId": "123456",
+        // }
+
+        // Validate data
+        const sessionId = data.sessionId;
+        if (!sessionId) {
+          throw new Error('Missing required fields');
+        }
+        const isValid = userSessions.has(sessionId);
+        if (!isValid) {
+          throw new Error('Invalid session ID');
+        }
+
+        sendSuccess(res, { message: 'Token validated' });
+      } catch (error) {
+        sendError(res, 500, `Token validation error: ${error.message}`);
+        new Logger('Auth').error(`Token validation error: ${error.message}`);
+      }
+    });
+    return;
+  }
+
   if (req.method == 'POST' && req.url == '/login') {
     let body = '';
     req.on('data', (chunk) => {
