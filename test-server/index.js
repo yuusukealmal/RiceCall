@@ -1388,6 +1388,17 @@ io.on('connection', async (socket) => {
         );
       }
 
+      // Check user is blocked from the server
+      const isBlocked = checkUserBlocked(members, server.id, userId);
+      if (isBlocked) {
+        throw new SocketError(
+          'User is blocked from the server',
+          'CONNECTSERVER',
+          'BLOCKED',
+          403,
+        );
+      }
+
       // Check if user is already exists in the server
       const exists = Object.values(members).find(
         (member) => member.serverId === server.id && member.userId === userId,
@@ -1410,6 +1421,14 @@ io.on('connection', async (socket) => {
       }
 
       const userPermission = await getPermissionLevel(userId, server.id);
+      if (userPermission < 2 && server.settings.visibility === 'invisible') {
+        throw new SocketError(
+          '該群組只允許會員加入，請先申請加入(重新整理後可見)',
+          'CONNECTSERVER',
+          'VISIBILITY',
+          403,
+        );
+      }
 
       // Update user presence
       presenceStates[presence.id] = {
@@ -1756,7 +1775,106 @@ io.on('connection', async (socket) => {
     }
   });
 
-  // Add these socket event handlers in your server code
+  socket.on('getMembers', async (data) => {
+    // data = {
+    //   sessionId
+    //   serverId
+    // }
+    // console.log(data);
+
+    // Get database
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const members = (await db.get('members')) || {};
+
+    try {
+      // Validate data
+      const sessionId = data.sessionId;
+      const serverId = data.serverId;
+      if (!sessionId || !serverId) {
+        throw new SocketError(
+          'Missing required fields',
+          'GETMEMBERS',
+          'DATA',
+          400,
+        );
+      }
+
+      const userId = userSessions.get(sessionId);
+      if (!userId) {
+        throw new SocketError(
+          `Invalid session ID(${sessionId})`,
+          'GETMEMBERS',
+          'USER_ID',
+          400,
+        );
+      }
+
+      const user = users[userId];
+      if (!user) {
+        throw new SocketError(
+          `User(${userId}) not found`,
+          'GETMEMBERS',
+          'USER',
+          404,
+        );
+      }
+
+      const server = servers[serverId];
+      if (!server) {
+        throw new SocketError(
+          `Server(${serverId}) not found`,
+          'GETMEMBERS',
+          'SERVER',
+          404,
+        );
+      }
+
+      // Check if user has permission to view members
+      const userPermission = await getPermissionLevel(userId, server.id);
+      if (userPermission < 5) {
+        throw new SocketError(
+          'Insufficient permissions',
+          'GETMEMBERS',
+          'USER_PERMISSION',
+          403,
+        );
+      }
+
+      // Get all members for this server
+      const serverMembers = Object.values(members)
+        .filter((member) => member.serverId === serverId)
+        .map(async (member) => ({
+          ...member,
+        }));
+
+      const resolvedMembers = await Promise.all(serverMembers);
+
+      socket.emit('members', resolvedMembers);
+
+      new Logger('Members').success(`Members fetched for server(${serverId})`);
+    } catch (error) {
+      if (error instanceof SocketError) {
+        io.to(socket.id).emit('error', {
+          message: error.message,
+          part: error.part,
+          tag: error.tag,
+          status_code: error.status_code,
+        });
+      } else {
+        io.to(socket.id).emit('error', {
+          message: `獲取成員時發生無法預期的錯誤: ${error.message}`,
+          part: 'GETMEMBERS',
+          tag: 'EXCEPTION_ERROR',
+          status_code: 500,
+        });
+      }
+      new Logger('Members').error(`Error getting members: ${error.message}`);
+
+      // Emit error data (only to the user)
+      io.to(socket.id).emit('members', []);
+    }
+  });
 
   socket.on('getApplications', async (data) => {
     const users = (await db.get('users')) || {};
@@ -1956,11 +2074,23 @@ io.on('connection', async (socket) => {
       const updatedApplications = await getServerApplications(serverId);
       socket.emit('applications', updatedApplications);
 
-      // If accepted, emit server update to all users
       if (action === 'accept') {
+        // emit server update to all users
         io.to(`server_${serverId}`).emit('serverUpdate', {
           ...(await getServer(serverId)),
         });
+
+        // emit user update to the user
+        const targetSocketId = userToSocket.get(application.userId);
+        if (targetSocketId) {
+          const sockets = await io.fetchSockets();
+          for (const socket of sockets)
+            if (socket.id == targetSocketId)
+              io.to(socket.id).emit('userConnect', {
+                ...(await getUser(application.userId)),
+                members: await getUserMembers(application.userId),
+              });
+        }
       }
 
       new Logger('Applications').success(
@@ -2042,7 +2172,7 @@ io.on('connection', async (socket) => {
       );
       if (existingApplication) {
         throw new SocketError(
-          'You already have a pending application',
+          '您已經有一個待審核的申請，請等待管理員審核',
           'APPLYSERVERMEMBERSHIP',
           'APPLICATION',
           400,
@@ -2062,8 +2192,6 @@ io.on('connection', async (socket) => {
       // Save to database
       applications[applicationId] = newApplication;
       await db.set(`serverApplications.${applicationId}`, newApplication);
-
-      console.log('New application:', newApplication);
 
       // Send success response
       socket.emit('applicationResponse', {
@@ -2878,6 +3006,351 @@ io.on('connection', async (socket) => {
     }
   });
 
+  socket.on('ManageUserAction', async (data) => {
+    // Get database
+    const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
+    const channels = (await db.get('channels')) || {};
+    const presenceStates = (await db.get('presenceStates')) || {};
+
+    try {
+      // Common validation
+      const { sessionId, serverId, targetId, type } = data;
+      if (!sessionId || !serverId || !targetId || !type) {
+        throw new SocketError(
+          'Missing required fields',
+          'MANAGEUSERACTION',
+          'DATA',
+          400,
+        );
+      }
+
+      const userId = userSessions.get(sessionId);
+      if (!userId) {
+        throw new SocketError(
+          `Invalid session ID(${sessionId})`,
+          'MANAGEUSERACTION',
+          'USER_ID',
+          400,
+        );
+      }
+
+      const user = users[userId];
+      const target = users[targetId];
+      if (!user || !target) {
+        throw new SocketError(
+          `User(${userId} or ${targetId}) not found`,
+          'MANAGEUSERACTION',
+          'USER',
+          404,
+        );
+      }
+
+      const server = servers[serverId];
+      if (!server) {
+        throw new SocketError(
+          `Server(${serverId}) not found`,
+          'MANAGEUSERACTION',
+          'SERVER',
+          404,
+        );
+      }
+
+      const targetPresence = presenceStates[`presence_${targetId}`];
+      if (!targetPresence) {
+        throw new SocketError(
+          `Target presence not found`,
+          'MANAGEUSERACTION',
+          'PRESENCE',
+          404,
+        );
+      }
+
+      const selfPresence = presenceStates[`presence_${userId}`];
+      if (!selfPresence) {
+        throw new SocketError(
+          `Self presence not found`,
+          'MANAGEUSERACTION',
+          'PRESENCE',
+          404,
+        );
+      }
+
+      // Check required permission level based on action type
+      const userPermission = await getPermissionLevel(userId, server.id);
+      const requiredPermission = type === 'move' ? 3 : 5;
+
+      if (userPermission < requiredPermission) {
+        throw new SocketError(
+          'Insufficient permissions',
+          'MANAGEUSERACTION',
+          'PERMISSION',
+          403,
+        );
+      }
+
+      // Special validation for kick/block
+      if (type === 'kick' || type === 'block') {
+        // Check if target is the owner
+        if (server.ownerId === targetId) {
+          throw new SocketError(
+            'Cannot perform action on server owner',
+            'MANAGEUSERACTION',
+            'OWNER',
+            400,
+          );
+        }
+
+        if (type === 'block') {
+          const members = Object.values(await db.get('members')) || [];
+          const serverBlockedUsers =
+            members.filter(
+              (member) => member.serverId === serverId && member.isBlocked,
+            ) || [];
+
+          if (serverBlockedUsers.includes(targetId)) {
+            throw new SocketError(
+              'User is already blocked',
+              'MANAGEUSERACTION',
+              'BLOCKED',
+              400,
+            );
+          }
+
+          server.blockedUserIds =
+            serverBlockedUsers.map((member) => member.userId) || [];
+        }
+      }
+
+      // Get target's socket and current channel if they're connected
+      const targetSocketId = userToSocket.get(targetId);
+      const targetCurrentChannel = channels[targetPresence.currentChannelId];
+
+      switch (type) {
+        case 'move': {
+          // Additional move validation
+          if (
+            selfPresence.currentServerId !== targetPresence.currentServerId ||
+            !selfPresence.currentChannelId ||
+            !targetPresence.currentChannelId
+          ) {
+            throw new SocketError(
+              'Users must be in same server and channels',
+              'MANAGEUSERACTION',
+              'CHANNEL',
+              400,
+            );
+          }
+
+          const destinationChannel = channels[selfPresence.currentChannelId];
+          if (!destinationChannel) {
+            throw new SocketError(
+              'Destination channel not found',
+              'MANAGEUSERACTION',
+              'CHANNEL',
+              404,
+            );
+          }
+
+          // Remove from current channel
+          if (targetCurrentChannel) {
+            targetCurrentChannel.userIds = targetCurrentChannel.userIds.filter(
+              (id) => id !== targetId,
+            );
+            await db.set(
+              `channels.${targetCurrentChannel.id}`,
+              targetCurrentChannel,
+            );
+          }
+
+          // Add to destination channel
+          if (!destinationChannel.userIds.includes(targetId)) {
+            destinationChannel.userIds.push(targetId);
+            await db.set(
+              `channels.${destinationChannel.id}`,
+              destinationChannel,
+            );
+          }
+
+          // Update presence
+          targetPresence.currentChannelId = destinationChannel.id;
+          targetPresence.updatedAt = Date.now();
+          await db.set(`presenceStates.${targetPresence.id}`, targetPresence);
+
+          // Handle socket operations
+          if (targetSocketId) {
+            const sockets = await io.fetchSockets();
+            for (const socket of sockets) {
+              if (socket.id === targetSocketId) {
+                if (targetCurrentChannel) {
+                  socket.leave(`channel_${targetCurrentChannel.id}`);
+                }
+                socket.join(`channel_${destinationChannel.id}`);
+              }
+            }
+
+            // Play sound in destination channel
+            io.to(`channel_${destinationChannel.id}`).emit('playSound', 'join');
+
+            // Notify target
+            io.to(targetSocketId).emit('userPresenceUpdate', {
+              ...(await getPresenceState(targetId)),
+            });
+          }
+
+          break;
+        }
+
+        case 'kick': {
+          // Remove from channel if connected
+          if (targetCurrentChannel) {
+            targetCurrentChannel.userIds = targetCurrentChannel.userIds.filter(
+              (id) => id !== targetId,
+            );
+            await db.set(
+              `channels.${targetCurrentChannel.id}`,
+              targetCurrentChannel,
+            );
+          }
+
+          // Clear contribution interval if exists
+          if (targetSocketId) {
+            clearContributionInterval(targetSocketId);
+          }
+
+          // Update presence
+          targetPresence.currentServerId = null;
+          targetPresence.currentChannelId = null;
+          targetPresence.updatedAt = Date.now();
+          await db.set(`presenceStates.${targetPresence.id}`, targetPresence);
+
+          // Remove member permission
+          const member = await getMember(targetId, serverId);
+          if (member) {
+            member.permissionLevel = 0;
+            await db.set(`members.${member.id}`, member);
+          }
+
+          // Handle socket operations
+          if (targetSocketId) {
+            const sockets = await io.fetchSockets();
+            for (const socket of sockets) {
+              if (socket.id === targetSocketId) {
+                if (targetCurrentChannel) {
+                  socket.leave(`channel_${targetCurrentChannel.id}`);
+                }
+                socket.leave(`server_${serverId}`);
+              }
+            }
+
+            // Notify target
+            io.to(targetSocketId).emit('channelDisconnect');
+            io.to(targetSocketId).emit('serverDisconnect');
+            io.to(targetSocketId).emit('userPresenceUpdate', {
+              ...(await getPresenceState(targetId)),
+            });
+          }
+
+          break;
+        }
+
+        case 'block': {
+          // First kick the user if they're connected
+          if (targetCurrentChannel) {
+            targetCurrentChannel.userIds = targetCurrentChannel.userIds.filter(
+              (id) => id !== targetId,
+            );
+            await db.set(
+              `channels.${targetCurrentChannel.id}`,
+              targetCurrentChannel,
+            );
+          }
+
+          if (targetSocketId) {
+            clearContributionInterval(targetSocketId);
+          }
+
+          // Update presence
+          targetPresence.currentServerId = null;
+          targetPresence.currentChannelId = null;
+          targetPresence.updatedAt = Date.now();
+          await db.set(`presenceStates.${targetPresence.id}`, targetPresence);
+
+          // Remove member permission change isBlocked to true
+          const member = await getMember(targetId, serverId);
+          if (member) {
+            member.permissionLevel = 0;
+            member.isBlocked = true;
+            await db.set(`members.${member.id}`, member);
+          }
+
+          // Handle socket operations
+          if (targetSocketId) {
+            const sockets = await io.fetchSockets();
+            for (const socket of sockets) {
+              if (socket.id === targetSocketId) {
+                if (targetCurrentChannel) {
+                  socket.leave(`channel_${targetCurrentChannel.id}`);
+                }
+                socket.leave(`server_${serverId}`);
+              }
+            }
+
+            // Notify target
+            io.to(targetSocketId).emit('channelDisconnect');
+            io.to(targetSocketId).emit('serverDisconnect');
+            io.to(targetSocketId).emit('userPresenceUpdate', {
+              ...(await getPresenceState(targetId)),
+            });
+            // Update user's blocked status
+            io.to(socket.id).emit('userConnect', {
+              ...(await getUser(userId)),
+              members: await getUserMembers(userId),
+            });
+          }
+
+          break;
+        }
+
+        default:
+          throw new SocketError(
+            'Invalid action type',
+            'MANAGEUSERACTION',
+            'TYPE',
+            400,
+          );
+      }
+
+      // Update all clients with new server state
+      io.to(`server_${serverId}`).emit('serverUpdate', {
+        ...(await getServer(serverId)),
+      });
+
+      new Logger('WebSocket').success(
+        `User(${targetId}) ${type} action performed by user(${userId}) in server(${serverId})`,
+      );
+    } catch (error) {
+      if (error instanceof SocketError) {
+        io.to(socket.id).emit('error', {
+          message: error.message,
+          part: error.part,
+          tag: error.tag,
+          status_code: error.status_code,
+        });
+      } else {
+        io.to(socket.id).emit('error', {
+          message: `處理用戶操作時發生無法預期的錯誤: ${error.message}`,
+          part: 'MANAGEUSERACTION',
+          tag: 'EXCEPTION_ERROR',
+          status_code: 500,
+        });
+      }
+      new Logger('WebSocket').error(
+        `Error performing user action: ${error.message}`,
+      );
+    }
+  });
+
   socket.on('addChannel', async (data) => {
     // d = {
     //   sessionId: '123456',
@@ -3067,7 +3540,6 @@ io.on('connection', async (socket) => {
           404,
         );
       }
-      console.log(editedChannel);
       const channel = channels[editedChannel.id];
       if (!channel) {
         throw new SocketError(
@@ -3231,52 +3703,120 @@ io.on('connection', async (socket) => {
 });
 
 // Functions
-const setupContributionInterval = (socketId, userId) => {
+const setupContributionInterval = async (socketId, userId) => {
   try {
-    const interval = setInterval(async () => {
-      // Get database
-      const user = (await db.get(`users.${userId}`)) || {};
+    // Get user data
+    const user = (await db.get(`users.${userId}`)) || {};
 
-      // Initialize xp if it doesn't exist
-      if (user.xp === undefined) {
-        user.xp = 0;
-      }
+    // Initialize xp if it doesn't exist
+    if (user.xp === undefined) {
+      user.xp = 0;
+    }
 
-      // Add XP
-      user.xp += XP_SYSTEM.XP_PER_HOUR;
+    // Calculate catch-up XP if needed
+    if (user.lastXpAwardedAt) {
+      const timeSinceLastAward = Date.now() - user.lastXpAwardedAt;
+      const hoursSinceLastAward = Math.floor(
+        timeSinceLastAward / XP_SYSTEM.INTERVAL_MS,
+      );
 
-      // Add contribution to current server
-      const presence = await getPresenceState(userId);
-      if (presence.currentServerId) {
-        const member = await getMember(userId, presence.currentServerId);
-        if (member) {
-          member.contribution += XP_SYSTEM.XP_PER_HOUR;
-          await db.set(`members.${member.id}`, member);
+      if (hoursSinceLastAward > 0) {
+        // Award catch-up XP
+        const catchUpXp = hoursSinceLastAward * XP_SYSTEM.XP_PER_HOUR;
+        user.xp += catchUpXp;
+
+        // Add catch-up contribution to current server
+        const presence = await getPresenceState(userId);
+        if (presence.currentServerId) {
+          const member = await getMember(userId, presence.currentServerId);
+          if (member) {
+            member.contribution += catchUpXp;
+            await db.set(`members.${member.id}`, member);
+          }
         }
+
+        // Process any level ups
+        while (user.xp >= calculateRequiredXP(user.level)) {
+          const requiredXP = calculateRequiredXP(user.level);
+          user.level += 1;
+          user.xp -= requiredXP;
+          new Logger('WebSocket').info(
+            `User(${userId}) leveled up to ${user.level}`,
+          );
+        }
+
+        // Update lastXpAwardedAt to align with hourly intervals
+        user.lastXpAwardedAt += hoursSinceLastAward * XP_SYSTEM.INTERVAL_MS;
       }
+    } else {
+      // First time setup
+      user.lastXpAwardedAt = Date.now();
+    }
 
-      // Check for level up
-      const requiredXP = calculateRequiredXP(user.level);
-      if (user.xp >= requiredXP) {
-        user.level += 1; // Level up
-        user.xp -= requiredXP; // Remaining XP carries over
+    // Save user changes
+    await db.set(`users.${userId}`, user);
 
-        new Logger('WebSocket').info(
-          `User(${userId}) leveled up to ${user.level}`,
-        );
-      }
+    // Calculate delay to align with next hour interval
+    const timeUntilNextAward =
+      XP_SYSTEM.INTERVAL_MS -
+      ((Date.now() - user.lastXpAwardedAt) % XP_SYSTEM.INTERVAL_MS);
 
-      // Save changes
-      await db.set(`users.${userId}`, user);
+    // Setup initial timeout to align with hour intervals
+    setTimeout(() => {
+      // Start regular interval once aligned
+      const interval = setInterval(async () => {
+        try {
+          const user = (await db.get(`users.${userId}`)) || {};
 
-      // Emit updated data (only to the user)
-      io.to(socketId).emit('userUpdate', {
-        level: user.level,
-        xp: user.xp,
-        requiredXP: calculateRequiredXP(user.level),
-      });
-    }, XP_SYSTEM.INTERVAL_MS);
-    contributionInterval.set(socketId, interval);
+          // Add XP
+          user.xp += XP_SYSTEM.XP_PER_HOUR;
+          user.lastXpAwardedAt = Date.now();
+
+          // Add contribution to current server
+          const presence = await getPresenceState(userId);
+          if (presence.currentServerId) {
+            const member = await getMember(userId, presence.currentServerId);
+            if (member) {
+              member.contribution += XP_SYSTEM.XP_PER_HOUR;
+              await db.set(`members.${member.id}`, member);
+            }
+          }
+
+          // Check for level up
+          const requiredXP = calculateRequiredXP(user.level);
+          if (user.xp >= requiredXP) {
+            user.level += 1;
+            user.xp -= requiredXP;
+            new Logger('WebSocket').info(
+              `User(${userId}) leveled up to ${user.level}`,
+            );
+          }
+
+          // Save changes
+          await db.set(`users.${userId}`, user);
+
+          // Emit updated data
+          io.to(socketId).emit('userUpdate', {
+            level: user.level,
+            xp: user.xp,
+            requiredXP: calculateRequiredXP(user.level),
+          });
+        } catch (error) {
+          new Logger('WebSocket').error(
+            `Error in XP interval: ${error.message}`,
+          );
+        }
+      }, XP_SYSTEM.INTERVAL_MS);
+
+      contributionInterval.set(socketId, interval);
+    }, timeUntilNextAward);
+
+    // Emit initial XP state
+    io.to(socketId).emit('userUpdate', {
+      level: user.level,
+      xp: user.xp,
+      requiredXP: calculateRequiredXP(user.level),
+    });
   } catch (error) {
     clearContributionInterval(socketId);
     new Logger('WebSocket').error(
@@ -3347,6 +3887,22 @@ const setupCleanupInterval = async () => {
   // Run initial cleanup on setup
   cleanupUnusedAvatars().catch(console.error);
 };
+const checkUserBlocked = (members, serverId, userId) => {
+  const serverMember = Object.values(members).find(
+    (member) => member.serverId === serverId && member.userId === userId,
+  );
+
+  if (serverMember?.isBlocked) {
+    throw new SocketError(
+      '您已被此群組封鎖',
+      'CONNECTSERVER',
+      'USER_BLOCKED',
+      403,
+    );
+  }
+
+  return false;
+};
 const calculateRequiredXP = (level) => {
   return Math.ceil(XP_SYSTEM.BASE_XP * Math.pow(XP_SYSTEM.GROWTH_RATE, level));
 };
@@ -3371,29 +3927,6 @@ const deleteUserIdSocketIdMap = (userId = null, socketId = null) => {
   }
   return false;
 };
-const searchServers = (serverList, query) => {
-  if (!query) return serverList;
-
-  const normalizedQuery = query.toLowerCase().trim();
-
-  return Object.values(serverList)
-    .filter((server) => {
-      // 精確 ID 匹配
-      if (server.displayId.toString() === normalizedQuery) return true;
-
-      // 模糊名稱匹配
-      const normalizedName = server.name.toLowerCase().trim();
-      return (
-        normalizedName.includes(normalizedQuery) ||
-        calculateSimilarity(normalizedName, normalizedQuery) > 0.6
-      );
-    })
-    .reduce((acc, server) => {
-      acc[server.id] = server;
-      return acc;
-    }, {});
-};
-
 // 計算文字相似度 (0-1)
 const calculateSimilarity = (str1, str2) => {
   const longer = str1.length > str2.length ? str1 : str2;
