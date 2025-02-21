@@ -18,7 +18,7 @@ import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 import ContextMenu from '@/components/ContextMenu';
 
 // Types
-import type { Application, Server } from '@/types';
+import type { Application, Server, Member, User } from '@/types';
 
 // Utils
 import { getPermissionText } from '@/utils/formatters';
@@ -43,6 +43,8 @@ interface SortState {
   direction: 'asc' | 'desc';
 }
 
+type SortFunction = (a: Member, b: Member, direction: number) => number;
+
 interface ServerSettingModalProps {
   onClose: () => void;
 }
@@ -50,6 +52,7 @@ interface ServerSettingModalProps {
 const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   // Redux
   const server = useSelector((state: { server: Server }) => state.server);
+  const mainUser = useSelector((state: { user: User }) => state.user);
   const sessionId = useSelector(
     (state: { sessionToken: string }) => state.sessionToken,
   );
@@ -66,10 +69,16 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
 
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
   const [applications, setApplications] = useState<Application[]>([]);
-  const [contextMenu, setContextMenu] = useState<{
+  const [applicationContextMenu, setApplicationContextMenu] = useState<{
     x: number;
     y: number;
     application: any;
+  } | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [memberContextMenu, setMemberContextMenu] = useState<{
+    x: number;
+    y: number;
+    member: any;
   } | null>(null);
   const [searchText, setSearchText] = useState<string>('');
   const [blockPage, setBlockPage] = useState<number>(1);
@@ -161,7 +170,28 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   };
 
   useEffect(() => {
-    if (activeTabIndex === 4 && socket) {
+    if (!socket || !sessionId) return;
+
+    if (activeTabIndex === 2) {
+      // Emit getMembers event
+      socket.emit('getMembers', {
+        sessionId: sessionId,
+        serverId: server.id,
+      });
+
+      // Set up listener for members response
+      const handleMembers = (data: any) => {
+        setMembers(data);
+      };
+
+      // Add listener
+      socket.on('members', handleMembers);
+
+      // Cleanup function
+      return () => {
+        socket.off('members', handleMembers);
+      };
+    } else if (activeTabIndex === 4) {
       // Emit getApplications event
       socket.emit('getApplications', {
         sessionId: sessionId,
@@ -183,7 +213,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
     }
   }, [activeTabIndex, socket, sessionId, server.id]);
 
-  const handleContextMenu = (e: React.MouseEvent, application: any) => {
+  const handleMemberContextMenu = (e: React.MouseEvent, member: any) => {
     e.preventDefault();
 
     // Get the scroll container element (table body)
@@ -210,7 +240,44 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
     const x = e.clientX - containerRect.left + scrollOffset.x + MENU_OFFSET.x;
     const y = e.clientY - containerRect.top + scrollOffset.y + MENU_OFFSET.y;
 
-    setContextMenu({
+    setMemberContextMenu({
+      x,
+      y,
+      member,
+    });
+  };
+
+  const handleApplicationContextMenu = (
+    e: React.MouseEvent,
+    application: any,
+  ) => {
+    e.preventDefault();
+
+    // Get the scroll container element (table body)
+    const scrollContainer = e.currentTarget.closest('.overflow-y-auto');
+
+    // Calculate scroll offsets
+    const scrollOffset = scrollContainer
+      ? {
+          x: scrollContainer.scrollLeft,
+          y: scrollContainer.scrollTop,
+        }
+      : { x: 0, y: 0 };
+
+    // Get the container's position relative to viewport
+    const containerRect = scrollContainer?.getBoundingClientRect() || {
+      left: 0,
+      top: 0,
+    };
+
+    // Add offset to position menu below cursor
+    const MENU_OFFSET = { x: 150, y: 110 }; // Small offset for visual balance
+
+    // Calculate final coordinates
+    const x = e.clientX - containerRect.left + scrollOffset.x + MENU_OFFSET.x;
+    const y = e.clientY - containerRect.top + scrollOffset.y + MENU_OFFSET.y;
+
+    setApplicationContextMenu({
       x,
       y,
       application,
@@ -218,12 +285,12 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   };
 
   const handleApplicationAction = (action: 'accept' | 'reject') => {
-    if (!contextMenu?.application) return;
+    if (!applicationContextMenu?.application) return;
 
     socket?.emit('handleApplication', {
       sessionId: sessionId,
       serverId: server.id,
-      applicationId: contextMenu.application.id,
+      applicationId: applicationContextMenu.application.id,
       action: action,
     });
   };
@@ -335,18 +402,6 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
   };
 
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
-
-  // const usersList = useCallback((): UserList => {
-  //   if (!server?.members || !users) return {};
-  //   return Object.values(server.members)
-  //     .filter((user) => user.permissionLevel < 7)
-  //     .reduce((acc, member) => {
-  //       if (member.userId && users[member.userId]) {
-  //         acc[member.userId] = users[member.userId];
-  //       }
-  //       return acc;
-  //     }, {} as UserList);
-  // }, [server?.members, users]);
 
   useEffect(() => {
     setMarkdownContent(server.announcement || '');
@@ -653,189 +708,315 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
         );
 
       case 2:
-        const members = Object.values(server.members || [])
-          .filter((member) => {
-            const displayName = member.nickname.toLowerCase() || '未知用戶';
-            return (
-              displayName.includes(searchText.toLowerCase()) ||
-              searchText === ''
-            );
-          })
-          .sort((a, b) => {
-            const direction = sortState.direction === 'asc' ? 1 : -1;
+        const sortFunctions: Record<string, SortFunction> = {
+          name: (a: Member, b: Member, direction: number): number => {
+            const nameA = (a.nickname || '未知').toLowerCase();
+            const nameB = (b.nickname || '未知').toLowerCase();
+            return direction * nameA.localeCompare(nameB);
+          },
+          permission: (a: Member, b: Member, direction: number): number => {
+            const permissionA = a.permissionLevel ?? 1;
+            const permissionB = b.permissionLevel ?? 1;
+            return direction * (permissionA - permissionB);
+          },
+          contribution: (a: Member, b: Member, direction: number): number => {
+            const contribA = a.contribution ?? 0;
+            const contribB = b.contribution ?? 0;
+            return direction * (contribA - contribB);
+          },
+          joinDate: (a: Member, b: Member, direction: number): number => {
+            const dateA = a.joinedAt ?? 0;
+            const dateB = b.joinedAt ?? 0;
+            return direction * (dateA - dateB);
+          },
+        };
 
-            switch (sortState.field) {
-              case 'name':
-                const nameA = a.nickname || '未知';
-                const nameB = b.nickname || '未知';
-                return direction * nameA.localeCompare(nameB);
+        const processMembers = (
+          members: Member[],
+          searchText: string,
+          sortState: SortState,
+        ): Member[] => {
+          const searchLower = searchText.toLowerCase();
 
-              case 'permission':
-                const permissionA = a.permissionLevel || 1;
-                const permissionB = b.permissionLevel || 1;
-                return direction * (permissionA - permissionB);
+          return members
+            .filter((member: Member) => {
+              const displayName = (member.nickname || '未知用戶').toLowerCase();
+              return displayName.includes(searchLower) || searchText === '';
+            })
+            .sort((a: Member, b: Member) => {
+              const direction = sortState.direction === 'asc' ? 1 : -1;
+              const sortFn = sortFunctions[sortState.field];
+              return sortFn ? sortFn(a, b, direction) : 0;
+            });
+        };
 
-              case 'contribution':
-                const contribA = a.contribution || 0;
-                const contribB = b.contribution || 0;
-                return direction * (contribA - contribB);
+        const sortedMembers = processMembers(members, searchText, sortState);
 
-              case 'joinDate':
-                const dateA = a.joinedAt || 0;
-                const dateB = b.joinedAt || 0;
-                return direction * (dateA - dateB);
-
-              default:
-                return 0;
-            }
+        const handleUserMove = (target: Member) => {
+          socket?.emit('ManageUserAction', {
+            sessionId: sessionId,
+            serverId: server.id,
+            targetId: target.userId,
+            type: 'move',
           });
+        };
+
+        const handleKickServer = (target: Member) => {
+          setMembers((prev) =>
+            prev.filter((member) => member.id !== target.id),
+          );
+
+          socket?.emit('ManageUserAction', {
+            sessionId: sessionId,
+            serverId: server.id,
+            targetId: target.userId,
+            type: 'kick',
+          });
+        };
+
+        const handleBlockUser = (target: Member) => {
+          setMembers((prev) =>
+            prev.filter((member) => member.id !== target.id),
+          );
+
+          socket?.emit('ManageUserAction', {
+            sessionId: sessionId,
+            serverId: server.id,
+            targetId: target.userId,
+            type: 'block',
+          });
+        };
 
         return (
-          <div className="flex flex-col p-4">
-            <div className="flex flex-row justify-between items-center mb-6  select-none">
-              <span className="text-sm font-medium">
-                會員: {members.length}
-              </span>
-              <div className="flex justify-end items-center border rounded-md overflow-hidden">
-                <Search className="text-gray-400 h-5 w-5 ml-2" />
-                <input
-                  type="text"
-                  placeholder="輸入關鍵字搜尋"
-                  className="w-60 px-2 py-1.5 text-sm border-none outline-none"
-                  value={searchText}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setSearchText(e.target.value)
-                  }
-                />
+          <>
+            {memberContextMenu &&
+              (() => {
+                const isCurrentUser =
+                  memberContextMenu.member.userId === mainUser.id;
+                const menuItems = [
+                  {
+                    label: '傳送即時訊息',
+                    disabled: isCurrentUser,
+                    onClick: () => {},
+                  },
+                  {
+                    label: '檢視個人檔案',
+                    onClick: () => {},
+                  },
+                  {
+                    label: '新增好友',
+                    disabled: isCurrentUser,
+                    onClick: () => {},
+                  },
+                  {
+                    label: '拒聽此人語音',
+                    disabled: isCurrentUser,
+                    onClick: () => {},
+                  },
+                  {
+                    label: '修改群名片',
+                    onClick: () => {},
+                  },
+                  {
+                    label: '移至我的頻道',
+                    disabled: isCurrentUser,
+                    onClick: () => handleUserMove(memberContextMenu.member),
+                  },
+                  {
+                    label: '禁止此人語音',
+                    disabled: isCurrentUser,
+                    onClick: () => {},
+                  },
+                  {
+                    label: '禁止文字',
+                    disabled: isCurrentUser,
+                    onClick: () => {},
+                  },
+                  {
+                    label: '踢出群',
+                    disabled: isCurrentUser,
+                    onClick: () => handleKickServer(memberContextMenu.member),
+                  },
+                  {
+                    label: '封鎖',
+                    disabled: isCurrentUser,
+                    onClick: () => handleBlockUser(memberContextMenu.member),
+                  },
+                  {
+                    label: '會員管理',
+                    disabled: isCurrentUser,
+                    onClick: () => {},
+                  },
+                  {
+                    label: '邀請成為會員',
+                    disabled: isCurrentUser,
+                    onClick: () => {},
+                  },
+                ];
+
+                return (
+                  <div className="text-sm">
+                    <ContextMenu
+                      x={memberContextMenu.x}
+                      y={memberContextMenu.y}
+                      onClose={() => setMemberContextMenu(null)}
+                      items={menuItems}
+                    />
+                  </div>
+                );
+              })}
+
+            <div className="flex flex-col p-4">
+              <div className="flex flex-row justify-between items-center mb-6  select-none">
+                <span className="text-sm font-medium">
+                  會員: {sortedMembers.length}
+                </span>
+                <div className="flex justify-end items-center border rounded-md overflow-hidden">
+                  <Search className="text-gray-400 h-5 w-5 ml-2" />
+                  <input
+                    type="text"
+                    placeholder="輸入關鍵字搜尋"
+                    className="w-60 px-2 py-1.5 text-sm border-none outline-none"
+                    value={searchText}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setSearchText(e.target.value)
+                    }
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col border rounded-lg overflow-hidden">
-              <div className="max-h-[500px] overflow-y-auto">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-gray-50 text-gray-600 select-none">
-                    <tr>
-                      <th
-                        className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('name')}
-                      >
-                        <div className="flex items-center relative pr-6">
-                          會員資料
-                          <span className="absolute right-0">
-                            {sortState.field === 'name' &&
-                              (sortState.direction === 'asc' ? (
-                                <ChevronUp size={16} />
-                              ) : (
-                                <ChevronDown size={16} />
-                              ))}
-                          </span>
-                        </div>
-                      </th>
-                      <th
-                        className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('permission')}
-                      >
-                        <div className="flex items-center relative pr-6">
-                          身分
-                          <span className="absolute right-0">
-                            {sortState.field === 'permission' &&
-                              (sortState.direction === 'asc' ? (
-                                <ChevronUp size={16} />
-                              ) : (
-                                <ChevronDown size={16} />
-                              ))}
-                          </span>
-                        </div>
-                      </th>
-                      <th
-                        className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('contribution')}
-                      >
-                        <div className="flex items-center relative pr-6">
-                          貢獻值
-                          <span className="absolute right-0">
-                            {sortState.field === 'contribution' &&
-                              (sortState.direction === 'asc' ? (
-                                <ChevronUp size={16} />
-                              ) : (
-                                <ChevronDown size={16} />
-                              ))}
-                          </span>
-                        </div>
-                      </th>
-                      <th
-                        className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('joinDate')}
-                      >
-                        <div className="flex items-center relative pr-6">
-                          入會時間
-                          <span className="absolute right-0">
-                            {sortState.field === 'joinDate' &&
-                              (sortState.direction === 'asc' ? (
-                                <ChevronUp size={16} />
-                              ) : (
-                                <ChevronDown size={16} />
-                              ))}
-                          </span>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {members.map((member) => {
-                      const user = member.user;
-                      const userGender = user?.gender ?? 'Male';
-                      const userNickname = member.nickname ?? '';
-                      const userPermission = member.permissionLevel ?? 1;
-                      const userContributions = member.contribution ?? 0;
-                      const userJoinDate = new Date(
-                        member.joinedAt || 0,
-                      ).toLocaleString();
-
-                      return (
-                        <tr
-                          key={member.id}
-                          className="border-b hover:bg-gray-50"
+              <div className="flex flex-col border rounded-lg overflow-hidden">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-50 text-gray-600 select-none">
+                      <tr>
+                        <th
+                          className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort('name')}
                         >
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={`/channel/${userGender}_${userPermission}.png`}
-                                className="w-4 h-5 select-none"
-                                alt={`${userGender}_${userPermission}`}
-                              />
-                              <div>
-                                <div className="font-medium text-gray-900">
-                                  {userNickname}
+                          <div className="flex items-center relative pr-6">
+                            會員資料
+                            <span className="absolute right-0">
+                              {sortState.field === 'name' &&
+                                (sortState.direction === 'asc' ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </div>
+                        </th>
+                        <th
+                          className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort('permission')}
+                        >
+                          <div className="flex items-center relative pr-6">
+                            身分
+                            <span className="absolute right-0">
+                              {sortState.field === 'permission' &&
+                                (sortState.direction === 'asc' ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </div>
+                        </th>
+                        <th
+                          className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort('contribution')}
+                        >
+                          <div className="flex items-center relative pr-6">
+                            貢獻值
+                            <span className="absolute right-0">
+                              {sortState.field === 'contribution' &&
+                                (sortState.direction === 'asc' ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </div>
+                        </th>
+                        <th
+                          className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort('joinDate')}
+                        >
+                          <div className="flex items-center relative pr-6">
+                            入會時間
+                            <span className="absolute right-0">
+                              {sortState.field === 'joinDate' &&
+                                (sortState.direction === 'asc' ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedMembers.map((member) => {
+                        const user = member.user;
+                        const userGender = user?.gender ?? 'Male';
+                        const userNickname = member.nickname ?? '';
+                        const userPermission = member.permissionLevel ?? 1;
+                        const userContributions = member.contribution ?? 0;
+                        const userJoinDate = new Date(
+                          member.joinedAt || 0,
+                        ).toLocaleString();
+
+                        return (
+                          <tr
+                            key={member.id}
+                            className="border-b hover:bg-gray-50"
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleMemberContextMenu(e, member);
+                            }}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={`/channel/${userGender}_${userPermission}.png`}
+                                  className="w-4 h-5 select-none"
+                                  alt={`${userGender}_${userPermission}`}
+                                />
+                                <div>
+                                  <div className="font-medium text-gray-900">
+                                    {userNickname}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex flex-col">
-                              <span className="text-gray-500 text-xs">
-                                {getPermissionText(userPermission || 1)}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-gray-500">
-                            {userContributions}
-                          </td>
-                          <td className="px-4 py-3 text-gray-500">
-                            {userJoinDate}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 text-xs">
+                                  {getPermissionText(userPermission || 1)}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500">
+                              {userContributions}
+                            </td>
+                            <td className="px-4 py-3 text-gray-500">
+                              {userJoinDate}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="mt-4 text-right text-sm text-gray-500 select-none">
+                右鍵可以進行處理
               </div>
             </div>
-
-            <div className="mt-4 text-right text-sm text-gray-500 select-none">
-              右鍵可以進行處理
-            </div>
-          </div>
+          </>
         );
 
       case 3:
@@ -939,11 +1120,11 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
 
         return (
           <>
-            {contextMenu && (
+            {applicationContextMenu && (
               <ContextMenu
-                x={contextMenu.x}
-                y={contextMenu.y}
-                onClose={() => setContextMenu(null)}
+                x={applicationContextMenu.x}
+                y={applicationContextMenu.y}
+                onClose={() => setApplicationContextMenu(null)}
                 items={[
                   {
                     label: '接受申請',
@@ -1021,7 +1202,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                             onContextMenu={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleContextMenu(e, application);
+                              handleApplicationContextMenu(e, application);
                             }}
                           >
                             <td className="px-4 py-3 truncate">

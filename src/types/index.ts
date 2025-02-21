@@ -84,6 +84,7 @@ export interface Member {
   managedChannels: string[];
   permissionLevel: Permission;
   joinedAt: number;
+  isBlocked?: boolean;
   // THESE WERE NOT SAVE IN THE DATABASE
   user: User | null;
   server: Server | null;

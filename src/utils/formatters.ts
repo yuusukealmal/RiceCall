@@ -35,12 +35,12 @@ export const getPermissionText = (permission: number): string => {
   const permissionMap: Record<number, string> = {
     [Permission.Guest]: '遊客', // 1
     [Permission.Member]: '會員', // 2
-    [Permission.ChannelAdmin]: '頻道管理員', // 3
+    [Permission.ChannelAdmin]: '二級頻道管理員', // 3
     [Permission.ChannelManager]: '頻道管理員', // 4
     [Permission.ServerAdmin]: '群管理員', // 5
     [Permission.ServerOwner]: '群創建者', // 6
-    [Permission.EventStaff]: '官方活動人員', // 7
-    [Permission.Official]: '官方人員', // 8
+    [Permission.EventStaff]: '官方客服', // 7
+    [Permission.Official]: '超級管理員', // 8
   };
   return permissionMap[permission] || '未知';
 };

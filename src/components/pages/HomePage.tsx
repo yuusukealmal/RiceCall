@@ -45,6 +45,11 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
   const handleServerSelect = (serverId: string) => {
     if (typeof window === 'undefined') return;
 
+    if (user.members?.[serverId]?.isBlocked) {
+      alert(`您已被「${server.name}」封鎖`);
+      return;
+    }
+
     if (server.settings.visibility === 'invisible' && userPermission < 2) {
       setShowPrivateModal(true);
       return;
