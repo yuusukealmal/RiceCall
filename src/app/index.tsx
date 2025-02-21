@@ -56,6 +56,9 @@ const Header: React.FC<HeaderProps> = React.memo(
 
     const handleLogout = () => {
       socket?.emit('disconnectUser', { sessionId });
+      localStorage.removeItem('autoLogin');
+      localStorage.removeItem('encryptedPassword');
+      localStorage.removeItem('sessionToken');
     };
 
     const handleLeaveServer = () => {
@@ -458,7 +461,7 @@ const HomeComponent = () => {
   };
 
   const onClose = () => {
-    alert("這裡是關不掉的喔");
+    alert('這裡是關不掉的喔');
   };
 
   return (
