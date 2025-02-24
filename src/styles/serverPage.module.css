@@ -152,11 +152,10 @@
 }
 
 .saperator {
-  background: url(../../public/channel/icon_v_split.png) no-repeat center center;
-  background-position: 0 0;
-  min-height: 20px;
-  min-width: 2px;
-  cursor: auto;
+  background: url(../../public/icon_v_split.png) no-repeat center center;
+  height: 1rem;
+  width: 1.5rem;
+  background-size: auto;
 }
 
 /* Channel List */
@@ -203,6 +202,10 @@
 
 .currentChannelIcon.status3 {
   background-position: -60px 0;
+}
+
+.currentChannelIcon.status4 {
+  background-position: -80px 0;
 }
 
 .currentChannelText {
@@ -285,9 +288,14 @@
   font-size: 14px;
 }
 
+.userCurrentLocation,
+.userCurrentLocation .channelTabCount {
+  color: #ff0000 !important;
+}
+
 .channelList .subChannel:not(.lobby),
-.channelList .subChannel:not(.lobby) + .userList .userTab  {
-  padding: .125rem 20px .125rem 1.7rem;
+.channelList .subChannel:not(.lobby) + .userList .userTab {
+  padding: 0.125rem 20px 0.125rem 1.7rem;
 }
 
 .userList {
@@ -303,7 +311,6 @@
   align-items: center;
   padding: 0.125rem 20px 0.125rem 0.75rem;
   cursor: pointer;
-  border-radius: 3px;
   gap: 5px;
 }
 
@@ -323,8 +330,8 @@
 }
 
 .userGrade {
-  min-width: 15px;
-  min-height: 13px;
+  width: 15px;
+  height: 15px;
   background: url(../../public/usergrade.png) no-repeat center center;
   background-size: auto;
   background-position: 0 0;
@@ -334,8 +341,8 @@
 .userState {
   background: url(../../public/channel/mic_queue_state.png) no-repeat center
     center;
-  min-height: 12px;
-  min-width: 12px;
+  height: 12px;
+  width: 12px;
   background-position: 0 0;
   left: 0;
 }
