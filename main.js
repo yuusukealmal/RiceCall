@@ -4,10 +4,9 @@ const path = require('path');
 const { app, BrowserWindow, ipcMain } = require('electron');
 const isDev = require('electron-is-dev');
 
-const baseUri = 'http://127.0.0.1:3000';
-// const baseUri = isDev
-//   ? 'http://127.0.0.1:3000' // Load localhost:3000 in development mode
-//   : `file://${path.join(__dirname, '../build/index.html')}`; // Load built files in production mode
+const baseUri = isDev
+  ? 'http://127.0.0.1:3000' // Load localhost:3000 in development mode
+  : `file://${path.join(__dirname, '../build/index.html')}`; // Load built files in production mode
 
 function createMainWindow() {
   const mainWindow = new BrowserWindow({
@@ -29,8 +28,8 @@ function createMainWindow() {
 
 function createAuthWindow() {
   const authWindow = new BrowserWindow({
-    width: 600,
-    height: 450,
+    width: 1000,
+    height: 650,
     resizable: false,
     frame: false,
     transparent: true,
@@ -40,7 +39,7 @@ function createAuthWindow() {
       contextIsolation: true,
     },
   });
-  authWindow.loadURL(`${baseUri}/auth`);
+  authWindow.loadURL(`${baseUri}`);
 
   // Open DevTools in development mode
   // if (isDev) authWindow.webContents.openDevTools();
