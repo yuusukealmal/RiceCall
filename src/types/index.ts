@@ -13,26 +13,27 @@ export const enum Permission {
 export interface User {
   id: string;
   name: string;
+  avatar: string | null;
   avatarUrl: string | null;
+  signature: string;
+  status: 'online' | 'dnd' | 'idle' | 'gn';
   gender: 'Male' | 'Female';
   level: number;
-  signature: string;
-  badgeIds: string[];
-  ownedServerIds: string[];
+  xp: number;
+  requiredXp: number;
+  progress: number;
+  currentChannelId: string;
+  currentServerId: string;
+  lastActiveAt: number;
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  xpInfo?: XpInfo;
+  members?: Member[];
   badges?: Badge[];
-  presence?: Presence | null;
-  members?: {
-    [serverId: string]: Member;
-  } | null;
-}
-
-export interface XpInfo {
-  xp: number;
-  required: number;
-  progress: number;
+  friends?: Friend[];
+  friendGroups?: FriendGroup[];
+  friendApplications?: FriendApplication[];
+  servers?: Server[];
+  ownedServers?: Server[];
 }
 
 export interface Badge {
@@ -42,91 +43,60 @@ export interface Badge {
   order: number;
 }
 
-export interface FriendCategory {
-  id: string;
-  name: string;
-  userId: string;
-  friendIds: string[]; // This is userId not friendId
-  order: number;
-  createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  friends?: Friend[] | null;
-}
-
-export interface Presence {
-  id: string;
-  userId: string;
-  status: 'online' | 'dnd' | 'idle' | 'gn';
-  currentChannelId: string;
-  currentServerId: string;
-  customStatus: string;
-  lastActiveAt: number;
-  updatedAt: number;
-}
-
 export interface Friend {
   id: string;
-  status: 'accepted' | 'pending' | 'blocked';
-  messageIds: string[];
-  userIds: string[];
+  isBlocked: boolean;
+  groupId: string;
+  user1Id: string;
+  user2Id: string;
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  messages?: Message[] | null;
-  user?: User | null;
+  user?: User;
+  directMessages?: DirectMessage[];
+}
+
+export interface FriendGroup {
+  id: string;
+  name: string;
+  order: number;
+  userId: string;
+  createdAt: number;
+  // THESE WERE NOT SAVE IN THE DATABASE
+  friends?: Friend[];
+}
+
+export interface FriendApplication {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  description: string;
+  createdAt: number;
+  // THESE WERE NOT SAVE IN THE DATABASE
 }
 
 export interface Member {
   id: string;
+  isBlocked: boolean;
   nickname: string;
-  serverId: string;
-  userId: string;
   contribution: number;
-  managedChannels: string[];
   permissionLevel: Permission;
-  joinedAt: number;
-  isBlocked?: boolean;
+  userId: string;
+  serverId: string;
+  createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  user: User | null;
-  server: Server | null;
 }
 
 export interface Server {
   id: string;
   name: string;
-  iconUrl: string | null;
-  level: number;
+  avatar: string | null;
+  avatarUrl: string | null;
+  announcement: string;
   description: string;
-  wealth: number; // 財富值，但不知道是做什麼用的
+  displayId: string;
   slogan: string;
-  announcement: string;
-  channelIds: string[];
-  displayId: string;
-  lobbyId: string;
-  ownerId: string;
-  settings: {
-    allowDirectMessage: boolean;
-    visibility: 'public' | 'private' | 'invisible';
-    defaultChannelId: string;
-  };
-  createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  channels?: Channel[] | null;
-  lobby?: Channel | null;
-  owner?: User | null;
-  members?: {
-    [userId: string]: Member;
-  } | null;
-  applications?: Application[] | null;
-}
-
-export interface ServerList {
-  id: string;
-  name: string;
-  iconUrl: string | null;
   level: number;
-  announcement: string;
-  channelIds: string[];
-  displayId: string;
+  wealth: number; // 財富值，但不知道是做什麼用的
   lobbyId: string;
   ownerId: string;
   settings: {
@@ -136,35 +106,32 @@ export interface ServerList {
   };
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  channels?: Channel[] | null;
-  lobby?: Channel | null;
-  owner?: User | null;
-  members?: {
-    [userId: string]: Member;
-  } | null;
-  applications?: Application[] | null;
+  lobby?: Channel;
+  owner?: User;
+  users?: User[];
+  channels?: Channel[];
+  applications?: ServerApplication[];
+  members?: Member[];
 }
 
-export interface Application {
+export interface ServerApplication {
   id: string;
+  description: string;
   userId: string;
   serverId: string;
-  description: string;
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  user?: User | null;
-  server?: Server | null;
 }
 
 export interface Channel {
   id: string;
   name: string;
-  messageIds: string[];
-  parentId: string | null;
-  userIds: string[];
+  isRoot: boolean;
   isCategory: boolean;
   isLobby: boolean;
-  order?: number;
+  voiceMode: "free" | "queue" | "forbidden";
+  chatMode: "free" | "forbidden";
+  order: number;
   serverId: string;
   settings: {
     bitrate: number;
@@ -174,22 +141,32 @@ export interface Channel {
   };
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  messages?: Message[] | null;
-  parent?: Channel | null;
-  users?: User[] | null;
+  subChannels?: Channel[];
+  messages?: Message[];
+  users?: User[];
 }
 
 export interface Message {
   id: string;
   content: string;
   type: 'general' | 'info';
+  permissionLevel: Permission;
   senderId: string;
+  channelId: string;
   timestamp: number;
   // THESE WERE NOT SAVE IN THE DATABASE
   sender?: User | null;
 }
-export interface MessageList {
-  [messageId: string]: Message;
+
+export interface DirectMessage {
+  id: string;
+  content: string;
+  type: 'general' | 'info';
+  senderId: string;
+  friendId: string;
+  timestamp: number;
+  // THESE WERE NOT SAVE IN THE DATABASE
+  sender?: User | null;
 }
 
 export interface ModalTabItem {
