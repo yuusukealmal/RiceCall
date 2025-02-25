@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react/display-name */
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
