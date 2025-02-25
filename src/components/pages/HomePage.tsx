@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import dynamic from 'next/dynamic';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 // CSS
@@ -191,6 +191,33 @@ const HomePageComponent: React.FC = React.memo(() => {
 
   // Test
   const userServers = user?.servers ?? [];
+  const username = user?.name || '用戶';
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.electron) {
+      window.electron.updateDiscordPresence({
+        details: `正在瀏覽主頁`,
+        state: `已加入 ${userServers.length} 個群組`,
+        largeImageKey: 'app_icon',
+        largeImageText: 'RC Voice',
+        smallImageKey: 'home_icon',
+        smallImageText: '主頁',
+        resetTimer: true,
+        buttons: [
+          {
+            label: '加入我們的Discord伺服器',
+            url: 'https://discord.gg/adCWzv6wwS',
+          },
+        ],
+      });
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && window.electron) {
+        window.electron.updateDiscordPresence({});
+      }
+    };
+  }, [username, userServers.length]);
 
   return (
     <div className={styles['homeWrapper']}>

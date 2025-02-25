@@ -16,6 +16,7 @@
     "@radix-ui/themes": "^3.2.0",
     "@reduxjs/toolkit": "^2.5.1",
     "better-sqlite3": "^11.8.1",
+    "discord-rpc": "^4.0.1",
     "dompurify": "^3.2.4",
     "formidable": "^3.5.2",
     "fs": "^0.0.1-security",

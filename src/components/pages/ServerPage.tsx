@@ -141,6 +141,32 @@ const ServerPageComponent: React.FC = () => {
   const serverAnnouncement = server?.announcement ?? '';
   const channelMessages = channel?.messages ?? [];
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.electron) {
+      window.electron.updateDiscordPresence({
+        details: `在 ${serverName} 中`,
+        state: `與 ${server?.users?.length ?? 0} 位成員聊天`,
+        largeImageKey: 'app_icon',
+        largeImageText: 'RC Voice',
+        smallImageKey: 'home_icon',
+        smallImageText: '主頁',
+        resetTimer: true,
+        buttons: [
+          {
+            label: '加入我們的Discord伺服器',
+            url: 'https://discord.gg/adCWzv6wwS',
+          },
+        ],
+      });
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && window.electron) {
+        window.electron.updateDiscordPresence({});
+      }
+    };
+  }, [serverName]);
+
   return (
     <div className={styles['serverWrapper']}>
       <div className={styles['serverContent']}>
