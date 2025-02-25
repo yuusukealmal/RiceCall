@@ -1,6 +1,7 @@
 /* eslint-disable react/display-name */
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 // CSS
 import styles from '@/styles/friendPage.module.css';
@@ -13,14 +14,34 @@ import BadgeViewer from '@/components/viewers/BadgeViewer';
 // Types
 import type { User } from '@/types';
 
-// Redux
-import { useSelector } from 'react-redux';
+// Hooks
+import { useSocket } from '@/hooks/SocketProvider';
 
 interface HeaderProps {
   user: User;
 }
 
 const Header: React.FC<HeaderProps> = React.memo(({ user }) => {
+  // Redux
+  const sessionId = useSelector(
+    (state: { sessionToken: string | null }) => state.sessionToken,
+  );
+
+  // Socket
+  const socket = useSocket();
+
+  const handleChangeSignature = (signature: string) => {
+    const updatedUser: Partial<User> = { signature };
+    socket?.emit('updateUser', { sessionId, user: updatedUser });
+  };
+
+  // Input Control
+  const [signatureInput, setSignatureInput] = useState<string>(
+    user.signature ?? '',
+  );
+  const [isComposing, setIsComposing] = useState<boolean>(false);
+  const MAXLENGTH = 300;
+
   const userLevel = Math.min(56, Math.ceil(user.level / 5)); // 56 is max level
   const userAvatarUrl = user.avatarUrl;
   const userBadges = user.badges ?? [];
@@ -53,10 +74,33 @@ const Header: React.FC<HeaderProps> = React.memo(({ user }) => {
       <div className={styles['signatureBox']}>
         <textarea
           className={styles['signatureInput']}
-          value={userSignature}
+          value={signatureInput}
           placeholder="點擊更改簽名"
           data-placeholder="30018"
-          onChange={() => {}} // TODO: Implement signature change
+          onChange={(e) => {
+            if (signatureInput.length > MAXLENGTH) return;
+            e.preventDefault();
+            const input = e.target.value;
+            setSignatureInput(input);
+          }}
+          onKeyDown={(e) => {
+            if (e.shiftKey) return;
+            if (e.key !== 'Enter') return;
+            e.currentTarget.blur();
+            if (signatureInput == user.signature) return;
+            if (signatureInput.length > MAXLENGTH) return;
+            if (isComposing) return;
+            e.preventDefault();
+            handleChangeSignature(signatureInput);
+          }}
+          onBlur={(e) => {
+            if (signatureInput == user.signature) return;
+            if (signatureInput.length > MAXLENGTH) return;
+            e.preventDefault();
+            handleChangeSignature(signatureInput);
+          }}
+          onCompositionStart={() => setIsComposing(true)}
+          onCompositionEnd={() => setIsComposing(false)}
         />
       </div>
     </div>
