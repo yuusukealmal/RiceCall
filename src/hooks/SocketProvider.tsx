@@ -2,12 +2,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { Socket, io } from 'socket.io-client';
+import { createContext, useContext, useState } from 'react';
+import { Socket } from 'socket.io-client';
 import { useSelector } from 'react-redux';
 
 // Types
-import type { Channel, Server, User } from '@/types';
+import {
+  Channel,
+  Server,
+  User,
+  SocketServerEvent,
+  SocketClientEvent,
+} from '@/types';
 
 // Utils
 import { errorHandler } from '@/utils/errorHandler';
@@ -16,26 +22,30 @@ import { errorHandler } from '@/utils/errorHandler';
 import store from '@/redux/store';
 import { clearServer, setServer } from '@/redux/serverSlice';
 import { clearUser, setUser } from '@/redux/userSlice';
-import { clearSessionToken, setSessionToken } from '@/redux/sessionTokenSlice';
+import { clearSessionToken } from '@/redux/sessionTokenSlice';
 import { clearChannel, setChannel } from '@/redux/channelSlice';
 
-const WS_URL = 'ws://localhost:4500';
+// Services
+import { ipcService } from '@/services/ipc.service';
 
-type SocketContextType = Socket | null;
+// const WS_URL = 'ws://localhost:4500';
 
-const SocketContext = createContext<SocketContextType>(null);
+type SocketContextType = {
+  event?: Record<SocketClientEvent, (...args: any[]) => void>;
+};
 
-export const useSocket = () => useContext(SocketContext);
+const SocketContext = createContext<SocketContextType>({});
+
+export const useSocket = () => {
+  const context = useContext(SocketContext);
+  return context.event;
+};
 
 interface SocketProviderProps {
   children: React.ReactNode;
 }
 
 export const SocketProvider = ({ children }: SocketProviderProps) => {
-  const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [socket, setSocket] = useState<SocketContextType>(null);
-
   // Redux
   const user = useSelector((state: { user: User | null }) => state.user);
   const server = useSelector(
@@ -44,151 +54,176 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const channel = useSelector(
     (state: { channel: Channel | null }) => state.channel,
   );
-  const sessionId = useSelector(
-    (state: { sessionToken: string | null }) => state.sessionToken,
-  );
 
-  useEffect(() => {
-    const token =
-      store.getState().sessionToken ?? localStorage.getItem('sessionToken');
-    if (!token) return;
-    store.dispatch(setSessionToken(token));
-    localStorage.setItem('sessionToken', token);
-  }, [sessionId]);
+  const handleDisconnect = () => {
+    console.log('Socket disconnected');
+    store.dispatch(clearServer());
+    store.dispatch(clearUser());
+    store.dispatch(clearSessionToken());
+    localStorage.removeItem('sessionToken');
+  };
+  const handleUserConnect = (user: any) => {
+    console.log('User connected: ', user);
+    store.dispatch(setUser(user));
+  };
+  const handleUserDisconnect = () => {
+    console.log('User disconnected');
+    store.dispatch(clearServer());
+    store.dispatch(clearUser());
+    store.dispatch(clearSessionToken());
+    localStorage.removeItem('sessionToken');
+  };
+  const handleUserUpdate = (data: Partial<User>) => {
+    console.log('User update: ', data);
+    if (!user) return;
+    store.dispatch(setUser({ ...user, ...data }));
+  };
+  const handleServerConnect = (server: Server) => {
+    console.log('Server connected: ', server);
+    store.dispatch(setServer(server));
+  };
+  const handleServerDisconnect = () => {
+    console.log('Server disconnected');
+    store.dispatch(clearServer());
+  };
+  const handleServerUpdate = (data: Partial<Server>) => {
+    console.log('Server update: ', data);
+    if (!server) return;
+    store.dispatch(setServer({ ...server, ...data }));
+  };
+  const handleChannelConnect = (channel: Channel) => {
+    store.dispatch(setChannel(channel));
+    console.log('Channel connected: ', channel);
+  };
+  const handleChannelDisconnect = () => {
+    console.log('Channel disconnected');
+    store.dispatch(clearChannel());
+  };
+  const handleChannelUpdate = (data: Partial<Channel>) => {
+    console.log('Channel update: ', data);
+    if (!channel) return;
+    store.dispatch(setChannel({ ...channel, ...data }));
+  };
+  const handlePlaySound = (sound: 'join' | 'leave') => {
+    switch (sound) {
+      case 'join':
+      // console.log('Play join sound');
+      // joinSoundRef.current?.play();
+      // break;
+      case 'leave':
+      // console.log('Play leave sound');
+      // leaveSoundRef.current?.play();
+      // break;
+    }
+  };
 
-  useEffect(() => {
-    if (!sessionId) return;
-
-    const socket: Socket = io(WS_URL, {
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-      query: {
-        sessionId: sessionId,
-      },
+  if (ipcService.getAvailability()) {
+    ipcService.onInitialData((data) => {
+      console.log('Initial data:', data);
+      store.dispatch(setUser(data.user));
+      store.dispatch(setServer(data.server));
+      store.dispatch(setChannel(data.channel));
     });
+    ipcService.onSocketEvent(SocketServerEvent.CONNECT, () =>
+      console.log('Connected to server'),
+    );
+    ipcService.onSocketEvent(SocketServerEvent.ERROR, (error) =>
+      errorHandler.ResponseError(error),
+    );
+    ipcService.onSocketEvent(SocketServerEvent.DISCONNECT, handleDisconnect);
+    ipcService.onSocketEvent(SocketServerEvent.USER_CONNECT, handleUserConnect);
+    ipcService.onSocketEvent(
+      SocketServerEvent.USER_DISCONNECT,
+      handleUserDisconnect,
+    );
+    ipcService.onSocketEvent(SocketServerEvent.USER_UPDATE, handleUserUpdate);
+    ipcService.onSocketEvent(
+      SocketServerEvent.SERVER_CONNECT,
+      handleServerConnect,
+    );
+    ipcService.onSocketEvent(
+      SocketServerEvent.SERVER_DISCONNECT,
+      handleServerDisconnect,
+    );
+    ipcService.onSocketEvent(
+      SocketServerEvent.SERVER_UPDATE,
+      handleServerUpdate,
+    );
+    ipcService.onSocketEvent(
+      SocketServerEvent.CHANNEL_CONNECT,
+      handleChannelConnect,
+    );
+    ipcService.onSocketEvent(
+      SocketServerEvent.CHANNEL_DISCONNECT,
+      handleChannelDisconnect,
+    );
+    ipcService.onSocketEvent(
+      SocketServerEvent.CHANNEL_UPDATE,
+      handleChannelUpdate,
+    );
+    ipcService.onSocketEvent(SocketServerEvent.PLAY_SOUND, handlePlaySound);
+  }
 
-    setSocket(socket);
-
-    socket.on('connect', () => {
-      setIsConnected(true);
-      console.log('Connected to server with session ID:', sessionId);
-    });
-    socket.on('error', (error) => {
-      setError(error);
-      errorHandler.ResponseError(error);
-      console.log('Connect server error');
-    });
-    socket.on('disconnect', () => {
-      setIsConnected(false);
-      console.log('Disconnected from server');
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [sessionId]);
-
-  useEffect(() => {
-    if (!socket || !sessionId) return;
-    const handleDisconnect = () => {
-      console.log('Socket disconnected, ', sessionId);
-      store.dispatch(clearServer());
-      store.dispatch(clearUser());
-      store.dispatch(clearSessionToken());
-      localStorage.removeItem('sessionToken');
-    };
-    const handleUserConnect = (user: any) => {
-      console.log('User connected: ', user);
-      store.dispatch(setUser(user));
-    };
-    const handleUserDisconnect = () => {
-      console.log('User disconnected');
-      store.dispatch(clearServer());
-      store.dispatch(clearUser());
-      store.dispatch(clearSessionToken());
-      localStorage.removeItem('sessionToken');
-    };
-    const handleUserUpdate = (data: Partial<User>) => {
-      console.log('User update: ', data);
-      if (!user) return;
-      store.dispatch(setUser({ ...user, ...data }));
-    };
-    const handleServerConnect = (server: Server) => {
-      console.log('Server connected: ', server);
-      store.dispatch(setServer(server));
-    };
-    const handleServerDisconnect = () => {
-      console.log('Server disconnected');
-      store.dispatch(clearServer());
-    };
-    const handleServerUpdate = (data: Partial<Server>) => {
-      console.log('Server update: ', data);
-      if (!server) return;
-      store.dispatch(setServer({ ...server, ...data }));
-    };
-    const handleChannelConnect = (channel: Channel) => {
-      store.dispatch(setChannel(channel));
-      console.log('Channel connected: ', channel);
-    };
-    const handleChannelDisconnect = () => {
-      console.log('Channel disconnected');
-      store.dispatch(clearChannel());
-    };
-    const handleChannelUpdate = (data: Partial<Channel>) => {
-      console.log('Channel update: ', data);
-      if (!channel) return;
-      store.dispatch(setChannel({ ...channel, ...data }));
-    };
-    const handleDirectMessage = (data: any) => {
-      console.log('Direct message: ', data);
-    };
-    const handlePlaySound = (sound: 'join' | 'leave') => {
-      switch (sound) {
-        case 'join':
-        // console.log('Play join sound');
-        // joinSoundRef.current?.play();
-        // break;
-        case 'leave':
-        // console.log('Play leave sound');
-        // leaveSoundRef.current?.play();
-        // break;
-      }
-    };
-
-    socket.on('disconnect', handleDisconnect);
-    socket.on('userConnect', handleUserConnect);
-    socket.on('userDisconnect', handleUserDisconnect);
-    socket.on('userUpdate', handleUserUpdate);
-    socket.on('serverConnect', handleServerConnect);
-    socket.on('serverDisconnect', handleServerDisconnect);
-    socket.on('serverUpdate', handleServerUpdate);
-    socket.on('channelConnect', handleChannelConnect);
-    socket.on('channelDisconnect', handleChannelDisconnect);
-    socket.on('channelUpdate', handleChannelUpdate);
-    socket.on('directMessage', handleDirectMessage);
-    socket.on('playSound', handlePlaySound);
-
-    return () => {
-      socket.off('disconnect', handleDisconnect);
-      socket.off('userConnect', handleUserConnect);
-      socket.off('userDisconnect', handleUserDisconnect);
-      socket.off('userUpdate', handleUserUpdate);
-      socket.off('serverConnect', handleServerConnect);
-      socket.off('serverDisconnect', handleServerDisconnect);
-      socket.off('serverUpdate', handleServerUpdate);
-      socket.off('channelConnect', handleChannelConnect);
-      socket.off('channelDisconnect', handleChannelDisconnect);
-      socket.off('channelUpdate', handleChannelUpdate);
-      socket.off('directMessage', handleDirectMessage);
-      socket.off('playSound', handlePlaySound);
-    };
-  }, [socket, sessionId, user, server, channel]);
+  const event = {
+    [SocketClientEvent.CONNECT_USER]: () =>
+      ipcService.sendSocketEvent(SocketClientEvent.CONNECT_USER, null),
+    [SocketClientEvent.DISCONNECT_USER]: () =>
+      ipcService.sendSocketEvent(SocketClientEvent.DISCONNECT_USER, null),
+    [SocketClientEvent.UPDATE_USER]: (user: Partial<User>) =>
+      ipcService.sendSocketEvent(SocketClientEvent.UPDATE_USER, { user }),
+    [SocketClientEvent.CONNECT_SERVER]: (serverId: string) =>
+      ipcService.sendSocketEvent(SocketClientEvent.CONNECT_SERVER, {
+        serverId,
+      }),
+    [SocketClientEvent.DISCONNECT_SERVER]: (serverId: string) =>
+      ipcService.sendSocketEvent(SocketClientEvent.DISCONNECT_SERVER, {
+        serverId,
+      }),
+    [SocketClientEvent.CREATE_SERVER]: (server: Server) =>
+      ipcService.sendSocketEvent(SocketClientEvent.CREATE_SERVER, {
+        server,
+      }),
+    [SocketClientEvent.UPDATE_SERVER]: (server: Partial<Server>) =>
+      ipcService.sendSocketEvent(SocketClientEvent.UPDATE_SERVER, {
+        server,
+      }),
+    [SocketClientEvent.DELETE_SERVER]: (serverId: string) =>
+      ipcService.sendSocketEvent(SocketClientEvent.DELETE_SERVER, {
+        serverId,
+      }),
+    [SocketClientEvent.CONNECT_CHANNEL]: (channelId: string) =>
+      ipcService.sendSocketEvent(SocketClientEvent.CONNECT_CHANNEL, {
+        channelId,
+      }),
+    [SocketClientEvent.DISCONNECT_CHANNEL]: (channelId: string) =>
+      ipcService.sendSocketEvent(SocketClientEvent.DISCONNECT_CHANNEL, {
+        channelId,
+      }),
+    [SocketClientEvent.CREATE_CHANNEL]: (channel: Channel) =>
+      ipcService.sendSocketEvent(SocketClientEvent.CREATE_CHANNEL, {
+        channel,
+      }),
+    [SocketClientEvent.UPDATE_CHANNEL]: (channel: Partial<Channel>) =>
+      ipcService.sendSocketEvent(SocketClientEvent.UPDATE_CHANNEL, {
+        channel,
+      }),
+    [SocketClientEvent.DELETE_CHANNEL]: (channelId: string) =>
+      ipcService.sendSocketEvent(SocketClientEvent.DELETE_CHANNEL, {
+        channelId,
+      }),
+    [SocketClientEvent.SEND_MESSAGE]: (message: string) =>
+      ipcService.sendSocketEvent(SocketClientEvent.SEND_MESSAGE, {
+        message,
+      }),
+    [SocketClientEvent.SEND_DIRECT_MESSAGE]: (message: string) =>
+      ipcService.sendSocketEvent(SocketClientEvent.SEND_DIRECT_MESSAGE, {
+        message,
+      }),
+  };
 
   return (
-    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
+    <SocketContext.Provider value={{ event }}>
+      {children}
+    </SocketContext.Provider>
   );
 };

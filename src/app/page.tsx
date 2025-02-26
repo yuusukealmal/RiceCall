@@ -27,16 +27,19 @@ import { measureLatency } from '@/utils/measureLatency';
 
 // Hooks
 import { useSocket } from '@/hooks/SocketProvider';
+
+// Services
+import { ipcService } from '@/services/ipc.service';
+
 import Auth from './auth/page';
 
 interface HeaderProps {
   selectedId?: number;
   onSelect?: (tabId: number) => void;
-  onClose?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = React.memo(
-  ({ selectedId = 1, onSelect, onClose }) => {
+  ({ selectedId = 1, onSelect }) => {
     // Redux
     const user = useSelector((state: { user: User | null }) => state.user);
     const server = useSelector(
@@ -50,7 +53,7 @@ const Header: React.FC<HeaderProps> = React.memo(
     const socket = useSocket();
 
     const handleLogout = () => {
-      socket?.close();
+      socket?.disconnectUser();
       localStorage.removeItem('autoLogin');
       localStorage.removeItem('encryptedPassword');
       localStorage.removeItem('sessionToken');
@@ -59,24 +62,38 @@ const Header: React.FC<HeaderProps> = React.memo(
     const handleLeaveServer = () => {
       if (!user) return;
       const serverId = user.currentServerId;
-      socket?.emit('disconnectServer', { serverId, sessionId });
+      socket?.disconnectServer(serverId);
     };
 
     const handleUpdateStatus = (status: User['status']) => {
-      socket?.emit('updateUser', { sessionId, user: { status } });
+      socket?.updateUser({ status });
     };
 
     // Fullscreen Control
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const handleFullscreen = () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
+      if (!isFullscreen) {
+        ipcService.getAvailability()
+          ? ipcService.window.maximize()
+          : document.documentElement.requestFullscreen();
         setIsFullscreen(true);
       } else {
-        document.exitFullscreen();
+        ipcService.getAvailability()
+          ? ipcService.window.unmaximize()
+          : document.exitFullscreen();
         setIsFullscreen(false);
       }
+    };
+
+    const handleMinimize = () => {
+      if (ipcService.getAvailability()) ipcService.window.minimize();
+      else console.warn('IPC not available - not in Electron environment');
+    };
+
+    const handleClose = () => {
+      if (ipcService.getAvailability()) ipcService.window.close();
+      else console.warn('IPC not available - not in Electron environment');
     };
 
     // Menu Control
@@ -273,13 +290,13 @@ const Header: React.FC<HeaderProps> = React.memo(
               </div>
             </div>
           </div>
-          <div className={header['minimize']} />
+          <div className={header['minimize']} onClick={handleMinimize} />
           <div
             className={isFullscreen ? header['restore'] : header['maxsize']}
             onClick={handleFullscreen}
             aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
           />
-          <div className={header['close']} onClick={onClose} />
+          <div className={header['close']} onClick={handleClose} />
         </div>
       </div>
     );
@@ -294,12 +311,6 @@ const HomeComponent = () => {
   const server = useSelector(
     (state: { server: Server | null }) => state.server,
   );
-  const sessionId = useSelector(
-    (state: { sessionToken: string | null }) => state.sessionToken,
-  );
-
-  // Socket Control
-  const socket = useSocket();
 
   // Sound Control
   const joinSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -319,7 +330,7 @@ const HomeComponent = () => {
   }, [server]);
 
   const getMainContent = () => {
-    if (!socket || !sessionId) return <LoadingSpinner />;
+    if (!user) return <LoadingSpinner />;
     else {
       switch (selectedTabId) {
         case 1:
@@ -333,23 +344,12 @@ const HomeComponent = () => {
     }
   };
 
-  const handleCloseWindow = () => {
-    if (window.electron) {
-      window.electron.close();
-    } else {
-      window.close();
-    }
-  };
-
-  return !socket || !sessionId ? (
-    <Auth />
-  ) : (
+  return (
     <>
       {/* Top Navigation */}
       <Header
         selectedId={selectedTabId}
         onSelect={(tabId) => setSelectedTabId(tabId)}
-        onClose={handleCloseWindow}
       />
       {/* Main Content */}
       <div className="content">{getMainContent()}</div>
