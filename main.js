@@ -158,7 +158,7 @@ async function createAuthWindow() {
   return authWindow;
 }
 
-async function createPopup(page) {
+async function createPopup(type, height, width) {
   if (isDev) {
     try {
       await waitForPort(3000);
@@ -170,8 +170,8 @@ async function createPopup(page) {
   }
 
   const popup = new BrowserWindow({
-    minWidth: 800,
-    minHeight: 600,
+    minWidth: width ?? 800,
+    minHeight: height ?? 600,
     resizable: false,
     frame: false,
     transparent: true,
@@ -412,7 +412,9 @@ app.whenReady().then(async () => {
   });
 
   // Popup handlers
-  ipcMain.on('open-popup', (type) => createPopup(type));
+  ipcMain.on('open-popup', (type, height, width) =>
+    createPopup(type, height, width),
+  );
 
   // listen for window control event
   ipcMain.on('window-control', (event, command) => {

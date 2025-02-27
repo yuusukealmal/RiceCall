@@ -24,56 +24,32 @@ import store from '@/redux/store';
 
 // Hooks
 import { useSocket } from '@/hooks/SocketProvider';
+import { useContextMenu } from '@/components/ContextMenuProvider';
 
 // Components
 import BadgeViewer from '@/components/viewers/BadgeViewer';
-import ContextMenu from '@/components/ContextMenu';
-import UserInfoBlock from '@/components/UserInfoBlock';
 
-// Modals
-import AddChannelModal from '@/components/modals/AddChannelModal';
-import EditChannelModal from '@/components/modals/EditChannelModal';
-import DeleteChannelModal from '@/components/modals/DeleteChannelModal';
-
-interface ContextMenuPosState {
-  x: number;
-  y: number;
-}
+// Services
+import { ipcService } from '@/services/ipc.service';
 
 interface CategoryTabProps {
   category: Channel;
   server: Server;
-  user: User;
+  canEdit: boolean;
   index: number;
 }
 
 const CategoryTab: React.FC<CategoryTabProps> = React.memo(
-  ({ category, server, user, index }) => {
+  ({ category, server, canEdit, index }) => {
     // Expanded Control
     const [expanded, setExpanded] = useState<boolean>(true);
 
-    // Context Menu Control
-    const [contentMenuPos, setContentMenuPos] = useState<ContextMenuPosState>({
-      x: 0,
-      y: 0,
-    });
-    const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
-
-    // Modal Control
-    const [showAddChannelModal, setShowAddChannelModal] =
-      useState<boolean>(false);
-    const [showEditChannelModal, setShowEditChannelModal] =
-      useState<boolean>(false);
-    const [showDeleteChannelModal, setShowDeleteChannelModal] =
-      useState<boolean>(false);
+    // Context Menu
+    const contextMenu = useContextMenu();
 
     const categoryVisibility = category.settings.visibility ?? 'public';
     const categoryName = category.name ?? '';
-    // const userMember = server.members?.find((m) => m.userId === user.id);
-    const userMember = server.members?.[user.id];
-    const userPermission = userMember?.permissionLevel ?? 1;
-    const subChannels = category.subChannels ?? [];
-    const canEdit = userPermission >= 5;
+    const categoryChannels: Channel[] = []; //FIXME
 
     return (
       <Draggable
@@ -99,8 +75,32 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
               onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setContentMenuPos({ x: e.pageX, y: e.pageY });
-                setShowContextMenu(true);
+                contextMenu.showContextMenu(e.pageX, e.pageY, [
+                  {
+                    id: 'edit',
+                    icon: <Edit size={14} className="w-5 h-5 mr-2" />,
+                    label: '編輯',
+                    show: canEdit,
+                    onClick: () =>
+                      ipcService.popup.open('edit-channel', 400, 300),
+                  },
+                  {
+                    id: 'add',
+                    icon: <Plus size={14} className="w-5 h-5 mr-2" />,
+                    label: '新增',
+                    show: canEdit && category.isRoot,
+                    onClick: () =>
+                      ipcService.popup.open('create-channel', 400, 300),
+                  },
+                  {
+                    id: 'delete',
+                    icon: <Trash size={14} className="w-5 h-5 mr-2" />,
+                    label: '刪除',
+                    show: canEdit && !category.isLobby,
+                    onClick: () =>
+                      ipcService.popup.open('delete-channel', 400, 300),
+                  },
+                ]);
               }}
             >
               <div className={styles['channelTabLable']}>{categoryName}</div>
@@ -121,23 +121,23 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
                     {...provided.droppableProps}
                     className={styles['channelList']}
                   >
-                    {subChannels
+                    {categoryChannels
                       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                      .map((subChannel, index) =>
-                        subChannel.isCategory ? (
+                      .map((channel, index) =>
+                        channel.isCategory ? (
                           <CategoryTab
-                            key={subChannel.id}
-                            category={subChannel}
+                            key={channel.id}
+                            category={channel}
                             server={server}
-                            user={user}
+                            canEdit={canEdit}
                             index={index}
                           />
                         ) : (
                           <ChannelTab
-                            key={subChannel.id}
-                            channel={subChannel}
+                            key={channel.id}
+                            channel={channel}
                             server={server}
-                            user={user}
+                            canEdit={canEdit}
                             index={index}
                           />
                         ),
@@ -146,64 +146,6 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
                   </div>
                 )}
               </Droppable>
-            )}
-            {/* Context Menu */}
-            {showContextMenu && canEdit && (
-              <ContextMenu
-                onClose={() => setShowContextMenu(false)}
-                x={contentMenuPos.x}
-                y={contentMenuPos.y}
-                items={[
-                  {
-                    id: 'edit',
-                    icon: <Edit size={14} className="w-5 h-5 mr-2" />,
-                    label: '編輯',
-                    onClick: () => {
-                      setShowContextMenu(false);
-                      setShowEditChannelModal(true);
-                    },
-                  },
-                  {
-                    id: 'add',
-                    icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-                    label: '新增',
-                    onClick: () => {
-                      setShowContextMenu(false);
-                      setShowAddChannelModal(true);
-                    },
-                  },
-                  {
-                    id: 'delete',
-                    icon: <Trash size={14} className="w-5 h-5 mr-2" />,
-                    label: '刪除',
-                    onClick: () => {
-                      setShowContextMenu(false);
-                      setShowDeleteChannelModal(true);
-                    },
-                  },
-                ]}
-              />
-            )}
-            {/* Add Channel Modal */}
-            {showAddChannelModal && (
-              <AddChannelModal
-                onClose={() => setShowAddChannelModal(false)}
-                isRoot={false}
-              />
-            )}
-            {/* Edit Channel Modal */}
-            {showEditChannelModal && (
-              <EditChannelModal
-                onClose={() => setShowEditChannelModal(false)}
-                channel={category}
-              />
-            )}
-            {/* Delete Channel Modal */}
-            {showDeleteChannelModal && (
-              <DeleteChannelModal
-                onClose={() => setShowDeleteChannelModal(false)}
-                channel={category}
-              />
             )}
           </div>
         )}
@@ -215,63 +157,34 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
 interface ChannelTabProps {
   channel: Channel;
   server: Server;
-  user: User;
+  canEdit: boolean;
   index: number;
 }
 
 const ChannelTab: React.FC<ChannelTabProps> = React.memo(
-  ({ channel, server, user, index }) => {
+  ({ channel, server, canEdit, index }) => {
     // Redux
-    const sessionId = useSelector(
-      (state: { sessionToken: string }) => state.sessionToken,
-    );
+    const user = useSelector((state: { user: User | null }) => state.user);
 
-    // Socket Control
+    // Socket
     const socket = useSocket();
+
+    // Context Menu
+    const contextMenu = useContextMenu();
 
     // Expanded Control
     const [expanded, setExpanded] = useState<boolean>(true);
 
-    // Context Menu Control
-    const [contentMenuPos, setContentMenuPos] = useState<ContextMenuPosState>({
-      x: 0,
-      y: 0,
-    });
-    const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
-
-    // Modal Control
-    const [showEditChannelModal, setShowEditChannelModal] =
-      useState<boolean>(false);
-    const [showAddChannelModal, setShowAddChannelModal] =
-      useState<boolean>(false);
-    const [showDeleteChannelModal, setShowDeleteChannelModal] =
-      useState<boolean>(false);
-
     const handleJoinChannel = (channelId: string) => {
-      if (user.currentChannelId !== channelId) {
-        if (server.settings?.visibility === 'private' && userPermission === 1) {
-          const targetChannel = server.channels?.find(
-            (c) => c.id === channelId,
-          );
-          if (!targetChannel?.isLobby) {
-            alert('在半公開伺服器中,普通用戶只能加入大廳頻道');
-            return;
-          }
-        }
-
-        socket?.connectChannel(channelId);
-      }
+      if (user?.currentChannelId == channelId) return;
+      socket?.connectChannel(channelId);
     };
 
     const channelVisibility = channel.settings.visibility ?? 'public';
     const channelName = channel.name ?? '';
     const channelUsers =
       server.users?.filter((u) => u.currentChannelId === channel.id) ?? [];
-    // const userMember = server.members?.find((m) => m.userId === user.id);
-    const userMember = server.members?.[user.id];
-    const userPermission = userMember?.permissionLevel ?? 1;
-    const userInChannel = user.currentChannelId === channel.id;
-    const canEdit = userPermission >= 5;
+    const userInChannel = user?.currentChannelId === channel.id;
 
     return (
       <Draggable
@@ -301,8 +214,32 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
               onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setContentMenuPos({ x: e.pageX, y: e.pageY });
-                setShowContextMenu(true);
+                contextMenu.showContextMenu(e.pageX, e.pageY, [
+                  {
+                    id: 'edit',
+                    icon: <Edit size={14} className="w-5 h-5 mr-2" />,
+                    label: '編輯',
+                    show: canEdit,
+                    onClick: () =>
+                      ipcService.popup.open('edit-channel', 400, 300),
+                  },
+                  {
+                    id: 'add',
+                    icon: <Plus size={14} className="w-5 h-5 mr-2" />,
+                    label: '新增',
+                    show: canEdit && !channel.isLobby && channel.isRoot,
+                    onClick: () =>
+                      ipcService.popup.open('create-channel', 400, 300),
+                  },
+                  {
+                    id: 'delete',
+                    icon: <Trash size={14} className="w-5 h-5 mr-2" />,
+                    label: '刪除',
+                    show: canEdit && !channel.isLobby,
+                    onClick: () =>
+                      ipcService.popup.open('delete-channel', 400, 300),
+                  },
+                ]);
               }}
             >
               <div className={styles['channelTabLable']}>{channelName}</div>
@@ -315,75 +252,15 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
               <div className={styles['userList']}>
                 {channelUsers
                   .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((channelUser: User) => (
+                  .map((user: User) => (
                     <UserTab
                       key={user.id}
                       user={user}
                       server={server}
-                      channelUser={channelUser}
+                      canEdit={canEdit}
                     />
                   ))}
               </div>
-            )}
-            {/* Context Menu */}
-            {showContextMenu && canEdit && (
-              <ContextMenu
-                onClose={() => setShowContextMenu(false)}
-                x={contentMenuPos.x}
-                y={contentMenuPos.y}
-                items={[
-                  {
-                    id: 'edit',
-                    icon: <Edit size={14} className="w-5 h-5 mr-2" />,
-                    label: '編輯',
-                    onClick: () => {
-                      setShowContextMenu(false);
-                      setShowEditChannelModal(true);
-                    },
-                  },
-                  {
-                    id: 'add',
-                    icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-                    label: '新增',
-                    disabled: channel.isLobby,
-                    onClick: () => {
-                      setShowContextMenu(false);
-                      setShowAddChannelModal(true);
-                    },
-                  },
-                  {
-                    id: 'delete',
-                    icon: <Trash size={14} className="w-5 h-5 mr-2" />,
-                    label: '刪除',
-                    disabled: channel.isLobby,
-                    onClick: () => {
-                      setShowContextMenu(false);
-                      setShowDeleteChannelModal(true);
-                    },
-                  },
-                ]}
-              />
-            )}
-            {/* Add Channel Modal */}
-            {showAddChannelModal && (
-              <AddChannelModal
-                onClose={() => setShowAddChannelModal(false)}
-                isRoot={false}
-              />
-            )}
-            {/* Edit Channel Modal */}
-            {showEditChannelModal && (
-              <EditChannelModal
-                onClose={() => setShowEditChannelModal(false)}
-                channel={channel}
-              />
-            )}
-            {/* Delete Channel Modal */}
-            {showDeleteChannelModal && (
-              <DeleteChannelModal
-                onClose={() => setShowDeleteChannelModal(false)}
-                channel={channel}
-              />
             )}
           </div>
         )}
@@ -393,29 +270,26 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 );
 
 interface UserTabProps {
-  channelUser: User;
   server: Server;
   user: User;
+  canEdit: boolean;
 }
 
 const UserTab: React.FC<UserTabProps> = React.memo(
-  ({ user, server, channelUser }) => {
-    // Socket Control
+  ({ user, server, canEdit }) => {
+    // Socket
     const socket = useSocket();
 
-    // Context Menu Control
-    const [contentMenuPos, setContentMenuPos] = useState<ContextMenuPosState>({
-      x: 0,
-      y: 0,
-    });
-    const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
+    // Context
+    const contextMenu = useContextMenu();
 
+    // User Info Block Control
     const [showInfoBlock, setShowInfoBlock] = useState<boolean>(false);
-    const floatingBlockRef = useRef<HTMLDivElement>(null);
+    const infoBlockRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (floatingBlockRef.current?.contains(event.target as Node))
+        if (infoBlockRef.current?.contains(event.target as Node))
           setShowInfoBlock(false);
       };
 
@@ -424,38 +298,20 @@ const UserTab: React.FC<UserTabProps> = React.memo(
         document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // const channelUserMember = server.members?.find((m) => m.userId === user.id);
+    const channelUser = user;
     const channelUserMember = server.members?.[user.id];
     const channelUserPermission = channelUserMember?.permissionLevel ?? 1;
     const channelUserNickname = channelUserMember?.nickname ?? user.name;
     const channelUserLevel = Math.min(56, Math.ceil(user.level / 5)); // 56 is max level
     const channelUserGender = user.gender;
     const channelUserBadges = user.badges ?? [];
-    // const userMember = server.members?.find((m) => m.userId === user.id);
-    const userMember = server.members?.[user.id];
-    const userPermission = userMember?.permissionLevel ?? 1;
-    const canEdit = userPermission >= 5;
 
-    const handleKickUser = (targetId: string) => {
-      socket?.emit('userKicked', {
-        sessionId: store.getState().sessionToken,
-        serverId: server.id,
-        userId: user.id,
-        targetId: targetId,
-      });
-    };
+    const handleKickUser = (targetId: string) => {};
 
-    const handleaddFriend = (targetId: string) => {
-      socket?.emit('userAddFriend', {
-        sessionId: store.getState().sessionToken,
-        serverId: server.id,
-        userId: user.id,
-        targetId: targetId,
-      });
-    };
+    const handleAddFriend = (targetId: string) => {};
 
     return (
-      <div key={user.id} ref={floatingBlockRef}>
+      <div key={user.id} ref={infoBlockRef}>
         {/* User View */}
         <div
           className={`${styles['userTab']}`}
@@ -464,14 +320,32 @@ const UserTab: React.FC<UserTabProps> = React.memo(
           onDoubleClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            setContentMenuPos({ x: e.pageX, y: e.pageY });
-            setShowInfoBlock(true);
+            // setContentMenuPos({ x: e.pageX, y: e.pageY });
+            // setShowInfoBlock(true);
           }}
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            setContentMenuPos({ x: e.pageX, y: e.pageY });
-            setShowContextMenu(true);
+            contextMenu.showContextMenu(e.pageX, e.pageY, [
+              {
+                id: 'kick',
+                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
+                label: '踢出',
+                show: canEdit && user.id != channelUser.id,
+                onClick: () => {
+                  handleKickUser(user.id);
+                },
+              },
+              {
+                id: 'addFriend',
+                icon: <Plus size={14} className="w-5 h-5 mr-2" />,
+                label: '新增好友',
+                show: canEdit && user.id != channelUser.id,
+                onClick: () => {
+                  handleAddFriend(user.id);
+                },
+              },
+            ]);
           }}
         >
           <div className={styles['userState']} />
@@ -492,63 +366,16 @@ const UserTab: React.FC<UserTabProps> = React.memo(
           )}
         </div>
 
-        {/* Context Menu */}
-        {showContextMenu && (
-          <ContextMenu
-            onClose={() => setShowContextMenu(false)}
-            x={contentMenuPos.x}
-            y={contentMenuPos.y}
-            items={
-              canEdit
-                ? [
-                    {
-                      id: 'kick',
-                      icon: <Trash size={14} className="w-5 h-5 mr-2" />,
-                      label: '踢出',
-                      disabled: user.id == channelUser.id ? true : false,
-                      onClick: () => {
-                        setShowContextMenu(false);
-                        handleKickUser(user.id);
-                      },
-                    },
-                    {
-                      id: 'addFriend',
-                      icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-                      label: '新增好友',
-                      disabled: user.id == channelUser.id ? true : false,
-                      onClick: () => {
-                        setShowContextMenu(false);
-                        handleaddFriend(user.id);
-                      },
-                    },
-                  ]
-                : [
-                    {
-                      id: 'addFriend',
-                      icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-                      label: '新增好友',
-                      disabled: user.id == channelUser.id ? true : false,
-                      onClick: () => {
-                        setShowContextMenu(false);
-                        handleaddFriend(user.id);
-                      },
-                    },
-                  ]
-            }
-          />
-        )}
-
         {/* User Info Block */}
-        {showInfoBlock && (
+        {/* FIXME */}
+        {/* {showInfoBlock && (
           <UserInfoBlock
             onClose={() => setShowInfoBlock(false)}
             x={contentMenuPos.x}
             y={contentMenuPos.y}
             user={user}
           />
-        )}
-
-        {/* Kick User Modal */}
+        )} */}
       </div>
     );
   },
@@ -564,41 +391,22 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
   // Redux
   const user = useSelector((state: { user: User }) => state.user);
   const server = useSelector((state: { server: Server }) => state.server);
-  const sessionId = useSelector(
-    (state: { sessionToken: string }) => state.sessionToken,
-  );
 
-  // Socket Control
+  // Socket
   const socket = useSocket();
 
-  const [contentMenuPos, setContentMenuPos] = useState<ContextMenuPosState>({
-    x: 0,
-    y: 0,
-  });
-  const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
-
-  // Modal Control
-  const [showAddChannelModal, setShowAddChannelModal] =
-    useState<boolean>(false);
+  // Context
+  const contextMenu = useContextMenu();
 
   const connectStatus = 3;
   const userCurrentChannel = channels.find(
     (ch) => ch.id == user.currentChannelId,
   );
   const userCurrentChannelName = userCurrentChannel?.name ?? '';
-  // const userMember = server.members?.find((m) => m.userId === user.id);
   const userMember = server.members?.[user.id];
   const userPermission = userMember?.permissionLevel ?? 1;
   const serverChannels = server.channels ?? [];
   const canEdit = userPermission >= 5;
-
-  // Updates we send to the server
-  interface ChannelUpdate {
-    id: string;
-    order: number;
-    parentChannelId: string | null;
-    isCategory: boolean;
-  }
 
   const handleDragEnd = (result: DropResult) => {
     const { destination, source, draggableId, combine } = result;
@@ -608,10 +416,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
     if (!movedChannel) return;
 
     // Permission check
-    // const userMember = server.members?.find((m) => m.userId === user.id);
-    const userMember = server.members?.[user.id];
-    const userPermission = userMember?.permissionLevel ?? 1;
-    const canEdit = userPermission >= 5;
     if (!canEdit) return;
 
     // Prevent lobby movement restrictions
@@ -623,13 +427,9 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
     }
 
     // Helper to emit updates
-    const emitUpdates = (updates: ChannelUpdate[]) => {
+    const emitUpdates = (updates: Partial<Channel>[]) => {
       if (updates.length === 0) return;
-      socket?.emit('updateChannelOrder', {
-        sessionId: store.getState().sessionToken,
-        serverId: server.id,
-        updates,
-      });
+      socket?.updateChannel(updates);
     };
 
     // Handle combining channels
@@ -646,17 +446,17 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
         ) || [];
       const newOrder = siblings.length;
 
-      const updates: ChannelUpdate[] = [
+      const updates: Partial<Channel>[] = [
         {
           id: targetChannel.id,
           order: targetChannel.order,
-          parentChannelId: null,
+          // parentChannelId: null,
           isCategory: true,
         },
         {
           id: movedChannel.id,
           order: newOrder,
-          parentChannelId: targetChannel.id,
+          // parentChannelId: targetChannel.id,
           isCategory: false,
         },
       ];
@@ -668,10 +468,10 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
 
       if (sourceChannels) {
         const sourceUpdates = sourceChannels.map(
-          (ch, idx): ChannelUpdate => ({
+          (ch, idx): Partial<Channel> => ({
             id: ch.id,
             order: idx,
-            parentChannelId: null,
+            // parentChannelId: null,
             isCategory: ch.isCategory,
           }),
         );
@@ -709,10 +509,10 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
     updatedChannels.splice(destination.index, 0, movedChannel);
 
     // Create updates
-    const updates: ChannelUpdate[] = updatedChannels.map((ch, idx) => ({
+    const updates: Partial<Channel>[] = updatedChannels.map((ch, idx) => ({
       id: ch.id,
       order: idx,
-      parentChannelId: targetParentId,
+      // parentChannelId: targetParentId,
       isCategory: ch.isCategory,
     }));
 
@@ -720,24 +520,12 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
     updates.push({
       id: movedChannel.id,
       order: destination.index,
-      parentChannelId: targetParentId,
+      // parentChannelId: targetParentId,
       isCategory: movedChannel.isCategory,
     });
 
     emitUpdates(updates);
   };
-
-  useEffect(() => {
-    const currentChannel = server.channels?.find(
-      (c) => c.id === user.currentChannelId,
-    );
-    if (currentChannel && currentChannel.isCategory) {
-      const lobbyChannel = server.channels?.find((c) => c.isLobby);
-      if (lobbyChannel && lobbyChannel.id !== user.currentChannelId) {
-        socket?.connectChannel(lobbyChannel.id);
-      }
-    }
-  }, [server.channels, user.currentChannelId, sessionId, socket]);
 
   return (
     <>
@@ -774,8 +562,15 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
         onContextMenu={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          setContentMenuPos({ x: e.pageX, y: e.pageY });
-          setShowContextMenu(true);
+          contextMenu.showContextMenu(e.pageX, e.pageY, [
+            {
+              id: 'addChannel',
+              icon: <Plus size={14} className="w-5 h-5 mr-2" />,
+              label: '新增',
+              show: canEdit,
+              onClick: () => ipcService.popup.open('create-channel', 400, 300),
+            },
+          ]);
         }}
       >
         所有頻道
@@ -804,7 +599,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
                       key={channel.id}
                       category={channel}
                       server={server}
-                      user={user}
+                      canEdit={canEdit}
                       index={index}
                     />
                   ) : (
@@ -812,7 +607,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
                       key={channel.id}
                       channel={channel}
                       server={server}
-                      user={user}
+                      canEdit={canEdit}
                       index={index}
                     />
                   ),
@@ -822,32 +617,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
           )}
         </Droppable>
       </DragDropContext>
-      {/* Context Menu */}
-      {showContextMenu && canEdit && (
-        <ContextMenu
-          onClose={() => setShowContextMenu(false)}
-          x={contentMenuPos.x}
-          y={contentMenuPos.y}
-          items={[
-            {
-              id: 'addChannel',
-              icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-              label: '新增',
-              onClick: () => {
-                setShowContextMenu(false);
-                setShowAddChannelModal(true);
-              },
-            },
-          ]}
-        />
-      )}
-      {/* Add Channel Modal */}
-      {showAddChannelModal && (
-        <AddChannelModal
-          onClose={() => setShowAddChannelModal(false)}
-          isRoot={true}
-        />
-      )}
     </>
   );
 };

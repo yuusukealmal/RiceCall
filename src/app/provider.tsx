@@ -4,7 +4,8 @@ import React from 'react';
 import { Provider } from 'react-redux';
 
 // Hooks
-import { SocketProvider } from '@/hooks/SocketProvider';
+import SocketProvider from '@/hooks/SocketProvider';
+import ContextMenuProvider from '@/components/ContextMenuProvider';
 
 // Redux
 import store from '@/redux/store';
@@ -16,7 +17,9 @@ interface ProvidersProps {
 const Providers = ({ children }: ProvidersProps) => {
   return (
     <Provider store={store}>
-      <SocketProvider>{children}</SocketProvider>
+      <SocketProvider>
+        <ContextMenuProvider>{children}</ContextMenuProvider>
+      </SocketProvider>
     </Provider>
   );
 };

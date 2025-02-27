@@ -45,7 +45,7 @@ interface SocketProviderProps {
   children: React.ReactNode;
 }
 
-export const SocketProvider = ({ children }: SocketProviderProps) => {
+const SocketProvider = ({ children }: SocketProviderProps) => {
   // Redux
   const user = useSelector((state: { user: User | null }) => state.user);
   const server = useSelector(
@@ -227,3 +227,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     </SocketContext.Provider>
   );
 };
+
+SocketProvider.displayName = 'SocketProvider';
+
+export default SocketProvider;

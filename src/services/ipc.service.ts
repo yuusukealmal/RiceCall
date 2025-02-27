@@ -1,4 +1,4 @@
-import { SocketClientEvent, SocketServerEvent } from "@/types";
+import { SocketClientEvent, SocketServerEvent } from '@/types';
 
 // Safe reference to electron's ipcRenderer
 let ipcRenderer: any = null;
@@ -95,6 +95,14 @@ export const ipcService = {
     offUnmaximize: (callback: () => void) => {
       if (isElectron) {
         ipcRenderer.removeListener('window-unmaximized', callback);
+      }
+    },
+  },
+
+  popup: {
+    open: (type: string, height?: number, width?: number) => {
+      if (isElectron) {
+        ipcRenderer.send('open-popup', type, height, width);
       }
     },
   },
