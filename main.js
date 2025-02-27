@@ -412,7 +412,7 @@ app.whenReady().then(async () => {
   });
 
   // Popup handlers
-  ipcMain.on('open-popup', (type, height, width) =>
+  ipcMain.on('open-popup', (event, type, height, width) =>
     createPopup(type, height, width),
   );
 
