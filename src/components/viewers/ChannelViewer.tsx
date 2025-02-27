@@ -541,10 +541,12 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
         </div>
       </div>
       {/* Mic Queue */}
-      <div className={styles['sectionTitle']}>麥序</div>
-      <div className={styles['micQueueBox']}>
-        <div className={styles['userList']}>
-          {/* {micQueueUsers.map((user) => (
+      {userCurrentChannel?.voiceMode === 'queue' && (
+        <>
+          <div className={styles['sectionTitle']}>麥序</div>
+          <div className={styles['micQueueBox']}>
+            <div className={styles['userList']}>
+              {/* {micQueueUsers.map((user) => (
             <UserTab
               key={user.id}
               user={user}
@@ -552,8 +554,11 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
               mainUser={user}
             />
           ))} */}
-        </div>
-      </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Saperator */}
       <div className={styles['saperator-2']} />
       {/* All Channels */}
