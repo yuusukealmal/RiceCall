@@ -184,9 +184,7 @@ const obtainXp = async (socket, userId) => {
 
     // Update member contribution if in a server
     if (user.currentServerId) {
-      const member = user.members.find(
-        (m) => m.serverId === user.currentServerId,
-      );
+      const member = user.members[user.currentServerId];
       if (!member) {
         throw new Error(
           `User(${user.id}) not found in server(${user.currentServerId})`,
