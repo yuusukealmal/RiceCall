@@ -2,18 +2,23 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
 const { app, BrowserWindow, ipcMain, protocol } = require('electron');
+const serve = require("electron-serve");
 const net = require('net');
 const DiscordRPC = require('discord-rpc');
 const { Socket, io } = require('socket.io-client');
 
-let baseUri = "";
-
 let isDev = process.argv.includes("--dev");
+
+const appServe = app.isPackaged ? serve({
+  directory: path.join(__dirname, "./out")
+}) : !isDev ? serve({
+  directory: path.join(__dirname, "./out")
+}) : null;
+
+let baseUri = "";
 
 if (isDev) {
   baseUri = 'http://127.0.0.1:3000'
-} else {
-  baseUri = `app://`;
 }
 
 // Track windows
@@ -109,14 +114,16 @@ async function createMainWindow() {
       contextIsolation: false,
     },
   });
-  if (isDev) {
-    mainWindow.loadURL(`${baseUri}`);
-  } else {
-    mainWindow.loadURL(path.join(__dirname, './out', `index.html`));
-  }
 
-  // Open DevTools in development mode
-  if (isDev) mainWindow.webContents.openDevTools();
+  if (app.isPackaged || !isDev) {
+    appServe(mainWindow).then(() => {
+      mainWindow.loadURL("app://-");
+    });
+  } else {
+    mainWindow.loadURL(`${baseUri}`);
+    // Open DevTools in development mode
+    mainWindow.webContents.openDevTools();
+  }
 
   // wait for page load to send initial state
   mainWindow.webContents.on('did-finish-load', () => {
@@ -153,16 +160,15 @@ async function createAuthWindow() {
     },
   });
 
-  if (isDev) {
-    authWindow.loadURL(`${baseUri}/auth`);
+  if (app.isPackaged || !isDev) {
+    appServe(authWindow).then(() => {
+      authWindow.loadURL("app://./auth.html");
+    });
   } else {
-    authWindow.loadURL(path.join(__dirname, './out', `auth.html`));
+    authWindow.loadURL(`${baseUri}/auth`);
+    // Open DevTools in development mode
+    authWindow.webContents.openDevTools();
   }
-
-
-  // Open DevTools in development mode
-  // if (isDev) authWindow.webContents.openDevTools();
-  authWindow.webContents.openDevTools();
 
   // wait for page load to send initial state
   authWindow.webContents.on('did-finish-load', () => {
@@ -197,10 +203,15 @@ async function createPopup(type, height, width) {
       contextIsolation: false,
     },
   });
-  if (isDev) {
-    popup.loadURL(`${baseUri}/popup?type=${type}`);
+
+  if (app.isPackaged || !isDev) {
+    appServe(popup).then(() => {
+      popup.loadURL(`app://./popup.html?type=${type}`);
+    });
   } else {
-    popup.loadURL(path.join(__dirname, './out', `popup.html?type=${type}`));
+    popup.loadURL(`${baseUri}/popup?type=${type}`);
+    // Open DevTools in development mode
+    popup.webContents.openDevTools();
   }
 
   // Open DevTools in development mode
@@ -384,17 +395,6 @@ rpc.on('ready', () => {
 });
 
 app.whenReady().then(async () => {
-  if (!isDev) {
-    // **註冊自訂 app 協議**
-    protocol.handle('app', (request) => {
-      const url = request.url.replace(/^app:\/\//, '');
-      console.log(url);
-      const filePath = path.join(__dirname, './out', url);
-      console.log(filePath);
-      return { path: filePath };
-    });
-  }
-
   await createAuthWindow();
 
   app.on('before-quit', () => {
