@@ -1,73 +1,103 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React from 'react';
-
-// Types
-import type { ModalButton } from '@/types';
+import React, { useEffect, useState } from 'react';
 
 // Components
 import Header from '@/components/Header';
 
-const getButtonStyle = (button: ModalButton, disabled: boolean) => {
-  switch (button.style) {
-    case 'primary':
-      return `bg-blue-600 text-white hover:bg-blue-700 ${
-        disabled ? 'disabled:bg-blue-400' : ''
-      }`;
-    case 'secondary':
-      return `bg-white border border-black-200 text-black hover:bg-gray-300`;
-    case 'danger':
-      return `bg-red-600 text-white hover:bg-red-700 ${
-        disabled ? 'disabled:bg-red-400' : ''
-      }`;
-  }
-};
+// Types
+import { Channel, popupType } from '@/types';
 
-// interface ModalProps {
-//   title?: string;
-//   buttons: ModalButton[];
-//   width: string;
-//   height: string;
-//   changeContent: string[];
-//   children: React.ReactNode;
-//   onClose: () => void;
-// }
+// Modals
+import CreateServerModal from '@/components/modals/CreateServerModal';
+import AddChannelModal from '@/components/modals/AddChannelModal';
+import DeleteChannelModal from '@/components/modals/DeleteChannelModal';
+import EditChannelModal from '@/components/modals/EditChannelModal';
+import ServerApplication from '@/components/modals/ServerApplicationModal';
 
-const Modal = React.memo(
-  // ({ title, buttons, onClose = () => {} }: { title: string, buttons: ModalButton[], onClose: () => void }) => {
-    () => {
-    // const hasButtons = buttons && buttons.length > 0;
+const Modal = React.memo(() => {
+  const [type, setType] = useState<popupType | null>(null);
 
-    const getMainContent = () => {
-      return <> </>;
-      // if (!socket || !user) return <LoadingSpinner />;
-      // else {
-      //   switch (selectedTabId) {
-      //     case 1:
-      //       return <HomePage />;
-      //     case 2:
-      //       return <FriendPage />;
-      //     case 3:
-      //       if (!server) return;
-      //       return <ServerPage />;
-      //   }
-      // }
+  useEffect(() => {
+    if (window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get('type') as popupType;
+      setType(type);
+    }
+  }, []);
+
+  const getTitle = (isCategory?: boolean) => {
+    switch (type) {
+      case popupType.CREATE_SERVER:
+        return { title: '創建語音群', button: ['close'] };
+      case popupType.CREATE_CHANNEL:
+        return { title: '創建頻道', button: ['close'] };
+      case popupType.EDIT_CHANNEL:
+        return {
+          title: `編輯${isCategory ? '類別' : '頻道'}`,
+          button: ['close'],
+        };
+      case popupType.DELETE_CHANNEL:
+        return { title: '刪除頻道', button: ['close'] };
+      case popupType.APPLY_MEMBER:
+        return { title: '申請會員', button: ['close'] };
+      default:
+        return undefined;
+    }
+  };
+
+  const getMainContent = () => {
+    const mockChannel: Channel = {
+      id: 'default',
+      name: '',
+      isCategory: false,
+      settings: {
+        visibility: 'public',
+        bitrate: 0,
+        slowmode: false,
+        userLimit: 0,
+      },
+      isRoot: false,
+      isLobby: false,
+      voiceMode: 'free',
+      chatMode: 'free',
+      order: 0,
+      serverId: '',
+      createdAt: 0,
     };
 
-    return (
-      <div
-        className={`fixed w-full h-full flex-1 flex-col bg-white rounded shadow-lg overflow-hidden transform outline-g`}
-      >
-        {/* Top Nevigation */}
-        {/* <Header title={title} onClose={onClose}></Header> */}
-        {/* Main Content */}
-        <div className="flex flex-1 min-h-0 overflow-y-auto">
-          {getMainContent()}
-        </div>
-        {/* Bottom */}
-        <div className="flex flex-row justify-end items-center bg-gray-50">
-          {/* {hasButtons && (
+    switch (type) {
+      case popupType.CREATE_SERVER:
+        return <CreateServerModal onClose={() => {}} />;
+      case popupType.CREATE_CHANNEL:
+        return <AddChannelModal onClose={() => {}} isRoot={false} />;
+      case popupType.EDIT_CHANNEL:
+        return <EditChannelModal onClose={() => {}} channel={mockChannel} />;
+      case popupType.DELETE_CHANNEL:
+        return <DeleteChannelModal onClose={() => {}} channel={mockChannel} />;
+      case popupType.APPLY_MEMBER:
+        return <ServerApplication onClose={() => {}} server={undefined} />;
+      default:
+        return <></>;
+    }
+  };
+
+  const getButtons = () => {};
+
+  return (
+    <div
+      className={`fixed w-full h-full flex-1 flex-col bg-white rounded shadow-lg overflow-hidden transform outline-g`}
+    >
+      {/* Top Nevigation */}
+      <Header title={getTitle()} onClose={() => {}}></Header>
+      {/* Main Content */}
+      <div className="flex flex-1 min-h-0 overflow-y-auto">
+        {getMainContent()}
+      </div>
+      {/* Bottom */}
+      <div className="flex flex-row justify-end items-center bg-gray-50">
+        {/* {hasButtons && (
             <div className="flex justify-end gap-2 p-4 bg-gray-50">
               {buttons.map((button, i) => (
                 <button
@@ -84,11 +114,10 @@ const Modal = React.memo(
               ))}
             </div>
           )} */}
-        </div>
       </div>
-    );
-  },
-);
+    </div>
+  );
+});
 
 Modal.displayName = 'SettingPage';
 

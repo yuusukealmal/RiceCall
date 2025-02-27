@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import dynamic from 'next/dynamic';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { CircleX } from 'lucide-react';
 
@@ -12,7 +12,7 @@ import { CircleX } from 'lucide-react';
 import header from '@/styles/common/header.module.css';
 
 // Types
-import type { Channel, Server, User } from '@/types';
+import type { Server, User } from '@/types';
 
 // Pages
 import FriendPage from '@/components/pages/FriendPage';
@@ -31,8 +31,6 @@ import { useSocket } from '@/hooks/SocketProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-
-import Auth from './auth/page';
 
 interface HeaderProps {
   selectedId?: number;
@@ -145,6 +143,8 @@ const Header: React.FC<HeaderProps> = React.memo(
 
     return (
       <div className={header['header']}>
+        {/* Title */}
+        <div className={`${header['titleBox']} ${header['big']}`}></div>
         {/* User Status */}
         <div className={header['userStatus']}>
           {showUserSetting && (
@@ -306,21 +306,12 @@ const Header: React.FC<HeaderProps> = React.memo(
 
 Header.displayName = 'Header';
 
-const HomeComponent = () => {
+const Home = () => {
   // Redux
-  const user = useSelector((state: { user: User | null }) => state.user);
   const server = useSelector(
     (state: { server: Server | null }) => state.server,
   );
-
-  // Sound Control
-  const joinSoundRef = useRef<HTMLAudioElement | null>(null);
-  const leaveSoundRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    joinSoundRef.current = new Audio('/sounds/join.mp3');
-    leaveSoundRef.current = new Audio('/sounds/leave.mp3');
-  }, []);
+  const user = useSelector((state: { user: User | null }) => state.user);
 
   // Tab Control
   const [selectedTabId, setSelectedTabId] = useState<number>(1);
@@ -347,7 +338,6 @@ const HomeComponent = () => {
 
   return (
     <>
-      {/* Top Navigation */}
       <Header
         selectedId={selectedTabId}
         onSelect={(tabId) => setSelectedTabId(tabId)}
@@ -358,11 +348,6 @@ const HomeComponent = () => {
   );
 };
 
-HomeComponent.displayName = 'HomeComponent';
-
-// use dynamic import to disable SSR
-const Home = dynamic(() => Promise.resolve(HomeComponent), {
-  ssr: false,
-});
+Home.displayName = 'Home';
 
 export default Home;

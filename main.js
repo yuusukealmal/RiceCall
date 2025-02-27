@@ -1,15 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
-const { app, BrowserWindow, ipcMain } = require('electron');
-const isDev = require('electron-is-dev');
+const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const net = require('net');
 const DiscordRPC = require('discord-rpc');
 const { Socket, io } = require('socket.io-client');
 
-const baseUri = isDev
-  ? 'http://127.0.0.1:3000' // Load localhost:3000 in development mode
-  : `file://${path.join(__dirname, '../build/index.html')}`; // Load built files in production mode
+let baseUri = "";
+
+let isDev = process.argv.includes("--dev");
+
+if (isDev) {
+  baseUri = 'http://127.0.0.1:3000'
+} else {
+  baseUri = `app://`;
+}
 
 // Track windows
 let mainWindow = null;
@@ -93,7 +98,7 @@ async function createMainWindow() {
   }
 
   mainWindow = new BrowserWindow({
-    minWidth: 1200,
+    minWidth: 1400,
     minHeight: 800,
     frame: false,
     transparent: true,
@@ -104,7 +109,11 @@ async function createMainWindow() {
       contextIsolation: false,
     },
   });
-  mainWindow.loadURL(`${baseUri}`);
+  if (isDev) {
+    mainWindow.loadURL(`${baseUri}`);
+  } else {
+    mainWindow.loadURL(path.join(__dirname, './out', `index.html`));
+  }
 
   // Open DevTools in development mode
   if (isDev) mainWindow.webContents.openDevTools();
@@ -132,8 +141,8 @@ async function createAuthWindow() {
   }
 
   authWindow = new BrowserWindow({
-    width: 1000,
-    height: 650,
+    width: 610,
+    height: 450,
     resizable: false,
     frame: false,
     transparent: true,
@@ -143,10 +152,17 @@ async function createAuthWindow() {
       contextIsolation: false,
     },
   });
-  authWindow.loadURL(`${baseUri}/auth`);
+
+  if (isDev) {
+    authWindow.loadURL(`${baseUri}/auth`);
+  } else {
+    authWindow.loadURL(path.join(__dirname, './out', `auth.html`));
+  }
+
 
   // Open DevTools in development mode
-  if (isDev) authWindow.webContents.openDevTools();
+  // if (isDev) authWindow.webContents.openDevTools();
+  authWindow.webContents.openDevTools();
 
   // wait for page load to send initial state
   authWindow.webContents.on('did-finish-load', () => {
@@ -170,8 +186,8 @@ async function createPopup(type, height, width) {
   }
 
   const popup = new BrowserWindow({
-    minWidth: width ?? 800,
-    minHeight: height ?? 600,
+    width: width ?? 800,
+    height: height ?? 600,
     resizable: false,
     frame: false,
     transparent: true,
@@ -181,7 +197,11 @@ async function createPopup(type, height, width) {
       contextIsolation: false,
     },
   });
-  popup.loadURL(`${baseUri}/popup?type=${type}`); // Add page query parameter
+  if (isDev) {
+    popup.loadURL(`${baseUri}/popup?type=${type}`);
+  } else {
+    popup.loadURL(path.join(__dirname, './out', `popup.html?type=${type}`));
+  }
 
   // Open DevTools in development mode
   if (isDev) popup.webContents.openDevTools();
@@ -364,6 +384,17 @@ rpc.on('ready', () => {
 });
 
 app.whenReady().then(async () => {
+  if (!isDev) {
+    // **註冊自訂 app 協議**
+    protocol.handle('app', (request) => {
+      const url = request.url.replace(/^app:\/\//, '');
+      console.log(url);
+      const filePath = path.join(__dirname, './out', url);
+      console.log(filePath);
+      return { path: filePath };
+    });
+  }
+
   await createAuthWindow();
 
   app.on('before-quit', () => {
@@ -375,6 +406,69 @@ app.whenReady().then(async () => {
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       // app.quit();
+    }
+  });
+
+  // Window management IPC handlers
+  ipcMain.on('login', (_, sessionId) => {
+    if (!socketInstance) socketInstance = connectSocket(sessionId);
+    socketInstance.connect();
+  });
+  ipcMain.on('logout', () => {
+    socketInstance = disconnectSocket(socketInstance);
+  });
+
+  // Window control handlers
+  ipcMain.on('minimize-window', () => {
+    const currentWindow = BrowserWindow.getFocusedWindow();
+    if (currentWindow) {
+      currentWindow.minimize();
+    }
+  });
+  ipcMain.on('maximize-window', () => {
+    const currentWindow = BrowserWindow.getFocusedWindow();
+    if (currentWindow) {
+      if (currentWindow.isMaximized()) {
+        currentWindow.unmaximize();
+      } else {
+        currentWindow.maximize();
+      }
+    }
+  });
+  ipcMain.on('close-window', () => {
+    const currentWindow = BrowserWindow.getFocusedWindow();
+    if (currentWindow) {
+      currentWindow.close();
+    }
+  });
+
+  // Popup handlers
+  ipcMain.on('open-popup', (_, type, height, width) =>
+    createPopup(type, height, width),
+  );
+
+  // listen for window control event
+  ipcMain.on('window-control', (event, command) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window) return;
+
+    switch (command) {
+      case 'minimize':
+        window.minimize();
+        break;
+      case 'maximize':
+        if (window.isMaximized()) {
+          window.unmaximize();
+        } else {
+          window.maximize();
+        }
+        break;
+      case 'unmaximize':
+        window.unmaximize();
+        break;
+      case 'close':
+        window.close();
+        break;
     }
   });
 
