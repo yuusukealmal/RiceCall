@@ -21,12 +21,14 @@ interface FormErrors {
   general?: string;
   account?: string;
   password?: string;
+  confirmPassword?: string;
   username?: string;
 }
 
 interface RegisterPageData {
   account: string;
   password: string;
+  confirmPassword: string;
   username: string;
   gender: 'Male' | 'Female';
 }
@@ -40,6 +42,7 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
     const [formData, setFormData] = useState<RegisterPageData>({
       account: '',
       password: '',
+      confirmPassword: '',
       username: '',
       gender: 'Male',
     });
@@ -69,6 +72,12 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
           ...prev,
           password: validatePassword(value),
         }));
+      } else if (name === 'confirmPassword') {
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword:
+            value !== formData.password ? '密碼輸入不一致' : undefined,
+        }));
       } else if (name === 'username') {
         setErrors((prev) => ({
           ...prev,
@@ -84,6 +93,10 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
       const accountError = validateAccount(formData.account);
       const passwordError = validatePassword(formData.password);
       const usernameError = validateUsername(formData.username);
+      const confirmPasswordError =
+        formData.password !== formData.confirmPassword
+          ? '密碼輸入不一致'
+          : undefined;
 
       setErrors({
         account: accountError,
@@ -91,9 +104,15 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
         username: usernameError,
       });
 
-      if (!accountError && !passwordError && !usernameError) {
+      if (
+        !accountError &&
+        !passwordError &&
+        !confirmPasswordError &&
+        !usernameError
+      ) {
         try {
-          const data = await authService.register(formData);
+          const { confirmPassword, ...dataToSubmit } = formData;
+          const data = await authService.register(dataToSubmit);
           onRegisterSuccess();
         } catch (error) {
           setErrors({
@@ -158,20 +177,20 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
               <div className={styles['inputBox']}>
                 <label className={styles['label']}>{'確認密碼'}</label>
                 <InputField
-                  name="password"
+                  name="confirmPassword"
                   type="password"
-                  value={formData.password}
+                  value={formData.confirmPassword}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
                   placeholder="請再次輸入密碼"
                   showFunctionButton={'password'}
                   style={{
-                    borderColor: errors.password ? '#f87171' : '#d1d5db',
+                    borderColor: errors.confirmPassword ? '#f87171' : '#d1d5db',
                   }}
                 />
               </div>
-              {errors.password ? (
-                <p className={styles['warning']}>{errors.password}</p>
+              {errors.confirmPassword ? (
+                <p className={styles['warning']}>{errors.confirmPassword}</p>
               ) : (
                 <p className={styles['hint']}>{'重複輸入密碼'}</p>
               )}
