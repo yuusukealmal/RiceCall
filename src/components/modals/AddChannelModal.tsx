@@ -28,6 +28,8 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
       (state: { sessionToken: string }) => state.sessionToken,
     );
 
+    console.log('server', server);
+
     // Socket
     const socket = useSocket();
 
@@ -38,7 +40,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
       isLobby: false,
       isCategory: false,
       isRoot,
-      serverId: server?.id || '',
+      serverId: '',
       voiceMode: 'free',
       chatMode: 'free',
       order: 0,
@@ -56,7 +58,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
 
     const handleSubmit = (e: FormEvent) => {
       e.preventDefault();
-      socket?.createChannel(newChannel);
+      socket?.createChannel({ ...newChannel, serverId: server.id });
       onClose();
     };
 
