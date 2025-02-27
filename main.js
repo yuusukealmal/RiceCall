@@ -118,7 +118,6 @@ async function createMainWindow() {
   if (app.isPackaged || !isDev) {
     appServe(mainWindow).then(() => {
       mainWindow.loadURL("app://-");
-      mainWindow.webContents.openDevTools();
     });
   } else {
     mainWindow.loadURL(`${baseUri}`);
@@ -164,7 +163,6 @@ async function createAuthWindow() {
   if (app.isPackaged || !isDev) {
     appServe(authWindow).then(() => {
       authWindow.loadURL("app://./auth.html");
-      authWindow.webContents.openDevTools();
     });
   } else {
     authWindow.loadURL(`${baseUri}/auth`);
@@ -209,7 +207,6 @@ async function createPopup(type, height, width) {
   if (app.isPackaged || !isDev) {
     appServe(popup).then(() => {
       popup.loadURL(`app://./popup.html?type=${type}`);
-      popup.webContents.openDevTools();
     });
   } else {
     popup.loadURL(`${baseUri}/popup?type=${type}`);
