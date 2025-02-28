@@ -107,7 +107,7 @@
 .optionBox {
   gap: 5px;
   height: auto;
-  width: 23%;
+  min-width: 40px;
   display: flex;
   align-items: center;
   position: relative;
@@ -153,8 +153,8 @@
 
 .saperator {
   background: url(../../public/icon_v_split.png) no-repeat center center;
-  height: 1rem;
-  width: 1.5rem;
+  min-height: 20px;
+  min-width: 2px;
   background-size: auto;
 }
 

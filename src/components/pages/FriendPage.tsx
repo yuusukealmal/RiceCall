@@ -125,7 +125,7 @@ const FriendPageComponent: React.FC = React.memo(() => {
       if (isResizing) {
         const maxWidth = window.innerWidth * 0.3;
         const newWidth = Math.max(
-          220,
+          250,
           Math.min(mouseMoveEvent.clientX, maxWidth),
         );
         setSidebarWidth(newWidth);

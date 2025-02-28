@@ -83,7 +83,7 @@ const ServerPageComponent: React.FC = () => {
       if (isResizing) {
         const maxWidth = window.innerWidth * 0.3;
         const newWidth = Math.max(
-          220,
+          250,
           Math.min(mouseMoveEvent.clientX, maxWidth),
         );
         setSidebarWidth(newWidth);
