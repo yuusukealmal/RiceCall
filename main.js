@@ -2,28 +2,33 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
 const { app, BrowserWindow, ipcMain, protocol } = require('electron');
-const serve = require("electron-serve");
+const serve = require('electron-serve');
 const net = require('net');
 const DiscordRPC = require('discord-rpc');
 const { Socket, io } = require('socket.io-client');
 
-let isDev = process.argv.includes("--dev");
+let isDev = process.argv.includes('--dev');
 
-const appServe = app.isPackaged ? serve({
-  directory: path.join(__dirname, "./out")
-}) : !isDev ? serve({
-  directory: path.join(__dirname, "./out")
-}) : null;
+const appServe = app.isPackaged
+  ? serve({
+      directory: path.join(__dirname, './out'),
+    })
+  : !isDev
+  ? serve({
+      directory: path.join(__dirname, './out'),
+    })
+  : null;
 
-let baseUri = "";
+let baseUri = '';
 
 if (isDev) {
-  baseUri = 'http://127.0.0.1:3000'
+  baseUri = 'http://127.0.0.1:3000';
 }
 
 // Track windows
 let mainWindow = null;
 let authWindow = null;
+let popupWindows = {};
 
 // Socket connection
 const WS_URL = 'http://localhost:4500';
@@ -92,6 +97,11 @@ function waitForPort(port) {
 }
 
 async function createMainWindow() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.focus();
+    return mainWindow;
+  }
+
   if (isDev) {
     try {
       await waitForPort(3000);
@@ -117,7 +127,7 @@ async function createMainWindow() {
 
   if (app.isPackaged || !isDev) {
     appServe(mainWindow).then(() => {
-      mainWindow.loadURL("app://-");
+      mainWindow.loadURL('app://-');
     });
   } else {
     mainWindow.loadURL(`${baseUri}`);
@@ -137,6 +147,11 @@ async function createMainWindow() {
 }
 
 async function createAuthWindow() {
+  if (authWindow && !authWindow.isDestroyed()) {
+    authWindow.focus();
+    return authWindow;
+  }
+
   if (isDev) {
     try {
       await waitForPort(3000);
@@ -162,7 +177,7 @@ async function createAuthWindow() {
 
   if (app.isPackaged || !isDev) {
     appServe(authWindow).then(() => {
-      authWindow.loadURL("app://./auth.html");
+      authWindow.loadURL('app://./auth.html');
     });
   } else {
     authWindow.loadURL(`${baseUri}/auth`);
@@ -181,6 +196,12 @@ async function createAuthWindow() {
 }
 
 async function createPopup(type, height, width) {
+  // Track popup windows
+  if (popupWindows[type] && !popupWindows[type].isDestroyed()) {
+    popupWindows[type].focus();
+    return popupWindows[type];
+  }
+
   if (isDev) {
     try {
       await waitForPort(3000);
@@ -204,6 +225,10 @@ async function createPopup(type, height, width) {
     },
   });
 
+  popup.on('closed', () => {
+    popupWindows[type] = null;
+  });
+
   if (app.isPackaged || !isDev) {
     appServe(popup).then(() => {
       popup.loadURL(`app://./popup.html?type=${type}`);
@@ -216,6 +241,8 @@ async function createPopup(type, height, width) {
 
   // Open DevTools in development mode
   if (isDev) popup.webContents.openDevTools();
+
+  popupWindows[type] = popup;
 
   return popup;
 }
@@ -444,69 +471,6 @@ app.whenReady().then(async () => {
 
   // Popup handlers
   ipcMain.on('open-popup', (_, type, height, width) =>
-    createPopup(type, height, width),
-  );
-
-  // listen for window control event
-  ipcMain.on('window-control', (event, command) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (!window) return;
-
-    switch (command) {
-      case 'minimize':
-        window.minimize();
-        break;
-      case 'maximize':
-        if (window.isMaximized()) {
-          window.unmaximize();
-        } else {
-          window.maximize();
-        }
-        break;
-      case 'unmaximize':
-        window.unmaximize();
-        break;
-      case 'close':
-        window.close();
-        break;
-    }
-  });
-
-  // Window management IPC handlers
-  ipcMain.on('login', (_, sessionId) => {
-    if (!socketInstance) socketInstance = connectSocket(sessionId);
-    socketInstance.connect();
-  });
-  ipcMain.on('logout', () => {
-    socketInstance = disconnectSocket(socketInstance);
-  });
-
-  // Window control handlers
-  ipcMain.on('minimize-window', () => {
-    const currentWindow = BrowserWindow.getFocusedWindow();
-    if (currentWindow) {
-      currentWindow.minimize();
-    }
-  });
-  ipcMain.on('maximize-window', () => {
-    const currentWindow = BrowserWindow.getFocusedWindow();
-    if (currentWindow) {
-      if (currentWindow.isMaximized()) {
-        currentWindow.unmaximize();
-      } else {
-        currentWindow.maximize();
-      }
-    }
-  });
-  ipcMain.on('close-window', () => {
-    const currentWindow = BrowserWindow.getFocusedWindow();
-    if (currentWindow) {
-      currentWindow.close();
-    }
-  });
-
-  // Popup handlers
-  ipcMain.on('open-popup', (event, type, height, width) =>
     createPopup(type, height, width),
   );
 
