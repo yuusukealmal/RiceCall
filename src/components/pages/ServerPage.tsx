@@ -41,9 +41,6 @@ const ServerPageComponent: React.FC = () => {
   const channel = useSelector(
     (state: { channel: Channel | null }) => state.channel,
   );
-  const sessionId = useSelector(
-    (state: { sessionToken: string }) => state.sessionToken,
-  );
 
   // Socket
   const socket = useSocket();
@@ -129,6 +126,9 @@ const ServerPageComponent: React.FC = () => {
   const [showServerSetting, setShowServerSetting] = useState<boolean>(false);
 
   const userMember = user ? server?.members?.[user.id] : null;
+  const userPermissionLevel = userMember?.permissionLevel ?? (0 as Permission);
+  const serverUsers = server?.users ?? [];
+  const serverUserCount = serverUsers.length;
   const serverChannels = server?.channels ?? [];
   const serverAvatar = server?.avatarUrl
     ? API_URL + server.avatarUrl
@@ -197,9 +197,7 @@ const ServerPageComponent: React.FC = () => {
                 <div className={styles['idIcon']} />
                 <div className={styles['idText']}>{serverDisplayId}</div>
                 <div className={styles['memberIcon']} />
-                <div className={styles['memberText']}>
-                  {server?.users?.length ?? 0}
-                </div>
+                <div className={styles['memberText']}>{serverUserCount}</div>
               </div>
             </div>
             <div className={styles['optionBox']}>
@@ -237,8 +235,7 @@ const ServerPageComponent: React.FC = () => {
                   content: msg,
                   senderId: user.id,
                   channelId: user.currentChannelId,
-                  permissionLevel:
-                    userMember?.permissionLevel ?? (0 as Permission),
+                  permissionLevel: userPermissionLevel,
                   timestamp: 0,
                 });
               }}

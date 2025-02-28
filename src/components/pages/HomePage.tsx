@@ -31,8 +31,6 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
   // Socket Control
   const socket = useSocket();
 
-  const [showPrivateModal, setShowPrivateModal] = useState(false);
-
   const handleServerSelect = (serverId: string) => {
     socket?.connectServer(serverId);
   };
@@ -46,12 +44,6 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
 
   return (
     <>
-      {showPrivateModal && (
-        <ServerApplicationModal
-          server={server}
-          onClose={() => setShowPrivateModal(false)}
-        />
-      )}
       <div
         className={styles['myGroupsRoomItemBox']}
         onClick={() => handleServerSelect(server.id)}
@@ -174,9 +166,8 @@ const HomePageComponent: React.FC = React.memo(() => {
   // State
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Test
   const userServers = user?.servers ?? [];
-  const username = user?.name || '用戶';
+  const userName = user?.name || '用戶';
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.electron) {
@@ -202,7 +193,7 @@ const HomePageComponent: React.FC = React.memo(() => {
         window.electron.updateDiscordPresence({});
       }
     };
-  }, [username, userServers.length]);
+  }, [userServers.length]);
 
   return (
     <div className={styles['homeWrapper']}>
@@ -210,39 +201,26 @@ const HomePageComponent: React.FC = React.memo(() => {
       <main className={styles['myGroupsWrapper']}>
         <div className={styles['myGroupsContain']}>
           <div className={styles['myGroupsView']}>
-            {/* {searchQuery && joinedServers.length > 0 && (
-              <div className={styles['myGroupsItem']}>
-                <div className={styles['myGroupsTitle']} data-key="80016">
-                  搜尋結果：
-                </div>
-                <div className={styles['myGroupsRoomItems']}>
-                  <ServerGrid servers={joinedServers} />
-                </div>
+            <div className={styles['myGroupsItem']}>
+              <div className={styles['myGroupsTitle']} data-key="60005">
+                最近訪問
               </div>
-            )}
-            {!searchQuery && ( */}
-            <>
-              <div className={styles['myGroupsItem']}>
-                <div className={styles['myGroupsTitle']} data-key="60005">
-                  最近訪問
-                </div>
-                <ServerGrid servers={userServers} />
-              </div>
+              <ServerGrid servers={userServers} />
+            </div>
 
-              <div className={styles['myGroupsItem']}>
-                <div className={styles['myGroupsTitle']} data-key="30283">
-                  我的語音群
-                </div>
-                <ServerGrid servers={userServers} />
+            <div className={styles['myGroupsItem']}>
+              <div className={styles['myGroupsTitle']} data-key="30283">
+                我的語音群
               </div>
+              <ServerGrid servers={userServers} />
+            </div>
 
-              <div className={styles['myGroupsItem']}>
-                <div className={styles['myGroupsTitle']} data-key="60005">
-                  收藏的語音群
-                </div>
-                <ServerGrid servers={userServers} />
+            <div className={styles['myGroupsItem']}>
+              <div className={styles['myGroupsTitle']} data-key="60005">
+                收藏的語音群
               </div>
-            </>
+              <ServerGrid servers={userServers} />
+            </div>
           </div>
         </div>
       </main>

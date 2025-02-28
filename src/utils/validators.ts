@@ -24,3 +24,7 @@ export const validateUsername = (value: string): string => {
   if (value.length > 32) return '顯示名稱最多 32 個字';
   return '';
 };
+export const validateCheckPassword = (value: string, check: string): string => {
+  if (value !== check) return '密碼輸入不一致';
+  return '';
+}

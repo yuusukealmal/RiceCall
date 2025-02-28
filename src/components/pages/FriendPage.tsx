@@ -23,11 +23,6 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = React.memo(({ user }) => {
-  // Redux
-  const sessionId = useSelector(
-    (state: { sessionToken: string | null }) => state.sessionToken,
-  );
-
   // Socket
   const socket = useSocket();
 
@@ -148,6 +143,9 @@ const FriendPageComponent: React.FC = React.memo(() => {
     };
   }, [resize, stopResizing]);
 
+  const userFriends = user.friends ?? [];
+  const userFriendGroups = user.friendGroups ?? [];
+
   return (
     <div className={styles['friendWrapper']}>
       <Header user={user} />
@@ -158,8 +156,8 @@ const FriendPageComponent: React.FC = React.memo(() => {
           style={{ width: `${sidebarWidth}px` }}
         >
           <FriendListViewer
-            friends={user.friends ?? []}
-            friendGroups={user.friendGroups ?? []}
+            friends={userFriends}
+            friendGroups={userFriendGroups}
           />
         </aside>
 

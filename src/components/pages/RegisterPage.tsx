@@ -7,6 +7,7 @@ import styles from '@/styles/registerPage.module.css';
 // Utils
 import {
   validateAccount,
+  validateCheckPassword,
   validatePassword,
   validateUsername,
 } from '@/utils/validators';
@@ -39,6 +40,7 @@ interface RegisterPageProps {
 
 const RegisterPage: React.FC<RegisterPageProps> = React.memo(
   ({ onRegisterSuccess }) => {
+    // Form Control
     const [formData, setFormData] = useState<RegisterPageData>({
       account: '',
       password: '',
@@ -46,7 +48,12 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
       username: '',
       gender: 'Male',
     });
+
+    // Error Control
     const [errors, setErrors] = useState<FormErrors>({});
+
+    // Loading Control
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleInputChange = (
       e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -75,8 +82,7 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
       } else if (name === 'confirmPassword') {
         setErrors((prev) => ({
           ...prev,
-          confirmPassword:
-            value !== formData.password ? '密碼輸入不一致' : undefined,
+          confirmPassword: validateCheckPassword(value, prev.password ?? ''),
         }));
       } else if (name === 'username') {
         setErrors((prev) => ({
@@ -86,39 +92,38 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
       }
     };
 
-    const handleSubmit = async (
-      e: FormEvent<HTMLFormElement>,
-    ): Promise<void> => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      setIsLoading(true);
       const accountError = validateAccount(formData.account);
       const passwordError = validatePassword(formData.password);
       const usernameError = validateUsername(formData.username);
-      const confirmPasswordError =
-        formData.password !== formData.confirmPassword
-          ? '密碼輸入不一致'
-          : undefined;
-
+      const confirmPasswordError = validateCheckPassword(
+        formData.confirmPassword,
+        formData.password,
+      );
       setErrors({
         account: accountError,
         password: passwordError,
+        confirmPassword: confirmPasswordError,
         username: usernameError,
       });
-
       if (
-        !accountError &&
-        !passwordError &&
-        !confirmPasswordError &&
-        !usernameError
-      ) {
-        try {
-          const { confirmPassword, ...dataToSubmit } = formData;
-          const data = await authService.register(dataToSubmit);
-          onRegisterSuccess();
-        } catch (error) {
-          setErrors({
-            general: error instanceof Error ? error.message : '註冊失敗',
-          });
-        }
+        accountError ||
+        passwordError ||
+        confirmPasswordError ||
+        usernameError
+      )
+        return;
+      try {
+        const data = await authService.register(formData);
+        if (data) onRegisterSuccess();
+      } catch (error) {
+        setErrors({
+          general: error instanceof Error ? error.message : '未知錯誤',
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
 

@@ -50,9 +50,6 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
     }, [onClose]);
 
     const userGender = user.gender;
-    // const userMember = server.members?.find(
-    //   (member) => member.userId === user.id,
-    // );
     const userMember = server.members?.[user.id];
     const userPermission = userMember?.permissionLevel ?? 1;
     const userContributions = userMember?.contribution ?? 0;
@@ -144,6 +141,8 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
 
           {/* Badges Section */}
           <div className={UserInfoCard['userInfoBadges']}>
+            <BadgeViewer badges={userBadges} maxDisplay={13} />
+            {/* <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
             <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
             <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
             <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
@@ -155,13 +154,7 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
             <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
             <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
             <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
-            <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
-            <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" />
-            {/* {userBadges.length > 0 && (
-              <div className="select-none mt-0.5 flex-shrink-0">
-                <BadgeViewer badges={userBadges} maxDisplay={13} />
-              </div>
-            )} */}
+            <img src="/badge/raidcall_2.png" alt="8-bit Yellow Cat Badge" /> */}
           </div>
         </div>
       </div>
