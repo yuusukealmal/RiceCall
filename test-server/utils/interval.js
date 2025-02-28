@@ -13,7 +13,7 @@ const {
 const Logger = require('./logger');
 const Map = require('./map');
 const Get = require('./get');
-const Set = require('./set');
+const SetModule = require('./set');
 const Func = require('./func');
 
 const interval = {
@@ -180,7 +180,7 @@ const obtainXp = async (socket, userId) => {
       requiredXP,
       progress: user.xp / requiredXP,
     };
-    await Set.user(user.id, userUpdate);
+    await SetModule.user(user.id, userUpdate);
 
     // Update member contribution if in a server
     if (user.currentServerId) {
@@ -196,7 +196,7 @@ const obtainXp = async (socket, userId) => {
       const memberUpdate = {
         contribution: member.contribution,
       };
-      await Set.member(member.id, memberUpdate);
+      await SetModule.member(member.id, memberUpdate);
     }
 
     // Update last XP award time
