@@ -281,30 +281,6 @@
   display: block;
 }
 
-/* .menuDropDown .option.hasSubmenu .submenu {
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: -100%;
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 5px;
-    z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .menuDropDown .option.hasSubmenu .submenu .option {
-    cursor: pointer;
-    text-align: center;
-    width: 100%;
-    padding-top: 5px;
-    padding-bottom: 5px;
-  }
-  
-  .menuDropDown .option.hasSubmenu .submenu .option:hover {
-    background: #eee;
-  } */
-
 .selected:before {
   width: 13px;
   height: 13px;
@@ -373,10 +349,11 @@
 }
 
 .mainTabs .tabClose {
+  color: #fff;
   z-index: 1;
   position: absolute;
-  top: 0.3rem;
-  right: 0.3rem;
+  top: 9px;
+  right: 9px;
 }
 
 /* User Status */
