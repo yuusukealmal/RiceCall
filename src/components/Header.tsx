@@ -15,10 +15,9 @@ interface TitleType {
 
 interface HeaderProps {
   title?: TitleType;
-  onClose: () => void;
 }
 
-const Header: React.FC<HeaderProps> = React.memo(({ title, onClose }) => {
+const Header: React.FC<HeaderProps> = React.memo(({ title }) => {
   // Fullscreen Control
   const [isFullscreen, setIsFullscreen] = useState(false);
 
