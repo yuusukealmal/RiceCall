@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
-const { app, BrowserWindow, ipcMain, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const serve = require('electron-serve');
 const net = require('net');
 const DiscordRPC = require('discord-rpc');
-const { Socket, io } = require('socket.io-client');
+const { io } = require('socket.io-client');
 
 let isDev = process.argv.includes('--dev');
 
