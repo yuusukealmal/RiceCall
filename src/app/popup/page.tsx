@@ -29,8 +29,14 @@ const Modal = React.memo(() => {
 
   const getTitle = (isCategory?: boolean) => {
     switch (type) {
+      case popupType.EDIT_USER:
+        return { title: '編輯個人資料', button: ['close'] };
       case popupType.CREATE_SERVER:
         return { title: '創建語音群', button: ['close'] };
+      case popupType.EDIT_SERVER:
+        return { title: '編輯語音群', button: ['close'] };
+      case popupType.DELETE_SERVER:
+        return { title: '刪除語音群', button: ['close'] };
       case popupType.CREATE_CHANNEL:
         return { title: '創建頻道', button: ['close'] };
       case popupType.EDIT_CHANNEL:
@@ -42,6 +48,10 @@ const Modal = React.memo(() => {
         return { title: '刪除頻道', button: ['close'] };
       case popupType.APPLY_MEMBER:
         return { title: '申請會員', button: ['close'] };
+      case popupType.APPLY_FRIEND:
+        return { title: '好友請求', button: ['close'] };
+      case popupType.DIRECT_MESSAGE:
+        return { title: '私訊', button: ['close'] };
       default:
         return undefined;
     }
@@ -68,8 +78,14 @@ const Modal = React.memo(() => {
     };
 
     switch (type) {
+      case popupType.EDIT_USER:
+        return; // <EditUserModal onClose={() => {}} />;
       case popupType.CREATE_SERVER:
         return <CreateServerModal onClose={() => {}} />;
+      case popupType.EDIT_SERVER:
+        return; // <EditServerModal onClose={() => {}} server={undefined} />;
+      case popupType.DELETE_SERVER:
+        return; // This one doesn't exist :D
       case popupType.CREATE_CHANNEL:
         return <AddChannelModal onClose={() => {}} isRoot={false} />;
       case popupType.EDIT_CHANNEL:
@@ -78,6 +94,10 @@ const Modal = React.memo(() => {
         return <DeleteChannelModal onClose={() => {}} channel={mockChannel} />;
       case popupType.APPLY_MEMBER:
         return <ServerApplication onClose={() => {}} server={undefined} />;
+      case popupType.APPLY_FRIEND:
+        return; // <FriendApplication onClose={() => {}} />;
+      case popupType.DIRECT_MESSAGE:
+        return; // <DirectMessageModal onClose={() => {}} />;
       default:
         return <></>;
     }
@@ -90,7 +110,7 @@ const Modal = React.memo(() => {
       className={`fixed w-full h-full flex-1 flex-col bg-white rounded shadow-lg overflow-hidden transform outline-g`}
     >
       {/* Top Nevigation */}
-      <Header title={getTitle()} onClose={() => {}}></Header>
+      <Header title={getTitle()}></Header>
       {/* Main Content */}
       <div className="flex flex-1 min-h-0 overflow-y-auto">
         {getMainContent()}
