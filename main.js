@@ -140,7 +140,6 @@ async function createMainWindow() {
     mainWindow.webContents.send(
       mainWindow.isMaximized() ? 'window-maximized' : 'window-unmaximized',
     );
-    mainWindow.webContents.send('initial-data', sharedData);
   });
 
   return mainWindow;
