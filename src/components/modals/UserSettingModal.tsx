@@ -9,8 +9,8 @@ import Modal from '@/components/Modal';
 // Types
 import type { User, ModalTabItem } from '@/types';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 interface BasicInfoTabProps {
   user: Partial<User>;

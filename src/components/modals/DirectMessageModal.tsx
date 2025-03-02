@@ -11,8 +11,8 @@ import Modal from '@/components/Modal';
 // Types
 import { User, Friend, DirectMessage } from '@/types';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 // Components
 import MessageViewer from '@/components/viewers/MessageViewer';

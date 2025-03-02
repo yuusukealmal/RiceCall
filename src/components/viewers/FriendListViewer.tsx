@@ -13,8 +13,10 @@ import { popupType, type Friend, type FriendGroup } from '@/types';
 // Components
 import BadgeViewer from '@/components/viewers/BadgeViewer';
 
-//
-import { useContextMenu } from '@/components/ContextMenuProvider';
+// Providers
+import { useContextMenu } from '@/providers/ContextMenuProvider';
+
+// Services
 import { ipcService } from '@/services/ipc.service';
 
 interface FriendGroupProps {

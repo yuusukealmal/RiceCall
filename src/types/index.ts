@@ -184,12 +184,21 @@ export interface ModalButton {
   style: 'primary' | 'secondary' | 'danger';
   onClick: () => void;
 }
+
 export interface ContextMenuItem {
-  id: string;
-  icon: React.ReactNode;
+  id?: string;
   label: string;
+  show?: boolean;
   disabled?: boolean;
   onClick: () => void;
+  icon?: React.ReactNode;
+  className?: string;
+}
+
+export interface Emoji {
+  id: number;
+  alt: string;
+  path: string;
 }
 
 export enum SocketClientEvent {
@@ -230,10 +239,13 @@ export enum SocketServerEvent {
 export enum popupType {
   CREATE_SERVER = 'createServer',
   EDIT_SERVER = 'editServer',
+  DELETE_SERVER = 'deleteServer',
   CREATE_CHANNEL = 'createChannel',
-  DELETE_CHANNEL = 'deleteChannel',
   EDIT_CHANNEL = 'editChannel',
+  DELETE_CHANNEL = 'deleteChannel',
+  EDIT_USER = 'editUser',
   APPLY_MEMBER = 'applyMember',
+  APPLY_FRIEND = 'applyFriend',
   DIRECT_MESSAGE = 'directMessage',
 }
 

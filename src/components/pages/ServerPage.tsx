@@ -21,7 +21,7 @@ import UserSettingModal from '@/components/modals/UserSettingModal';
 import type { User, Server, Message, Permission, Channel } from '@/types';
 
 // Socket
-import { useSocket } from '@/hooks/SocketProvider';
+import { useSocket } from '@/providers/SocketProvider';
 
 // Services
 import { API_URL } from '@/services/api.service';

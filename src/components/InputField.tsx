@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { ChangeEvent, FocusEvent, useState } from 'react';
-import { Eye, EyeClosed, ChevronDown } from 'lucide-react';
 
 // CSS
 import styles from '@/styles/inputField.module.css';
@@ -17,16 +16,7 @@ interface InputFieldProps {
 }
 
 const InputField: React.FC<InputFieldProps> = React.memo(
-  ({
-    name,
-    value,
-    onChange,
-    onBlur,
-    type = 'text',
-    placeholder,
-    showFunctionButton = '',
-    style,
-  }) => {
+  ({ name, value, placeholder, style, onChange, onBlur }) => {
     const [showPassword, setShowPassword] = useState(false);
 
     const isPasswordField = name === 'password'; // 確認是否為密碼欄位

@@ -24,8 +24,8 @@ import type { ServerApplication, Server, Member, User } from '@/types';
 import { getPermissionText } from '@/utils/formatters';
 import { validateName, validateDescription } from './CreateServerModal';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 // Redux
 import { useSelector } from 'react-redux';
@@ -1121,7 +1121,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
 
         return (
           <>
-            {applicationContextMenu && (
+            {applicationContextMenu &&
               {
                 // 這裡需修改
                 // <ContextMenu
@@ -1143,8 +1143,7 @@ const ServerSettingModal = memo(({ onClose }: ServerSettingModalProps) => {
                 //     },
                 //   ]}
                 // />
-              }
-            )}
+              }}
             <div className="flex flex-col h-full p-4">
               <div className="flex justify-between items-center mb-6">
                 <span className="text-sm font-medium">

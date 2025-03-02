@@ -23,9 +23,9 @@ import { popupType, type Channel, type Server, type User } from '@/types';
 // Redux
 import store from '@/redux/store';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
-import { useContextMenu } from '@/components/ContextMenuProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
+import { useContextMenu } from '@/providers/ContextMenuProvider';
 
 // Components
 import BadgeViewer from '@/components/viewers/BadgeViewer';

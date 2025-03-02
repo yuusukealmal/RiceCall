@@ -8,8 +8,8 @@ import Modal from '@/components/Modal';
 // Types
 import { Channel, Server } from '@/types';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 // CSS
 import Popup from '../../styles/common/popup.module.css';

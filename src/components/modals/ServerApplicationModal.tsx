@@ -8,8 +8,8 @@ import { useSelector } from 'react-redux';
 import Modal from '@/components/Modal';
 import Dialog from '@/components/common/Dialog';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 // Types
 import { Server } from '@/types';

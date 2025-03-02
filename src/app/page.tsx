@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-'use client';
-
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import dynamic from 'next/dynamic';
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -26,8 +24,8 @@ import UserSettingModal from '@/components/modals/UserSettingModal';
 // Utils
 import { measureLatency } from '@/utils/measureLatency';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';

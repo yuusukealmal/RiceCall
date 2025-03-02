@@ -3,8 +3,8 @@
 import React, { FormEvent, useState, Suspense, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 // Components
 import Modal from '@/components/Modal';

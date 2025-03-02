@@ -3,9 +3,9 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 
-// Hooks
-import SocketProvider from '@/hooks/SocketProvider';
-import ContextMenuProvider from '@/components/ContextMenuProvider';
+// Providers
+import SocketProvider from '@/providers/SocketProvider';
+import ContextMenuProvider from '@/providers/ContextMenuProvider';
 
 // Redux
 import store from '@/redux/store';

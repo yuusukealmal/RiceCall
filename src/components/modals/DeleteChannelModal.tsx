@@ -2,7 +2,7 @@
 import React, { FormEvent, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Channel } from '@/types';
-import { useSocket } from '@/hooks/SocketProvider';
+import { useSocket } from '@/providers/SocketProvider';
 import Dialog from '@/components/common/Dialog';
 
 import DeleteChannel from '../../styles/popups/deleteChannel.module.css';

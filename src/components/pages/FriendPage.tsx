@@ -15,8 +15,8 @@ import BadgeViewer from '@/components/viewers/BadgeViewer';
 // Types
 import type { User } from '@/types';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 interface HeaderProps {
   user: User;

@@ -8,8 +8,8 @@ import Modal from '@/components/Modal';
 // Types
 import { Channel, Visibility } from '@/types';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 // CSS
 import EditChannel from '../../styles/popups/editChannel.module.css';

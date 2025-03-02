@@ -6,14 +6,11 @@ import { useSelector } from 'react-redux';
 // CSS
 import styles from '@/styles/homePage.module.css';
 
-// Components
-import ServerApplicationModal from '@/components/modals/ServerApplicationModal';
-
 // Type
 import { popupType, type Server, type User } from '@/types';
 
-// Hooks
-import { useSocket } from '@/hooks/SocketProvider';
+// Providers
+import { useSocket } from '@/providers/SocketProvider';
 
 // Services
 import { API_URL } from '@/services/api.service';

@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  createContext,
-  ReactNode,
-} from 'react';
+import React, { useEffect, useContext, createContext, ReactNode } from 'react';
+
+// Types
+import { ContextMenuItem } from '@/types';
+
+// Components
+import ContextMenu from '@/components/ContextMenu';
 
 interface ContextMenuContextType {
-  showContextMenu: (x: number, y: number, items: MenuItem[]) => void;
+  showContextMenu: (x: number, y: number, items: ContextMenuItem[]) => void;
   closeContextMenu: () => void;
 }
 
@@ -21,16 +21,6 @@ export const useContextMenu = () => {
   return useContext(ContextMenuContext);
 };
 
-interface MenuItem {
-  id?: string;
-  label: string;
-  show?: boolean;
-  disabled?: boolean;
-  onClick: () => void;
-  icon?: ReactNode;
-  className?: string;
-}
-
 interface ContextMenuProviderProps {
   children: ReactNode;
 }
@@ -38,7 +28,7 @@ interface ContextMenuProviderProps {
 const ContextMenuProvider = ({ children }: ContextMenuProviderProps) => {
   const [x, setX] = React.useState(0);
   const [y, setY] = React.useState(0);
-  const [items, setItems] = React.useState<MenuItem[]>([]);
+  const [items, setItems] = React.useState<ContextMenuItem[]>([]);
   const [isVisible, setIsVisible] = React.useState(false);
 
   useEffect(() => {
@@ -63,7 +53,7 @@ const ContextMenuProvider = ({ children }: ContextMenuProviderProps) => {
     };
   }, []);
 
-  const showContextMenu = (x: number, y: number, items: MenuItem[]) => {
+  const showContextMenu = (x: number, y: number, items: ContextMenuItem[]) => {
     setX(x);
     setY(y);
     setItems(items);
@@ -77,29 +67,7 @@ const ContextMenuProvider = ({ children }: ContextMenuProviderProps) => {
   return (
     <>
       {isVisible && (
-        <div
-          className="fixed bg-white shadow-lg rounded border z-50"
-          style={{ top: y, left: x }}
-        >
-          {items
-            .filter((item) => item.show)
-            .map((item, index) => (
-              <button
-                key={item.id || index}
-                onClick={() => {
-                  item.onClick();
-                  closeContextMenu();
-                }}
-                disabled={item.disabled ?? false}
-                className={`flex w-full px-4 py-2 text-left hover:bg-gray-100 ${
-                  item.disabled ? 'bg-gray-100 cursor-not-allowed' : ''
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-        </div>
+        <ContextMenu x={x} y={y} onClose={closeContextMenu} items={items} />
       )}
       <ContextMenuContext.Provider
         value={{ showContextMenu, closeContextMenu }}
