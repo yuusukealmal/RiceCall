@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SocketClientEvent, SocketServerEvent } from '@/types';
+import { discordPresence, SocketClientEvent, SocketServerEvent } from '@/types';
 
 // Safe reference to electron's ipcRenderer
 let ipcRenderer: any = null;
@@ -129,4 +129,12 @@ export const ipcService = {
       }
     },
   },
+
+  discord: {
+    updatePresence: (presence: discordPresence) => {
+      if (isElectron) {
+        ipcRenderer.send('update-discord-presence', presence);
+      }
+    }
+  }
 };

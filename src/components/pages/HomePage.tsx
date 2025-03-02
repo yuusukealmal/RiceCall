@@ -167,32 +167,24 @@ const HomePageComponent: React.FC = React.memo(() => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const userServers = user?.servers ?? [];
-  const userName = user?.name || '用戶';
+  const userName = user?.name || 'Unknown';
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.electron) {
-      window.electron.updateDiscordPresence({
-        details: `正在瀏覽主頁`,
-        state: `已加入 ${userServers.length} 個群組`,
-        largeImageKey: 'app_icon',
-        largeImageText: 'RC Voice',
-        smallImageKey: 'home_icon',
-        smallImageText: '主頁',
-        resetTimer: true,
-        buttons: [
-          {
-            label: '加入我們的Discord伺服器',
-            url: 'https://discord.gg/adCWzv6wwS',
-          },
-        ],
-      });
-    }
-
-    return () => {
-      if (typeof window !== 'undefined' && window.electron) {
-        window.electron.updateDiscordPresence({});
-      }
-    };
+    ipcService.discord.updatePresence({
+      details: `正在瀏覽主頁`,
+      state: `已加入 ${userServers.length} 個群組`,
+      largeImageKey: 'app_icon',
+      largeImageText: 'RC Voice',
+      smallImageKey: 'home_icon',
+      smallImageText: '主頁',
+      timestamp: Date.now(),
+      buttons: [
+        {
+          label: '加入我們的Discord伺服器',
+          url: 'https://discord.gg/adCWzv6wwS',
+        },
+      ],
+    });
   }, [userServers.length]);
 
   return (

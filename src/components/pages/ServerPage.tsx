@@ -11,6 +11,7 @@ import styles from '@/styles/serverPage.module.css';
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 import MessageViewer from '@/components/viewers/MessageViewer';
 import ChannelViewer from '@/components/viewers/ChannelViewer';
+import MessageInputBox from '@/components/MessageInputBox';
 
 // Modals
 import ServerSettingModal from '@/components/modals/ServerSettingModal';
@@ -24,7 +25,7 @@ import { useSocket } from '@/hooks/SocketProvider';
 
 // Services
 import { API_URL } from '@/services/api.service';
-import MessageInputBox from '@/components/MessageInputBox';
+import { ipcService } from '@/services/ipc.service';
 
 const getStoredBoolean = (key: string, defaultValue: boolean): boolean => {
   const stored = localStorage.getItem(key);
@@ -139,30 +140,22 @@ const ServerPageComponent: React.FC = () => {
   const channelMessages = channel?.messages ?? [];
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.electron) {
-      window.electron.updateDiscordPresence({
-        details: `在 ${serverName} 中`,
-        state: `與 ${server?.users?.length ?? 0} 位成員聊天`,
-        largeImageKey: 'app_icon',
-        largeImageText: 'RC Voice',
-        smallImageKey: 'home_icon',
-        smallImageText: '主頁',
-        resetTimer: true,
-        buttons: [
-          {
-            label: '加入我們的Discord伺服器',
-            url: 'https://discord.gg/adCWzv6wwS',
-          },
-        ],
-      });
-    }
-
-    return () => {
-      if (typeof window !== 'undefined' && window.electron) {
-        window.electron.updateDiscordPresence({});
-      }
-    };
-  }, [serverName]);
+    ipcService.discord.updatePresence({
+      details: `在 ${serverName} 中`,
+      state: `與 ${serverUserCount} 位成員聊天`,
+      largeImageKey: 'app_icon',
+      largeImageText: 'RC Voice',
+      smallImageKey: 'home_icon',
+      smallImageText: '主頁',
+      timestamp: Date.now(),
+      buttons: [
+        {
+          label: '加入我們的Discord伺服器',
+          url: 'https://discord.gg/adCWzv6wwS',
+        },
+      ],
+    });
+  }, [serverName, serverUserCount]);
 
   return (
     <div className={styles['serverWrapper']}>

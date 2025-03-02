@@ -236,3 +236,17 @@ export enum popupType {
   APPLY_MEMBER = 'applyMember',
   DIRECT_MESSAGE = 'directMessage',
 }
+
+export interface discordPresence {
+  details: string;
+  state: string;
+  largeImageKey: string;
+  largeImageText: string;
+  smallImageKey: string;
+  smallImageText: string;
+  timestamp: number;
+  buttons: {
+    label: string;
+    url: string;
+  }[];
+}
