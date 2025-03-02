@@ -306,18 +306,17 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 0.5rem 1rem 0 1rem;
+  padding: 0.5rem 0.5rem 0 0.5rem;
   width: max-content;
   min-width: 120px;
+  height: 2.2rem;
   align-items: center;
   justify-content: center;
   font-family: Arial;
   font-size: 15px;
-  text-align: center;
-  text-overflow: ellipsis;
+  text-align: left;
   overflow: hidden;
   white-space: nowrap;
-  height: 2.2rem;
 }
 
 .mainTabs .tab .tabBg {
@@ -337,6 +336,10 @@
 .mainTabs .tab .tabLable {
   flex: 1;
   z-index: 1;
+  max-width: 100%;
+  padding-right: 1rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
   color: rgb(255 255 255);
 }
 
@@ -352,8 +355,8 @@
   color: #fff;
   z-index: 1;
   position: absolute;
-  top: 9px;
-  right: 9px;
+  top: 0.6rem;
+  right: 0.5rem;
 }
 
 /* User Status */
