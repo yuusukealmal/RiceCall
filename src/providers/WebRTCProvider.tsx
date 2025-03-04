@@ -176,6 +176,8 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
         }
       },
     );
+
+    return () => {};
   }, [socket]);
 
   const createPeerConnection = async (rtcConnection: string) => {

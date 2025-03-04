@@ -10,7 +10,7 @@ import { CircleX } from 'lucide-react';
 import header from '@/styles/common/header.module.css';
 
 // Types
-import type { Server, User } from '@/types';
+import type { Channel, Server, User } from '@/types';
 
 // Pages
 import FriendPage from '@/components/pages/FriendPage';
@@ -30,6 +30,12 @@ import { useSocket } from '@/providers/SocketProvider';
 // Services
 import { ipcService } from '@/services/ipc.service';
 
+// Redux
+import store from '@/redux/store';
+import { clearServer, setServer } from '@/redux/serverSlice';
+import { clearUser, setUser } from '@/redux/userSlice';
+import { clearChannel, setChannel } from '@/redux/channelSlice';
+
 interface HeaderProps {
   selectedId?: number;
   onSelect?: (tabId: number) => void;
@@ -42,28 +48,90 @@ const Header: React.FC<HeaderProps> = React.memo(
     const server = useSelector(
       (state: { server: Server | null }) => state.server,
     );
-    const sessionId = useSelector(
-      (state: { sessionToken: string | null }) => state.sessionToken,
-    );
 
     // Socket
     const socket = useSocket();
 
+    const handleDisconnect = () => {
+      console.log('Socket disconnected');
+      store.dispatch(clearChannel());
+      store.dispatch(clearServer());
+      store.dispatch(clearUser());
+      localStorage.removeItem('sessionToken');
+    };
+    const handleUserConnect = (user: any) => {
+      console.log('User connected: ', user);
+      store.dispatch(setUser(user));
+    };
+    const handleUserDisconnect = () => {
+      console.log('User disconnected');
+      store.dispatch(clearChannel());
+      store.dispatch(clearServer());
+      store.dispatch(clearUser());
+      localStorage.removeItem('sessionToken');
+    };
+    const handleUserUpdate = (data: Partial<User>) => {
+      console.log('User update: ', data);
+      const user_ = store.getState().user;
+      if (!user_) return;
+      store.dispatch(setUser({ ...user_, ...data }));
+    };
+    const handleServerConnect = (server: Server) => {
+      console.log('Server connected: ', server);
+      store.dispatch(setServer(server));
+    };
+    const handleServerDisconnect = () => {
+      console.log('Server disconnected');
+      store.dispatch(clearServer());
+    };
+    const handleServerUpdate = (data: Partial<Server>) => {
+      console.log('Server update: ', data);
+      const server_ = store.getState().server;
+      if (!server_) return;
+      store.dispatch(setServer({ ...server_, ...data }));
+    };
+    const handleChannelConnect = (channel: Channel) => {
+      console.log('Channel connected: ', channel);
+      store.dispatch(setChannel(channel));
+    };
+    const handleChannelDisconnect = () => {
+      console.log('Channel disconnected');
+      store.dispatch(clearChannel());
+    };
+    const handleChannelUpdate = (data: Partial<Channel>) => {
+      console.log('Channel update: ', data);
+      const channel_ = store.getState().channel;
+      if (!channel_) return;
+      store.dispatch(setChannel({ ...channel_, ...data }));
+    };
     const handleLogout = () => {
       ipcService.auth.logout();
       localStorage.removeItem('autoLogin');
       localStorage.removeItem('encryptedPassword');
       localStorage.removeItem('sessionToken');
     };
-
     const handleLeaveServer = () => {
       if (!user) return;
       socket?.send.disconnectServer({ serverId: user.currentServerId });
     };
-
     const handleUpdateStatus = (status: User['status']) => {
       socket?.send.updateUser({ user: { status } });
     };
+
+    useEffect(() => {
+      socket?.on.connect(() => console.log('Socket connected'));
+      socket?.on.error((error: any) => console.error(error));
+      socket?.on.disconnect(handleDisconnect);
+      socket?.on.userConnect(handleUserConnect);
+      socket?.on.userDisconnect(handleUserDisconnect);
+      socket?.on.userUpdate(handleUserUpdate);
+      socket?.on.serverConnect(handleServerConnect);
+      socket?.on.serverDisconnect(handleServerDisconnect);
+      socket?.on.serverUpdate(handleServerUpdate);
+      socket?.on.channelConnect(handleChannelConnect);
+      socket?.on.channelDisconnect(handleChannelDisconnect);
+      socket?.on.channelUpdate(handleChannelUpdate);
+    }, [socket]);
 
     // Fullscreen Control
     const [isFullscreen, setIsFullscreen] = useState(false);
