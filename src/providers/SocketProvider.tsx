@@ -117,9 +117,9 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
     setEvent(newEvent);
 
     return () => {
-      Object.values(SocketServerEvent).map((event) =>
-        ipcService.removeListener(event),
-      );
+      Object.keys(newEvent.on).map((event) => {
+        ipcService.removeListener(event);
+      });
     };
   }, []);
 
@@ -134,18 +134,20 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
         store.dispatch(setChannel(data.channel));
       });
 
-      event?.on.connect(() => console.log('Socket connected'));
-      event?.on.error((error: any) => console.error(error));
-      event?.on.disconnect(handleDisconnect);
-      event?.on.userConnect(handleUserConnect);
-      event?.on.userDisconnect(handleUserDisconnect);
-      event?.on.userUpdate(handleUserUpdate);
-      event?.on.serverConnect(handleServerConnect);
-      event?.on.serverDisconnect(handleServerDisconnect);
-      event?.on.serverUpdate(handleServerUpdate);
-      event?.on.channelConnect(handleChannelConnect);
-      event?.on.channelDisconnect(handleChannelDisconnect);
-      event?.on.channelUpdate(handleChannelUpdate);
+      if (window.location.pathname === '/') {
+        event?.on.connect(() => console.log('Socket connected'));
+        event?.on.error((error: any) => console.error(error));
+        event?.on.disconnect(handleDisconnect);
+        event?.on.userConnect(handleUserConnect);
+        event?.on.userDisconnect(handleUserDisconnect);
+        event?.on.userUpdate(handleUserUpdate);
+        event?.on.serverConnect(handleServerConnect);
+        event?.on.serverDisconnect(handleServerDisconnect);
+        event?.on.serverUpdate(handleServerUpdate);
+        event?.on.channelConnect(handleChannelConnect);
+        event?.on.channelDisconnect(handleChannelDisconnect);
+        event?.on.channelUpdate(handleChannelUpdate);
+      }
     }
   }, [event]);
 
