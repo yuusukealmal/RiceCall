@@ -30,8 +30,11 @@ import { ipcService } from '@/services/ipc.service';
 
 type SocketContextType = {
   event?: {
-    send: Record<SocketClientEvent, (data: any) => void>;
-    on: Record<SocketServerEvent, (callback: (data: any) => void) => void>;
+    send: Record<SocketClientEvent, (data: any) => () => void>;
+    on: Record<
+      SocketServerEvent,
+      (callback: (data: any) => void) => () => void
+    >;
   };
 };
 
@@ -61,14 +64,19 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
 
       const newEvent = {
         send: Object.values(SocketClientEvent).reduce((acc, event) => {
-          acc[event] = (data: any) => ipcService.sendSocketEvent(event, data);
+          acc[event] = (data: any) => {
+            ipcService.sendSocketEvent(event, data);
+            return () => {};
+          };
           return acc;
-        }, {} as Record<SocketClientEvent, (data: any) => void>),
+        }, {} as Record<SocketClientEvent, (data: any) => () => void>),
         on: Object.values(SocketServerEvent).reduce((acc, event) => {
-          acc[event] = (callback: (data: any) => void) =>
+          acc[event] = (callback: (data: any) => void) => {
             ipcService.onSocketEvent(event, callback);
+            return () => ipcService.removeListener(event);
+          };
           return acc;
-        }, {} as Record<SocketServerEvent, (callback: (data: any) => void) => void>),
+        }, {} as Record<SocketServerEvent, (callback: (data: any) => void) => () => void>),
       };
       setEvent(newEvent);
 

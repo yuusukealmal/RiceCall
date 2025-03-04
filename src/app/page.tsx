@@ -10,7 +10,7 @@ import { CircleX } from 'lucide-react';
 import header from '@/styles/common/header.module.css';
 
 // Types
-import type { Channel, Server, User } from '@/types';
+import { Channel, Server, User, SocketServerEvent } from '@/types';
 
 // Pages
 import FriendPage from '@/components/pages/FriendPage';
@@ -119,18 +119,32 @@ const Header: React.FC<HeaderProps> = React.memo(
     };
 
     useEffect(() => {
-      socket?.on.connect(() => console.log('Socket connected'));
-      socket?.on.error((error: any) => console.error(error));
-      socket?.on.disconnect(handleDisconnect);
-      socket?.on.userConnect(handleUserConnect);
-      socket?.on.userDisconnect(handleUserDisconnect);
-      socket?.on.userUpdate(handleUserUpdate);
-      socket?.on.serverConnect(handleServerConnect);
-      socket?.on.serverDisconnect(handleServerDisconnect);
-      socket?.on.serverUpdate(handleServerUpdate);
-      socket?.on.channelConnect(handleChannelConnect);
-      socket?.on.channelDisconnect(handleChannelDisconnect);
-      socket?.on.channelUpdate(handleChannelUpdate);
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.CONNECT]: () => console.log('Socket connected'),
+        [SocketServerEvent.ERROR]: (error: any) => console.error(error),
+        [SocketServerEvent.DISCONNECT]: handleDisconnect,
+        [SocketServerEvent.USER_CONNECT]: handleUserConnect,
+        [SocketServerEvent.USER_DISCONNECT]: handleUserDisconnect,
+        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+        [SocketServerEvent.SERVER_CONNECT]: handleServerConnect,
+        [SocketServerEvent.SERVER_DISCONNECT]: handleServerDisconnect,
+        [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
+        [SocketServerEvent.CHANNEL_CONNECT]: handleChannelConnect,
+        [SocketServerEvent.CHANNEL_DISCONNECT]: handleChannelDisconnect,
+        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
+      };
+
+      const unsubscribe = Object.entries(eventHandlers).map(
+        ([event, handler]) => {
+          return socket.on[event as SocketServerEvent](handler);
+        },
+      );
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
     }, [socket]);
 
     // Fullscreen Control
