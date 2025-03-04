@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 // Types
 import {
@@ -47,6 +47,8 @@ interface SocketProviderProps {
 }
 
 const SocketProvider = ({ children }: SocketProviderProps) => {
+  const [event, setEvent] = useState<SocketContextType['event']>();
+
   const handleDisconnect = () => {
     console.log('Socket disconnected');
     store.dispatch(clearServer());
@@ -100,6 +102,27 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
     store.dispatch(setChannel({ ...channel_, ...data }));
   };
 
+  useEffect(() => {
+    const newEvent = {
+      send: Object.values(SocketClientEvent).reduce((acc, event) => {
+        acc[event] = (data: any) => ipcService.sendSocketEvent(event, data);
+        return acc;
+      }, {} as Record<SocketClientEvent, (data: any) => void>),
+      on: Object.values(SocketServerEvent).reduce((acc, event) => {
+        acc[event] = (callback: (data: any) => void) =>
+          ipcService.onSocketEvent(event, callback);
+        return acc;
+      }, {} as Record<SocketServerEvent, (callback: (data: any) => void) => void>),
+    };
+    setEvent(newEvent);
+
+    return () => {
+      Object.values(SocketServerEvent).map((event) =>
+        ipcService.removeListener(event),
+      );
+    };
+  }, []);
+
   // Initialize socket event listeners
   useEffect(() => {
     if (ipcService.getAvailability()) {
@@ -111,50 +134,20 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
         store.dispatch(setChannel(data.channel));
       });
 
-      const eventHandlers = {
-        [SocketServerEvent.CONNECT]: () => console.log('Connected to server'),
-        [SocketServerEvent.ERROR]: (error: any) => console.error(error),
-        [SocketServerEvent.DISCONNECT]: handleDisconnect,
-        [SocketServerEvent.USER_CONNECT]: handleUserConnect,
-        [SocketServerEvent.USER_DISCONNECT]: handleUserDisconnect,
-        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
-        [SocketServerEvent.SERVER_CONNECT]: handleServerConnect,
-        [SocketServerEvent.SERVER_DISCONNECT]: handleServerDisconnect,
-        [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
-        [SocketServerEvent.CHANNEL_CONNECT]: handleChannelConnect,
-        [SocketServerEvent.CHANNEL_DISCONNECT]: handleChannelDisconnect,
-        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
-      };
-
-      Object.entries(eventHandlers).forEach(([event, handler]) => {
-        ipcService.onSocketEvent(event as SocketServerEvent, handler);
-      });
-
-      // Cleanup
-      return () => {
-        Object.keys(eventHandlers).forEach((event) => {
-          ipcService.removeListener(event);
-        });
-      };
+      event?.on.connect(() => console.log('Socket connected'));
+      event?.on.error((error: any) => console.error(error));
+      event?.on.disconnect(handleDisconnect);
+      event?.on.userConnect(handleUserConnect);
+      event?.on.userDisconnect(handleUserDisconnect);
+      event?.on.userUpdate(handleUserUpdate);
+      event?.on.serverConnect(handleServerConnect);
+      event?.on.serverDisconnect(handleServerDisconnect);
+      event?.on.serverUpdate(handleServerUpdate);
+      event?.on.channelConnect(handleChannelConnect);
+      event?.on.channelDisconnect(handleChannelDisconnect);
+      event?.on.channelUpdate(handleChannelUpdate);
     }
-  }, []);
-
-  const event = {
-    send: Object.values(SocketClientEvent).reduce((acc, event) => {
-      acc[event] = (data: any) => {
-        console.log(event, data);
-        ipcService.sendSocketEvent(event, data);
-      };
-      return acc;
-    }, {} as Record<SocketClientEvent, (data: any) => void>),
-    on: Object.values(SocketServerEvent).reduce((acc, event) => {
-      acc[event] = (callback: (data: any) => void) => {
-        console.log(event, callback);
-        ipcService.onSocketEvent(event, callback);
-      };
-      return acc;
-    }, {} as Record<SocketServerEvent, (callback: (data: any) => void) => void>),
-  };
+  }, [event]);
 
   return (
     <SocketContext.Provider value={{ event }}>

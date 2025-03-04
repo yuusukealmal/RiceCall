@@ -11,8 +11,8 @@ import { useSocket } from '@/providers/SocketProvider';
 import { Channel } from '@/types';
 
 interface WebRTCContextType {
-  joinVoiceChannel?: (channelId: string) => void;
-  leaveVoiceChannel?: () => void;
+  // joinVoiceChannel?: (channelId: string) => void;
+  // leaveVoiceChannel?: () => void;
   toggleMute?: () => void;
   isMute?: boolean;
 }
@@ -34,7 +34,7 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
   // RTC State
   const [peers, setPeers] = useState<{ [id: string]: MediaStream }>({});
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [channelId, setChannelId] = useState<string | null>(null);
+  const [channelId, setChannelId] = useState<string | null>(null); // Not used
   const [isMute, setIsMute] = useState<boolean>(false);
   const localAudioRef = useRef<HTMLAudioElement>(null);
   const peerAudioRefs = useRef<{ [id: string]: HTMLAudioElement }>({});
@@ -50,18 +50,14 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
       })
       .catch((err) => console.error('Error accessing microphone', err));
 
+    // Not used
     socket?.on.channelConnect(async (channel: Channel) => {
       setChannelId(channel.id);
     });
 
+    // Not used
     socket?.on.channelDisconnect(async () => {
       setChannelId(null);
-    });
-
-    socket?.on.RTCConnect(async (rtcConnections: string[]) => {
-      // for (const rtcConnection of rtcConnections) {
-      //   await createPeerConnection(rtcConnection);
-      // }
     });
 
     socket?.on.RTCJoin(async (rtcConnection: string) => {
@@ -239,10 +235,12 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
     });
   };
 
+  // Not used
   const joinVoiceChannel = (channelId: string) => {
     socket?.send.connectChannel({ channelId });
   };
 
+  // Not used
   const leaveVoiceChannel = () => {
     if (channelId) {
       socket?.send.disconnectChannel({ channelId });
@@ -261,9 +259,7 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
   };
 
   return (
-    <WebRTCContext.Provider
-      value={{ joinVoiceChannel, leaveVoiceChannel, toggleMute, isMute }}
-    >
+    <WebRTCContext.Provider value={{ toggleMute, isMute }}>
       {Object.keys(peers).map((userId) => (
         <audio
           key={userId}
