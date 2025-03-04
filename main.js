@@ -142,6 +142,10 @@ async function createMainWindow() {
     );
   });
 
+  mainWindow.webContents.on('close', () => {
+    app.quit();
+  });
+
   return mainWindow;
 }
 
@@ -191,6 +195,10 @@ async function createAuthWindow() {
     );
   });
 
+  authWindow.webContents.on('close', () => {
+    app.quit();
+  });
+
   return authWindow;
 }
 
@@ -237,9 +245,6 @@ async function createPopup(type, height, width) {
     // Open DevTools in development mode
     popup.webContents.openDevTools();
   }
-
-  // Open DevTools in development mode
-  if (isDev) popup.webContents.openDevTools();
 
   popupWindows[type] = popup;
 
@@ -378,27 +383,17 @@ function connectSocket(sessionId) {
       socket.emit('sendDirectMessage', { sessionId, ...data }),
     );
 
-    // Close auth window and create main window
-    if (authWindow) {
-      authWindow.close();
-      authWindow = null;
-    }
-    createMainWindow();
+    mainWindow?.show();
+    authWindow?.hide();
   });
 
   return socket;
 }
 
 function disconnectSocket(socket) {
-  if (socket) socket.disconnect();
-
-  // Close main window and create auth window
-  if (mainWindow) {
-    mainWindow.close();
-    mainWindow = null;
-  }
-  createAuthWindow();
-
+  socket?.disconnect();
+  mainWindow?.hide();
+  authWindow?.show();
   return null;
 }
 
@@ -418,6 +413,10 @@ rpc.on('ready', () => {
 
 app.whenReady().then(async () => {
   await createAuthWindow();
+  await createMainWindow();
+
+  mainWindow.hide();
+  authWindow.show();
 
   app.on('before-quit', () => {
     if (rpc) {
@@ -427,7 +426,7 @@ app.whenReady().then(async () => {
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
-      // app.quit();
+      app.quit();
     }
   });
 
