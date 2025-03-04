@@ -135,7 +135,6 @@ async function createMainWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // wait for page load to send initial state
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.send(
       mainWindow.isMaximized() ? 'window-maximized' : 'window-unmaximized',
@@ -188,7 +187,6 @@ async function createAuthWindow() {
     authWindow.webContents.openDevTools();
   }
 
-  // wait for page load to send initial state
   authWindow.webContents.on('did-finish-load', () => {
     authWindow.webContents.send(
       authWindow.isMaximized() ? 'window-maximized' : 'window-unmaximized',
@@ -202,7 +200,7 @@ async function createAuthWindow() {
   return authWindow;
 }
 
-async function createPopup(type, height, width) {
+async function createPopup(type, height, width, initialData) {
   // Track popup windows
   if (popupWindows[type] && !popupWindows[type].isDestroyed()) {
     popupWindows[type].focus();
@@ -232,10 +230,6 @@ async function createPopup(type, height, width) {
     },
   });
 
-  popup.on('closed', () => {
-    popupWindows[type] = null;
-  });
-
   if (app.isPackaged || !isDev) {
     appServe(popup).then(() => {
       popup.loadURL(`app://./popup.html?type=${type}`);
@@ -246,7 +240,13 @@ async function createPopup(type, height, width) {
     popup.webContents.openDevTools();
   }
 
-  popupWindows[type] = popup;
+  popup.webContents.on('closed', () => {
+    popupWindows[type] = null;
+  });
+
+  popup.webContents.on('request-initial-data', (event) => {
+    event.sender.send('initial-data', initialData);
+  });
 
   return popup;
 }
@@ -458,15 +458,11 @@ app.on('ready', async () => {
   authWindow.show();
 
   app.on('before-quit', () => {
-    if (rpc) {
-      rpc.destroy().catch(console.error);
-    }
+    if (rpc) rpc.destroy().catch(console.error);
   });
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-      app.quit();
-    }
+    if (process.platform !== 'darwin') app.quit();
   });
 
   // Window management IPC handlers
@@ -478,40 +474,15 @@ app.on('ready', async () => {
     socketInstance = disconnectSocket(socketInstance);
   });
 
-  // Window control handlers
-  ipcMain.on('minimize-window', () => {
-    const currentWindow = BrowserWindow.getFocusedWindow();
-    if (currentWindow) {
-      currentWindow.minimize();
-    }
-  });
-  ipcMain.on('maximize-window', () => {
-    const currentWindow = BrowserWindow.getFocusedWindow();
-    if (currentWindow) {
-      if (currentWindow.isMaximized()) {
-        currentWindow.unmaximize();
-      } else {
-        currentWindow.maximize();
-      }
-    }
-  });
-  ipcMain.on('close-window', () => {
-    const currentWindow = BrowserWindow.getFocusedWindow();
-    if (currentWindow) {
-      currentWindow.close();
-    }
-  });
-
   // Popup handlers
-  ipcMain.on('open-popup', (_, type, height, width) =>
-    createPopup(type, height, width),
-  );
+  ipcMain.on('open-popup', async (_, type, height, width) => {
+    popupWindows[type] = await createPopup(type, height, width);
+  });
 
   // Window control event handlers
   ipcMain.on('window-control', (event, command) => {
     const window = BrowserWindow.fromWebContents(event.sender);
     if (!window) return;
-
     switch (command) {
       case 'minimize':
         window.minimize();
@@ -532,11 +503,6 @@ app.on('ready', async () => {
     }
   });
 
-  // Request initial data handlers
-  ipcMain.on('request-initial-data', (event) => {
-    event.sender.send('initial-data', sharedData);
-  });
-
   // Discord RPC handlers
   ipcMain.on('update-discord-presence', (_, updatePresence) => {
     setActivity(updatePresence);
@@ -555,6 +521,10 @@ app.on('ready', async () => {
 app.on('activate', async () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     await createAuthWindow();
+    await createMainWindow();
+
+    mainWindow.hide();
+    authWindow.show();
   }
 });
 

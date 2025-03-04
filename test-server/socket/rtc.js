@@ -16,18 +16,9 @@ const rtcRooms = {};
 const rtcHandler = {
   offer: async (io, socket, sessionId, to, offer) => {
     try {
-      console.log(`[RTC] Handle Offer: from ${socket.id} to ${to}`);
-
-      // ensure offer is serializable
-      const serializedOffer = offer
-        ? {
-            type: offer.type,
-            sdp: offer.sdp,
-          }
-        : null;
       socket.to(to).emit('RTCOffer', {
         from: socket.id,
-        offer: serializedOffer,
+        offer: offer,
       });
 
       new Logger('RTC').info(
@@ -44,19 +35,9 @@ const rtcHandler = {
 
   answer: async (io, socket, sessionId, to, answer) => {
     try {
-      console.log(`[RTC] Handle Answer: from ${socket.id} to ${to}`);
-
-      // ensure answer is serializable
-      const serializedAnswer = answer
-        ? {
-            type: answer.type,
-            sdp: answer.sdp,
-          }
-        : null;
-
       socket.to(to).emit('RTCAnswer', {
         from: socket.id,
-        answer: serializedAnswer,
+        answer: answer,
       });
 
       new Logger('RTC').info(
@@ -73,21 +54,9 @@ const rtcHandler = {
 
   candidate: async (io, socket, sessionId, to, candidate) => {
     try {
-      console.log(`[RTC] Handle ICE Candidate: from ${socket.id} to ${to}`);
-
-      // ensure candidate is serializable
-      const serializedCandidate = candidate
-        ? {
-            candidate: candidate.candidate,
-            sdpMid: candidate.sdpMid,
-            sdpMLineIndex: candidate.sdpMLineIndex,
-            usernameFragment: candidate.usernameFragment,
-          }
-        : null;
-
       socket.to(to).emit('RTCIceCandidate', {
         from: socket.id,
-        candidate: serializedCandidate,
+        candidate: candidate,
       });
 
       new Logger('RTC').info(
@@ -106,17 +75,12 @@ const rtcHandler = {
     try {
       socket.join(`channel_${channelId}`);
 
+      // NOT USED ANYMORE
       if (!rtcRooms[channelId]) rtcRooms[channelId] = [];
       rtcRooms[channelId].push(socket.id);
 
       // Emit RTC join event (To all users)
       socket.to(`channel_${channelId}`).emit('RTCJoin', socket.id);
-
-      // Emit RTC join event (Only to the user)
-      const existingUsers = rtcRooms[channelId].filter(
-        (id) => id !== socket.id,
-      );
-      socket.emit('RTCConnect', existingUsers);
 
       new Logger('RTC').info(`User(${sessionId}) joined channel(${channelId})`);
     } catch (error) {
@@ -130,6 +94,7 @@ const rtcHandler = {
     try {
       socket.leave(`channel_${channelId}`);
 
+      // NOT USED ANYMORE
       if (!rtcRooms[channelId]) return;
       rtcRooms[channelId] = rtcRooms[channelId].filter(
         (id) => id !== socket.id,
