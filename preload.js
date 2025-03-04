@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electron', {
   close: () => ipcRenderer.send('close'),
   minimize: () => ipcRenderer.send('minimize'),
   reload: () => ipcRenderer.send('reload'),
+  openDevtool: () => ipcRenderer.send('openDevtool'),
 
   // Discord RPC
   updateDiscordPresence: (presenceData) => {

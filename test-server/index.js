@@ -210,7 +210,17 @@ const io = new Server(server, {
   },
 });
 
-require('./socket/index')(io);
+// const Call = require("./call");
+// let serverCall = new Call();
+// async function runServerCall() {
+//   const channels = (await db.get('channels')) || {};
+//   const CallLogger = new Logger('Call');
+//   serverCall = new Call(io, channels, CallLogger);
+// }
+// runServerCall();
+// serverCall.handleDisconnect(socket);
+
+require('./socket/index')(io, db);
 
 // Error Handling
 server.on('error', (error) => {

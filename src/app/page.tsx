@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = React.memo(
     const socket = useSocket();
 
     const handleLogout = () => {
-      socket?.disconnectUser();
+      ipcService.auth.logout();
       localStorage.removeItem('autoLogin');
       localStorage.removeItem('encryptedPassword');
       localStorage.removeItem('sessionToken');
@@ -58,12 +58,11 @@ const Header: React.FC<HeaderProps> = React.memo(
 
     const handleLeaveServer = () => {
       if (!user) return;
-      const serverId = user.currentServerId;
-      socket?.disconnectServer(serverId);
+      socket?.send.disconnectServer({ serverId: user.currentServerId });
     };
 
     const handleUpdateStatus = (status: User['status']) => {
-      socket?.updateUser({ status });
+      socket?.send.updateUser({ user: { status } });
     };
 
     // Fullscreen Control
@@ -90,6 +89,11 @@ const Header: React.FC<HeaderProps> = React.memo(
 
     const handleClose = () => {
       if (ipcService.getAvailability()) ipcService.window.close();
+      else console.warn('IPC not available - not in Electron environment');
+    };
+
+    const handleOpenDevtool = () => {
+      if (ipcService.getAvailability()) ipcService.window.openDevtool();
       else console.warn('IPC not available - not in Electron environment');
     };
 
@@ -223,6 +227,7 @@ const Header: React.FC<HeaderProps> = React.memo(
                 className={`${header['option']} ${header['hasImage']}`}
                 data-type="system-setting"
                 data-key="30066"
+                onClick={() => handleOpenDevtool()}
               >
                 系統設定
               </div>

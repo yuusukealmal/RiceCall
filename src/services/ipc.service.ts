@@ -106,6 +106,11 @@ export const ipcService = {
         ipcRenderer.removeListener('window-unmaximized', callback);
       }
     },
+    openDevtool: () => {
+      if (isElectron) {
+        ipcRenderer.send('openDevtool');
+      }
+    },
   },
 
   popup: {
@@ -135,6 +140,6 @@ export const ipcService = {
       if (isElectron) {
         ipcRenderer.send('update-discord-presence', presence);
       }
-    }
-  }
+    },
+  },
 };

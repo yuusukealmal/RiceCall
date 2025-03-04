@@ -178,7 +178,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 
     const handleJoinChannel = (channelId: string) => {
       if (user?.currentChannelId == channelId) return;
-      socket?.connectChannel(channelId);
+      socket?.send.connectChannel({ channelId });
     };
 
     const channelVisibility = channel.settings.visibility ?? 'public';
@@ -285,19 +285,33 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     const contextMenu = useContextMenu();
 
     // User Info Block Control
-    const [showInfoBlock, setShowInfoBlock] = useState<boolean>(false);
+    // const [showInfoBlock, setShowInfoBlock] = useState<boolean>(false);
+    const userId = user.id;
+    const [userSpeakingStatus, setUserSpeakingStatus] = useState<{
+      [userId: string]: boolean;
+    }>({ [userId]: true });
+
+    // socket?.on("user-speaking", ({ userId, isSpeaking }: { userId: string, isSpeaking: boolean }) => {
+    //   setUserSpeakingStatus(prevStatus => {
+    //     return {
+    //         ...prevStatus,
+    //         [userId]: !isSpeaking
+    //     };
+    //   });
+    // });
+
     const infoBlockRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (infoBlockRef.current?.contains(event.target as Node))
-          setShowInfoBlock(false);
-      };
+    // useEffect(() => {
+    //   const handleClickOutside = (event: MouseEvent) => {
+    //     if (infoBlockRef.current?.contains(event.target as Node))
+    //       setShowInfoBlock(false);
+    //   };
 
-      document.addEventListener('mousedown', handleClickOutside);
-      return () =>
-        document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    //   document.addEventListener('mousedown', handleClickOutside);
+    //   return () =>
+    //     document.removeEventListener('mousedown', handleClickOutside);
+    // }, []);
 
     const channelUser = user;
     const channelUserMember = server.members?.[user.id];
@@ -349,7 +363,10 @@ const UserTab: React.FC<UserTabProps> = React.memo(
             ]);
           }}
         >
-          <div className={styles['userState']} />
+          <div
+            className={`${styles['userState']}
+          ${userSpeakingStatus[user.id] ? styles['unplay'] : ''}`}
+          />
           <div
             className={`${styles['userIcon']} ${
               permission[channelUserGender]
@@ -430,7 +447,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
     // Helper to emit updates
     const emitUpdates = (updates: Partial<Channel>[]) => {
       if (updates.length === 0) return;
-      socket?.updateChannel(updates);
+      socket?.send.updateChannel({ channel: updates });
     };
 
     // Handle combining channels

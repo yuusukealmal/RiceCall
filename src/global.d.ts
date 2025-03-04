@@ -22,6 +22,7 @@ declare global {
       close: () => void;
       minimize: () => void;
       reload: () => void;
+      openDevtool: () => void;
 
       updateDiscordPresence: (presenceData: DiscordPresenceData) => void;
     };
