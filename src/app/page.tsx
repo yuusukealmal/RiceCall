@@ -25,6 +25,7 @@ import UserSettingModal from '@/components/modals/UserSettingModal';
 import { measureLatency } from '@/utils/measureLatency';
 
 // Providers
+import WebRTCProvider from '@/providers/WebRTCProvider';
 import { useSocket } from '@/providers/SocketProvider';
 
 // Services
@@ -136,11 +137,12 @@ const Header: React.FC<HeaderProps> = React.memo(
         [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
       };
 
-      const unsubscribe = Object.entries(eventHandlers).map(
-        ([event, handler]) => {
-          return socket.on[event as SocketServerEvent](handler);
-        },
-      );
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
 
       return () => {
         unsubscribe.forEach((unsub) => unsub());
@@ -422,14 +424,14 @@ const Home = () => {
   };
 
   return (
-    <>
+    <WebRTCProvider>
       <Header
         selectedId={selectedTabId}
         onSelect={(tabId) => setSelectedTabId(tabId)}
       />
       {/* Main Content */}
       <div className="content">{getMainContent()}</div>
-    </>
+    </WebRTCProvider>
   );
 };
 
