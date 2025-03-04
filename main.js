@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, session } = require('electron');
 const serve = require('electron-serve');
 const net = require('net');
 const DiscordRPC = require('discord-rpc');
@@ -266,9 +266,9 @@ function connectSocket(sessionId) {
   });
 
   socket.on('connect', () => {
-    BrowserWindow.getAllWindows().forEach((window) =>
-      window.webContents.send('connect', socket.id),
-    );
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('connect', socket.id);
+    });
     socket.on('connect_error', (error) => {
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('connect_error', error),
@@ -338,6 +338,36 @@ function connectSocket(sessionId) {
         window.webContents.send('channelUpdate', data),
       );
     });
+    socket.on('RTCConnect', (data) => {
+      BrowserWindow.getAllWindows().forEach((window) =>
+        window.webContents.send('RTCConnect', data),
+      );
+    });
+    socket.on('RTCOffer', (data) => {
+      BrowserWindow.getAllWindows().forEach((window) =>
+        window.webContents.send('RTCOffer', data),
+      );
+    });
+    socket.on('RTCAnswer', (data) => {
+      BrowserWindow.getAllWindows().forEach((window) =>
+        window.webContents.send('RTCAnswer', data),
+      );
+    });
+    socket.on('RTCIceCandidate', (data) => {
+      BrowserWindow.getAllWindows().forEach((window) =>
+        window.webContents.send('RTCIceCandidate', data),
+      );
+    });
+    socket.on('RTCJoin', (data) => {
+      BrowserWindow.getAllWindows().forEach((window) =>
+        window.webContents.send('RTCJoin', data),
+      );
+    });
+    socket.on('RTCLeave', (data) => {
+      BrowserWindow.getAllWindows().forEach((window) =>
+        window.webContents.send('RTCLeave', data),
+      );
+    });
 
     // Socket IPC event handling
     ipcMain.on('connectUser', (_, data) =>
@@ -376,11 +406,20 @@ function connectSocket(sessionId) {
     ipcMain.on('deleteChannel', (_, data) =>
       socket.emit('deleteChannel', { sessionId, ...data }),
     );
-    ipcMain.on('sendMessage', (_, data) =>
-      socket.emit('sendMessage', { sessionId, ...data }),
+    ipcMain.on('message', (_, data) =>
+      socket.emit('message', { sessionId, ...data }),
     );
-    ipcMain.on('sendDirectMessage', (_, data) =>
-      socket.emit('sendDirectMessage', { sessionId, ...data }),
+    ipcMain.on('directMessage', (_, data) =>
+      socket.emit('directMessage', { sessionId, ...data }),
+    );
+    ipcMain.on('RTCOffer', (_, data) =>
+      socket.emit('RTCOffer', { sessionId, ...data }),
+    );
+    ipcMain.on('RTCAnswer', (_, data) =>
+      socket.emit('RTCAnswer', { sessionId, ...data }),
+    );
+    ipcMain.on('RTCIceCandidate', (_, data) =>
+      socket.emit('RTCIceCandidate', { sessionId, ...data }),
     );
 
     mainWindow?.show();
@@ -411,7 +450,7 @@ rpc.on('ready', () => {
   setActivity(defaultPrecence);
 });
 
-app.whenReady().then(async () => {
+app.on('ready', async () => {
   await createAuthWindow();
   await createMainWindow();
 
@@ -501,6 +540,15 @@ app.whenReady().then(async () => {
   // Discord RPC handlers
   ipcMain.on('update-discord-presence', (_, updatePresence) => {
     setActivity(updatePresence);
+  });
+
+  ipcMain.on('openDevtool', () => {
+    if (isDev) {
+      const currentWindow = BrowserWindow.getFocusedWindow();
+
+      if (currentWindow)
+        currentWindow.webContents.openDevTools({ mode: 'detach' });
+    }
   });
 });
 

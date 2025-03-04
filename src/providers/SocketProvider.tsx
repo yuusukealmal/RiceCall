@@ -3,7 +3,6 @@
 'use client';
 
 import { createContext, useContext, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 
 // Types
 import {
@@ -30,7 +29,10 @@ import { ipcService } from '@/services/ipc.service';
 // const WS_URL = 'ws://localhost:4500';
 
 type SocketContextType = {
-  event?: Record<SocketClientEvent, (...args: any[]) => void>;
+  event?: {
+    send: Record<SocketClientEvent, (data: any) => void>;
+    on: Record<SocketServerEvent, (callback: (data: any) => void) => void>;
+  };
 };
 
 const SocketContext = createContext<SocketContextType>({});
@@ -45,15 +47,6 @@ interface SocketProviderProps {
 }
 
 const SocketProvider = ({ children }: SocketProviderProps) => {
-  // Redux
-  const user = useSelector((state: { user: User | null }) => state.user);
-  const server = useSelector(
-    (state: { server: Server | null }) => state.server,
-  );
-  const channel = useSelector(
-    (state: { channel: Channel | null }) => state.channel,
-  );
-
   const handleDisconnect = () => {
     console.log('Socket disconnected');
     store.dispatch(clearServer());
@@ -93,8 +86,8 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
     store.dispatch(setServer({ ...server_, ...data }));
   };
   const handleChannelConnect = (channel: Channel) => {
-    store.dispatch(setChannel(channel));
     console.log('Channel connected: ', channel);
+    store.dispatch(setChannel(channel));
   };
   const handleChannelDisconnect = () => {
     console.log('Channel disconnected');
@@ -106,27 +99,12 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
     if (!channel_) return;
     store.dispatch(setChannel({ ...channel_, ...data }));
   };
-  const handlePlaySound = (sound: 'join' | 'leave') => {
-    switch (sound) {
-      case 'join':
-      // console.log('Play join sound');
-      // joinSoundRef.current?.play();
-      // break;
-      case 'leave':
-      // console.log('Play leave sound');
-      // leaveSoundRef.current?.play();
-      // break;
-    }
-  };
 
   // Initialize socket event listeners
-  // make sure it only runs once
   useEffect(() => {
-    let isInitialDataReceived = false;
     if (ipcService.getAvailability()) {
       ipcService.requestInitialData();
       ipcService.onInitialData((data) => {
-        isInitialDataReceived = true;
         console.log('Initial data:', data);
         store.dispatch(setUser(data.user));
         store.dispatch(setServer(data.server));
@@ -146,7 +124,6 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
         [SocketServerEvent.CHANNEL_CONNECT]: handleChannelConnect,
         [SocketServerEvent.CHANNEL_DISCONNECT]: handleChannelDisconnect,
         [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
-        [SocketServerEvent.PLAY_SOUND]: handlePlaySound,
       };
 
       Object.entries(eventHandlers).forEach(([event, handler]) => {
@@ -163,60 +140,20 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
   }, []);
 
   const event = {
-    [SocketClientEvent.CONNECT_USER]: () =>
-      ipcService.sendSocketEvent(SocketClientEvent.CONNECT_USER, null),
-    [SocketClientEvent.DISCONNECT_USER]: () =>
-      ipcService.sendSocketEvent(SocketClientEvent.DISCONNECT_USER, null),
-    [SocketClientEvent.UPDATE_USER]: (user: Partial<User>) =>
-      ipcService.sendSocketEvent(SocketClientEvent.UPDATE_USER, { user }),
-    [SocketClientEvent.CONNECT_SERVER]: (serverId: string) =>
-      ipcService.sendSocketEvent(SocketClientEvent.CONNECT_SERVER, {
-        serverId,
-      }),
-    [SocketClientEvent.DISCONNECT_SERVER]: (serverId: string) =>
-      ipcService.sendSocketEvent(SocketClientEvent.DISCONNECT_SERVER, {
-        serverId,
-      }),
-    [SocketClientEvent.CREATE_SERVER]: (server: Server) =>
-      ipcService.sendSocketEvent(SocketClientEvent.CREATE_SERVER, {
-        server,
-      }),
-    [SocketClientEvent.UPDATE_SERVER]: (server: Partial<Server>) =>
-      ipcService.sendSocketEvent(SocketClientEvent.UPDATE_SERVER, {
-        server,
-      }),
-    [SocketClientEvent.DELETE_SERVER]: (serverId: string) =>
-      ipcService.sendSocketEvent(SocketClientEvent.DELETE_SERVER, {
-        serverId,
-      }),
-    [SocketClientEvent.CONNECT_CHANNEL]: (channelId: string) =>
-      ipcService.sendSocketEvent(SocketClientEvent.CONNECT_CHANNEL, {
-        channelId,
-      }),
-    [SocketClientEvent.DISCONNECT_CHANNEL]: (channelId: string) =>
-      ipcService.sendSocketEvent(SocketClientEvent.DISCONNECT_CHANNEL, {
-        channelId,
-      }),
-    [SocketClientEvent.CREATE_CHANNEL]: (channel: Channel) =>
-      ipcService.sendSocketEvent(SocketClientEvent.CREATE_CHANNEL, {
-        channel,
-      }),
-    [SocketClientEvent.UPDATE_CHANNEL]: (channel: Partial<Channel>) =>
-      ipcService.sendSocketEvent(SocketClientEvent.UPDATE_CHANNEL, {
-        channel,
-      }),
-    [SocketClientEvent.DELETE_CHANNEL]: (channelId: string) =>
-      ipcService.sendSocketEvent(SocketClientEvent.DELETE_CHANNEL, {
-        channelId,
-      }),
-    [SocketClientEvent.SEND_MESSAGE]: (message: string) =>
-      ipcService.sendSocketEvent(SocketClientEvent.SEND_MESSAGE, {
-        message,
-      }),
-    [SocketClientEvent.SEND_DIRECT_MESSAGE]: (message: string) =>
-      ipcService.sendSocketEvent(SocketClientEvent.SEND_DIRECT_MESSAGE, {
-        message,
-      }),
+    send: Object.values(SocketClientEvent).reduce((acc, event) => {
+      acc[event] = (data: any) => {
+        console.log(event, data);
+        ipcService.sendSocketEvent(event, data);
+      };
+      return acc;
+    }, {} as Record<SocketClientEvent, (data: any) => void>),
+    on: Object.values(SocketServerEvent).reduce((acc, event) => {
+      acc[event] = (callback: (data: any) => void) => {
+        console.log(event, callback);
+        ipcService.onSocketEvent(event, callback);
+      };
+      return acc;
+    }, {} as Record<SocketServerEvent, (callback: (data: any) => void) => void>),
   };
 
   return (

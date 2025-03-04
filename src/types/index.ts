@@ -148,6 +148,15 @@ export interface Channel {
   subChannels?: Channel[];
   messages?: Message[];
   users?: User[];
+  rtcConnections?: string[];
+}
+
+export interface voicePresences {
+  id: string;
+  username: string;
+  isSpeaker: boolean;
+  isSpeaking: boolean;
+  isMuted: boolean;
 }
 
 export interface Message {
