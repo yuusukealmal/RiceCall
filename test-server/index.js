@@ -188,7 +188,12 @@ const server = http.createServer((req, res) => {
         await db.set(`accountPasswords.${account}`, password);
         await db.set(`accountUserIds.${account}`, userId);
 
-        sendSuccess(res, { message: '註冊成功' });
+        sendSuccess(res, {
+          message: '註冊成功',
+          data: {
+            // user: await Get.user(user.id),
+          },
+        });
         new Logger('Auth').success(`User registered: ${account}`);
       } catch (error) {
         sendError(res, 500, `註冊時發生錯誤: ${error.message}`);
