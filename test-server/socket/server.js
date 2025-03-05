@@ -86,8 +86,7 @@ const serverHandler = {
 
       // Create new membership if there isn't one
       if (!member) {
-        const memberId = uuidv4();
-        await Set.member(memberId, {
+        await Set.member(`mb_${user.id}-${server.id}`, {
           nickname: user.name,
           serverId: server.id,
           userId: user.id,
@@ -112,6 +111,15 @@ const serverHandler = {
         sessionId,
         server.lobbyId,
       );
+
+      // Update user-server
+      const update_userServer = {
+        userId: user.id,
+        serverId: server.id,
+        recent: true,
+        timestamp: Date.now(),
+      };
+      await Set.userServer(`us_${user.id}-${server.id}`, update_userServer);
 
       // Update user
       const update = {
@@ -313,10 +321,11 @@ const serverHandler = {
         avatarPath = `/${SERVER_AVATAR_PATH}/${fileName}`;
       }
 
-      // Create server / main channel (lobby) / member (owner)
+      // Create Ids
       const serverId = uuidv4();
       const channelId = uuidv4();
-      const memberId = uuidv4();
+
+      // Create server
       await Set.server(serverId, {
         name: server.name.toString().trim().substring(0, 30),
         description: server.description.toString().substring(0, 200),
@@ -330,6 +339,8 @@ const serverHandler = {
         },
         createdAt: Date.now(),
       });
+
+      // Create channel (lobby)
       await Set.channel(channelId, {
         name: '大廳',
         isLobby: true,
@@ -342,12 +353,23 @@ const serverHandler = {
         },
         createdAt: Date.now(),
       });
-      await Set.member(memberId, {
+
+      // Create member
+      await Set.member(`mb_${user.id}-${server.id}`, {
         permissionLevel: 6,
         nickname: user.name,
         serverId: serverId,
         userId: userId,
         createdAt: Date.now(),
+      });
+
+      // Create user-server
+      await Set.userServer(`us_${userId}-${serverId}`, {
+        userId: userId,
+        serverId: serverId,
+        recent: true,
+        owned: true,
+        timestamp: Date.now(),
       });
 
       // Join the server

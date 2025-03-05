@@ -28,6 +28,22 @@ const set = {
     await db.set(`users.${id}`, users[id]);
     return users[id];
   },
+  userServer: async (id, data) => {
+    const userServers = await db.get('userServers');
+    userServers[id] = {
+      userId: '',
+      serverId: '',
+      recent: false,
+      owned: false,
+      favorite: false,
+      timestamp: 0,
+      ...userServers[id],
+      ...data,
+      id,
+    };
+    await db.set(`userServers.${id}`, userServers[id]);
+    return userServers[id];
+  },
   server: async (id, data) => {
     const servers = await db.get('servers');
     servers[id] = {
@@ -122,21 +138,6 @@ const set = {
     };
     await db.set(`directMessages.${id}`, directMessages[id]);
     return directMessages[id];
-  },
-  voicePresence: async (id, data) => {
-    const voicePresences = await db.get('voicePresences');
-    voicePresences[id] = {
-      isSpeaker: false,
-      isSpeaking: false,
-      isMuted: false,
-      userId: '',
-      channelId: '',
-      ...voicePresences[id],
-      ...data,
-      id,
-    };
-    await db.set(`voicePresences.${id}`, voicePresences[id]);
-    return voicePresences[id];
   },
 };
 

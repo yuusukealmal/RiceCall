@@ -14,8 +14,9 @@ const get = {
       friends: await get.userFriends(userId),
       friendGroups: await get.userFriendGroups(userId),
       friendApplications: await get.userFriendApplications(userId),
-      servers: await get.userServers(userId),
+      recentServers: await get.userRecentServers(userId),
       ownedServers: await get.userOwnedServers(userId),
+      favServers: await get.userFavServers(userId),
     };
   },
   userBadges: async (userId) => {
@@ -50,14 +51,30 @@ const get = {
       (app) => app.recieverId === userId,
     );
   },
-  userServers: async (userId) => {
+  userRecentServers: async (userId) => {
+    const userServers = (await db.get('userServers')) || {};
     const servers = (await db.get('servers')) || {};
-    const members = (await db.get('members')) || {};
-    return Object.values(servers).filter((server) => server);
+    return Object.values(userServers)
+      .filter((us) => us.userId === userId && us.recent)
+      .map((us) => servers[us.serverId])
+      .filter((server) => server);
   },
   userOwnedServers: async (userId) => {
+    const userServers = (await db.get('userServers')) || {};
     const servers = (await db.get('servers')) || {};
-    return Object.values(servers).filter((server) => server.ownerId === userId);
+    return Object.values(userServers)
+      .filter((us) => us.userId === userId && us.owned)
+      .map((us) => servers[us.serverId])
+      .filter((server) => server);
+  },
+  userFavServers: async (userId) => {
+    const userServers = (await db.get('userServers')) || {};
+    const servers = (await db.get('servers')) || {};
+    return Object.values(userServers)
+      .filter((us) => us.userId === userId && us.favorite)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .map((us) => servers[us.serverId])
+      .filter((server) => server);
   },
   // Server
   server: async (serverId) => {

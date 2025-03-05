@@ -32,8 +32,9 @@ export interface User {
   friends?: Friend[];
   friendGroups?: FriendGroup[];
   friendApplications?: FriendApplication[];
-  servers?: Server[];
+  recentServers?: Server[];
   ownedServers?: Server[];
+  favServers?: Server[];
 }
 
 export interface Badge {

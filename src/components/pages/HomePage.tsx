@@ -167,13 +167,15 @@ const HomePageComponent: React.FC = React.memo(() => {
   // State
   const [searchQuery, setSearchQuery] = useState('');
 
-  const userServers = user?.servers ?? [];
+  const userRecentServers = user?.recentServers ?? [];
+  const userOwnedServers = user?.ownedServers ?? [];
+  const userFavServers = user?.favServers ?? [];
   const userName = user?.name || 'Unknown';
 
   useEffect(() => {
     ipcService.discord.updatePresence({
       details: `正在瀏覽主頁`,
-      state: `已加入 ${userServers.length} 個群組`,
+      state: `使用者: ${userName}`,
       largeImageKey: 'app_icon',
       largeImageText: 'RC Voice',
       smallImageKey: 'home_icon',
@@ -186,7 +188,7 @@ const HomePageComponent: React.FC = React.memo(() => {
         },
       ],
     });
-  }, [userServers.length]);
+  }, []);
 
   return (
     <div className={styles['homeWrapper']}>
@@ -198,21 +200,21 @@ const HomePageComponent: React.FC = React.memo(() => {
               <div className={styles['myGroupsTitle']} data-key="60005">
                 最近訪問
               </div>
-              <ServerGrid servers={userServers} />
+              <ServerGrid servers={userRecentServers} />
             </div>
 
             <div className={styles['myGroupsItem']}>
               <div className={styles['myGroupsTitle']} data-key="30283">
                 我的語音群
               </div>
-              <ServerGrid servers={userServers} />
+              <ServerGrid servers={userOwnedServers} />
             </div>
 
             <div className={styles['myGroupsItem']}>
               <div className={styles['myGroupsTitle']} data-key="60005">
                 收藏的語音群
               </div>
-              <ServerGrid servers={userServers} />
+              <ServerGrid servers={userFavServers} />
             </div>
           </div>
         </div>
