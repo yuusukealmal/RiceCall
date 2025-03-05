@@ -16,7 +16,6 @@ const rtcHandler = require('./rtc');
 
 module.exports = (io, db) => {
   io.use((socket, next) => {
-    console.log(socket.handshake.query);
     const sessionId = socket.handshake.query.sessionId;
     if (!sessionId) {
       new Logger('Socket').error(`Invalid session ID: ${sessionId}`);
@@ -128,7 +127,7 @@ module.exports = (io, db) => {
       //     ...
       //   }
       // }
-      console.log(data);
+      // console.log(data);
 
       // Validate data
       const { sessionId, server } = data;

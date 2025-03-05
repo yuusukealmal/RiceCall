@@ -49,7 +49,7 @@ export const authService = {
       ...formData,
       password: base64encode(formData.password),
     };
-    return apiService.post('/register', registerData);
+    return await apiService.post('/register', registerData);
   },
 
   logout: () => {

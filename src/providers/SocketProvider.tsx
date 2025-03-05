@@ -5,23 +5,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 // Types
-import {
-  Channel,
-  Server,
-  User,
-  SocketServerEvent,
-  SocketClientEvent,
-} from '@/types';
-
-// Utils
-import { errorHandler } from '@/utils/errorHandler';
-
-// Redux
-import store from '@/redux/store';
-import { clearServer, setServer } from '@/redux/serverSlice';
-import { clearUser, setUser } from '@/redux/userSlice';
-import { clearSessionToken } from '@/redux/sessionTokenSlice';
-import { clearChannel, setChannel } from '@/redux/channelSlice';
+import { SocketServerEvent, SocketClientEvent } from '@/types';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
@@ -52,41 +36,31 @@ interface SocketProviderProps {
 const SocketProvider = ({ children }: SocketProviderProps) => {
   const [event, setEvent] = useState<SocketContextType['event']>();
 
-  if (ipcService.getAvailability()) {
-    useEffect(() => {
-      ipcService.requestInitialData();
-      ipcService.onInitialData((data) => {
-        console.log('Initial data:', data);
-        store.dispatch(setUser(data.user));
-        store.dispatch(setServer(data.server));
-        store.dispatch(setChannel(data.channel));
+  useEffect(() => {
+    const newEvent = {
+      send: Object.values(SocketClientEvent).reduce((acc, event) => {
+        acc[event] = (data: any) => {
+          ipcService.sendSocketEvent(event, data);
+          return () => {};
+        };
+        return acc;
+      }, {} as Record<SocketClientEvent, (data: any) => () => void>),
+      on: Object.values(SocketServerEvent).reduce((acc, event) => {
+        acc[event] = (callback: (data: any) => void) => {
+          ipcService.onSocketEvent(event, callback);
+          return () => ipcService.removeListener(event);
+        };
+        return acc;
+      }, {} as Record<SocketServerEvent, (callback: (data: any) => void) => () => void>),
+    };
+    setEvent(newEvent);
+
+    return () => {
+      Object.keys(newEvent.on).map((event) => {
+        ipcService.removeListener(event);
       });
-
-      const newEvent = {
-        send: Object.values(SocketClientEvent).reduce((acc, event) => {
-          acc[event] = (data: any) => {
-            ipcService.sendSocketEvent(event, data);
-            return () => {};
-          };
-          return acc;
-        }, {} as Record<SocketClientEvent, (data: any) => () => void>),
-        on: Object.values(SocketServerEvent).reduce((acc, event) => {
-          acc[event] = (callback: (data: any) => void) => {
-            ipcService.onSocketEvent(event, callback);
-            return () => ipcService.removeListener(event);
-          };
-          return acc;
-        }, {} as Record<SocketServerEvent, (callback: (data: any) => void) => () => void>),
-      };
-      setEvent(newEvent);
-
-      return () => {
-        Object.keys(newEvent.on).map((event) => {
-          ipcService.removeListener(event);
-        });
-      };
-    }, []);
-  }
+    };
+  }, []);
 
   return (
     <SocketContext.Provider value={{ event }}>
