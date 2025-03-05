@@ -457,6 +457,43 @@ app.on('ready', async () => {
   mainWindow.hide();
   authWindow.show();
 
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents
+      .executeJavaScript(
+        `
+      (function() {
+        const autoLogin = localStorage.getItem('autoLogin') === 'true';
+        const token = localStorage.getItem('jwtToken');
+        
+        if (autoLogin && token) {
+          // Try to parse the token to check if it's valid
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Date.now() / 1000;
+            
+            // Check if token is expired
+            if (payload.exp && payload.exp > currentTime) {
+              // Token is valid, trigger login in main process
+              require('electron').ipcRenderer.send('login', token);
+              return true;
+            }
+          } catch (e) {
+            console.error('Error parsing token:', e);
+          }
+        }
+        
+        // No valid token, show auth window
+        return false;
+      })()
+    `,
+      )
+      .then((shouldAutoLogin) => {
+        if (!shouldAutoLogin) {
+          authWindow.show();
+        }
+      });
+  });
+
   app.on('before-quit', () => {
     if (rpc) {
       rpc.destroy().catch(console.error);
@@ -469,13 +506,21 @@ app.on('ready', async () => {
     }
   });
 
-  // Window management IPC handlers
-  ipcMain.on('login', (_, sessionId) => {
-    if (!socketInstance) socketInstance = connectSocket(sessionId);
+  ipcMain.on('login', (_, token) => {
+    if (!socketInstance) socketInstance = connectSocket(token);
     socketInstance.connect();
+
+    mainWindow.show();
+    authWindow.hide();
   });
+
   ipcMain.on('logout', () => {
+    // Disconnect socket
     socketInstance = disconnectSocket(socketInstance);
+
+    // Show auth window and hide main window
+    mainWindow.hide();
+    authWindow.show();
   });
 
   // Window control handlers

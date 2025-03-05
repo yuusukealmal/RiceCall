@@ -8,6 +8,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const utils = require('./utils');
+const jwtUtil = require('./utils/jwt');
 const Logger = utils.logger;
 const Set = utils.set;
 const Get = utils.get;
@@ -128,7 +129,7 @@ const server = http.createServer((req, res) => {
         });
 
         // Generate session id
-        const sessionId = uuidv4();
+        const sessionId = jwtUtil.generateToken(user.id);
         utils.map.userSessions.set(sessionId, user.id);
 
         sendSuccess(res, {
@@ -145,6 +146,34 @@ const server = http.createServer((req, res) => {
       }
     });
     return;
+  }
+
+  if (req.method == 'GET' && req.url == '/refresh-token') {
+    // Get the authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return sendError(res, 401, 'No token provided');
+    }
+
+    const sessionId = authHeader.split(' ')[1];
+
+    // Verify current token
+    const result = jwtUtil.verifyToken(sessionId);
+    if (!result.valid) {
+      return sendError(res, 401, 'Invalid token');
+    }
+
+    const newToken = jwtUtil.generateToken(result.userId);
+
+    // Update the user sessions map
+    utils.map.userSessions.set(newToken, result.userId);
+
+    sendSuccess(res, {
+      message: 'Token refreshed',
+      data: {
+        sessionId: newToken,
+      },
+    });
   }
 
   if (req.method == 'POST' && req.url == '/register') {
@@ -166,8 +195,8 @@ const server = http.createServer((req, res) => {
         const accountPasswords = (await db.get(`accountPasswords`)) || {};
 
         // Validate data
-        const account = data.account;
-        const password = data.password;
+        const account = data.account.trim();
+        const password = data.password.trim();
         if (!account || !password) {
           throw new Error('無效的帳號或密碼');
         }

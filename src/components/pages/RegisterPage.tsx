@@ -139,6 +139,7 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
               <div className={styles['inputBox']}>
                 <label className={styles['label']}>{'帳號'}</label>
                 <InputField
+                  type="text"
                   name="account"
                   value={formData.account}
                   onChange={handleInputChange}
@@ -160,8 +161,8 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
               <div className={styles['inputBox']}>
                 <label className={styles['label']}>{'密碼'}</label>
                 <InputField
-                  name="password"
                   type="password"
+                  name="password"
                   value={formData.password}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
@@ -182,8 +183,8 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
               <div className={styles['inputBox']}>
                 <label className={styles['label']}>{'確認密碼'}</label>
                 <InputField
-                  name="confirmPassword"
                   type="password"
+                  name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   onBlur={handleBlur}

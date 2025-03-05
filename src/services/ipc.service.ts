@@ -130,6 +130,7 @@ export const ipcService = {
     },
     logout: () => {
       if (isElectron) {
+        localStorage.removeItem('jwtToken');
         ipcRenderer.send('logout');
       }
     },

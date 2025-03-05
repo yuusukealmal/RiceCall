@@ -1,4 +1,5 @@
 const utils = require('../utils');
+const jwtUtil = require('../utils/jwt');
 const Logger = utils.logger;
 const Map = utils.map;
 const Get = utils.get;
@@ -15,7 +16,7 @@ const rtcHandler = require('./rtc');
 
 module.exports = (io, db) => {
   io.use((socket, next) => {
-    console.log(socket.handshake.query.sessionId);
+    console.log(socket.handshake.query);
     const sessionId = socket.handshake.query.sessionId;
     if (!sessionId) {
       new Logger('Socket').error(`Invalid session ID: ${sessionId}`);
@@ -23,6 +24,32 @@ module.exports = (io, db) => {
         new SocketError('Invalid session ID', 'AUTH', 'SESSION_EXPIRED', 401),
       );
     }
+    socket.sessionId = sessionId;
+    return next();
+  });
+
+  io.use((socket, next) => {
+    const sessionId = socket.handshake.query.sessionId;
+    if (!sessionId) {
+      return next(
+        new SocketError(
+          'No authentication token',
+          'AUTH',
+          'TOKEN_MISSING',
+          401,
+        ),
+      );
+    }
+
+    // Verify JWT token
+    const result = jwtUtil.verifyToken(sessionId);
+    if (!result.valid) {
+      return next(
+        new SocketError('Invalid token', 'AUTH', 'TOKEN_INVALID', 401),
+      );
+    }
+
+    socket.userId = result.userId;
     socket.sessionId = sessionId;
     return next();
   });

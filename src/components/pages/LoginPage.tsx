@@ -75,8 +75,14 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(
       e.preventDefault();
       setIsLoading(true);
       try {
-        const data = await authService.login(formData);
-        if (data) onLoginSuccess(data.sessionId);
+        const response = await authService.login(formData);
+
+        if (response?.sessionId) {
+          if (formData.autoLogin) localStorage.setItem('autoLogin', 'true');
+          else localStorage.removeItem('autoLogin');
+
+          onLoginSuccess(response.sessionId);
+        }
       } catch (error) {
         setErrors({
           general: error instanceof Error ? error.message : '未知錯誤',
@@ -100,6 +106,7 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(
             <div className={styles['inputBox']}>
               <label className={styles['label']}>{'帳號'}</label>
               <InputField
+                type="text"
                 name="account"
                 value={formData.account}
                 onChange={handleInputChange}
@@ -114,8 +121,8 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(
             <div className={styles['inputBox']}>
               <label className={styles['label']}>{'密碼'}</label>
               <InputField
-                name="password"
                 type="password"
+                name="password"
                 value={formData.password}
                 onChange={handleInputChange}
                 onBlur={handleBlur}

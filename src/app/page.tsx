@@ -23,6 +23,7 @@ import UserSettingModal from '@/components/modals/UserSettingModal';
 
 // Utils
 import { measureLatency } from '@/utils/measureLatency';
+import { isTokenExpired } from '@/utils/jwt';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -420,6 +421,42 @@ const Home = () => {
       }
     }
   };
+
+  useEffect(() => {
+    const attemptAutoLogin = async () => {
+      // Check if auto login is enabled
+      const autoLogin = localStorage.getItem('autoLogin') === 'true';
+      if (!autoLogin) return;
+
+      // Get stored token
+      const token = localStorage.getItem('jwtToken');
+
+      // If no token, exit
+      if (!token) return;
+
+      // Check if token is valid (not expired)
+      if (isTokenExpired(token)) {
+        // Token expired, clear it
+        localStorage.removeItem('jwtToken');
+        return;
+      }
+
+      try {
+        // Connect to socket with token
+        ipcService.auth.login(token);
+
+        // You might need to fetch the user data here if needed
+        // const userData = await authService.getUserData();
+      } catch (error) {
+        console.error('Auto login failed:', error);
+        // Clean up on failure
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('autoLogin');
+      }
+    };
+
+    attemptAutoLogin();
+  }, []);
 
   return (
     <>
