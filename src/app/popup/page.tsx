@@ -11,6 +11,7 @@ import { Channel, popupType } from '@/types';
 
 // Modals
 import CreateServerModal from '@/components/modals/CreateServerModal';
+import EditServerModal from '@/components/modals/EditServerModal';
 import AddChannelModal from '@/components/modals/AddChannelModal';
 import DeleteChannelModal from '@/components/modals/DeleteChannelModal';
 import EditChannelModal from '@/components/modals/EditChannelModal';
@@ -84,7 +85,7 @@ const Modal = React.memo(() => {
       case popupType.CREATE_SERVER:
         return <CreateServerModal onClose={() => {}} />;
       case popupType.EDIT_SERVER:
-        return; // <EditServerModal onClose={() => {}} server={undefined} />;
+        return <EditServerModal onClose={() => {}} />;
       case popupType.DELETE_SERVER:
         return; // This one doesn't exist :D
       case popupType.CREATE_CHANNEL:
@@ -124,9 +125,7 @@ const Modal = React.memo(() => {
       {/* Top Nevigation */}
       <Header title={getTitle()}></Header>
       {/* Main Content */}
-      <div className="flex flex-1 min-h-0 overflow-y-auto">
-        {getMainContent()}
-      </div>
+      {getMainContent()}
       {/* Bottom */}
       <div className="flex flex-row justify-end items-center bg-gray-50">
         {/* {hasButtons && (

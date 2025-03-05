@@ -14,7 +14,7 @@ import ChannelViewer from '@/components/viewers/ChannelViewer';
 import MessageInputBox from '@/components/MessageInputBox';
 
 // Modals
-import ServerSettingModal from '@/components/modals/ServerSettingModal';
+import ServerSettingModal from '@/components/modals/EditServerModal';
 import UserSettingModal from '@/components/modals/UserSettingModal';
 
 // Types

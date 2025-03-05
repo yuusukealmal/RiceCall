@@ -1,0 +1,243 @@
+.serverSettingContent {
+  display: flex;
+}
+
+.serverSettingLeft {
+  height: auto;
+  width: 100%;
+  background: url(../../../public/setting_left_bg.png) no-repeat center center;
+  background-size: cover;
+  border-right: 1px solid #b4dbec;
+  max-width: 145px;
+}
+
+.serverSettingTabsBox {
+  height: 100%;
+  width: 145px;
+  display: flex;
+  flex-direction: column;
+}
+
+.serverSettingTab {
+  height: auto;
+  min-height: 28px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-top: 1px solid #ffffff00;
+  border-bottom: 1px solid #ffffff00;
+  border-right: 1px solid #ffffff00;
+  font-size: 13px;
+}
+
+.serverSettingTab:first-child {
+  margin-top: 15px;
+}
+.serverSettingTab.active {
+  border-top: 1px solid #b4dbec;
+  border-bottom: 1px solid #b4dbec;
+  border-right: 1px solid #ffffff00;
+  background-color: #f7f7f7;
+}
+
+.serverSettingRight {
+  height: 100%;
+  width: 100%;
+}
+
+.server-setting-page {
+  height: 100%;
+  width: auto;
+  padding: 10px;
+}
+
+.serverSettingPageBox {
+  font-size: 13px;
+}
+
+.serverSettingItemWrapper {
+  display: flex;
+}
+
+.server-setting-about,
+.serverSettingItem,
+.serverSettingItemBox {
+  width: 100%;
+}
+
+.serverSettingItem {
+  display: flex;
+  align-items: center;
+}
+
+.serverSettingItemContain {
+  margin: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 2px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.serverSettingText {
+  width: auto;
+  padding: 3px;
+}
+
+.serverSettingInputBorder {
+  position: relative;
+  display: inline-block;
+  border: 1px solid #ddd;
+  padding-top: 0;
+  padding-bottom: 0;
+  background: #fff;
+  width: 100%;
+}
+
+.serverSettingInput {
+  flex: 1;
+  padding: 3px;
+  border: 1px solid #ffffff;
+  outline: none;
+  font-size: 12px;
+  width: 100%;
+  font-family: 'SimSun', sans-serif;
+  background: #fff;
+  color: #000;
+}
+
+.serverSettingAvatatarPictureBox {
+  height: 100%;
+  width: 20rem;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.serverSettingAvatatarPicture {
+  height: 100px;
+  width: 100px;
+  border: 1px solid #b7cceb;
+  margin-bottom: 5px;
+}
+
+.serverSettingAvatatarPicture.default {
+  background: url(../../../public/im/IMLogo.png);
+  background-size: cover;
+}
+
+.serverSettingButton {
+  text-align: center;
+  height: 24px;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  background-position: 0 0;
+  border: 1px solid #cbcccd;
+  width: auto;
+  border-radius: 5px;
+  background: #fff;
+  min-width: 60px;
+}
+
+.serverSettingSelectBox {
+  display: flex;
+  align-items: center;
+}
+
+.serverSettingSelect {
+  border-radius: 3px;
+  flex: 1;
+  padding: 3px;
+  border: 1px solid #ffffff;
+  outline: none;
+  font-size: 12px;
+  width: 100%;
+  height: auto;
+  font-family: 'SimSun', sans-serif;
+  appearance: none;
+}
+
+.serverSettingSelectDropDownIcon {
+  width: 25px;
+  height: 10px;
+  background: url(../../../public/login_combobox_triangle.png) no-repeat center
+    center;
+  background-position: 0 0;
+  position: absolute;
+  top: 6px;
+  right: -1px;
+  pointer-events: none;
+}
+
+.serverSettingSelectDropDownIcon {
+  width: 25px;
+  height: 10px;
+  background: url(../../../public/login_combobox_triangle.png) no-repeat center
+    center;
+  background-position: 0 0;
+  position: absolute;
+  top: 6px;
+  right: -1px;
+  pointer-events: none;
+}
+
+.serverSettingRichCoinTitle {
+  display: flex;
+  align-items: center;
+}
+
+.serverSettingRichCoin {
+  height: 16px;
+  width: 16px;
+  background: url(../../../public/golden_pea.png);
+  background-size: cover;
+  margin-left: 3px;
+}
+
+.server-setting-about .serverSettingInput {
+  height: 40px;
+}
+
+.serverSettingHeaderTitle {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 5;
+  height: 35px;
+}
+
+.serverSettingItemWrapper.markdown {
+  align-items: center;
+  flex-direction: column;
+}
+
+.markdown .serverSettingTextareaBox {
+  height: 100%;
+  width: 100%;
+}
+
+.markdown .serverSettingInputBorder,
+.markdown .serverSettingTextarea {
+  width: 98%;
+  display: block;
+  outline: none;
+  background: #ffffff;
+  padding: 8px;
+  resize: none;
+  overflow: auto;
+  font-size: 15px;
+  margin: 5px;
+  border: 1px solid #e0e0e4;
+  height: 220px;
+}
+
+.markdownTitle {
+  width: 95%;
+}
