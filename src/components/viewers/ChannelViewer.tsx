@@ -278,40 +278,8 @@ interface UserTabProps {
 
 const UserTab: React.FC<UserTabProps> = React.memo(
   ({ user, server, canEdit }) => {
-    // Socket
-    const socket = useSocket();
-
     // Context
     const contextMenu = useContextMenu();
-
-    // User Info Block Control
-    // const [showInfoBlock, setShowInfoBlock] = useState<boolean>(false);
-    const userId = user.id;
-    const [userSpeakingStatus, setUserSpeakingStatus] = useState<{
-      [userId: string]: boolean;
-    }>({ [userId]: true });
-
-    // socket?.on("user-speaking", ({ userId, isSpeaking }: { userId: string, isSpeaking: boolean }) => {
-    //   setUserSpeakingStatus(prevStatus => {
-    //     return {
-    //         ...prevStatus,
-    //         [userId]: !isSpeaking
-    //     };
-    //   });
-    // });
-
-    const infoBlockRef = useRef<HTMLDivElement>(null);
-
-    // useEffect(() => {
-    //   const handleClickOutside = (event: MouseEvent) => {
-    //     if (infoBlockRef.current?.contains(event.target as Node))
-    //       setShowInfoBlock(false);
-    //   };
-
-    //   document.addEventListener('mousedown', handleClickOutside);
-    //   return () =>
-    //     document.removeEventListener('mousedown', handleClickOutside);
-    // }, []);
 
     const channelUser = user;
     const channelUserMember = server.members?.[user.id];
@@ -326,7 +294,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     const handleAddFriend = (targetId: string) => {};
 
     return (
-      <div key={user.id} ref={infoBlockRef}>
+      <div key={user.id}>
         {/* User View */}
         <div
           className={`${styles['userTab']}`}
@@ -335,8 +303,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
           onDoubleClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            // setContentMenuPos({ x: e.pageX, y: e.pageY });
-            // setShowInfoBlock(true);
+            contextMenu.showUserInfoBlock(e.pageX, e.pageY, user, server);
           }}
           onContextMenu={(e) => {
             e.preventDefault();
@@ -364,8 +331,9 @@ const UserTab: React.FC<UserTabProps> = React.memo(
           }}
         >
           <div
-            className={`${styles['userState']}
-          ${userSpeakingStatus[user.id] ? styles['unplay'] : ''}`}
+            className={`${styles['userState']} ${
+              false ? styles['unplay'] : ''
+            }`}
           />
           <div
             className={`${styles['userIcon']} ${
@@ -383,17 +351,6 @@ const UserTab: React.FC<UserTabProps> = React.memo(
             <div className={styles['myLocationIcon']} />
           )}
         </div>
-
-        {/* User Info Block */}
-        {/* FIXME */}
-        {/* {showInfoBlock && (
-          <UserInfoBlock
-            onClose={() => setShowInfoBlock(false)}
-            x={contentMenuPos.x}
-            y={contentMenuPos.y}
-            user={user}
-          />
-        )} */}
       </div>
     );
   },

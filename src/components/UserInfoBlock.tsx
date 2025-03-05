@@ -21,36 +21,18 @@ import { getPermissionText } from '@/utils/formatters';
 
 interface UserInfoBlockProps {
   user: User | null;
-  x?: number;
-  y?: number;
+  server: Server | null;
+  x: number;
+  y: number;
   onClose: () => void;
 }
 
 const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
-  ({ onClose, x, y, user }) => {
+  ({ onClose, x, y, user, server }) => {
     if (!user) return null;
 
-    // Redux
-    const server = useSelector((state: { server: Server }) => state.server);
-
-    // Ref
-    const ref = React.useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      const handleClick = (e: MouseEvent) => {
-        if (!ref.current?.contains(e.target as Node)) onClose();
-      };
-
-      window.addEventListener('click', handleClick);
-      // window.addEventListener('contextmenu', handleClick);
-      return () => {
-        window.removeEventListener('click', handleClick);
-        // window.addEventListener('contextmenu', handleClick);
-      };
-    }, [onClose]);
-
     const userGender = user.gender;
-    const userMember = server.members?.[user.id];
+    const userMember = server?.members?.[user.id];
     const userPermission = userMember?.permissionLevel ?? 1;
     const userContributions = userMember?.contribution ?? 0;
     const userLevel = Math.min(56, Math.ceil(user.level / 5));
@@ -64,11 +46,7 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
     return (
       <div
         className={`${UserInfoCard['userInfoCard']} ${UserInfoCard['info-card-vip-5']}`}
-        style={{
-          top: `${y}px`,
-          left: `${x}px`,
-        }}
-        ref={ref}
+        style={{ top: y, left: x }}
       >
         <div className={`${UserInfoCard['userInfoHeader']}}`}>
           {/* Left Avatar */}
