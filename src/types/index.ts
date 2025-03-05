@@ -264,6 +264,7 @@ export enum popupType {
   APPLY_MEMBER = 'applyMember',
   APPLY_FRIEND = 'applyFriend',
   DIRECT_MESSAGE = 'directMessage',
+  ERROR = 'error',
 }
 
 export interface discordPresence {

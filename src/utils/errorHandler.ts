@@ -1,56 +1,35 @@
-export class SocketError extends Error {
+import { ipcService } from '@/services/ipc.service';
+
+export class StandardizedError extends Error {
   constructor(
     message: string,
+    public name: string = 'Error',
     public part: string = 'UNKNOWN_PART',
     public tag: string = 'UNKNOWN_ERROR',
     public status_code: number = 500,
+    public handler: () => void = () => {},
   ) {
     super(message);
-    this.name = 'AppError';
   }
 }
 
-// 先創起來放，錯誤統一管理
-export const standardizedError = (
-  error: unknown,
-  part?: string,
-  tag?: string,
-): SocketError => {
-  if (error instanceof SocketError) {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return new SocketError(error.message, part, tag);
-  }
-
-  return new SocketError('未知錯誤', 'UNKNOWN_ERROR');
-};
-
 export class errorHandler {
-  private static logError(error: SocketError): void {
-    alert(`${error.message}\n\nThe error at ${error.part} with tag ${error.tag}`);
-    const situation = (() => {
-      switch (error.status_code) {
-        case 400:
-          return 'request error';
-        case 404:
-          return 'not found';
-        case 500:
-          return 'internal server error';
-        default:
-          return 'unknown error';
-      }
-    })();
-    console.error(
-      `${error.message}:The error at ${error.part} with tag ${error.tag} is ${situation}`,
-    );
-  }
-  public static ResponseError(error: SocketError): void {
-    this.logError(error);
-    errorHandler.handle();
-    errorHandler.handle = () => {};
+  error: StandardizedError;
+
+  constructor(error: StandardizedError) {
+    this.error = error;
   }
 
-  public static handle = () => {}; //外包函數
+  show() {
+    const errorMessage = `[錯誤][${this.error.tag}] ${this.error.message}，錯誤代碼: ${this.error.status_code} (${this.error.part})`;
+
+    ipcService.popup.open('error', 207, 412, {
+      iconType: 'error',
+      title: errorMessage,
+      from: 'errorHandler',
+    });
+    ipcService.popup.onSubmit(({ to }: any) => {
+      if (to == 'errorHandler') this.error.handler();
+    });
+  }
 }

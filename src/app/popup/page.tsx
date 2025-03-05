@@ -15,10 +15,14 @@ import AddChannelModal from '@/components/modals/AddChannelModal';
 import DeleteChannelModal from '@/components/modals/DeleteChannelModal';
 import EditChannelModal from '@/components/modals/EditChannelModal';
 import ServerApplication from '@/components/modals/ServerApplicationModal';
+
+// Services
 import { ipcService } from '@/services/ipc.service';
+import Dialog from '@/components/modals/Dialog';
 
 const Modal = React.memo(() => {
   const [type, setType] = useState<popupType | null>(null);
+  const [initialData, setInitialData] = useState<any | null>(null);
 
   useEffect(() => {
     if (window.location.search) {
@@ -27,6 +31,17 @@ const Modal = React.memo(() => {
       setType(type);
     }
   }, []);
+
+  useEffect(() => {
+    if (!type) return;
+
+    ipcService.initialData.request(type);
+    ipcService.initialData.receive((data) => setInitialData(data));
+
+    return () => {
+      ipcService.removeListener('initial-data');
+    };
+  }, [type]);
 
   const getTitle = (isCategory?: boolean) => {
     switch (type) {
@@ -53,6 +68,8 @@ const Modal = React.memo(() => {
         return { title: '好友請求', button: ['close'] };
       case popupType.DIRECT_MESSAGE:
         return { title: '私訊', button: ['close'] };
+      case popupType.ERROR:
+        return { title: '錯誤', button: ['close'] };
       default:
         return undefined;
     }
@@ -99,23 +116,50 @@ const Modal = React.memo(() => {
         return; // <FriendApplication onClose={() => {}} />;
       case popupType.DIRECT_MESSAGE:
         return; // <DirectMessageModal onClose={() => {}} />;
+      case popupType.ERROR:
+        return <Dialog {...initialData} />;
       default:
         return <></>;
     }
   };
 
-  const getButtons = () => {};
-
-  useEffect(() => {
-    ipcService.requestInitialData();
-    ipcService.onInitialData((data) => {
-      console.log(data);
-    });
-
-    return () => {
-      ipcService.removeListener('initial-data');
-    };
-  }, []);
+  const getButtons = () => {
+    switch (type) {
+      case popupType.EDIT_USER:
+        return [];
+      case popupType.CREATE_SERVER:
+        return [];
+      case popupType.EDIT_SERVER:
+        return [];
+      case popupType.DELETE_SERVER:
+        return [];
+      case popupType.CREATE_CHANNEL:
+        return [];
+      case popupType.EDIT_CHANNEL:
+        return [];
+      case popupType.DELETE_CHANNEL:
+        return [];
+      case popupType.APPLY_MEMBER:
+        return [];
+      case popupType.APPLY_FRIEND:
+        return [];
+      case popupType.DIRECT_MESSAGE:
+        return [];
+      case popupType.ERROR:
+        return [
+          {
+            type: 'button',
+            label: '確定',
+            onClick: () => {
+              // ipcService.popup.submit(initialData.from);
+              ipcService.window.close();
+            },
+          },
+        ];
+      default:
+        return [];
+    }
+  };
 
   return (
     <div
@@ -129,23 +173,18 @@ const Modal = React.memo(() => {
       </div>
       {/* Bottom */}
       <div className="flex flex-row justify-end items-center bg-gray-50">
-        {/* {hasButtons && (
-            <div className="flex justify-end gap-2 p-4 bg-gray-50">
-              {buttons.map((button, i) => (
-                <button
-                  key={i}
-                  type={button.type}
-                  onClick={button.onClick}
-                  className={`px-4 py-2 rounded ${getButtonStyle(
-                    button,
-                    false,
-                  )}`}
-                >
-                  {button.label}
-                </button>
-              ))}
-            </div>
-          )} */}
+        <div className="flex justify-end gap-2 p-4 bg-gray-50">
+          {getButtons().map((button, i) => (
+            <button
+              key={i}
+              type={button.type as 'button'}
+              onClick={button.onClick}
+              className={`px-4 py-2 rounded`}
+            >
+              {button.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

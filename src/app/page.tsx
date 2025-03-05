@@ -19,10 +19,9 @@ import ServerPage from '@/components/pages/ServerPage';
 
 // Components
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import UserSettingModal from '@/components/modals/UserSettingModal';
 
 // Utils
-import { measureLatency } from '@/utils/measureLatency';
+import { errorHandler, StandardizedError } from '@/utils/errorHandler';
 
 // Providers
 import WebRTCProvider from '@/providers/WebRTCProvider';
@@ -59,6 +58,9 @@ const Header: React.FC<HeaderProps> = React.memo(
     };
     const handleDisconnect = () => {
       console.log('Socket disconnected');
+    };
+    const handleError = (error: StandardizedError) => {
+      new errorHandler(error).show();
     };
     const handleUserConnect = (user: any) => {
       console.log('User connected: ', user);
@@ -118,6 +120,9 @@ const Header: React.FC<HeaderProps> = React.memo(
     const handleUpdateStatus = (status: User['status']) => {
       socket?.send.updateUser({ user: { status } });
     };
+    const handleCreateError = (error: StandardizedError) => {
+      new errorHandler(error).show();
+    };
 
     useEffect(() => {
       if (!socket) return;
@@ -134,7 +139,7 @@ const Header: React.FC<HeaderProps> = React.memo(
         [SocketServerEvent.CHANNEL_CONNECT]: handleChannelConnect,
         [SocketServerEvent.CHANNEL_DISCONNECT]: handleChannelDisconnect,
         [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
-        [SocketServerEvent.ERROR]: (error: any) => console.error(error),
+        [SocketServerEvent.ERROR]: handleError,
       };
 
       const unsubscribe: (() => void)[] = [];
@@ -306,6 +311,17 @@ const Header: React.FC<HeaderProps> = React.memo(
                 className={`${header['option']} ${header['hasImage']}`}
                 data-type="message-history"
                 data-key="30136"
+                onClick={() =>
+                  handleCreateError(
+                    new StandardizedError(
+                      '此頁面尚未完工',
+                      'NotImplementedError',
+                      'Page',
+                      'PAGE_NOT_IMPLEMENTED',
+                      404,
+                    ),
+                  )
+                }
               >
                 訊息紀錄
               </div>

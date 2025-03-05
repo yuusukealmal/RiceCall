@@ -20,7 +20,7 @@ export const ipcService = {
   // Get service availability
   getAvailability: () => !!ipcRenderer,
 
-  // Send message to main process (sendSocketEvent)
+  // Socket event methods
   sendSocketEvent: (event: SocketClientEvent, data: any) => {
     if (isElectron) {
       ipcRenderer.send(event, data);
@@ -28,8 +28,6 @@ export const ipcService = {
       console.warn('IPC not available - not in Electron environment');
     }
   },
-
-  // Listen for messages from main process (onSocketEvent)
   onSocketEvent: (event: SocketServerEvent, callback: (data: any) => void) => {
     if (isElectron) {
       ipcRenderer.on(event, (_: any, data: any) => callback(data));
@@ -38,7 +36,7 @@ export const ipcService = {
     }
   },
 
-  // Remove all listeners for a specific channel
+  // Remove specific listener
   removeListener: (event: string) => {
     if (isElectron) {
       ipcRenderer.removeAllListeners(event);
@@ -47,21 +45,22 @@ export const ipcService = {
     }
   },
 
-  //
-  onInitialData: (callback: (data: any) => void) => {
-    if (isElectron) {
-      ipcRenderer.on('initial-data', (_: any, data: any) => callback(data));
-    } else {
-      console.warn('IPC not available - not in Electron environment');
-    }
-  },
-
-  requestInitialData: () => {
-    if (isElectron) {
-      ipcRenderer.send('request-initial-data');
-    } else {
-      console.warn('IPC not available - not in Electron environment');
-    }
+  // Initial data methods
+  initialData: {
+    receive: (callback: (data: any) => void) => {
+      if (isElectron) {
+        ipcRenderer.on('initial-data', (_: any, data: any) => callback(data));
+      } else {
+        console.warn('IPC not available - not in Electron environment');
+      }
+    },
+    request: (from: string) => {
+      if (isElectron) {
+        ipcRenderer.send('initial-data', from);
+      } else {
+        console.warn('IPC not available - not in Electron environment');
+      }
+    },
   },
 
   // Window control methods
@@ -106,6 +105,7 @@ export const ipcService = {
         ipcRenderer.removeListener('window-unmaximized', callback);
       }
     },
+    // FIXME: THIS SHOULD BE REMOVED
     openDevtool: () => {
       if (isElectron) {
         ipcRenderer.send('openDevtool');
@@ -114,9 +114,24 @@ export const ipcService = {
   },
 
   popup: {
-    open: (type: string, height?: number, width?: number, initialData?: any) => {
+    open: (
+      type: string,
+      height?: number,
+      width?: number,
+      initialData?: any,
+    ) => {
       if (isElectron) {
         ipcRenderer.send('open-popup', type, height, width, initialData);
+      }
+    },
+    submit: (to: string) => {
+      if (isElectron) {
+        ipcRenderer.send('popup-submit', to);
+      }
+    },
+    onSubmit: (callback: (data: any) => void) => {
+      if (isElectron) {
+        ipcRenderer.on('popup-submit', (_: any, data: any) => callback(data));
       }
     },
   },

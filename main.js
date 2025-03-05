@@ -34,12 +34,8 @@ let popups = {};
 const WS_URL = 'http://localhost:4500';
 let socketInstance = null;
 
-// Share data between main and renderer processes
-let sharedData = {
-  user: null,
-  server: null,
-  channel: null,
-};
+// Popup initial datas
+let initialDatas = {};
 
 // Disocrd RPC
 const clientId = '1242441392341516288';
@@ -217,6 +213,7 @@ async function createPopup(type, height, width, initialData) {
     }
   }
 
+  initialDatas[type] = initialData;
   popups[type] = new BrowserWindow({
     width: width ?? 800,
     height: height ?? 600,
@@ -242,10 +239,6 @@ async function createPopup(type, height, width, initialData) {
 
   popups[type].webContents.on('closed', () => {
     popups[type] = null;
-  });
-
-  ipcMain.on('request-initial-data', (event) => {
-    popups[type].webContents.send('initial-data', initialData);
   });
 
   return popups[type];
@@ -285,55 +278,46 @@ function connectSocket(token) {
       );
     });
     socket.on('userConnect', (data) => {
-      sharedData.user = data;
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('userConnect', data),
       );
     });
     socket.on('userDisconnect', (data) => {
-      sharedData.user = null;
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('userDisconnect', data),
       );
     });
     socket.on('userUpdate', (data) => {
-      sharedData.user = { ...sharedData.user, ...data };
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('userUpdate', data),
       );
     });
     socket.on('serverConnect', (data) => {
-      sharedData.server = data;
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('serverConnect', data),
       );
     });
     socket.on('serverDisconnect', (data) => {
-      sharedData.server = null;
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('serverDisconnect', data),
       );
     });
     socket.on('serverUpdate', (data) => {
-      sharedData.server = { ...sharedData.server, ...data };
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('serverUpdate', data),
       );
     });
     socket.on('channelConnect', (data) => {
-      sharedData.channel = data;
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('channelConnect', data),
       );
     });
     socket.on('channelDisconnect', (data) => {
-      sharedData.channel = null;
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('channelDisconnect', data),
       );
     });
     socket.on('channelUpdate', (data) => {
-      sharedData.channel = { ...sharedData.channel, ...data };
       BrowserWindow.getAllWindows().forEach((window) =>
         window.webContents.send('channelUpdate', data),
       );
@@ -458,6 +442,15 @@ app.on('ready', async () => {
     mainWindow.hide();
     authWindow.show();
     socketInstance = disconnectSocket(socketInstance);
+  });
+
+  // Initial data request handlers
+  ipcMain.on('initial-data', (event, from) => {
+    event.sender.send('initial-data', initialDatas[from]);
+  });
+
+  ipcMain.on('popup-submit', (event, to) => {
+    popups[to].webContents.send('popup-submit');
   });
 
   // Popup handlers

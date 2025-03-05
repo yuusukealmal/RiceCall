@@ -3,27 +3,27 @@ import React from 'react';
 
 import Popup from '../../styles/common/popup.module.css';
 
+const DialogIcon = {
+  error: 'error',
+  warning: 'warning',
+  info: 'info',
+};
+
 interface DialogProps {
-  popupIcon: string;
-  textBorder: string;
+  iconType: keyof typeof DialogIcon;
   title: React.ReactNode;
   onSubmit: (e: React.FormEvent) => void;
-  onClose: () => void;
 }
 
-const Dialog: React.FC<DialogProps> = ({
-  popupIcon,
-  textBorder,
-  title,
-  onSubmit,
-  onClose,
-}) => {
-  console.log(popupIcon, textBorder, title);
+const Dialog: React.FC<DialogProps> = (initialData: DialogProps) => {
+  const { iconType, title } = initialData;
   return (
     <div className={Popup['inputGroup']}>
       <div className={Popup['inputBox']}>
-        <div className={`${Popup['popupIcon']} ${Popup[popupIcon]}`}></div>
-        <div className={textBorder}>
+        <div
+          className={`${Popup['popupIcon']} ${Popup[DialogIcon[iconType]]}`}
+        ></div>
+        <div className={Popup['textBorder']}>
           <div className={Popup['title']}>{title}</div>
         </div>
       </div>

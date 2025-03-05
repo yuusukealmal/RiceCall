@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 
 // Components
 import Modal from '@/components/Modal';
-import Dialog from '@/components/common/Dialog';
+import Dialog from '@/components/modals/Dialog';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
