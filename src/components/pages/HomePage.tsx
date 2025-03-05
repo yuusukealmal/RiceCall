@@ -140,7 +140,9 @@ const Header: React.FC<HeaderProps> = React.memo(({ onSearch }) => {
           <button
             className={styles['navegateItem']}
             data-key="30014"
-            onClick={() => handleOpenCreateServerPopup()}
+            onClick={() =>
+              ipcService.popup.open(popupType.CREATE_SERVER, 407, 550)
+            }
           >
             <div></div>
             創建語音群
