@@ -15,6 +15,7 @@ import AddChannelModal from '@/components/modals/AddChannelModal';
 import DeleteChannelModal from '@/components/modals/DeleteChannelModal';
 import EditChannelModal from '@/components/modals/EditChannelModal';
 import ServerApplication from '@/components/modals/ServerApplicationModal';
+import { ipcService } from '@/services/ipc.service';
 
 const Modal = React.memo(() => {
   const [type, setType] = useState<popupType | null>(null);
@@ -104,6 +105,17 @@ const Modal = React.memo(() => {
   };
 
   const getButtons = () => {};
+
+  useEffect(() => {
+    ipcService.requestInitialData();
+    ipcService.onInitialData((data) => {
+      console.log(data);
+    });
+
+    return () => {
+      ipcService.removeListener('initial-data');
+    };
+  }, []);
 
   return (
     <div

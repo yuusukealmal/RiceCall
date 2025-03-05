@@ -114,9 +114,9 @@ export const ipcService = {
   },
 
   popup: {
-    open: (type: string, height?: number, width?: number) => {
+    open: (type: string, height?: number, width?: number, initialData?: any) => {
       if (isElectron) {
-        ipcRenderer.send('open-popup', type, height, width);
+        ipcRenderer.send('open-popup', type, height, width, initialData);
       }
     },
   },

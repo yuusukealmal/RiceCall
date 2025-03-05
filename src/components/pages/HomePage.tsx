@@ -98,6 +98,10 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = React.memo(({ onSearch }) => {
+  const handleOpenCreateServerPopup = () => {
+    ipcService.popup.open(popupType.CREATE_SERVER, 600, 450, { data: 'test' });
+  };
+
   return (
     <>
       <header className={styles['homeHeader']}>
@@ -136,9 +140,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ onSearch }) => {
           <button
             className={styles['navegateItem']}
             data-key="30014"
-            onClick={() =>
-              ipcService.popup.open(popupType.CREATE_SERVER, 600, 450)
-            }
+            onClick={() => handleOpenCreateServerPopup()}
           >
             <div></div>
             創建語音群

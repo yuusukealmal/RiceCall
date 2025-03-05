@@ -244,8 +244,8 @@ async function createPopup(type, height, width, initialData) {
     popups[type] = null;
   });
 
-  popups[type].webContents.on('request-initial-data', (event) => {
-    event.sender.send('initial-data', initialData);
+  ipcMain.on('request-initial-data', (event) => {
+    popups[type].webContents.send('initial-data', initialData);
   });
 
   return popups[type];
@@ -461,8 +461,8 @@ app.on('ready', async () => {
   });
 
   // Popup handlers
-  ipcMain.on('open-popup', async (_, type, height, width) => {
-    createPopup(type, height, width);
+  ipcMain.on('open-popup', async (_, type, height, width, initialData) => {
+    createPopup(type, height, width, initialData);
   });
 
   // Window control event handlers
