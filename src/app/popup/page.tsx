@@ -35,13 +35,7 @@ const Modal = React.memo(() => {
 
   useEffect(() => {
     if (!type) return;
-
-    ipcService.initialData.request(type);
-    ipcService.initialData.receive((data) => setInitialData(data));
-
-    return () => {
-      ipcService.removeListener('initial-data');
-    };
+    ipcService.initialData.request(type, (data) => setInitialData(data));
   }, [type]);
 
   const getTitle = (isCategory?: boolean) => {
@@ -152,7 +146,7 @@ const Modal = React.memo(() => {
             type: 'button',
             label: '確定',
             onClick: () => {
-              // ipcService.popup.submit(initialData.from);
+              ipcService.popup.submit(initialData.submitTo);
               ipcService.window.close();
             },
           },

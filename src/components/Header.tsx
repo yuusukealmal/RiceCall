@@ -22,27 +22,18 @@ const Header: React.FC<HeaderProps> = React.memo(({ title }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const handleFullscreen = () => {
-    if (!isFullscreen) {
-      ipcService.getAvailability()
-        ? ipcService.window.maximize()
-        : document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      ipcService.getAvailability()
-        ? ipcService.window.unmaximize()
-        : document.exitFullscreen();
-      setIsFullscreen(false);
-    }
+    isFullscreen
+      ? ipcService.window.unmaximize()
+      : ipcService.window.maximize();
+    setIsFullscreen(!isFullscreen);
   };
 
   const handleMinimize = () => {
-    if (ipcService.getAvailability()) ipcService.window.minimize();
-    else console.warn('IPC not available - not in Electron environment');
+    ipcService.window.minimize();
   };
 
   const handleClose = () => {
-    if (ipcService.getAvailability()) ipcService.window.close();
-    else console.warn('IPC not available - not in Electron environment');
+    ipcService.window.close();
   };
 
   return (

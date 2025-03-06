@@ -17,9 +17,6 @@ if (typeof window !== 'undefined' && window.require) {
 export const isElectron = !!ipcRenderer;
 
 export const ipcService = {
-  // Get service availability
-  getAvailability: () => !!ipcRenderer,
-
   // Socket event methods
   sendSocketEvent: (event: SocketClientEvent, data: any) => {
     if (isElectron) {
@@ -47,16 +44,28 @@ export const ipcService = {
 
   // Initial data methods
   initialData: {
-    receive: (callback: (data: any) => void) => {
+    request: (to: string, callback: (data: any) => void) => {
       if (isElectron) {
-        ipcRenderer.on('initial-data', (_: any, data: any) => callback(data));
+        ipcRenderer.send('request-initial-data', to);
+        ipcRenderer.on(
+          'response-initial-data',
+          (_: any, from: string, data: any) => {
+            if (from != to) return;
+            callback(data);
+            ipcRenderer.removeAllListeners('response-initial-data');
+          },
+        );
       } else {
         console.warn('IPC not available - not in Electron environment');
       }
     },
-    request: (from: string) => {
+    onRequest: (host: string, data: any) => {
       if (isElectron) {
-        ipcRenderer.send('initial-data', from);
+        ipcRenderer.on('request-initial-data', (_: any, to: string) => {
+          if (to != host) return;
+          ipcRenderer.send('response-initial-data', host, data);
+          ipcRenderer.removeAllListeners('request-initial-data');
+        });
       } else {
         console.warn('IPC not available - not in Electron environment');
       }
@@ -68,21 +77,29 @@ export const ipcService = {
     minimize: () => {
       if (isElectron) {
         ipcRenderer.send('window-control', 'minimize');
+      } else {
+        window.close();
       }
     },
     maximize: () => {
       if (isElectron) {
         ipcRenderer.send('window-control', 'maximize');
+      } else {
+        document.documentElement.requestFullscreen();
       }
     },
     unmaximize: () => {
       if (isElectron) {
         ipcRenderer.send('window-control', 'unmaximize');
+      } else {
+        document.exitFullscreen();
       }
     },
     close: () => {
       if (isElectron) {
         ipcRenderer.send('window-control', 'close');
+      } else {
+        window.close();
       }
     },
     onMaximize: (callback: () => void) => {
@@ -114,14 +131,9 @@ export const ipcService = {
   },
 
   popup: {
-    open: (
-      type: string,
-      height?: number,
-      width?: number,
-      initialData?: any,
-    ) => {
+    open: (type: string, height?: number, width?: number) => {
       if (isElectron) {
-        ipcRenderer.send('open-popup', type, height, width, initialData);
+        ipcRenderer.send('open-popup', type, height, width);
       }
     },
     submit: (to: string) => {
@@ -129,9 +141,13 @@ export const ipcService = {
         ipcRenderer.send('popup-submit', to);
       }
     },
-    onSubmit: (callback: (data: any) => void) => {
+    onSubmit: (host: string, callback: () => void) => {
       if (isElectron) {
-        ipcRenderer.on('popup-submit', (_: any, data: any) => callback(data));
+        ipcRenderer.on('popup-submit', (_: any, to: string) => {
+          if (to != host) return;
+          callback();
+          ipcRenderer.removeAllListeners('popup-submit');
+        });
       }
     },
   },

@@ -158,17 +158,10 @@ const Header: React.FC<HeaderProps> = React.memo(
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const handleFullscreen = () => {
-      if (!isFullscreen) {
-        ipcService.getAvailability()
-          ? ipcService.window.maximize()
-          : document.documentElement.requestFullscreen();
-        setIsFullscreen(true);
-      } else {
-        ipcService.getAvailability()
-          ? ipcService.window.unmaximize()
-          : document.exitFullscreen();
-        setIsFullscreen(false);
-      }
+      isFullscreen
+        ? ipcService.window.unmaximize()
+        : ipcService.window.maximize();
+      setIsFullscreen(!isFullscreen);
     };
     const handleMinimize = () => {
       ipcService.window.minimize();

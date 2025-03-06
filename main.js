@@ -196,7 +196,7 @@ async function createAuthWindow() {
   return authWindow;
 }
 
-async function createPopup(type, height, width, initialData) {
+async function createPopup(type, height, width) {
   // Track popup windows
   if (popups[type] && !popups[type].isDestroyed()) {
     popups[type].focus();
@@ -213,7 +213,6 @@ async function createPopup(type, height, width, initialData) {
     }
   }
 
-  initialDatas[type] = initialData;
   popups[type] = new BrowserWindow({
     width: width ?? 800,
     height: height ?? 600,
@@ -445,17 +444,27 @@ app.on('ready', async () => {
   });
 
   // Initial data request handlers
-  ipcMain.on('initial-data', (event, from) => {
-    event.sender.send('initial-data', initialDatas[from]);
+  ipcMain.on('request-initial-data', (_, to) => {
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('request-initial-data', to);
+    });
+  });
+  ipcMain.on('response-initial-data', (_, from, data) => {
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('response-initial-data', from, data);
+    });
   });
 
-  ipcMain.on('popup-submit', (event, to) => {
-    popups[to].webContents.send('popup-submit');
+  // Popup submit handlers
+  ipcMain.on('popup-submit', (_, to) => {
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('popup-submit', to);
+    });
   });
 
   // Popup handlers
-  ipcMain.on('open-popup', async (_, type, height, width, initialData) => {
-    createPopup(type, height, width, initialData);
+  ipcMain.on('open-popup', async (_, type, height, width) => {
+    createPopup(type, height, width);
   });
 
   // Window control event handlers
