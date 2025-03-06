@@ -8,22 +8,68 @@ const Map = utils.map;
 const Get = utils.get;
 const Interval = utils.interval;
 const Set = utils.set;
+const JWT = utils.jwt;
 // Socket error
-const SocketError = require('./socketError');
+const StandardizedError = require('../standardizedError');
 // Handlers
 const rtcHandler = require('./rtc');
 
 const channelHandler = {
-  connectChannel: async (io, socket, sessionId, channelId) => {
+  connectChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     const channels = (await db.get('channels')) || {};
 
     try {
-      // validate data
+      // data = {
+      //   channelId:
+      // }
+      // console.log(data);
+
+      // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'ValidationError',
+          'CONNECTCHANNEL',
+          'TOKEN_MISSING',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'ValidationError',
+          'CONNECTCHANNEL',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'ValidationError',
+          'CONNECTCHANNEL',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { channelId } = data;
+      if (!channelId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'CONNECTCHANNEL',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Invalid session ID(${sessionId})`,
           'CONNECTCHANNEL',
           'SESSION_EXPIRED',
@@ -32,7 +78,7 @@ const channelHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
+        throw new StandardizedError(
           `User(${userId}) not found`,
           'CONNECTCHANNEL',
           'USER',
@@ -41,7 +87,7 @@ const channelHandler = {
       }
       const channel = channels[channelId];
       if (!channel && channelId) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Channel(${channelId}) not found`,
           'CONNECTCHANNEL',
           'CHANNEL',
@@ -49,7 +95,7 @@ const channelHandler = {
         );
       }
       if (channel.settings.visibility === 'private') {
-        throw new SocketError(
+        throw new StandardizedError(
           'Insufficient permissions',
           'CONNECTCHANNEL',
           'CHANNEL_VISIBILITY',
@@ -59,12 +105,9 @@ const channelHandler = {
 
       // check if user is already in a channel, if so, disconnect the channel
       if (user.currentChannelId) {
-        await channelHandler.disconnectChannel(
-          io,
-          socket,
-          sessionId,
-          user.currentChannelId,
-        );
+        await channelHandler.disconnectChannel(io, socket, {
+          channelId: user.currentChannelId,
+        });
       }
 
       // Update user
@@ -82,7 +125,7 @@ const channelHandler = {
 
       // Join the channel
       // socket.join(`channel_${channel.id}`);
-      await rtcHandler.join(io, socket, sessionId, channel.id);
+      await rtcHandler.join(io, socket, { channelId: channel.id });
 
       // Emit updated data (only to the user)
       io.to(socket.id).emit('userUpdate', update);
@@ -101,7 +144,7 @@ const channelHandler = {
       io.to(socket.id).emit('channelDisconnect', null);
 
       // Emit error data (only to the user)
-      if (error instanceof SocketError) {
+      if (error instanceof StandardizedError) {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
@@ -118,16 +161,61 @@ const channelHandler = {
       );
     }
   },
-  disconnectChannel: async (io, socket, sessionId, channelId) => {
+  disconnectChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     const channels = (await db.get('channels')) || {};
 
     try {
+      // data = {
+      //   channelId:
+      // }
+      // console.log(data);
+
       // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'ValidationError',
+          'DISCONNECTCHANNEL',
+          'INVALID_TOKEN',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'ValidationError',
+          'DISCONNECTCHANNEL',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'ValidationError',
+          'DISCONNECTCHANNEL',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { channelId } = data;
+      if (!channelId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'DISCONNECTCHANNEL',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Invalid session ID(${sessionId})`,
           'DISCONNECTCHANNEL',
           'SESSION_EXPIRED',
@@ -136,7 +224,7 @@ const channelHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
+        throw new StandardizedError(
           `User(${userId}) not found`,
           'DISCONNECTCHANNEL',
           'USER',
@@ -145,7 +233,7 @@ const channelHandler = {
       }
       const channel = channels[channelId];
       if (!channel) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Channel(${channelId}) not found`,
           'DISCONNECTCHANNEL',
           'CHANNEL',
@@ -165,7 +253,7 @@ const channelHandler = {
 
       // Leave the channel
       // socket.leave(`channel_${channel.id}`);
-      await rtcHandler.leave(io, socket, sessionId, channel.id);
+      await rtcHandler.leave(io, socket, { channelId: channel.id });
 
       // Play sound
       io.to(`channel_${channel.id}`).emit('playSound', 'leave');
@@ -184,7 +272,7 @@ const channelHandler = {
       );
     } catch (error) {
       // Emit error data (only to the user)
-      if (error instanceof SocketError) {
+      if (error instanceof StandardizedError) {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
@@ -200,16 +288,63 @@ const channelHandler = {
       );
     }
   },
-  createChannel: async (io, socket, sessionId, channel) => {
+  createChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     const servers = (await db.get('servers')) || {};
 
     try {
+      // data = {
+      //   channel: {
+      //     ...
+      //   },
+      // }
+      // console.log(data);
+
       // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'CREATECHANNEL',
+          'ValidationError',
+          'TOKEN_MISSING',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'CREATECHANNEL',
+          'ValidationError',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'CREATECHANNEL',
+          'ValidationError',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { channel } = data;
+      if (!channel) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'CREATECHANNEL',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Invalid session ID(${sessionId})`,
           'CREATECHANNEL',
           'SESSION_EXPIRED',
@@ -218,7 +353,7 @@ const channelHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
+        throw new StandardizedError(
           `User(${userId}) not found`,
           'CREATECHANNEL',
           'USER',
@@ -227,7 +362,7 @@ const channelHandler = {
       }
       const server = servers[channel.serverId];
       if (!server) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Server(${channel.serverId}) not found`,
           'CREATECHANNEL',
           'SERVER',
@@ -236,7 +371,7 @@ const channelHandler = {
       }
       const members = await Get.serverMembers(server.id);
       if (!members[user.id]) {
-        throw new SocketError(
+        throw new StandardizedError(
           `User(${user.id}) not found in server(${server.id})`,
           'UPDATECHANNEL',
           'MEMBER',
@@ -245,7 +380,7 @@ const channelHandler = {
       }
       const userPermission = members[user.id].permission;
       if (userPermission < 4) {
-        throw new SocketError(
+        throw new StandardizedError(
           'Insufficient permissions',
           'UPDATECHANNEL',
           'USER_PERMISSION',
@@ -272,7 +407,7 @@ const channelHandler = {
       );
     } catch (error) {
       // Emit error data (only to the user)
-      if (error instanceof SocketError) {
+      if (error instanceof StandardizedError) {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
@@ -286,17 +421,64 @@ const channelHandler = {
       new Logger('WebSocket').error('Error adding channel: ' + error.message);
     }
   },
-  updateChannel: async (io, socket, sessionId, editedChannel) => {
+  updateChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     const servers = (await db.get('servers')) || {};
     const channels = (await db.get('channels')) || {};
 
     try {
+      // data = {
+      //   channel: {
+      //     ...
+      //   },
+      // };
+      // console.log(data);
+
       // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'UPDATECHANNEL',
+          'ValidationError',
+          'TOKEN_MISSING',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'UPDATECHANNEL',
+          'ValidationError',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'UPDATECHANNEL',
+          'ValidationError',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { channel: editedChannel } = data;
+      if (!editedChannel) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'UPDATECHANNEL',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Invalid session ID(${sessionId})`,
           'UPDATECHANNEL',
           'SESSION_EXPIRED',
@@ -305,7 +487,7 @@ const channelHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
+        throw new StandardizedError(
           `User(${userId}) not found`,
           'UPDATECHANNEL',
           'USER',
@@ -314,7 +496,7 @@ const channelHandler = {
       }
       const channel = channels[editedChannel.id];
       if (!channel) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Channel(${editedChannel.id}) not found`,
           'UPDATECHANNEL',
           'CHANNEL',
@@ -323,7 +505,7 @@ const channelHandler = {
       }
       const server = servers[channel.serverId];
       if (!server) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Server(${channel.serverId}) not found`,
           'UPDATECHANNEL',
           'SERVER',
@@ -332,7 +514,7 @@ const channelHandler = {
       }
       const members = await Get.serverMembers(server.id);
       if (!members[user.id]) {
-        throw new SocketError(
+        throw new StandardizedError(
           `User(${user.id}) not found in server(${server.id})`,
           'UPDATECHANNEL',
           'MEMBER',
@@ -341,7 +523,7 @@ const channelHandler = {
       }
       const userPermission = members[user.id].permission;
       if (userPermission < 4) {
-        throw new SocketError(
+        throw new StandardizedError(
           'Insufficient permissions',
           'UPDATECHANNEL',
           'USER_PERMISSION',
@@ -367,7 +549,7 @@ const channelHandler = {
       );
     } catch (error) {
       // Emit error data (only to the user)
-      if (error instanceof SocketError) {
+      if (error instanceof StandardizedError) {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
@@ -381,16 +563,61 @@ const channelHandler = {
       new Logger('WebSocket').error('Error updating channel: ' + error.message);
     }
   },
-  deleteChannel: async (io, socket, sessionId, channelId) => {
+  deleteChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     const channels = (await db.get('channels')) || {};
 
     try {
+      // data = {
+      //   channelId:
+      // }
+      // console.log(data);
+
       // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'DELETECHANNEL',
+          'ValidationError',
+          'TOKEN_MISSING',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'DELETECHANNEL',
+          'ValidationError',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'DELETECHANNEL',
+          'ValidationError',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { channelId } = data;
+      if (!channelId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'DELETECHANNEL',
+          'ValidationError',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Invalid session ID(${sessionId})`,
           'DELETECHANNEL',
           'SESSION_EXPIRED',
@@ -399,7 +626,7 @@ const channelHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
+        throw new StandardizedError(
           `User(${userId}) not found`,
           'DELETECHANNEL',
           'USER',
@@ -408,7 +635,7 @@ const channelHandler = {
       }
       const channel = channels[channelId];
       if (!channel) {
-        throw new SocketError(
+        throw new StandardizedError(
           `Channel(${channelId}) not found`,
           'DELETECHANNEL',
           'CHANNEL',
@@ -429,7 +656,7 @@ const channelHandler = {
       );
     } catch (error) {
       // Emit error data (only to the user)
-      if (error instanceof SocketError) {
+      if (error instanceof StandardizedError) {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {

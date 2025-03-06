@@ -20,24 +20,71 @@ const Get = utils.get;
 const Interval = utils.interval;
 const Func = utils.func;
 const Set = utils.set;
+const JWT = utils.jwt;
 // Socket error
-const SocketError = require('./socketError');
+const StandardizedError = require('../standardizedError');
 // Handlers
 const channelHandler = require('./channel');
 
 const serverHandler = {
-  connectServer: async (io, socket, sessionId, serverId) => {
+  connectServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     const servers = (await db.get('servers')) || {};
     const members = (await db.get('members')) || {};
 
     try {
+      // data = {
+      //   serverId:
+      // }
+      // console.log(data);
+
       // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'ValidationError',
+          'CONNECTSERVER',
+          'TOKEN_MISSING',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'ValidationError',
+          'CONNECTSERVER',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'ValidationError',
+          'CONNECTSERVER',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { serverId } = data;
+      if (!serverId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'CONNECTSERVER',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
-          `Invalid session ID(${sessionId})`,
+        throw new StandardizedError(
+          `無效的 session ID(${sessionId})`,
+          'ValidationError',
           'CONNECTSERVER',
           'SESSION_EXPIRED',
           401,
@@ -45,8 +92,9 @@ const serverHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
-          `User(${userId}) not found`,
+        throw new StandardizedError(
+          `使用者(${userId})不存在`,
+          'ValidationError',
           'CONNECTSERVER',
           'USER',
           404,
@@ -54,30 +102,31 @@ const serverHandler = {
       }
       const server = servers[serverId];
       if (!server) {
-        throw new SocketError(
-          `Server(${serverId}) not found`,
+        throw new StandardizedError(
+          `伺服器(${serverId})不存在`,
+          'ValidationError',
           'CONNECTSERVER',
           'SERVER',
           404,
         );
       }
-      const member = Object.values(members).find(
-        (member) => member.serverId === server.id && member.userId === user.id,
-      );
+      const member = members[`mb_${user.id}-${server.id}`];
       if (
         server.settings.visibility === 'invisible' &&
         !(member?.permissionLevel > 1)
       ) {
-        throw new SocketError(
-          'Server is invisible and you are not a member',
+        throw new StandardizedError(
+          '該伺服器為私人伺服器',
+          'ValidationError',
           'CONNECTSERVER',
           'VISIBILITY',
           403,
         );
       }
       if (member?.isBlocked) {
-        throw new SocketError(
-          'You are blocked from the server',
+        throw new StandardizedError(
+          '您已被該伺服器封鎖',
+          'ValidationError',
           'CONNECTSERVER',
           'BLOCKED',
           403,
@@ -96,21 +145,15 @@ const serverHandler = {
 
       // Leave prev server
       if (user.currentServerId) {
-        await serverHandler.disconnectServer(
-          io,
-          socket,
-          sessionId,
-          user.currentServerId,
-        );
+        await serverHandler.disconnectServer(io, socket, {
+          serverId: user.currentServerId,
+        });
       }
 
       // Connect to the server's lobby channel
-      await channelHandler.connectChannel(
-        io,
-        socket,
-        sessionId,
-        server.lobbyId,
-      );
+      await channelHandler.connectChannel(io, socket, {
+        channelId: server.lobbyId,
+      });
 
       // Update user-server
       const update_userServer = {
@@ -139,38 +182,82 @@ const serverHandler = {
         `User(${user.id}) connected to server(${server.id})`,
       );
     } catch (error) {
+      if (!error instanceof StandardizedError) {
+        error = new StandardizedError(
+          `連接伺服器時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'CONNECTSERVER',
+          'EXCEPTION_ERROR',
+          500,
+        );
+      }
+
       // Emit data (only to the user)
       io.to(socket.id).emit('serverDisconnect', null);
-
-      // Emit error data (only to the user)
-      if (error instanceof SocketError) {
-        io.to(socket.id).emit('error', error);
-      } else {
-        io.to(socket.id).emit('error', {
-          message: `加入伺服器時發生無法預期的錯誤: ${error.message}`,
-          part: 'CONNECTSERVER',
-          tag: 'EXCEPTION_ERROR',
-          status_code: 500,
-        });
-      }
+      io.to(socket.id).emit('error', error);
 
       new Logger('WebSocket').error(
         `Error connecting server: ${error.message}`,
       );
     }
   },
-  disconnectServer: async (io, socket, sessionId, serverId) => {
+  disconnectServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     const servers = (await db.get('servers')) || {};
-    const channels = (await db.get('channels')) || {};
 
     try {
+      // data = {
+      //   serverId:
+      // }
+      // console.log(data);
+
       // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'ValidationError',
+          'DISCONNECTSERVER',
+          'TOKEN_MISSING',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'ValidationError',
+          'DISCONNECTSERVER',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'ValidationError',
+          'DISCONNECTSERVER',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { serverId } = data;
+      if (!serverId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'DISCONNECTSERVER',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
-          `Invalid session ID(${sessionId})`,
+        throw new StandardizedError(
+          `無效的 session ID(${sessionId})`,
+          'ValidationError',
           'DISCONNECTSERVER',
           'SESSION_EXPIRED',
           401,
@@ -178,8 +265,9 @@ const serverHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
-          `User(${userId}) not found`,
+        throw new StandardizedError(
+          `使用者(${userId})不存在`,
+          'ValidationError',
           'DISCONNECTSERVER',
           'USER',
           404,
@@ -187,28 +275,20 @@ const serverHandler = {
       }
       const server = servers[serverId];
       if (!server) {
-        throw new SocketError(
-          `Server(${serverId}) not found`,
+        throw new StandardizedError(
+          `伺服器(${serverId})不存在`,
+          'ValidationError',
           'DISCONNECTSERVER',
           'SERVER',
           404,
         );
       }
-      const channel = channels[user.currentChannelId];
-      if (!channel) {
-        new Logger('WebSocket').warn(
-          `Channel(${user.currentChannelId}) not found. Won't disconnect channel.`,
-        );
-      }
 
       // Leave prev channel
-      if (channel) {
-        await channelHandler.disconnectChannel(
-          io,
-          socket,
-          sessionId,
-          channel.id,
-        );
+      if (user.currentChannelId) {
+        await channelHandler.disconnectChannel(io, socket, {
+          channelId: user.currentChannelId,
+        });
       }
 
       // Update user presence
@@ -229,34 +309,83 @@ const serverHandler = {
         `User(${user.id}) disconnected from server(${server.id})`,
       );
     } catch (error) {
-      // Emit error data (only to the user)
-      if (error instanceof SocketError) {
-        io.to(socket.id).emit('error', error);
-      } else {
-        io.to(socket.id).emit('error', {
-          message: `離開伺服器時發生無法預期的錯誤: ${error.message}`,
-          part: 'DISCONNECTSERVER',
-          tag: 'EXCEPTION_ERROR',
-          status_code: 500,
-        });
+      if (!error instanceof StandardizedError) {
+        error = new StandardizedError(
+          `斷開伺服器時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'DISCONNECTSERVER',
+          'EXCEPTION_ERROR',
+          500,
+        );
       }
+
+      // Emit data (only to the user)
+      io.to(socket.id).emit('error', error);
 
       new Logger('WebSocket').error(
         `Error disconnecting from server: ${error.message}`,
       );
     }
   },
-  createServer: async (io, socket, sessionId, server) => {
+  createServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     let uploadedFilePath = null;
 
     try {
+      // data = {
+      //   server: {
+      //     ...
+      //   }
+      // }
+      // console.log(data);
+
       // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'ValidationError',
+          'CREATESERVER',
+          'TOKEN_MISSING',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'ValidationError',
+          'CREATESERVER',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'ValidationError',
+          'CREATESERVER',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { server } = data;
+      if (!server) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'CREATESERVER',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
-          `Invalid session ID(${sessionId})`,
+        throw new StandardizedError(
+          `無效的 session ID(${sessionId})`,
+          'ValidationError',
           'CREATESERVER',
           'SESSION_EXPIRED',
           401,
@@ -264,16 +393,18 @@ const serverHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
-          `User(${userId}) not found`,
+        throw new StandardizedError(
+          `使用者(${userId})不存在`,
+          'ValidationError',
           'CREATESERVER',
           'USER',
           404,
         );
       }
       if (!server.name || server.name.length > 30 || !server.name.trim()) {
-        throw new SocketError(
-          'Invalid server name',
+        throw new StandardizedError(
+          '無效的伺服器名稱',
+          'ValidationError',
           'CREATESERVER',
           'NAME',
           400,
@@ -281,8 +412,9 @@ const serverHandler = {
       }
       const userOwnedServers = await Get.userOwnedServers(userId);
       if (userOwnedServers.length >= 3) {
-        throw new SocketError(
-          'You have reached the maximum number of servers you can own',
+        throw new StandardizedError(
+          '您已達到可創建伺服器上限',
+          'ValidationError',
           'CREATESERVER',
           'LIMIT',
           403,
@@ -373,7 +505,9 @@ const serverHandler = {
       });
 
       // Join the server
-      await serverHandler.connectServer(io, socket, sessionId, serverId);
+      await serverHandler.connectServer(io, socket, {
+        serverId: serverId,
+      });
 
       new Logger('Server').success(
         `New server(${serverId}) created by user(${userId})`,
@@ -386,34 +520,84 @@ const serverHandler = {
         });
       }
 
-      // Error response
-      if (error instanceof SocketError) {
-        io.to(socket.id).emit('error', error);
-      } else {
-        io.to(socket.id).emit('error', {
-          message: `建立伺服器時發生無法預期的錯誤: ${error.message}`,
-          part: 'CREATESERVER',
-          tag: 'EXCEPTION_ERROR',
-          status_code: 500,
-        });
+      if (!error instanceof StandardizedError) {
+        error = new StandardizedError(
+          `創建伺服器時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'CREATESERVER',
+          'EXCEPTION_ERROR',
+          500,
+        );
       }
+
+      // Emit error data (only to the user)
+      io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(`Error creating server: ${error.message}`);
     }
   },
-  updateServer: async (io, socket, sessionId, editedServer) => {
+  updateServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
     const servers = (await db.get('servers')) || {};
+    const members = (await db.get('members')) || {};
 
     let uploadedFilePath = null;
 
     try {
+      // data = {
+      //   server: {
+      //     ...
+      //   }
+      // }
+      // console.log(data);
+
       // Validate data
+      const jwt = socket.jwt;
+      if (!jwt) {
+        throw new StandardizedError(
+          '無可用的 JWT',
+          'ValidationError',
+          'UPDATESERVER',
+          'TOKEN_MISSING',
+          401,
+        );
+      }
+      const sessionId = socket.sessionId;
+      if (!sessionId) {
+        throw new StandardizedError(
+          '無可用的 session ID',
+          'ValidationError',
+          'UPDATESERVER',
+          'SESSION_MISSING',
+          401,
+        );
+      }
+      const result = JWT.verifyToken(jwt);
+      if (!result.valid) {
+        throw new StandardizedError(
+          '無效的 token',
+          'ValidationError',
+          'UPDATESERVER',
+          'TOKEN_INVALID',
+          401,
+        );
+      }
+      const { server: editedServer } = data;
+      if (!editedServer) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'UPDATESERVER',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const userId = Map.sessionToUser.get(sessionId);
       if (!userId) {
-        throw new SocketError(
-          `Invalid session ID(${sessionId})`,
+        throw new StandardizedError(
+          `無效的 session ID(${sessionId})`,
+          'ValidationError',
           'UPDATESERVER',
           'SESSION_EXPIRED',
           401,
@@ -421,8 +605,9 @@ const serverHandler = {
       }
       const user = users[userId];
       if (!user) {
-        throw new SocketError(
-          `User(${userId}) not found`,
+        throw new StandardizedError(
+          `使用者(${userId})不存在`,
+          'ValidationError',
           'UPDATESERVER',
           'USER',
           404,
@@ -430,29 +615,54 @@ const serverHandler = {
       }
       const server = servers[editedServer.id];
       if (!server) {
-        throw new SocketError(
-          `Server(${editedServer.id}) not found`,
+        throw new StandardizedError(
+          `伺服器(${editedServer.id})不存在`,
+          'ValidationError',
           'UPDATESERVER',
           'SERVER',
           404,
         );
       }
-      const members = await Get.serverMembers(server.id);
-      if (!members[user.id]) {
-        throw new SocketError(
-          `User(${user.id}) not found in server(${server.id})`,
+      const member = members[`mb_${user.id}-${server.id}`];
+      if (!member) {
+        throw new StandardizedError(
+          `使用者(${user.id})不在伺服器(${server.id})中`,
+          'ValidationError',
           'UPDATECHANNEL',
           'MEMBER',
           404,
         );
       }
-      const userPermission = members[user.id].permission;
+      const userPermission = member.permission;
       if (userPermission < 4) {
-        throw new SocketError(
-          'Insufficient permissions',
+        throw new StandardizedError(
+          '您沒有權限更新伺服器',
+          'ValidationError',
           'UPDATECHANNEL',
           'USER_PERMISSION',
           403,
+        );
+      }
+      if (
+        editedServer.name ||
+        editedServer.name.length > 30 ||
+        !editedServer.name.trim()
+      ) {
+        throw new StandardizedError(
+          '無效的伺服器名稱',
+          'ValidationError',
+          'UPDATESERVER',
+          'NAME',
+          400,
+        );
+      }
+      if (editedServer.description && editedServer.description.length > 200) {
+        throw new StandardizedError(
+          '伺服器描述過長',
+          'ValidationError',
+          'UPDATESERVER',
+          'DESCRIPTION',
+          400,
         );
       }
 
@@ -503,27 +713,6 @@ const serverHandler = {
         editedServer.avatarUrl = avatarPath;
       }
 
-      // Validate specific fields
-      if (
-        editedServer.name &&
-        (editedServer.name.length > 30 || !editedServer.name.trim())
-      ) {
-        throw new SocketError(
-          'Invalid server name',
-          'UPDATESERVER',
-          'NAME',
-          400,
-        );
-      }
-      if (editedServer.description && editedServer.description.length > 200) {
-        throw new SocketError(
-          'Invalid server description',
-          'UPDATESERVER',
-          'DESCRIPTION',
-          400,
-        );
-      }
-
       // Create new server object with only allowed updates
       await Set.server(server.id, {
         ...server,
@@ -551,17 +740,19 @@ const serverHandler = {
       if (uploadedFilePath) {
         fs.unlink(uploadedFilePath).catch(console.error);
       }
-      // Emit error data (only to the user)
-      if (error instanceof SocketError) {
-        io.to(socket.id).emit('error', error);
-      } else {
-        io.to(socket.id).emit('error', {
-          message: `更新伺服器時發生無法預期的錯誤: ${error.message}`,
-          part: 'UPDATESERVER',
-          tag: 'EXCEPTION_ERROR',
-          status_code: 500,
-        });
+
+      if (!error instanceof StandardizedError) {
+        error = new StandardizedError(
+          `更新伺服器時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'UPDATESERVER',
+          'EXCEPTION_ERROR',
+          500,
+        );
       }
+
+      // Emit error data (only to the user)
+      io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(`Error updating server: ${error.message}`);
     }
