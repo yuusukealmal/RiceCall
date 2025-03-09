@@ -757,10 +757,10 @@ const serverHandler = {
       new Logger('Server').error(`Error updating server: ${error.message}`);
     }
   },
-  getSearchResult: async (io, socket, data) => {
+  searchServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
-    const members = (await db.get('members')) || {};
+    const servers = (await db.get('servers')) || {};
 
     try {
       // Validate data
@@ -769,7 +769,7 @@ const serverHandler = {
         throw new StandardizedError(
           '無可用的 JWT',
           'ValidationError',
-          'GETSEARCHRESULT',
+          'SEARCHSERVER',
           'TOKEN_MISSING',
           401,
         );
@@ -779,7 +779,7 @@ const serverHandler = {
         throw new StandardizedError(
           '無可用的 session ID',
           'ValidationError',
-          'GETSEARCHRESULT',
+          'SEARCHSERVER',
           'SESSION_MISSING',
           401,
         );
@@ -789,7 +789,7 @@ const serverHandler = {
         throw new StandardizedError(
           '無效的 token',
           'ValidationError',
-          'GETSEARCHRESULT',
+          'SEARCHSERVER',
           'TOKEN_INVALID',
           401,
         );
@@ -799,7 +799,7 @@ const serverHandler = {
         throw new StandardizedError(
           '無效的搜尋查詢',
           'ValidationError',
-          'GETSEARCHRESULT',
+          'SEARCHSERVER',
           'QUERY_INVALID',
           400,
         );
@@ -809,7 +809,7 @@ const serverHandler = {
         throw new StandardizedError(
           `無效的 session ID(${sessionId})`,
           'ValidationError',
-          'GETSEARCHRESULT',
+          'SEARCHSERVER',
           'SESSION_EXPIRED',
           401,
         );
@@ -819,63 +819,43 @@ const serverHandler = {
         throw new StandardizedError(
           `使用者(${userId})不存在`,
           'ValidationError',
-          'GETSEARCHRESULT',
+          'SEARCHSERVER',
           'USER',
           404,
         );
       }
 
-      const servers = (await db.get('servers')) || {};
-
       const searchResults = Object.values(servers).filter((server) => {
         const queryStr = String(query).trim();
+        // Check if query is an exact match to the display ID
         const displayIdStr = String(server.displayId).trim();
         const isExactIdMatch =
           displayIdStr.toLowerCase() === queryStr.toLowerCase();
-        if (isExactIdMatch) return true;
-
-        if (server.settings.visibility === 'invisible') return false;
-
-        // Use the existing calculateSimilarity function that implements Levenshtein distance
+        // Use calculateSimilarity function to calculate similarity score
         const nameLower = server.name.toLowerCase();
         const queryLower = query.toLowerCase();
         const similarityScore = Func.calculateSimilarity(nameLower, queryLower);
 
-        // If query is a substring of name, or similarity score is high enough (0.6 or higher)
-        return nameLower.includes(queryLower) || similarityScore >= 0.6;
+        if (isExactIdMatch) return true;
+        if (server.settings.visibility != 'invisible') return true;
+        if (similarityScore >= 0.6) return true;
       });
 
       const maxResults = 20;
       const limitedResults = searchResults.slice(0, maxResults);
 
-      const resultsWithMembership = await Promise.all(
-        limitedResults.map(async (server) => {
-          const memberKey = `mb_${userId}-${server.id}`;
-          const isMember = !!members[memberKey];
-
-          return {
-            id: server.id,
-            name: server.name,
-            displayId: server.displayId,
-            ownerId: server.ownerId,
-            avatarUrl: server.avatarUrl,
-            description: server.description,
-            visibility: server.settings.visibility,
-            isMember: isMember,
-          };
-        }),
-      );
-
       // Emit search results to the user
-      io.to(socket.id).emit('searchResults', {
-        results: resultsWithMembership,
-      });
+      io.to(socket.id).emit('searchResults', limitedResults);
+
+      new Logger('WebSocket').success(
+        `User(${user.id}) searched for servers with query: ${query}`,
+      );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `搜尋伺服器時發生無法預期的錯誤: ${error.message}`,
           'ServerError',
-          'GETSEARCHRESULT',
+          'SEARCHSERVER',
           'EXCEPTION_ERROR',
           500,
         );

@@ -306,9 +306,9 @@ function connectSocket(token) {
         window.webContents.send('serverUpdate', data),
       );
     });
-    socket.on('searchResults', (data) => {
+    socket.on('serverSearch', (data) => {
       BrowserWindow.getAllWindows().forEach((window) => {
-        window.webContents.send('searchResults', data);
+        window.webContents.send('serverSearch', data);
       });
     });
     socket.on('channelConnect', (data) => {
@@ -369,9 +369,7 @@ function connectSocket(token) {
     ipcMain.on('createServer', (_, data) => socket.emit('createServer', data));
     ipcMain.on('updateServer', (_, data) => socket.emit('updateServer', data));
     ipcMain.on('deleteServer', (_, data) => socket.emit('deleteServer', data));
-    ipcMain.on('getSearchResult', (_, data) => {
-      socket.emit('getSearchResult', data);
-    });
+    ipcMain.on('searchServer', (_, data) => socket.emit('searchServer', data));
     ipcMain.on('connectChannel', (_, data) =>
       socket.emit('connectChannel', data),
     );

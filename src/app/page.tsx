@@ -53,60 +53,6 @@ const Header: React.FC<HeaderProps> = React.memo(
     // Socket
     const socket = useSocket();
 
-    const handleConnect = () => {
-      console.log('Socket connected');
-    };
-    const handleDisconnect = () => {
-      console.log('Socket disconnected');
-    };
-    const handleError = (error: StandardizedError) => {
-      new errorHandler(error).show();
-    };
-    const handleUserConnect = (user: any) => {
-      console.log('User connected: ', user);
-      store.dispatch(setUser(user));
-    };
-    const handleUserDisconnect = () => {
-      console.log('User disconnected');
-      store.dispatch(clearChannel());
-      store.dispatch(clearServer());
-      store.dispatch(clearUser());
-      authService.logout();
-    };
-    const handleUserUpdate = (data: Partial<User>) => {
-      console.log('User update: ', data);
-      const user_ = store.getState().user;
-      if (!user_) return;
-      store.dispatch(setUser({ ...user_, ...data }));
-    };
-    const handleServerConnect = (server: Server) => {
-      console.log('Server connected: ', server);
-      store.dispatch(setServer(server));
-    };
-    const handleServerDisconnect = () => {
-      console.log('Server disconnected');
-      store.dispatch(clearServer());
-    };
-    const handleServerUpdate = (data: Partial<Server>) => {
-      console.log('Server update: ', data);
-      const server_ = store.getState().server;
-      if (!server_) return;
-      store.dispatch(setServer({ ...server_, ...data }));
-    };
-    const handleChannelConnect = (channel: Channel) => {
-      console.log('Channel connected: ', channel);
-      store.dispatch(setChannel(channel));
-    };
-    const handleChannelDisconnect = () => {
-      console.log('Channel disconnected');
-      store.dispatch(clearChannel());
-    };
-    const handleChannelUpdate = (data: Partial<Channel>) => {
-      console.log('Channel update: ', data);
-      const channel_ = store.getState().channel;
-      if (!channel_) return;
-      store.dispatch(setChannel({ ...channel_, ...data }));
-    };
     const handleLogout = () => {
       store.dispatch(clearChannel());
       store.dispatch(clearServer());
@@ -123,36 +69,6 @@ const Header: React.FC<HeaderProps> = React.memo(
     const handleCreateError = (error: StandardizedError) => {
       new errorHandler(error).show();
     };
-
-    useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.CONNECT]: () => handleConnect,
-        [SocketServerEvent.DISCONNECT]: () => handleDisconnect,
-        [SocketServerEvent.USER_CONNECT]: handleUserConnect,
-        [SocketServerEvent.USER_DISCONNECT]: handleUserDisconnect,
-        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
-        [SocketServerEvent.SERVER_CONNECT]: handleServerConnect,
-        [SocketServerEvent.SERVER_DISCONNECT]: handleServerDisconnect,
-        [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
-        [SocketServerEvent.CHANNEL_CONNECT]: handleChannelConnect,
-        [SocketServerEvent.CHANNEL_DISCONNECT]: handleChannelDisconnect,
-        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
-        [SocketServerEvent.ERROR]: handleError,
-      };
-
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
 
     // Fullscreen Control
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -396,6 +312,94 @@ const Home = () => {
     (state: { server: Server | null }) => state.server,
   );
   const user = useSelector((state: { user: User | null }) => state.user);
+
+  // Socket
+  const socket = useSocket();
+
+  const handleConnect = () => {
+    console.log('Socket connected');
+  };
+  const handleDisconnect = () => {
+    console.log('Socket disconnected');
+  };
+  const handleError = (error: StandardizedError) => {
+    new errorHandler(error).show();
+  };
+  const handleUserConnect = (user: any) => {
+    console.log('User connected: ', user);
+    store.dispatch(setUser(user));
+  };
+  const handleUserDisconnect = () => {
+    console.log('User disconnected');
+    store.dispatch(clearChannel());
+    store.dispatch(clearServer());
+    store.dispatch(clearUser());
+    authService.logout();
+  };
+  const handleUserUpdate = (data: Partial<User>) => {
+    console.log('User update: ', data);
+    const user_ = store.getState().user;
+    if (!user_) return;
+    store.dispatch(setUser({ ...user_, ...data }));
+  };
+  const handleServerConnect = (server: Server) => {
+    console.log('Server connected: ', server);
+    store.dispatch(setServer(server));
+  };
+  const handleServerDisconnect = () => {
+    console.log('Server disconnected');
+    store.dispatch(clearServer());
+  };
+  const handleServerUpdate = (data: Partial<Server>) => {
+    console.log('Server update: ', data);
+    const server_ = store.getState().server;
+    if (!server_) return;
+    store.dispatch(setServer({ ...server_, ...data }));
+  };
+  const handleChannelConnect = (channel: Channel) => {
+    console.log('Channel connected: ', channel);
+    store.dispatch(setChannel(channel));
+  };
+  const handleChannelDisconnect = () => {
+    console.log('Channel disconnected');
+    store.dispatch(clearChannel());
+  };
+  const handleChannelUpdate = (data: Partial<Channel>) => {
+    console.log('Channel update: ', data);
+    const channel_ = store.getState().channel;
+    if (!channel_) return;
+    store.dispatch(setChannel({ ...channel_, ...data }));
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const eventHandlers = {
+      [SocketServerEvent.CONNECT]: () => handleConnect,
+      [SocketServerEvent.DISCONNECT]: () => handleDisconnect,
+      [SocketServerEvent.USER_CONNECT]: handleUserConnect,
+      [SocketServerEvent.USER_DISCONNECT]: handleUserDisconnect,
+      [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+      [SocketServerEvent.SERVER_CONNECT]: handleServerConnect,
+      [SocketServerEvent.SERVER_DISCONNECT]: handleServerDisconnect,
+      [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
+      [SocketServerEvent.CHANNEL_CONNECT]: handleChannelConnect,
+      [SocketServerEvent.CHANNEL_DISCONNECT]: handleChannelDisconnect,
+      [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
+      [SocketServerEvent.ERROR]: handleError,
+    };
+
+    const unsubscribe: (() => void)[] = [];
+
+    Object.entries(eventHandlers).map(([event, handler]) => {
+      const unsub = socket.on[event as SocketServerEvent](handler);
+      unsubscribe.push(unsub);
+    });
+
+    return () => {
+      unsubscribe.forEach((unsub) => unsub());
+    };
+  }, [socket]);
 
   // Tab Control
   const [selectedTabId, setSelectedTabId] = useState<number>(1);

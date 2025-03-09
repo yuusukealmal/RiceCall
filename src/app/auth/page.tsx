@@ -61,9 +61,7 @@ const Auth: React.FC = () => {
 
   // Wait socket is ready before auto login
   useEffect(() => {
-    setTimeout(() => {
-      authService.autoLogin();
-    }, 500); // Can be change to when socket is onReady not just specific time
+    setTimeout(() => authService.autoLogin(), 500); // Can be change to when socket is onReady not just specific time
   }, []);
 
   return (

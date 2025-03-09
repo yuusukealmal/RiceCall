@@ -110,7 +110,9 @@ const Header: React.FC<HeaderProps> = React.memo(({ onSearch }) => {
               placeholder="輸入群ID或群名稱"
               data-placeholder="60021"
               className={styles['searchInput']}
-              onChange={(e) => onSearch(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === 'Enter' && onSearch(e.currentTarget.value)
+              }
             />
             <div className={styles['searchIcon']} />
           </div>
@@ -195,9 +197,9 @@ const HomePageComponent: React.FC = React.memo(() => {
       return;
     }
 
-    socket?.send.getSearchResult({ query });
-    socket?.on.searchResults((data) => {
-      setSearchResults(data.results);
+    socket?.send.searchServer({ query });
+    socket?.on.serverSearch((results: Server[]) => {
+      setSearchResults(results);
     });
   };
 

@@ -212,9 +212,11 @@ export interface Emoji {
 }
 
 export enum SocketClientEvent {
+  SEARCH_USER = 'searchUser',
   CONNECT_USER = 'connectUser',
   DISCONNECT_USER = 'disconnectUser',
   UPDATE_USER = 'updateUser',
+  SEARCH_SERVER = 'searchServer',
   CONNECT_SERVER = 'connectServer',
   DISCONNECT_SERVER = 'disconnectServer',
   CREATE_SERVER = 'createServer',
@@ -230,7 +232,6 @@ export enum SocketClientEvent {
   RTC_OFFER = 'RTCOffer',
   RTC_ANSWER = 'RTCAnswer',
   RTC_ICE_CANDIDATE = 'RTCIceCandidate',
-  GET_SEARCH_RESULT = 'getSearchResult',
 }
 
 export enum SocketServerEvent {
@@ -240,6 +241,7 @@ export enum SocketServerEvent {
   USER_CONNECT = 'userConnect', // deprecated
   USER_DISCONNECT = 'userDisconnect', // deprecated
   USER_UPDATE = 'userUpdate',
+  SERVER_SEARCH = 'serverSearch',
   SERVER_CONNECT = 'serverConnect',
   SERVER_DISCONNECT = 'serverDisconnect',
   SERVER_UPDATE = 'serverUpdate',
@@ -253,7 +255,6 @@ export enum SocketServerEvent {
   RTC_ICE_CANDIDATE = 'RTCIceCandidate',
   RTC_JOIN = 'RTCJoin',
   RTC_LEAVE = 'RTCLeave',
-  SEARCH_RESULTS = 'searchResults',
 }
 
 export enum popupType {
