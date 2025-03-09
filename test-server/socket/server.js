@@ -842,10 +842,10 @@ const serverHandler = {
       });
 
       const maxResults = 20;
-      const limitedResults = searchResults.slice(0, maxResults);
+      const results = searchResults.slice(0, maxResults);
 
       // Emit search results to the user
-      io.to(socket.id).emit('searchResults', limitedResults);
+      io.to(socket.id).emit('serverSearch', results);
 
       new Logger('WebSocket').success(
         `User(${user.id}) searched for servers with query: ${query}`,
