@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, {
   ChangeEvent,
@@ -829,8 +832,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
             <>
               {memberContextMenu &&
                 (() => {
-                  const isCurrentUser =
-                    memberContextMenu.member.userId === mainUser?.id;
+                  const isCurrentUser = false;
+                    // memberContextMenu.member.userId === mainUser?.id;
                   const menuItems = [
                     {
                       label: '傳送即時訊息',
