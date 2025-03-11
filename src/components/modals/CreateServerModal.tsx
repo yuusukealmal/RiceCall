@@ -1,20 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @next/next/no-img-element */
-import React, { FormEvent, useState, Suspense, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import React, { FormEvent, useState } from 'react';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
-
-// Components
-import Modal from '@/components/Modal';
 
 // Types
 import { User, Server } from '@/types';
 
 // CSS
-import Popup from '../../styles/common/popup.module.css';
-import CreateServer from '../../styles/popups/createServer.module.css';
+import popup from '../../styles/common/popup.module.css';
+import createServer from '../../styles/popups/createServer.module.css';
+
+// Services
+import { ipcService } from '@/services/ipc.service';
 
 // Validation
 export const validateName = (name: string): string => {
@@ -28,24 +27,190 @@ export const validateDescription = (description: string): string => {
   return '';
 };
 
+interface ServerTypeTabProps {
+  user: User;
+  server: Server;
+  setServer: (server: Server) => void;
+}
+
+const ServerTypeTab: React.FC<ServerTypeTabProps> = ({
+  user,
+  server,
+  setServer,
+}) => {
+  const maxGroups = 3;
+  const remainingGroups = maxGroups - (user.ownedServers?.length ?? 0);
+
+  return (
+    <>
+      <div className={createServer['tab']}>
+        <div className={`${createServer['item']} ${createServer['active']}`}>
+          {'選擇語音群類型'}
+        </div>
+        <div className={`${createServer['item']}`}>{'填寫資料'}</div>
+      </div>
+      <div className={createServer['body']}>
+        <div className={`${createServer['message']}`}>
+          {`您還可以創建${remainingGroups}個群，創建之後不能刪除或轉讓`}
+        </div>
+        <label className={createServer['typeLabel']} data-key="60030">
+          {'請您選擇語音群類型'}
+        </label>
+        <div className={createServer['buttonGroup']}>
+          {['遊戲', '娛樂', '其他'].map((type) => (
+            <div
+              key={type}
+              className={`${createServer['button']} ${
+                !remainingGroups ? popup['disabled'] : ''
+              }`}
+              onClick={() => setServer({ ...server, type })}
+            >
+              {type}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
+interface ServerBasicInfoTabProps {
+  server: Server;
+  setServer: (server: Server) => void;
+}
+
+const ServerBasicInfoTab: React.FC<ServerBasicInfoTabProps> = ({
+  server,
+  setServer,
+}) => {
+  // Error Control
+  const [errors, setErrors] = useState<{ [key: string]: string }>({
+    name: '',
+    description: '',
+  });
+
+  // Image Preview Control
+  const [previewImage, setPreviewImage] = useState<string>(
+    '/logo_server_def.png',
+  );
+
+  return (
+    <>
+      <div className={createServer['tab']}>
+        <div className={`${createServer['item']}`}>{'選擇語音群類型'}</div>
+        <div className={`${createServer['item']} ${createServer['active']}`}>
+          {'填寫資料'}
+        </div>
+      </div>
+      <div className={createServer['body']}>
+        <div className={createServer['avatarWrapper']}>
+          <div>
+            <img
+              src={previewImage}
+              alt="Avatar"
+              className={createServer['avatarPicture']}
+            />
+            <input
+              type="file"
+              id="avatar-upload"
+              className="hidden"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file || file.size > 5 * 1024 * 1024) return; // FIXME: Add error message
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setPreviewImage(reader.result as string);
+                  setServer({ ...server, avatar: reader.result as string });
+                };
+                reader.readAsDataURL(file);
+              }}
+            />
+            <label
+              htmlFor="avatar-upload"
+              style={{ marginTop: '10px' }}
+              className={popup['button']}
+            >
+              更換頭像
+            </label>
+          </div>
+        </div>
+        <div className={createServer['inputGroup']}>
+          <div className={popup['inputBox']}>
+            <div className={popup['label']}>群類型</div>
+            <input className={popup['input']} disabled value={server.type} />
+          </div>
+          <div className={popup['inputBox']}>
+            <div className={`${popup['label']} ${popup['required']}`}>
+              群名稱
+            </div>
+            <input
+              className={popup['input']}
+              type="text"
+              value={server.name}
+              onChange={(e) => setServer({ ...server, name: e.target.value })}
+              onBlur={() =>
+                setErrors({
+                  ...errors,
+                  name: validateName(server.name),
+                })
+              }
+              placeholder="6-30個字元組成，首尾輸入的空格無效，不能包含不雅詞彙。"
+            />
+            {/* {errors.name && <p className="text-red-500">{errors.name}</p>} */}
+          </div>
+          <div className={popup['inputBox']}>
+            <div className={popup['label']}>口號</div>
+            <textarea
+              className={popup['input']}
+              value={server.description}
+              onChange={(e) =>
+                setServer({ ...server, description: e.target.value })
+              }
+              onBlur={() =>
+                setErrors({
+                  ...errors,
+                  description: validateDescription(server.description),
+                })
+              }
+              placeholder="0-30個字元，口號是您建立團隊的目標"
+            />
+            {/* {errors.description && (
+              <p className="text-red-500">{errors.description}</p>
+            )} */}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 interface CreateServerModalProps {
-  onClose: () => void;
+  user: User;
 }
 
 const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
-  ({ onClose }) => {
-    // Redux
-    const [serverType, setServerType] = useState<string | false>(false);
-    const user = useSelector((state: { user: User | null }) => state.user);
-    const sessionId = useSelector(
-      (state: { sessionToken: string | null }) => state.sessionToken,
-    );
+  (initialData: CreateServerModalProps) => {
+    const { user } = initialData;
+    if (!user) return null;
 
     // Socket Control
     const socket = useSocket();
 
+    const handleClose = () => {
+      ipcService.window.close();
+    };
+
+    const handleSubmit = async (e: FormEvent<Element>) => {
+      e.preventDefault();
+      socket?.send.createServer({ server: server });
+      handleClose();
+    };
+
+    const [section, setSection] = useState<number>(0);
+
     // Form Control
-    const [newServer, setNewServer] = useState<Server>({
+    const [server, setServer] = useState<Server>({
       id: '',
       name: '',
       avatar: null,
@@ -55,9 +220,10 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       wealth: 0,
       slogan: '',
       announcement: '',
+      type: '',
       displayId: '',
       lobbyId: '',
-      ownerId: '',
+      ownerId: user.id,
       settings: {
         allowDirectMessage: true,
         visibility: 'public',
@@ -66,173 +232,59 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       createdAt: 0,
     });
 
-    const [errors, setErrors] = useState<{
-      general?: string;
-      name?: string;
-      description?: string;
-    }>({});
-
-    // Image Preview
-    const [previewImage, setPreviewImage] = useState<string>(
-      '/logo_server_def.png',
-    );
-
-    const handleChange = (field: keyof Server, value: string) => {
-      setNewServer((prev) => ({ ...prev, [field]: value }));
+    const getMainContent = () => {
+      switch (section) {
+        case 0:
+          return (
+            <ServerTypeTab user={user} server={server} setServer={setServer} />
+          );
+        case 1:
+          return <ServerBasicInfoTab server={server} setServer={setServer} />;
+      }
     };
 
-    const handleSubmit = async (e: FormEvent<Element>) => {
-      e.preventDefault();
-      socket?.send.createServer({
-        server: { ...newServer, ownerId: user?.id ?? '' },
-      });
-      onClose();
-    };
-
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file || file.size > 5 * 1024 * 1024)
-        return alert('請選擇小於5MB的圖片');
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-        setNewServer((prev) => ({ ...prev, avatar: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    };
-
-    const maxGroups = 3,
-      remainingGroups = maxGroups - (user?.ownedServers?.length ?? 0);
-
-    return (
-      <div className={Popup['popupContainer']}>
-        <div className={Popup['popupMessageWrapper']}>
-          <div className={CreateServer['header']}>
-            <div className={CreateServer['headerButton']}>
-              <span>{serverType ? '填寫資料' : '選擇語音群類型'}</span>
-            </div>
-          </div>
-          <div className={Popup['popupBody']}>
-            <Suspense fallback={<div>Loading...</div>}>
-              {serverType ? (
-                <>
-                  <div className={CreateServer['changeAvatarWrapper']}>
-                    <div>
-                      <img
-                        src={previewImage}
-                        alt="Avatar"
-                        className={CreateServer['changeAvatarPicture']}
-                      />
-                      <input
-                        type="file"
-                        id="avatar-upload"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                      />
-                      <label
-                        htmlFor="avatar-upload"
-                        style={{ marginTop: '10px' }}
-                        className={Popup['button']}
-                      >
-                        更換頭像
-                      </label>
-                    </div>
-                  </div>
-                  <div className={Popup['inputGroup']}>
-                    <div className={Popup['inputBox']}>
-                      <div className={Popup['title']}>群類型：</div>
-                      <div
-                        className={`${Popup['inputBorder']} ${Popup['disabled']}`}
-                      >
-                        <input disabled value={serverType} />
-                      </div>
-                    </div>
-                  </div>
-                  <div className={Popup['inputBox']}>
-                    <div className={`${Popup['title']} ${Popup['impotant']}`}>
-                      群名稱
-                    </div>
-                    <div className={Popup['inputBorder']}>
-                      <input
-                        type="text"
-                        value={newServer.name}
-                        onChange={(e) => handleChange('name', e.target.value)}
-                        placeholder="6-30個字元組成，首尾輸入的空格無效，不能包含不雅詞彙。"
-                        className={Popup['inputBorder']}
-                      />
-                    </div>
-                    {errors.name && (
-                      <p className="text-red-500">{errors.name}</p>
-                    )}
-                  </div>
-                  <div className={Popup['inputBox']}>
-                    <div className={Popup['title']}>口號</div>
-                    <div className={Popup['inputBorder']}>
-                      <textarea
-                        value={newServer.description}
-                        onChange={(e) =>
-                          handleChange('description', e.target.value)
-                        }
-                        placeholder="0-30個字元，口號是您建立團隊的目標"
-                        className={Popup['inputBorder']}
-                      />
-                    </div>
-                    {errors.description && (
-                      <p className="text-red-500">{errors.description}</p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div
-                    className={`${Popup['popupMessage']} ${CreateServer['message']}`}
-                  >
-                    <p>
-                      {errors.general ||
-                        `您還可以創建${remainingGroups}個群，創建之後不能刪除或轉讓`}
-                    </p>
-                  </div>
-                  <label className={CreateServer['label']} data-key="60030">
-                    請您選擇語音群類型
-                  </label>
-                  <div className={CreateServer['buttonGroup']}>
-                    {['遊戲', '娛樂', '其他'].map((type) => (
-                      <div
-                        key={type}
-                        className={`${CreateServer['button']} ${
-                          !remainingGroups ? Popup['disabled'] : ''
-                        }`}
-                        onClick={() => setServerType(type)}
-                      >
-                        {type}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </Suspense>
-          </div>
-          <div className={Popup['popupFooter']}>
-            {serverType && (
+    const getFooter = () => {
+      switch (section) {
+        case 0:
+          return (
+            <>
+              <button className={popup['button']} onClick={() => setSection(1)}>
+                下一步
+              </button>
+              <button className={popup['button']} onClick={handleClose}>
+                取消
+              </button>
+            </>
+          );
+        case 1:
+          return (
+            <>
+              <button className={popup['button']} onClick={() => setSection(0)}>
+                上一步
+              </button>
               <button
-                className={`${Popup['button']} ${
-                  !newServer.name.trim() ? Popup['disabled'] : ''
+                className={`${popup['button']} ${
+                  !server.name.trim() ? popup['disabled'] : ''
                 }`}
+                disabled={!server.name.trim()}
                 onClick={handleSubmit}
               >
                 確定
               </button>
-            )}
-            <button className={Popup['button']} onClick={onClose}>
-              取消
-            </button>
-          </div>
-        </div>
+            </>
+          );
+      }
+    };
+
+    return (
+      <div className={popup['popupContainer']}>
+        <div className={popup['popupBody']}>{getMainContent()}</div>
+        <div className={popup['popupFooter']}>{getFooter()}</div>
       </div>
     );
   },
 );
 
 CreateServerModal.displayName = 'CreateServerModal';
+
 export default CreateServerModal;
