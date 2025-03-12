@@ -19,6 +19,7 @@ import AddChannelModal from '@/components/modals/AddChannelModal';
 import DeleteChannelModal from '@/components/modals/DeleteChannelModal';
 import EditChannelModal from '@/components/modals/EditChannelModal';
 import ServerApplication from '@/components/modals/ServerApplicationModal';
+import ApplyFriend from '@/components/modals/ApplyFriend';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
@@ -138,7 +139,7 @@ const Modal = React.memo(() => {
       case popupType.APPLY_MEMBER:
         return <ServerApplication onClose={() => {}} server={undefined} />;
       case popupType.APPLY_FRIEND:
-        return; // <FriendApplication onClose={() => {}} />;
+        return <ApplyFriend onClose={() => {}} />;
       case popupType.DIRECT_MESSAGE:
         return; // <DirectMessageModal onClose={() => {}} />;
       case popupType.ERROR:

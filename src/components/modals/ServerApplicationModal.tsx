@@ -113,14 +113,18 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
               </div>
             </div>
             <div className={Popup['popupFooter']}>
-              <button
-                type="submit"
-                className={`${Popup['button']} ${
-                  !description.trim() ? Popup['disabled'] : ''
-                }`}
-              >
-                申請
-              </button>
+              {isApplying ? (
+                <button
+                  type="submit"
+                  className={`${Popup['button']} ${
+                    !description.trim() ? Popup['disabled'] : ''
+                  }`}
+                >
+                  申請
+                </button>
+              ) : (
+                ''
+              )}
               <button
                 type="button"
                 className={Popup['button']}
@@ -141,31 +145,45 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
             <Dialog
               popupIcon="popupIconWarning"
               textBorder={Popup['textBorder']}
-              title={<>
-                該群的管理員已設定只有會員才能訪問
-                <br />
-                如需訪問，請
-                <span
-                  className={ServerApplication['applyText']}
-                  onClick={() => setIsApplying(true)}
-                  style={{ color: 'blue', cursor: 'pointer' }}
-                >
-                  申請成為會員
-                </span>
-                。
-              </>}
+              title={
+                <>
+                  該群的管理員已設定只有會員才能訪問
+                  <br />
+                  如需訪問，請
+                  <span
+                    className={ServerApplication['applyText']}
+                    onClick={() => setIsApplying(true)}
+                    style={{ color: 'blue', cursor: 'pointer' }}
+                  >
+                    申請成為會員
+                  </span>
+                  。
+                </>
+              }
               onSubmit={(e) => {
                 e.preventDefault();
                 setIsApplying(true);
-              } }
+              }}
               onClose={onClose}
               iconType={'error'}
               submitTo={''}
             />
           </div>
           <div className={Popup['popupFooter']}>
+            {isApplying ? (
+              <button
+                type="submit"
+                className={`${Popup['button']} ${
+                  !description.trim() ? Popup['disabled'] : ''
+                }`}
+              >
+                申請
+              </button>
+            ) : (
+              ''
+            )}
             <button type="button" className={Popup['button']} onClick={onClose}>
-              確定
+              取消
             </button>
           </div>
         </div>

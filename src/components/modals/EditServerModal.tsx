@@ -833,7 +833,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
               {memberContextMenu &&
                 (() => {
                   const isCurrentUser = false;
-                    // memberContextMenu.member.userId === mainUser?.id;
+                  // memberContextMenu.member.userId === mainUser?.id;
                   const menuItems = [
                     {
                       label: '傳送即時訊息',
@@ -909,6 +909,57 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                     </div>
                   );
                 })}
+              <div className={EditServer['serverSettingPageBox']}>
+                <div
+                  className={`${EditServer['serverSettingItemWrapper']} ${EditServer['markdown']}`}
+                >
+                  <div className={EditServer['serverSettingHeaderTitle']}>
+                    <div className={EditServer['serverSettingText']}>
+                      會員:%d
+                    </div>
+                    <div className={EditServer['serverSettingSearchBox']}>
+                      <div className={EditServer['serverSettingSearchBorder']}>
+                        <div
+                          className={EditServer['serverSettingSearchIcon']}
+                        ></div>
+                        <input
+                          className={EditServer['serverSettingSearchInput']}
+                          placeholder="輸入關鍵字或ID搜尋"
+                        />
+                        <div
+                          className={EditServer['serverSettingSearchPrev']}
+                        ></div>
+                        <div
+                          className={EditServer['serverSettingSearchNext']}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={EditServer['serverSettingTextareaBox']}>
+                    {isPreviewMode ? (
+                      <div className={EditServer['serverSettingInputBorder']}>
+                        <MarkdownViewer markdownText={markdownContent} />
+                      </div>
+                    ) : (
+                      <textarea
+                        className={EditServer['serverSettingTextarea']}
+                        value={markdownContent}
+                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                          setMarkdownContent(e.target.value)
+                        }
+                      >
+                        {markdownContent}
+                      </textarea>
+                    )}
+                  </div>
+                  <div
+                    className={`${EditServer['serverSettingText']} ${EditServer['markdownTitle']}`}
+                  >
+                    支援 Markdown 語法：**粗體**, *斜體*, # 標題, - 列表,
+                    ```程式碼```, [連結](https://)
+                  </div>
+                </div>
+              </div>
 
               <div className="flex flex-col p-4">
                 <div className="flex flex-row justify-between items-center mb-6  select-none">
