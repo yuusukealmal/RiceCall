@@ -82,7 +82,7 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
       } else if (name === 'confirmPassword') {
         setErrors((prev) => ({
           ...prev,
-          confirmPassword: validateCheckPassword(value, prev.password ?? ''),
+          confirmPassword: validateCheckPassword(value, formData.password),
         }));
       } else if (name === 'username') {
         setErrors((prev) => ({

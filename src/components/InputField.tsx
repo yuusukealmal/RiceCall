@@ -5,25 +5,22 @@ import React, { ChangeEvent, FocusEvent, useState } from 'react';
 import styles from '@/styles/inputField.module.css';
 
 interface InputFieldProps {
+  type?: string;
   name?: string;
   value?: string;
-  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
-  type?: string;
   placeholder?: string;
   showFunctionButton?: string;
   style?: React.CSSProperties;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
 }
 
 const InputField: React.FC<InputFieldProps> = React.memo(
-  ({ name, value, placeholder, style, onChange, onBlur }) => {
+  ({ type, name, value, placeholder, style, onChange, onBlur }) => {
     const [showPassword, setShowPassword] = useState(false);
-
-    const isPasswordField = name === 'password'; // 確認是否為密碼欄位
-
     return (
       <input
-        type={isPasswordField && !showPassword ? 'password' : 'text'}
+        type={type}
         name={name}
         value={value}
         onChange={onChange}
