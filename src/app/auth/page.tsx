@@ -18,6 +18,7 @@ const Header: React.FC = React.memo(() => {
   // Fullscreen Control
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Handlers
   const handleFullscreen = () => {
     isFullscreen
       ? ipcService.window.unmaximize()
@@ -65,7 +66,7 @@ const Auth: React.FC = () => {
   }, []);
 
   return (
-    <>
+    <div className="wrapper">
       {/* Top Navigation */}
       <Header />
       {/* Main Content */}
@@ -79,7 +80,7 @@ const Auth: React.FC = () => {
           <RegisterPage onRegisterSuccess={() => setIsLogin(true)} />
         )}
       </div>
-    </>
+    </div>
   );
 };
 
