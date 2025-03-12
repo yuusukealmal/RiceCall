@@ -82,7 +82,7 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
       } else if (name === 'confirmPassword') {
         setErrors((prev) => ({
           ...prev,
-          confirmPassword: validateCheckPassword(value, prev.password ?? ''),
+          confirmPassword: validateCheckPassword(value, formData.password),
         }));
       } else if (name === 'username') {
         setErrors((prev) => ({
@@ -95,27 +95,11 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setIsLoading(true);
-      const accountError = validateAccount(formData.account);
-      const passwordError = validatePassword(formData.password);
-      const usernameError = validateUsername(formData.username);
-      const confirmPasswordError = validateCheckPassword(
-        formData.confirmPassword,
-        formData.password,
-      );
-      setErrors({
-        account: accountError,
-        password: passwordError,
-        confirmPassword: confirmPasswordError,
-        username: usernameError,
-      });
-      if (
-        accountError ||
-        passwordError ||
-        confirmPasswordError ||
-        usernameError
-      )
-        return;
       try {
+        if (errors.account) return;
+        if (errors.password) return;
+        if (errors.confirmPassword) return;
+        if (errors.username) return;
         if (await authService.register(formData)) onRegisterSuccess();
       } catch (error) {
         setErrors({

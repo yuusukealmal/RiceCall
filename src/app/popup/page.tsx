@@ -34,6 +34,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ title, buttons }) => {
   // Fullscreen Control
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Handlers
   const handleFullscreen = () => {
     isFullscreen
       ? ipcService.window.unmaximize()
@@ -113,7 +114,7 @@ const Modal = React.memo(() => {
         return { title: '好友請求', button: ['close'] };
       case popupType.DIRECT_MESSAGE:
         return { title: '私訊', button: ['close'] };
-      case popupType.ERROR:
+      case popupType.DIALOG:
         return { title: '錯誤', button: ['close'] };
       default:
         return undefined;
@@ -142,7 +143,7 @@ const Modal = React.memo(() => {
         return <ApplyFriend onClose={() => {}} />;
       case popupType.DIRECT_MESSAGE:
         return; // <DirectMessageModal onClose={() => {}} />;
-      case popupType.ERROR:
+      case popupType.DIALOG:
         return <Dialog {...initialData} />;
       default:
         return <></>;
@@ -150,12 +151,12 @@ const Modal = React.memo(() => {
   };
 
   return (
-    <>
+    <div className="wrapper">
       {/* Top Nevigation */}
       <Header title={getTitle()?.title} buttons={getTitle()?.button} />
       {/* Main Content */}
       {getMainContent()}
-    </>
+    </div>
   );
 });
 
