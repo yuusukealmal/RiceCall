@@ -29,65 +29,35 @@ import { useSocket } from '@/providers/SocketProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+import authService from '@/services/auth.service';
 
 // Redux
 import store from '@/redux/store';
 import { clearServer, setServer } from '@/redux/serverSlice';
 import { clearUser, setUser } from '@/redux/userSlice';
 import { clearChannel, setChannel } from '@/redux/channelSlice';
-import authService from '@/services/auth.service';
 
 interface HeaderProps {
   selectedId?: number;
-  onSelect?: (tabId: number) => void;
+  setSelectedTabId?: (tabId: number) => void;
 }
 
 const Header: React.FC<HeaderProps> = React.memo(
-  ({ selectedId = 1, onSelect }) => {
+  ({ selectedId = 1, setSelectedTabId }) => {
     // Redux
-    const user = useSelector((state: { user: User | null }) => state.user);
-    const server = useSelector(
-      (state: { server: Server | null }) => state.server,
-    );
+    const user = useSelector((state: { user: User }) => state.user);
+    const server = useSelector((state: { server: Server }) => state.server);
+
+    // Variables
+    const userCurrentServerId = user.currentServerId;
+    const userName = user.name;
+    const userStatus = user.status;
 
     // Socket
     const socket = useSocket();
 
-    const handleLogout = () => {
-      store.dispatch(clearChannel());
-      store.dispatch(clearServer());
-      store.dispatch(clearUser());
-      authService.logout();
-    };
-    const handleLeaveServer = () => {
-      if (!user) return;
-      socket?.send.disconnectServer({ serverId: user.currentServerId });
-    };
-    const handleUpdateStatus = (status: User['status']) => {
-      socket?.send.updateUser({ user: { status } });
-    };
-    const handleCreateError = (error: StandardizedError) => {
-      new errorHandler(error).show();
-    };
-
     // Fullscreen Control
     const [isFullscreen, setIsFullscreen] = useState(false);
-
-    const handleFullscreen = () => {
-      isFullscreen
-        ? ipcService.window.unmaximize()
-        : ipcService.window.maximize();
-      setIsFullscreen(!isFullscreen);
-    };
-    const handleMinimize = () => {
-      ipcService.window.minimize();
-    };
-    const handleClose = () => {
-      ipcService.window.close();
-    };
-    const handleOpenDevtool = () => {
-      ipcService.window.openDevtool();
-    };
 
     // Menu Control
     const [showMenu, setShowMenu] = useState(false);
@@ -97,20 +67,19 @@ const Header: React.FC<HeaderProps> = React.memo(
 
     // Tab Control
     const MAIN_TABS = React.useMemo(() => {
-      const tabs = [];
-      if (user) {
-        tabs.push({
+      const tabs = [
+        {
           id: 1,
           label: '首頁',
           onClick: () => {},
-        });
-        tabs.push({
+        },
+        {
           id: 2,
           label: '好友',
           onClick: () => {},
-        });
-      }
-      if (server) {
+        },
+      ];
+      if (server.id) {
         tabs.push({
           id: 3,
           label: server.name,
@@ -128,8 +97,44 @@ const Header: React.FC<HeaderProps> = React.memo(
       { status: 'gn', label: '離線' },
     ];
 
-    const userName = user?.name ?? 'Unknown';
-    const userStatus = user?.status ?? 'online';
+    // Handlers
+    const handleLogout = () => {
+      store.dispatch(clearChannel());
+      store.dispatch(clearServer());
+      store.dispatch(clearUser());
+      authService.logout();
+    };
+
+    const handleLeaveServer = (serverId: string) => {
+      socket?.send.disconnectServer({ serverId: serverId });
+    };
+
+    const handleUpdateStatus = (status: User['status']) => {
+      socket?.send.updateUser({ user: { status } });
+    };
+
+    const handleCreateError = (error: StandardizedError) => {
+      new errorHandler(error).show();
+    };
+
+    const handleFullscreen = () => {
+      isFullscreen
+        ? ipcService.window.unmaximize()
+        : ipcService.window.maximize();
+      setIsFullscreen(!isFullscreen);
+    };
+
+    const handleMinimize = () => {
+      ipcService.window.minimize();
+    };
+
+    const handleClose = () => {
+      ipcService.window.close();
+    };
+
+    const handleOpenDevtool = () => {
+      ipcService.window.openDevtool();
+    };
 
     return (
       <div className={header['header']}>
@@ -176,7 +181,7 @@ const Header: React.FC<HeaderProps> = React.memo(
                   TabId === selectedId ? header['selected'] : ''
                 }`}
                 onClick={() => {
-                  onSelect?.(TabId);
+                  setSelectedTabId?.(TabId);
                   Tab.onClick();
                 }}
               >
@@ -184,7 +189,9 @@ const Header: React.FC<HeaderProps> = React.memo(
                 <div className={header['tabBg']}></div>
                 {TabId > 2 && (
                   <CircleX
-                    onClick={() => handleLeaveServer()}
+                    onClick={() => {
+                      handleLeaveServer(userCurrentServerId);
+                    }}
                     size={16}
                     className={header['tabClose']}
                   />
@@ -307,69 +314,8 @@ const Header: React.FC<HeaderProps> = React.memo(
 Header.displayName = 'Header';
 
 const Home = () => {
-  // Redux
-  const server = useSelector(
-    (state: { server: Server | null }) => state.server,
-  );
-  const user = useSelector((state: { user: User | null }) => state.user);
-
   // Socket
   const socket = useSocket();
-
-  const handleConnect = () => {
-    console.log('Socket connected');
-  };
-  const handleDisconnect = () => {
-    console.log('Socket disconnected');
-  };
-  const handleError = (error: StandardizedError) => {
-    new errorHandler(error).show();
-  };
-  const handleUserConnect = (user: any) => {
-    console.log('User connected: ', user);
-    store.dispatch(setUser(user));
-  };
-  const handleUserDisconnect = () => {
-    console.log('User disconnected');
-    store.dispatch(clearChannel());
-    store.dispatch(clearServer());
-    store.dispatch(clearUser());
-    authService.logout();
-  };
-  const handleUserUpdate = (data: Partial<User>) => {
-    console.log('User update: ', data);
-    const user_ = store.getState().user;
-    if (!user_) return;
-    store.dispatch(setUser({ ...user_, ...data }));
-  };
-  const handleServerConnect = (server: Server) => {
-    console.log('Server connected: ', server);
-    store.dispatch(setServer(server));
-  };
-  const handleServerDisconnect = () => {
-    console.log('Server disconnected');
-    store.dispatch(clearServer());
-  };
-  const handleServerUpdate = (data: Partial<Server>) => {
-    console.log('Server update: ', data);
-    const server_ = store.getState().server;
-    if (!server_) return;
-    store.dispatch(setServer({ ...server_, ...data }));
-  };
-  const handleChannelConnect = (channel: Channel) => {
-    console.log('Channel connected: ', channel);
-    store.dispatch(setChannel(channel));
-  };
-  const handleChannelDisconnect = () => {
-    console.log('Channel disconnected');
-    store.dispatch(clearChannel());
-  };
-  const handleChannelUpdate = (data: Partial<Channel>) => {
-    console.log('Channel update: ', data);
-    const channel_ = store.getState().channel;
-    if (!channel_) return;
-    store.dispatch(setChannel({ ...channel_, ...data }));
-  };
 
   useEffect(() => {
     if (!socket) return;
@@ -404,35 +350,93 @@ const Home = () => {
   // Tab Control
   const [selectedTabId, setSelectedTabId] = useState<number>(1);
 
-  useEffect(() => {
-    if (server) setSelectedTabId(3);
-    else setSelectedTabId(1);
-  }, [server]);
+  // Handlers
+  const handleConnect = () => {
+    console.log('Socket connected');
+  };
+
+  const handleDisconnect = () => {
+    console.log('Socket disconnected');
+  };
+
+  const handleError = (error: StandardizedError) => {
+    new errorHandler(error).show();
+  };
+
+  const handleUserConnect = (user: any) => {
+    console.log('User connected: ', user);
+    store.dispatch(setUser(user));
+    setSelectedTabId(1);
+  };
+
+  const handleUserDisconnect = () => {
+    console.log('User disconnected');
+    store.dispatch(clearChannel());
+    store.dispatch(clearServer());
+    store.dispatch(clearUser());
+    authService.logout();
+  };
+
+  const handleUserUpdate = (data: Partial<User>) => {
+    console.log('User update: ', data);
+    store.dispatch(setUser(data));
+  };
+
+  const handleServerConnect = (server: Server) => {
+    console.log('Server connected: ', server);
+    store.dispatch(setServer(server));
+    setSelectedTabId(3);
+  };
+
+  const handleServerDisconnect = () => {
+    console.log('Server disconnected');
+    store.dispatch(clearServer());
+    setSelectedTabId(1);
+  };
+
+  const handleServerUpdate = (data: Partial<Server>) => {
+    console.log('Server update: ', data);
+    store.dispatch(setServer(data));
+  };
+
+  const handleChannelConnect = (channel: Channel) => {
+    console.log('Channel connected: ', channel);
+    store.dispatch(setChannel(channel));
+  };
+
+  const handleChannelDisconnect = () => {
+    console.log('Channel disconnected');
+    store.dispatch(clearChannel());
+  };
+
+  const handleChannelUpdate = (data: Partial<Channel>) => {
+    console.log('Channel update: ', data);
+    store.dispatch(setChannel(data));
+  };
 
   const getMainContent = () => {
-    if (!user) return <LoadingSpinner />;
-    else {
-      switch (selectedTabId) {
-        case 1:
-          return <HomePage />;
-        case 2:
-          return <FriendPage />;
-        case 3:
-          if (!server) return;
-          return <ServerPage />;
-      }
+    if (!socket) return <LoadingSpinner />;
+    switch (selectedTabId) {
+      case 1:
+        return <HomePage />;
+      case 2:
+        return <FriendPage />;
+      case 3:
+        return <ServerPage />;
     }
   };
 
   return (
-    <WebRTCProvider>
-      <Header
-        selectedId={selectedTabId}
-        onSelect={(tabId) => setSelectedTabId(tabId)}
-      />
-      {/* Main Content */}
-      <div className="content">{getMainContent()}</div>
-    </WebRTCProvider>
+    <div className="wrapper">
+      <WebRTCProvider>
+        <Header
+          selectedId={selectedTabId}
+          setSelectedTabId={setSelectedTabId}
+        />
+        {/* Main Content */}
+        <div className="content">{getMainContent()}</div>
+      </WebRTCProvider>
+    </div>
   );
 };
 

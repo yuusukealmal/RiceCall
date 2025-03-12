@@ -216,8 +216,8 @@ export enum SocketClientEvent {
   SEARCH_USER = 'searchUser',
   CONNECT_USER = 'connectUser',
   DISCONNECT_USER = 'disconnectUser',
+  REFRESH_USER = 'refreshUser',
   UPDATE_USER = 'updateUser',
-  GET_USER_SERVERS = 'getUserServers',
   SEARCH_SERVER = 'searchServer',
   CONNECT_SERVER = 'connectServer',
   DISCONNECT_SERVER = 'disconnectServer',
@@ -243,7 +243,6 @@ export enum SocketServerEvent {
   USER_CONNECT = 'userConnect', // deprecated
   USER_DISCONNECT = 'userDisconnect', // deprecated
   USER_UPDATE = 'userUpdate',
-  GET_USER_SERVERS = 'getUserServers',
   SERVER_SEARCH = 'serverSearch',
   SERVER_CONNECT = 'serverConnect',
   SERVER_DISCONNECT = 'serverDisconnect',
@@ -271,7 +270,7 @@ export enum popupType {
   APPLY_MEMBER = 'applyMember',
   APPLY_FRIEND = 'applyFriend',
   DIRECT_MESSAGE = 'directMessage',
-  ERROR = 'error',
+  DIALOG = 'dialog',
 }
 
 export interface discordPresence {
