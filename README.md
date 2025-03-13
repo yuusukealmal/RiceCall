@@ -1,6 +1,6 @@
 # Rice call
 
-這是 Raidcall 的網頁非官方復刻版 Ricecall，目前尚處於開發階段，若有興趣歡迎於 Discord 一同參與討論
+這是 Raidcall 的非官方復刻版 Ricecall，目前尚處於開發階段，若有興趣歡迎於 Discord 一同參與討論
 
 ### ->[Discord 群組](https://discord.gg/adCWzv6wwS)<-
 
@@ -10,8 +10,8 @@
 
 | branch        | role                 |
 | ------------- | -------------------- |
-| [main](https://github.com/Nerdy-Home-ReOpen/rc-voice) | client / test-server |
-| [backend](https://github.com/Nerdy-Home-ReOpen/rc-voice/tree/Websocket)   | server               |
+| [main](https://github.com/NerdyHomeReOpen/RiceCall) | client / test-server |
+| [backend](https://github.com/NerdyHomeReOpen/RiceCall/tree/Websocket)   | server               |
 
 ## 如何啟動
 
