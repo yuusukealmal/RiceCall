@@ -142,7 +142,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
       <div className={Popup['popupContainer']}>
         <div className={Popup['popupMessageWrapper']}>
           <div className={ServerApplication['popupBody']}>
-            <Dialog
+            {/* <Dialog
               popupIcon="popupIconWarning"
               textBorder={Popup['textBorder']}
               title={
@@ -167,7 +167,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
               onClose={onClose}
               iconType={'error'}
               submitTo={''}
-            />
+            /> */}
           </div>
           <div className={Popup['popupFooter']}>
             {isApplying ? (

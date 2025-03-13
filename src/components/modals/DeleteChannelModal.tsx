@@ -33,7 +33,7 @@ const DeleteChannelModal: React.FC<DeleteChannelModalProps> = ({
     <form className={Popup['popupContainer']} onSubmit={handleSubmit}>
       <div className={Popup['popupMessageWrapper']}>
         <div className={DeleteChannel['popupBody']}>
-          <Dialog
+          {/* <Dialog
             popupIcon="popupIconWarning"
             textBorder={Popup['textBorder']}
             title={`您確定要刪除頻道：${channel?.name} 嗎？`}
@@ -41,7 +41,7 @@ const DeleteChannelModal: React.FC<DeleteChannelModalProps> = ({
             onClose={onClose}
             iconType={'error'}
             submitTo={''}
-          />
+          /> */}
         </div>
 
         <div className={Popup['popupFooter']}>
