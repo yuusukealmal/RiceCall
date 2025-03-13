@@ -148,13 +148,13 @@ export const ipcService = {
         [popupType.DELETE_CHANNEL]: { height: 300, width: 200 },
         [popupType.APPLY_FRIEND]: { height: 420, width: 540 },
         [popupType.APPLY_MEMBER]: { height: 420, width: 540 },
-        [popupType.DIRECT_MESSAGE]: { height: 300, width: 200 },
-        [popupType.DIALOG_ALERT]: { height: 200, width: 300 },
-        [popupType.DIALOG_ALERT2]: { height: 200, width: 300 },
-        [popupType.DIALOG_SUCCESS]: { height: 200, width: 300 },
-        [popupType.DIALOG_WARNING]: { height: 200, width: 300 },
-        [popupType.DIALOG_ERROR]: { height: 200, width: 300 },
-        [popupType.DIALOG_INFO]: { height: 200, width: 300 },
+        [popupType.DIRECT_MESSAGE]: { height: 200, width: 300 },
+        [popupType.DIALOG_ALERT]: { height: 200, width: 400 },
+        [popupType.DIALOG_ALERT2]: { height: 200, width: 400 },
+        [popupType.DIALOG_SUCCESS]: { height: 200, width: 400 },
+        [popupType.DIALOG_WARNING]: { height: 200, width: 400 },
+        [popupType.DIALOG_ERROR]: { height: 200, width: 400 },
+        [popupType.DIALOG_INFO]: { height: 200, width: 400 },
       };
 
       if (isElectron) {
