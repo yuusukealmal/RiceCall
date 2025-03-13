@@ -62,7 +62,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     const [server, setServer] = useState<Server>({
       id: '',
       name: '',
-      avatar: 'logo_server_def.png',
+      avatar: null,
       avatarUrl: null,
       level: 0,
       description: '',
@@ -170,12 +170,11 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                 <div className={createServer['avatarWrapper']}>
                   <div
                     className={createServer['avatarPicture']}
-                    style={{
-                      backgroundImage: `url(${server.avatar})`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center center',
-                    }}
+                    style={
+                      server.avatar
+                        ? { backgroundImage: `url(${server.avatar})` }
+                        : {}
+                    }
                   />
                   <input
                     type="file"

@@ -28,8 +28,8 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
   };
 
   // Variables
-  const serverAvatar = server.avatar;
   const serverName = server.name;
+  const serverAvatar = server.avatar;
   const serverDisplayId = server.displayId;
   const serverSlogan = server.slogan;
 
@@ -43,12 +43,9 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
       >
         <div
           className={homePage['myGroupsRoomAvatarPicture']}
-          style={{
-            backgroundImage: `url(${serverAvatar})`,
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center center',
-          }}
+          style={
+            serverAvatar ? { backgroundImage: `url(${serverAvatar})` } : {}
+          }
         ></div>
         <div className={homePage['myGroupsRoomInfo']}>
           <div className={homePage['myGroupsRoomName']}>{serverName}</div>

@@ -152,12 +152,11 @@ const ServerPageComponent: React.FC = React.memo(() => {
             <div className={styles['avatarBox']}>
               <div
                 className={styles['avatarPicture']}
-                style={{
-                  backgroundImage: `url(${serverAvatar})`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center center',
-                }}
+                style={
+                  serverAvatar
+                    ? { backgroundImage: `url(${serverAvatar})` }
+                    : {}
+                }
               />
             </div>
             <div className={styles['baseInfoBox']}>

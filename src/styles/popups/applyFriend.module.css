@@ -18,9 +18,10 @@
   object-fit: cover;
   min-width: 50px;
   min-height: 50px;
-  background: url(../../../public/logo_server_def.png) no-repeat center center;
-  background-size: contain;
-  background-position: 0 0;
+  background-image: url(../../../public/logo_server_def.png);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
 }
 .avatarPicture::before {
   content: '';
