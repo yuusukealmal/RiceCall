@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import React, { FormEvent, useState } from 'react';
+import React, { useState } from 'react';
 
 // Types
 import { Channel } from '@/types';
@@ -25,21 +25,18 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     if (!initialData) return null;
 
     // Variables
-    const parentName = parent?.name ?? '無';
+    const parentName = parent?.name || '無';
 
     // Socket
     const socket = useSocket();
 
+    // Handlers
     const handleClose = () => {
       ipcService.window.close();
     };
 
-    const handleSubmit = (e: FormEvent) => {
-      e.preventDefault();
-      socket?.send.createChannel({
-        channel: { ...channel, isRoot: !!parent, serverId: serverId },
-      });
-      handleClose();
+    const handleCreateChannel = (channel: Channel) => {
+      socket?.send.createChannel({ channel: channel });
     };
 
     // Form Control
@@ -92,7 +89,14 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
               !channel.name.trim() ? popup['disabled'] : ''
             }`}
             disabled={!channel.name.trim()}
-            onClick={handleSubmit}
+            onClick={() => {
+              handleCreateChannel({
+                ...channel,
+                isRoot: !!parent,
+                serverId: serverId,
+              });
+              handleClose();
+            }}
           >
             確定
           </button>

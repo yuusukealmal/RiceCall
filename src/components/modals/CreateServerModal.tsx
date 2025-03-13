@@ -197,19 +197,15 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     const { user } = initialData;
     if (!user) return null;
 
+    // Variables
+    const maxGroups = 3;
+    const remainingGroups = maxGroups - (user.ownedServers?.length ?? 0);
+    const canCreate = remainingGroups > 0;
+
     // Socket Control
     const socket = useSocket();
 
-    const handleClose = () => {
-      ipcService.window.close();
-    };
-
-    const handleSubmit = async (e: FormEvent<Element>) => {
-      e.preventDefault();
-      socket?.send.createServer({ server: server });
-      handleClose();
-    };
-
+    // Section Control
     const [section, setSection] = useState<number>(0);
 
     // Form Control
@@ -226,7 +222,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       type: '',
       displayId: '',
       lobbyId: '',
-      ownerId: user.id,
+      ownerId: '',
       settings: {
         allowDirectMessage: true,
         visibility: 'public',
@@ -235,9 +231,14 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       createdAt: 0,
     });
 
-    const maxGroups = 3;
-    const remainingGroups = maxGroups - (user.ownedServers?.length ?? 0);
-    const canCreate = remainingGroups > 0;
+    // Handlers
+    const handleClose = () => {
+      ipcService.window.close();
+    };
+
+    const handleCreateServer = (server: Server) => {
+      socket?.send.createServer({ server: server });
+    };
 
     const getMainContent = () => {
       switch (section) {
@@ -284,7 +285,10 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                   !server.name.trim() || !canCreate ? popup['disabled'] : ''
                 }`}
                 disabled={!server.name.trim() || !canCreate}
-                onClick={handleSubmit}
+                onClick={() => {
+                  handleCreateServer({ ...server, ownerId: user.id });
+                  handleClose();
+                }}
               >
                 確定
               </button>
