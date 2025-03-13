@@ -260,6 +260,9 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
           <div className={styles['channelTabCount']}>
             {`(${channelUsers.length})`}
           </div>
+          {userInChannel && !expanded && (
+            <div className={styles['myLocationIcon']} />
+          )}
         </div>
         {/* Expanded Sections */}
         {expanded && (
@@ -304,6 +307,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     const channelUserGrade = Math.min(56, Math.ceil(channelUserLevel / 5)); // 56 is max level
     const channelUserGender = channelUser.gender;
     const channelUserBadges = channelUser.badges || [];
+    const isCurrentUser = user.id === channelUser.id;
 
     // Socket
     const socket = useSocket();
@@ -373,9 +377,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
             }`}
           />
           <BadgeViewer badges={channelUserBadges} maxDisplay={3} />
-          {channelUser.id === user.id && (
-            <div className={styles['myLocationIcon']} />
-          )}
+          {isCurrentUser && <div className={styles['myLocationIcon']} />}
         </div>
       </div>
     );
