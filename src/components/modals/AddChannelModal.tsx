@@ -21,8 +21,6 @@ interface AddChannelModalProps {
 
 const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
   (initialData: AddChannelModalProps) => {
-    if (!initialData) return null;
-
     // Variables
     const parentName = initialData.parent?.name || '無';
     const serverId = initialData.serverId || '';

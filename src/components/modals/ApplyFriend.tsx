@@ -22,44 +22,10 @@ interface ApplyFriendModalProps {
 const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
   (initialData: ApplyFriendModalProps) => {
     // Variables
-    const user = initialData.user || {
-      id: '',
-      name: '未知使用者',
-      avatar: '',
-      avatarUrl: '',
-      signature: '',
-      status: 'online',
-      gender: 'Male',
-      level: 0,
-      xp: 0,
-      requiredXp: 0,
-      progress: 0,
-      currentChannelId: '',
-      currentServerId: '',
-      lastActiveAt: 0,
-      createdAt: 0,
-    };
-    const targetUser = initialData.targetUser || {
-      id: '',
-      name: '未知使用者',
-      avatar: '',
-      avatarUrl: '',
-      signature: '',
-      status: 'online',
-      gender: 'Male',
-      level: 0,
-      xp: 0,
-      requiredXp: 0,
-      progress: 0,
-      currentChannelId: '',
-      currentServerId: '',
-      lastActiveAt: 0,
-      createdAt: 0,
-    };
-    const targetUserId = targetUser.id;
-    const targetUserName = targetUser.name;
-    const targetUserAvatarUrl = targetUser.avatarUrl;
-    const friendGroups = user.friendGroups || [];
+    const targetUserId = initialData.targetUser?.id || '';
+    const targetUserName = initialData.targetUser?.name || '';
+    const targetUserAvatarUrl = initialData.targetUser?.avatarUrl || '';
+    const friendGroups = initialData.user?.friendGroups || [];
 
     // Socket
     const socket = useSocket();

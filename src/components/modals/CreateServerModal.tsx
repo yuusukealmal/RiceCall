@@ -41,24 +41,8 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
   (initialData: CreateServerModalProps) => {
     // Variables
     const maxGroups = 3;
-    const user = initialData.user || {
-      id: '',
-      name: '未知使用者',
-      avatar: '',
-      avatarUrl: '',
-      signature: '',
-      status: 'online',
-      gender: 'Male',
-      level: 0,
-      xp: 0,
-      requiredXp: 0,
-      progress: 0,
-      currentChannelId: '',
-      currentServerId: '',
-      lastActiveAt: 0,
-      createdAt: 0,
-    };
-    const userOwnedServers = user.ownedServers || [];
+    const userId = initialData.user?.id || '';
+    const userOwnedServers = initialData.user?.ownedServers || [];
     const remainingGroups = maxGroups - userOwnedServers.length;
     const canCreate = remainingGroups > 0;
 
@@ -278,7 +262,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                 }`}
                 disabled={!server.name.trim() || !canCreate}
                 onClick={() => {
-                  handleCreateServer({ ...server, ownerId: user.id });
+                  handleCreateServer({ ...server, ownerId: userId });
                   handleClose();
                 }}
               >
