@@ -8,8 +8,7 @@
 ![image](https://github.com/user-attachments/assets/14aa056c-4e81-4545-a2d9-21a5aa2db2be)
 ![image](https://github.com/user-attachments/assets/2ffb2c7a-f76b-43b0-9608-d807563c490b)
 ![image](https://github.com/user-attachments/assets/05c34459-1198-46e2-8e8a-6049945c6e70)
-![image](https://github.com/user-attachments/assets/c1122b06-cf8d-4213-98d5-44fdf1f77913)
-
+![image](https://github.com/user-attachments/assets/19441cd9-fb17-4c65-806e-01051b4da04c)
 
 ## 使用方法
 
