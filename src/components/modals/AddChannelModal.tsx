@@ -8,18 +8,24 @@ import { Channel } from '@/types';
 import { useSocket } from '@/providers/SocketProvider';
 
 // CSS
-import popup from '../../styles/common/popup.module.css';
-import addChannel from '../../styles/popups/addChannel.module.css';
+import popup from '@/styles/common/popup.module.css';
+import addChannel from '@/styles/popups/addChannel.module.css';
+
+// Services
 import { ipcService } from '@/services/ipc.service';
 
 interface AddChannelModalProps {
+  serverId: string;
   parent: Channel;
 }
 
 const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
   (initialData: AddChannelModalProps) => {
-    const { parent } = initialData;
+    const { serverId, parent } = initialData;
     if (!initialData) return null;
+
+    // Variables
+    const parentName = parent?.name ?? '無';
 
     // Socket
     const socket = useSocket();
@@ -30,7 +36,9 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
 
     const handleSubmit = (e: FormEvent) => {
       e.preventDefault();
-      socket?.send.createChannel({ channel: channel });
+      socket?.send.createChannel({
+        channel: { ...channel, isRoot: !!parent, serverId: serverId },
+      });
       handleClose();
     };
 
@@ -40,7 +48,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
       name: '',
       isLobby: false,
       isCategory: false,
-      isRoot: !!parent,
+      isRoot: false,
       serverId: '',
       voiceMode: 'free',
       chatMode: 'free',
@@ -61,7 +69,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
             <div className={addChannel['inputGroup']}>
               <div className={popup['inputBox']}>
                 <div className={popup['label']}>上級頻道</div>
-                <input className={popup['input']} disabled value={'123'} />
+                <input className={popup['input']} disabled value={parentName} />
               </div>
               <div className={popup['inputBox']}>
                 <div className={popup['label']}>頻道名稱</div>

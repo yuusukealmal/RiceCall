@@ -19,16 +19,12 @@ const DialogIcon = {
 
 interface DialogProps {
   iconType: keyof typeof DialogIcon;
-  popupIcon: string;
-  textBorder: string;
   title: React.ReactNode;
   submitTo: string;
-  onSubmit?: (e: FormEvent<Element>) => void;
-  onClose?: (e: FormEvent<Element>) => void;
 }
 
 const Dialog: React.FC<DialogProps> = (initialData: DialogProps) => {
-  const { iconType, popupIcon, textBorder, title, submitTo, onSubmit, onClose } = initialData;
+  const { iconType, title, submitTo } = initialData;
 
   const handleClose = () => {
     ipcService.window.close();

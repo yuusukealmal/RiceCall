@@ -31,18 +31,53 @@ interface CategoryTabProps {
 
 const CategoryTab: React.FC<CategoryTabProps> = React.memo(
   ({ category, canEdit }) => {
-    // Expanded Control
-    const [expanded, setExpanded] = useState<boolean>(true);
-
-    // Context Menu
-    const contextMenu = useContextMenu();
-
     // Variables
     const categoryName = category.name;
     const categoryIsRoot = category.isRoot;
     const categoryIsLobby = category.isLobby;
     const categoryVisibility = category.settings.visibility;
     const categoryChannels = category.subChannels || [];
+
+    // Socket
+    const socket = useSocket();
+
+    // Context Menu
+    const contextMenu = useContextMenu();
+
+    // Expanded Control
+    const [expanded, setExpanded] = useState<boolean>(true);
+
+    // Handlers
+    const handleOpenEditChannelPopup = () => {
+      ipcService.popup.open(popupType.EDIT_CHANNEL, 400, 300);
+      ipcService.initialData.onRequest(popupType.EDIT_CHANNEL, {
+        channel: category,
+      });
+    };
+
+    const handleOpenCreateChannelPopup = () => {
+      ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300);
+      ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
+        serverId: category.serverId,
+        parent: category,
+      });
+    };
+
+    const handleOpenWarningPopup = () => {
+      ipcService.popup.open(popupType.DIALOG, 400, 300);
+      ipcService.initialData.onRequest(popupType.DIALOG, {
+        iconType: 'warning',
+        title: '確定要刪除此頻道嗎？',
+        submitTo: popupType.DIALOG,
+      });
+      ipcService.popup.onSubmit(popupType.DIALOG, () =>
+        handleDeleteChannel(category.id),
+      );
+    };
+
+    const handleDeleteChannel = (channelId: string) => {
+      socket?.send.deleteChannel({ channelId });
+    };
 
     return (
       <div key={category.id}>
@@ -62,24 +97,21 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
                 icon: <Edit size={14} className="w-5 h-5 mr-2" />,
                 label: '編輯',
                 show: canEdit,
-                onClick: () =>
-                  ipcService.popup.open(popupType.EDIT_CHANNEL, 400, 300),
+                onClick: handleOpenEditChannelPopup,
               },
               {
                 id: 'add',
                 icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: '新增',
                 show: canEdit && !categoryIsLobby && categoryIsRoot,
-                onClick: () =>
-                  ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300),
+                onClick: handleOpenCreateChannelPopup,
               },
               {
                 id: 'delete',
                 icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: '刪除',
                 show: canEdit && !categoryIsLobby,
-                onClick: () =>
-                  ipcService.popup.open(popupType.DELETE_CHANNEL, 400, 300),
+                onClick: handleOpenWarningPopup,
               },
             ]);
           }}
@@ -146,6 +178,37 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     const [expanded, setExpanded] = useState<boolean>(true);
 
     // Handlers
+    const handleOpenEditChannelPopup = () => {
+      ipcService.popup.open(popupType.EDIT_CHANNEL, 400, 300);
+      ipcService.initialData.onRequest(popupType.EDIT_CHANNEL, {
+        channel: channel,
+      });
+    };
+
+    const handleOpenCreateChannelPopup = () => {
+      ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300);
+      ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
+        serverId: channel.serverId,
+        parent: channel,
+      });
+    };
+
+    const handleOpenWarningPopup = () => {
+      ipcService.popup.open(popupType.DIALOG, 400, 300);
+      ipcService.initialData.onRequest(popupType.DIALOG, {
+        iconType: 'warning',
+        title: '確定要刪除此頻道嗎？',
+        submitTo: popupType.DIALOG,
+      });
+      ipcService.popup.onSubmit(popupType.DIALOG, () =>
+        handleDeleteChannel(channel.id),
+      );
+    };
+
+    const handleDeleteChannel = (channelId: string) => {
+      socket?.send.deleteChannel({ channelId });
+    };
+
     const handleJoinChannel = (channelId: string) => {
       socket?.send.connectChannel({ channelId });
     };
@@ -174,24 +237,21 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
                 icon: <Edit size={14} className="w-5 h-5 mr-2" />,
                 label: '編輯',
                 show: canEdit,
-                onClick: () =>
-                  ipcService.popup.open(popupType.EDIT_CHANNEL, 400, 300),
+                onClick: handleOpenEditChannelPopup,
               },
               {
                 id: 'add',
                 icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: '新增',
                 show: canEdit && !channelIsLobby && channelIsRoot,
-                onClick: () =>
-                  ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300),
+                onClick: handleOpenCreateChannelPopup,
               },
               {
                 id: 'delete',
                 icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: '刪除',
                 show: canEdit && !channelIsLobby,
-                onClick: () =>
-                  ipcService.popup.open(popupType.DELETE_CHANNEL, 400, 300),
+                onClick: () => handleOpenWarningPopup,
               },
             ]);
           }}
@@ -225,9 +285,6 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user, canEdit }) => {
   // Redux
   const server = useSelector((state: { server: Server }) => state.server);
 
-  // Context
-  const contextMenu = useContextMenu();
-
   // Variables
   const serverMembers = server.members || {};
   const channelUser = user;
@@ -246,6 +303,12 @@ const UserTab: React.FC<UserTabProps> = React.memo(({ user, canEdit }) => {
   const channelUserGrade = Math.min(56, Math.ceil(channelUserLevel / 5)); // 56 is max level
   const channelUserGender = user.gender;
   const channelUserBadges = user.badges || [];
+
+  // Socket
+  const socket = useSocket();
+
+  // Context
+  const contextMenu = useContextMenu();
 
   return (
     <div key={user.id}>
@@ -353,6 +416,15 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
   // Context
   const contextMenu = useContextMenu();
 
+  // Handlers
+  const handleOpenCreateChannelPopup = () => {
+    ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300);
+    ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
+      serverId: server.id,
+      parent: null,
+    });
+  };
+
   return (
     <>
       {/* Current Channel */}
@@ -397,8 +469,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
               icon: <Plus size={14} className="w-5 h-5 mr-2" />,
               label: '新增',
               show: canEdit,
-              onClick: () =>
-                ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300),
+              onClick: handleOpenCreateChannelPopup,
             },
           ]);
         }}
