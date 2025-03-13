@@ -45,8 +45,9 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ server }) => {
           className={homePage['myGroupsRoomAvatarPicture']}
           style={{
             backgroundImage: `url(${serverAvatar})`,
+            backgroundRepeat: 'no-repeat',
             backgroundSize: 'cover',
-            backgroundPosition: '0 0',
+            backgroundPosition: 'center center',
           }}
         ></div>
         <div className={homePage['myGroupsRoomInfo']}>

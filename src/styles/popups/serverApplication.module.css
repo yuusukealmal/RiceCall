@@ -18,9 +18,6 @@
   object-fit: cover;
   min-width: 50px;
   min-height: 50px;
-  background: url(../../../public/logo_server_def.png) no-repeat center center;
-  background-size: contain;
-  background-position: 0 0;
 }
 .avatarPicture::before {
   content: '';
@@ -30,8 +27,7 @@
   z-index: 99;
   min-width: 52px;
   min-height: 52px;
-  background: url(../../../public/channel/server_logo_border.png) no-repeat
-    center center;
+  background: url(../../../public/win_border.png) no-repeat center center;
   background-size: cover;
   background-position: 0 0;
 }

@@ -204,11 +204,10 @@
 }
 
 .myGroupsRoomAvatarPicture {
-  width: auto;
-  height: 50px;
-  background: url(../../public/im/IMLogo.png) no-repeat center center;
-  background-size: cover;
-  background-position: 0 0;
+  position: relative;
+  cursor: pointer;
+  object-fit: cover;
+  min-height: 50px;
   min-width: 50px;
 }
 

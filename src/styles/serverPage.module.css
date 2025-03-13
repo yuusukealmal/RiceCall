@@ -37,18 +37,13 @@
   margin-left: 5px;
   cursor: pointer;
 }
-
 .avatarPicture {
   position: relative;
   cursor: pointer;
   object-fit: cover;
   min-height: 50px;
   min-width: 50px;
-  background: url(../../public/logo_server_def.png);
-  background-size: contain;
-  background-position: 0 0;
 }
-
 .avatarPicture::before {
   content: '';
   position: absolute;
@@ -71,7 +66,6 @@
   color: #515151;
   margin-left: 0.25rem;
 }
-
 .baseInfoBox .container {
   display: flex;
   justify-content: flex-start;
@@ -100,7 +94,6 @@
 
 .idText,
 .memberText {
-  font-size: 13px;
   margin-left: 5px;
 }
 

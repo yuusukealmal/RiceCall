@@ -22,6 +22,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
   React.memo((initialData: ServerApplicationModalProps) => {
     // Variables
     const serverName = initialData.server?.name || '';
+    const serverAvatar = initialData.server?.avatar || '';
     const serverDisplayId = initialData.server?.displayId || '';
 
     // Socket
@@ -61,7 +62,15 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
               <div className={applyMember['body']}>
                 <div className={applyMember['headerBox']}>
                   <div className={applyMember['avatarWrapper']}>
-                    <div className={applyMember['avatarPicture']} />
+                    <div
+                      className={applyMember['avatarPicture']}
+                      style={{
+                        backgroundImage: `url(${serverAvatar})`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center center',
+                      }}
+                    />
                   </div>
                   <div className={applyMember['serverInfoWrapper']}>
                     <div className={applyMember['serverName']}>

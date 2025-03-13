@@ -149,14 +149,17 @@ const ServerPageComponent: React.FC = React.memo(() => {
           style={{ width: `${sidebarWidth}px` }}
         >
           <div className={styles['sidebarHeader']}>
-            <div
-              className={styles['avatarPicture']}
-              style={{
-                backgroundImage: `url(${serverAvatar})`,
-                backgroundSize: 'cover',
-                backgroundPosition: '0 0',
-              }}
-            />
+            <div className={styles['avatarBox']}>
+              <div
+                className={styles['avatarPicture']}
+                style={{
+                  backgroundImage: `url(${serverAvatar})`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center center',
+                }}
+              />
+            </div>
             <div className={styles['baseInfoBox']}>
               <div className={styles['container']}>
                 <div className={styles['name']}>{serverName} </div>

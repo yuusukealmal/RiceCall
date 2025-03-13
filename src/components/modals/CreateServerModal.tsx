@@ -7,7 +7,7 @@ import popup from '@/styles/common/popup.module.css';
 import createServer from '@/styles/popups/createServer.module.css';
 
 // Types
-import { type User, type Server } from '@/types';
+import { type User, type Server, popupType } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -58,16 +58,11 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       description: '',
     });
 
-    // Image Preview Control
-    const [previewImage, setPreviewImage] = useState<string>(
-      '/logo_server_def.png',
-    );
-
     // Form Control
     const [server, setServer] = useState<Server>({
       id: '',
       name: '',
-      avatar: null,
+      avatar: 'logo_server_def.png',
       avatarUrl: null,
       level: 0,
       description: '',
@@ -93,6 +88,14 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
 
     const handleCreateServer = (server: Server) => {
       socket?.send.createServer({ server: server });
+    };
+
+    const handleOpenErrorDialog = (message: string) => {
+      ipcService.popup.open(popupType.DIALOG_ERROR);
+      ipcService.initialData.onRequest(popupType.DIALOG_ERROR, {
+        title: message,
+        submitTo: popupType.DIALOG_ERROR,
+      });
     };
 
     switch (section) {
@@ -165,39 +168,47 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
               </div>
               <div className={createServer['body']}>
                 <div className={createServer['avatarWrapper']}>
-                  <div>
-                    <img
-                      src={previewImage}
-                      alt="Avatar"
-                      className={createServer['avatarPicture']}
-                    />
-                    <input
-                      type="file"
-                      id="avatar-upload"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file || file.size > 5 * 1024 * 1024) return; // FIXME: Add error message
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setPreviewImage(reader.result as string);
-                          setServer({
-                            ...server,
-                            avatar: reader.result as string,
-                          });
-                        };
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                    <label
-                      htmlFor="avatar-upload"
-                      style={{ marginTop: '10px' }}
-                      className={popup['button']}
-                    >
-                      更換頭像
-                    </label>
-                  </div>
+                  <div
+                    className={createServer['avatarPicture']}
+                    style={{
+                      backgroundImage: `url(${server.avatar})`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center center',
+                    }}
+                  />
+                  <input
+                    type="file"
+                    id="avatar-upload"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) {
+                        handleOpenErrorDialog('無法讀取圖片');
+                        return;
+                      }
+                      if (file.size > 5 * 1024 * 1024) {
+                        handleOpenErrorDialog('圖片大小不能超過5MB');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setServer((prev) => ({
+                          ...prev,
+                          avatar: reader.result as string,
+                        }));
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    style={{ marginTop: '10px' }}
+                    className={popup['button']}
+                  >
+                    更換頭像
+                  </label>
                 </div>
                 <div className={createServer['inputGroup']}>
                   <div className={popup['inputBox']}>

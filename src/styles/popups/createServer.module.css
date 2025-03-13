@@ -34,10 +34,6 @@
   font-weight: bold;
   color: #646464;
 }
-.inputLabel {
-  font-size: 0.9rem;
-  min-width: 40px;
-}
 
 .buttonGroup {
   display: flex;
@@ -69,12 +65,16 @@
 
 .avatarWrapper {
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   height: auto;
   width: 100%;
-  min-height: 134px;
 }
-
 .avatarPicture {
-  max-height: 100px;
+  position: relative;
+  cursor: pointer;
+  object-fit: cover;
+  min-width: 100px;
+  min-height: 100px;
 }
