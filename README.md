@@ -1,8 +1,15 @@
-# Rice call
+# RiceCall
 
-這是 Raidcall 的非官方復刻版 Ricecall，目前尚處於開發階段，若有興趣歡迎於 Discord 一同參與討論
+這是 RaidCall 的非官方復刻版 RiceCall，目前尚處於開發階段，若有興趣歡迎於 Discord 一同參與討論
 
 ### ->[Discord 群組](https://discord.gg/adCWzv6wwS)<-
+
+![image](https://github.com/user-attachments/assets/e9676ed9-8543-455e-8dda-3c74b56f538f)
+![image](https://github.com/user-attachments/assets/14aa056c-4e81-4545-a2d9-21a5aa2db2be)
+![image](https://github.com/user-attachments/assets/2ffb2c7a-f76b-43b0-9608-d807563c490b)
+![image](https://github.com/user-attachments/assets/05c34459-1198-46e2-8e8a-6049945c6e70)
+![image](https://github.com/user-attachments/assets/c1122b06-cf8d-4213-98d5-44fdf1f77913)
+
 
 ## 使用方法
 
@@ -15,43 +22,43 @@
 
 ## 如何啟動
 
-### !!!請先安裝 modules!!!
+### 1. 安裝 Modules
 
 ```bash
 # 使用 npm
 npm install
 
-# 使用 yarn
+# 或使用 yarn (推薦)
 yarn install
 ```
 
-### 啟動 Client
+### 2. 啟動 Client
 
 ```bash
 # 使用 npm
-npm run dev
+npm run electron-dev
 
-# 使用 yarn
-yarn dev
+# 或使用 yarn (推薦)
+yarn electron-dev
 ```
 
-### 啟動 Test-Server (前端設計調適用)
+### 3. 啟動 Test-Server (前端開發用)
 
 ```bash
 node /test-server/index.js
 ```
 
-### 啟動 Server
+### 4. 建置 Database
 
 ```bash
-node index.js
+node /test-server/initial.js
 ```
 
 客戶端及伺服器即會運行於本地電腦上
 
-> [客戶端](localhost:3000) (預設為 port3000)
+> [客戶端](localhost:3000) (localhost:3000)
 >
-> [伺服器端](localhost:4500) (預設為 port4500)
+> [伺服器端](localhost:4500) (localhost:4500)
 
 ## 免責聲明
 
