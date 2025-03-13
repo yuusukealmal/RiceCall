@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { FormEvent } from 'react';
+import React from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
@@ -8,17 +8,17 @@ import dialog from '@/styles/popups/dialog.module.css';
 // Services
 import { ipcService } from '@/services/ipc.service';
 
-const DialogIcon = {
-  alert: 'alert',
-  alert2: 'alert2',
-  error: 'error',
-  warning: 'warning',
-  info: 'info',
-  success: 'success',
-};
+enum DIALOG_ICON {
+  ALERT = 'alert',
+  ALERT2 = 'alert2',
+  ERROR = 'error',
+  WARNING = 'warning',
+  INFO = 'info',
+  SUCCESS = 'success',
+}
 
 interface DialogProps {
-  iconType: keyof typeof DialogIcon;
+  iconType: keyof typeof DIALOG_ICON;
   title: React.ReactNode;
   submitTo: string;
 }
@@ -43,7 +43,7 @@ const Dialog: React.FC<DialogProps> = (initialData: DialogProps) => {
             <div className={popup['inputBox']}>
               <div
                 className={`${dialog['dialogIcon']} ${
-                  popup[DialogIcon[iconType]]
+                  popup[DIALOG_ICON[iconType]]
                 }`}
               ></div>
               <div className={popup['textBorder']}>
