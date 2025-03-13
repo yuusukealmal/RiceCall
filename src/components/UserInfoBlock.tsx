@@ -70,7 +70,7 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
                 <div
                   className={UserInfoCard['userInfoXpProgress']}
                   style={{
-                    width: `${userXpProgress}%`,
+                    width: `${userXpProgress * 100}%`,
                   }}
                 />
                 {/** Xp Text */}
@@ -79,7 +79,7 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = React.memo(
                   <div
                     style={{
                       position: 'absolute',
-                      left: `${userXpProgress}%`,
+                      left: `${userXpProgress * 100}%`,
                       transform: 'translateX(-50%) scale(0.8)',
                       bottom: '-25px',
                     }}
