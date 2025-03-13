@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react';
 
 // CSS
+import popup from '@/styles/common/popup.module.css';
 import header from '@/styles/common/header.module.css';
 
 // Types
@@ -163,13 +164,8 @@ const Modal = React.memo(() => {
         return <Dialog {...{ ...initialData, iconType: 'ERROR' }} />;
       case popupType.DIALOG_INFO:
         return <Dialog {...{ ...initialData, iconType: 'INFO' }} />;
-
       default:
-        return (
-          <Dialog
-            {...{ title: '未知的視窗類型', iconType: 'ERROR', submitTo: null }}
-          />
-        );
+        return <div className={popup['popupContainer']} />;
     }
   };
 

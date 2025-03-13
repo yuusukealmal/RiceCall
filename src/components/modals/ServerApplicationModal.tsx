@@ -6,7 +6,7 @@ import Popup from '@/styles/common/popup.module.css';
 import applyMember from '@/styles/popups/serverApplication.module.css';
 
 // Types
-import { type Server, type ServerApplication } from '@/types';
+import { popupType, type Server, type ServerApplication } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -33,9 +33,20 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
     const [isApplying, setIsApplying] = useState(false);
 
     // Section Control
-    const [section, setSection] = useState<number>(1);
+    const [section, setSection] = useState<number>(0);
 
     const handleCreatMemberApplication = (application: ServerApplication) => {};
+
+    const handleOpenSuccessDialog = () => {
+      ipcService.popup.open(popupType.DIALOG_SUCCESS);
+      ipcService.initialData.onRequest(popupType.DIALOG_SUCCESS, {
+        title: '申請已送出，請等待管理員審核',
+        submitTo: popupType.DIALOG_SUCCESS,
+      });
+      ipcService.popup.onSubmit(popupType.DIALOG_SUCCESS, () => {
+        setSection(1);
+      });
+    };
 
     const handleClose = () => {
       ipcService.window.close();
@@ -90,7 +101,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
                   //   serverId: server?.id,
                   //   description,
                   // });
-                  handleClose();
+                  handleOpenSuccessDialog();
                 }}
               >
                 {'送出'}

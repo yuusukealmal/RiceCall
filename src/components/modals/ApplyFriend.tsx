@@ -42,6 +42,10 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
       ipcService.popup.open(popupType.DIALOG_SUCCESS);
       ipcService.initialData.onRequest(popupType.DIALOG_SUCCESS, {
         title: '好友申請已發送，正等待對方的確認！',
+        submitTo: popupType.DIALOG_SUCCESS,
+      });
+      ipcService.popup.onSubmit(popupType.DIALOG_SUCCESS, () => {
+        handleClose();
       });
     };
 
@@ -109,7 +113,6 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
             onClick={() => {
               // handleCreateFriendApplication();
               handleOpenSuccessPopup();
-              handleClose();
             }}
           >
             {'傳送請求'}

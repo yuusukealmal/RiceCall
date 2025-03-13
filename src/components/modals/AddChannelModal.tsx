@@ -23,6 +23,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
   (initialData: AddChannelModalProps) => {
     // Variables
     const parentName = initialData.parent?.name || '無';
+    const isRoot = !!initialData.parent;
     const serverId = initialData.serverId || '';
 
     // Socket
@@ -90,7 +91,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
             onClick={() => {
               handleCreateChannel({
                 ...channel,
-                isRoot: !!parent,
+                isRoot: isRoot,
                 serverId: serverId,
               });
               handleClose();
