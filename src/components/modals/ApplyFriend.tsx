@@ -34,9 +34,9 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     const [description, setDescription] = useState('');
     const [friendGroup, setFriendGroup] = useState('');
 
-    const handleCreateFriendApplication = (application: FriendApplication) => {
-      // socket?.send.createFriendApplication({});
-    };
+    // const handleCreateFriendApplication = (application: FriendApplication) => {
+    //   // socket?.send.createFriendApplication({});
+    // };
 
     const handleOpenSuccessPopup = () => {
       ipcService.popup.open(popupType.DIALOG);

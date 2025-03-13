@@ -27,16 +27,15 @@ interface FriendGroupProps {
 
 const FriendGroup: React.FC<FriendGroupProps> = React.memo(
   ({ friendGroup, friends }) => {
+    // Variables
+    const groupName = friendGroup.name;
+    const groupFriends = friends.filter((fd) => fd.groupId == friendGroup.id);
+
     // Expanded Control
     const [expanded, setExpanded] = useState<boolean>(true);
 
     // Context Menu
     const contextMenu = useContextMenu();
-
-    const groupName = friendGroup.name;
-    const groupFriends = friends.filter(
-      (friend) => friend.groupId == friendGroup.id,
-    );
 
     return (
       <div key={friendGroup.id}>
@@ -87,15 +86,41 @@ interface FriendCardProps {
   friend: Friend;
 }
 const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
+  // Variables
+  const friendUser = friend.user || {
+    id: '',
+    name: '未知使用者',
+    avatar: '',
+    avatarUrl: '',
+    signature: '',
+    status: 'online',
+    gender: 'Male',
+    level: 0,
+    xp: 0,
+    requiredXp: 0,
+    progress: 0,
+    currentChannelId: '',
+    currentServerId: '',
+    lastActiveAt: 0,
+    createdAt: 0,
+  };
+  const friendAvatarUrl = friendUser.avatarUrl;
+  const friendName = friendUser.name;
+  const friendSignature = friendUser.signature;
+  const friendLevel = friendUser.level;
+  const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
+  const friendBadges = friendUser.badges || [];
+
   // Context Menu Control
   const contextMenu = useContextMenu();
 
-  const friendUser = friend.user;
-  const friendLevel = Math.min(56, Math.ceil((friendUser?.level ?? 0) / 5)); // 56 is max level
-  const friendAvatarUrl = friendUser?.avatarUrl;
-  const friendName = friendUser?.name;
-  const friendBadges = friendUser?.badges ?? [];
-  const friendSignature = friendUser?.signature ?? '';
+  // Handlers
+  const handleOpenDirectMessagePopup = () => {
+    ipcService.popup.open(popupType.DIRECT_MESSAGE);
+    ipcService.initialData.onRequest(popupType.DIRECT_MESSAGE, {
+      user: friendUser,
+    });
+  };
 
   return (
     <div key={friend.id}>
@@ -114,23 +139,19 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
             },
           ]);
         }}
-        onDoubleClick={(e) => {
-          ipcService.popup.open(popupType.DIRECT_MESSAGE);
+        onDoubleClick={() => {
+          handleOpenDirectMessagePopup();
         }}
       >
         <div
           className={styles['avatarPicture']}
-          style={
-            friendAvatarUrl
-              ? { backgroundImage: `url(${friendAvatarUrl})` }
-              : {}
-          }
+          style={{ backgroundImage: `url(${friendAvatarUrl})` }}
         />
         <div className={styles['baseInfoBox']}>
           <div className={styles['container']}>
             <div className={styles['name']}>{friendName}</div>
             <div
-              className={`${styles['userGrade']} ${grade[`lv-${friendLevel}`]}`}
+              className={`${styles['userGrade']} ${grade[`lv-${friendGrade}`]}`}
             />
             <BadgeViewer badges={friendBadges} />
           </div>
@@ -168,9 +189,9 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
       });
     };
 
-    const handleOpenCreateGroupPopup = () => {
-      // ipcService.popup.open(popupType.CREATE_FRIEND_GROUP);
-    };
+    // const handleOpenCreateGroupPopup = () => {
+    //   // ipcService.popup.open(popupType.CREATE_FRIEND_GROUP);
+    // };
 
     return (
       <>
