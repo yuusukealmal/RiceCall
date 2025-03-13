@@ -49,14 +49,14 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
 
     // Handlers
     const handleOpenEditChannelPopup = () => {
-      ipcService.popup.open(popupType.EDIT_CHANNEL, 400, 300);
+      ipcService.popup.open(popupType.EDIT_CHANNEL);
       ipcService.initialData.onRequest(popupType.EDIT_CHANNEL, {
         channel: category,
       });
     };
 
     const handleOpenCreateChannelPopup = () => {
-      ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300);
+      ipcService.popup.open(popupType.CREATE_CHANNEL);
       ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
         serverId: category.serverId,
         parent: category,
@@ -64,7 +64,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
     };
 
     const handleOpenWarningPopup = () => {
-      ipcService.popup.open(popupType.DIALOG, 400, 300);
+      ipcService.popup.open(popupType.DIALOG);
       ipcService.initialData.onRequest(popupType.DIALOG, {
         iconType: 'warning',
         title: '確定要刪除此頻道嗎？',
@@ -179,14 +179,14 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 
     // Handlers
     const handleOpenEditChannelPopup = () => {
-      ipcService.popup.open(popupType.EDIT_CHANNEL, 400, 300);
+      ipcService.popup.open(popupType.EDIT_CHANNEL);
       ipcService.initialData.onRequest(popupType.EDIT_CHANNEL, {
         channel: channel,
       });
     };
 
     const handleOpenCreateChannelPopup = () => {
-      ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300);
+      ipcService.popup.open(popupType.CREATE_CHANNEL);
       ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
         serverId: channel.serverId,
         parent: channel,
@@ -194,7 +194,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     };
 
     const handleOpenWarningPopup = () => {
-      ipcService.popup.open(popupType.DIALOG, 400, 300);
+      ipcService.popup.open(popupType.DIALOG);
       ipcService.initialData.onRequest(popupType.DIALOG, {
         iconType: 'warning',
         title: '確定要刪除此頻道嗎？',
@@ -313,7 +313,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
 
     // Handlers
     const handleOpenApplyFriendPopup = () => {
-      ipcService.popup.open(popupType.APPLY_FRIEND, 420, 540);
+      ipcService.popup.open(popupType.APPLY_FRIEND);
       ipcService.initialData.onRequest(popupType.APPLY_FRIEND, {
         user: user,
         targetUser: channelUser,
@@ -434,7 +434,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
 
   // Handlers
   const handleOpenCreateChannelPopup = () => {
-    ipcService.popup.open(popupType.CREATE_CHANNEL, 400, 300);
+    ipcService.popup.open(popupType.CREATE_CHANNEL);
     ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
       serverId: server.id,
       parent: null,

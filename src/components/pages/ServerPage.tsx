@@ -126,7 +126,7 @@ const ServerPageComponent: React.FC = React.memo(() => {
   };
 
   const handleOpenServerSettings = () => {
-    ipcService.popup.open(popupType.EDIT_SERVER, 450, 600);
+    ipcService.popup.open(popupType.EDIT_SERVER);
     ipcService.initialData.onRequest(popupType.EDIT_SERVER, {
       server: server,
     });

@@ -115,7 +115,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
           ]);
         }}
         onDoubleClick={(e) => {
-          ipcService.popup.open(popupType.DIRECT_MESSAGE, 600, 450);
+          ipcService.popup.open(popupType.DIRECT_MESSAGE);
         }}
       >
         <div
@@ -162,14 +162,14 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
 
     // Handlers
     const handleOpenApplyFriendPopup = () => {
-      ipcService.popup.open(popupType.APPLY_FRIEND, 420, 540);
+      ipcService.popup.open(popupType.APPLY_FRIEND);
       ipcService.initialData.onRequest(popupType.APPLY_FRIEND, {
         user: user,
       });
     };
 
     const handleOpenCreateGroupPopup = () => {
-      // ipcService.popup.open(popupType.CREATE_FRIEND_GROUP, 600, 450);
+      // ipcService.popup.open(popupType.CREATE_FRIEND_GROUP);
     };
 
     return (

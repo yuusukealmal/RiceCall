@@ -6,7 +6,7 @@ import popup from '@/styles/common/popup.module.css';
 import applyFriend from '@/styles/popups/applyFriend.module.css';
 
 // Types
-import { FriendApplication, User } from '@/types';
+import { FriendApplication, popupType, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -72,6 +72,14 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
       // socket?.send.createFriendApplication({});
     };
 
+    const handleOpenSuccessPopup = () => {
+      ipcService.popup.open(popupType.DIALOG);
+      ipcService.initialData.onRequest(popupType.DIALOG, {
+        iconType: 'success',
+        title: '好友申請已發送，正等待對方的確認！',
+      });
+    };
+
     const handleClose = () => {
       ipcService.window.close();
     };
@@ -135,6 +143,7 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
             disabled={!description.trim()}
             onClick={() => {
               // handleCreateFriendApplication();
+              handleOpenSuccessPopup();
               handleClose();
             }}
           >
