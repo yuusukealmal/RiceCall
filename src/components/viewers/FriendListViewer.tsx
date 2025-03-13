@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable react/display-name */
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Trash } from 'lucide-react';
 
 // CSS
@@ -8,7 +9,7 @@ import styles from '@/styles/friendPage.module.css';
 import grade from '@/styles/common/grade.module.css';
 
 // Types
-import { popupType, type Friend, type FriendGroup } from '@/types';
+import { popupType, type User, type Friend, type FriendGroup } from '@/types';
 
 // Components
 import BadgeViewer from '@/components/viewers/BadgeViewer';
@@ -102,8 +103,6 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
       <div
         className={styles['friendCard']}
         onContextMenu={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
           contextMenu.showContextMenu(e.pageX, e.pageY, [
             {
               id: 'delete',
@@ -116,8 +115,6 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
           ]);
         }}
         onDoubleClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
           ipcService.popup.open(popupType.DIRECT_MESSAGE, 600, 450);
         }}
       >
@@ -145,23 +142,35 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
 });
 
 interface FriendListViewerProps {
-  friendGroups: FriendGroup[] | null;
-  friends: Friend[] | null;
+  friendGroups: FriendGroup[];
+  friends: Friend[];
 }
 
 const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
   ({ friendGroups, friends }) => {
-    if (!friendGroups) return null;
+    // Redux
+    const user = useSelector((state: { user: User }) => state.user);
 
     // Search Control
     const [searchQuery, setSearchQuery] = useState<string>('');
 
     const filteredFriends =
-      friends?.filter((friend) => friend.user?.name.includes(searchQuery)) ??
-      [];
+      friends.filter((friend) => friend.user?.name.includes(searchQuery)) ?? [];
 
     // Tab Control
     const [selectedTabId, setSelectedTabId] = useState<number>(0);
+
+    // Handlers
+    const handleOpenApplyFriendPopup = () => {
+      ipcService.popup.open(popupType.APPLY_FRIEND, 420, 540);
+      ipcService.initialData.onRequest(popupType.APPLY_FRIEND, {
+        user: user,
+      });
+    };
+
+    const handleOpenCreateGroupPopup = () => {
+      // ipcService.popup.open(popupType.CREATE_FRIEND_GROUP, 600, 450);
+    };
 
     return (
       <>
@@ -213,10 +222,16 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
             {/* Bottom Buttons */}
             <div className={styles['bottomButtons']}>
               <div className={styles['button']} datatype="addGroup">
-                添加分組
+                {'添加分組'}
               </div>
-              <div className={styles['button']} datatype="addFriend">
-                新增好友
+              <div
+                className={styles['button']}
+                datatype="addFriend"
+                onClick={() => {
+                  handleOpenApplyFriendPopup();
+                }}
+              >
+                {'新增好友'}
               </div>
             </div>
           </div>

@@ -267,7 +267,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             {channelUsers
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((user: User) => (
-                <UserTab key={user.id} user={user} canEdit={canEdit} />
+                <UserTab key={user.id} channelUser={user} canEdit={canEdit} />
               ))}
           </div>
         )}
@@ -277,94 +277,110 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 );
 
 interface UserTabProps {
-  user: User;
+  channelUser: User;
   canEdit: boolean;
 }
 
-const UserTab: React.FC<UserTabProps> = React.memo(({ user, canEdit }) => {
-  // Redux
-  const server = useSelector((state: { server: Server }) => state.server);
+const UserTab: React.FC<UserTabProps> = React.memo(
+  ({ channelUser, canEdit }) => {
+    // Redux
+    const user = useSelector((state: { user: User }) => state.user);
+    const server = useSelector((state: { server: Server }) => state.server);
 
-  // Variables
-  const serverMembers = server.members || {};
-  const channelUser = user;
-  const channelUserMember = serverMembers[user.id] || {
-    id: '',
-    isBlocked: false,
-    nickname: '',
-    permissionLevel: 0,
-    userId: '',
-    serverId: '',
-    createdAt: 0,
-  };
-  const channelUserPermission = channelUserMember.permissionLevel;
-  const channelUserNickname = channelUserMember.nickname;
-  const channelUserLevel = user.level;
-  const channelUserGrade = Math.min(56, Math.ceil(channelUserLevel / 5)); // 56 is max level
-  const channelUserGender = user.gender;
-  const channelUserBadges = user.badges || [];
+    // Variables
+    const serverMembers = server.members || {};
+    const channelUserMember = serverMembers[channelUser.id] || {
+      id: '',
+      isBlocked: false,
+      nickname: '',
+      permissionLevel: 0,
+      userId: '',
+      serverId: '',
+      createdAt: 0,
+    };
+    const channelUserPermission = channelUserMember.permissionLevel;
+    const channelUserNickname = channelUserMember.nickname;
+    const channelUserLevel = channelUser.level;
+    const channelUserGrade = Math.min(56, Math.ceil(channelUserLevel / 5)); // 56 is max level
+    const channelUserGender = channelUser.gender;
+    const channelUserBadges = channelUser.badges || [];
 
-  // Socket
-  const socket = useSocket();
+    // Socket
+    const socket = useSocket();
 
-  // Context
-  const contextMenu = useContextMenu();
+    // Context
+    const contextMenu = useContextMenu();
 
-  return (
-    <div key={user.id}>
-      {/* User View */}
-      <div
-        className={`${styles['userTab']}`}
-        data-user-block
-        data-user-id={user.id}
-        onDoubleClick={(e) => {
-          contextMenu.showUserInfoBlock(e.pageX, e.pageY, user, server);
-        }}
-        onContextMenu={(e) => {
-          contextMenu.showContextMenu(e.pageX, e.pageY, [
-            {
-              id: 'kick',
-              icon: <Trash size={14} className="w-5 h-5 mr-2" />,
-              label: '踢出',
-              show: canEdit && user.id != channelUser.id,
-              onClick: () => {
-                // handleKickUser(user.id);
+    // Handlers
+    const handleOpenApplyFriendPopup = () => {
+      ipcService.popup.open(popupType.APPLY_FRIEND, 420, 540);
+      ipcService.initialData.onRequest(popupType.APPLY_FRIEND, {
+        user: user,
+        targetUser: channelUser,
+      });
+    };
+
+    return (
+      <div key={channelUser.id}>
+        {/* User View */}
+        <div
+          className={`${styles['userTab']}`}
+          onDoubleClick={(e) => {
+            contextMenu.showUserInfoBlock(
+              e.pageX,
+              e.pageY,
+              channelUser,
+              server,
+            );
+          }}
+          onContextMenu={(e) => {
+            contextMenu.showContextMenu(e.pageX, e.pageY, [
+              {
+                id: 'kick',
+                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
+                label: '踢出',
+                show: canEdit && user.id != channelUser.id,
+                onClick: () => {
+                  // handleKickUser(user.id);
+                },
               },
-            },
-            {
-              id: 'addFriend',
-              icon: <Plus size={14} className="w-5 h-5 mr-2" />,
-              label: '新增好友',
-              show: canEdit && user.id != channelUser.id,
-              onClick: () => {
-                // handleAddFriend(user.id);
+              {
+                id: 'addFriend',
+                icon: <Plus size={14} className="w-5 h-5 mr-2" />,
+                label: '新增好友',
+                show: canEdit && user.id != channelUser.id,
+                onClick: () => {
+                  handleOpenApplyFriendPopup();
+                },
               },
-            },
-          ]);
-        }}
-      >
-        <div
-          className={`${styles['userState']} ${false ? styles['unplay'] : ''}`}
-        />
-        <div
-          className={`${styles['userIcon']} ${permission[channelUserGender]} ${
-            permission[`lv-${channelUserPermission}`]
-          }`}
-        />
-        <div className={styles['userTabName']}>{channelUserNickname}</div>
-        <div
-          className={`${styles['userGrade']} ${
-            grade[`lv-${channelUserGrade}`]
-          }`}
-        />
-        <BadgeViewer badges={channelUserBadges} maxDisplay={3} />
-        {channelUser.id === user.id && (
-          <div className={styles['myLocationIcon']} />
-        )}
+            ]);
+          }}
+        >
+          <div
+            className={`${styles['userState']} ${
+              false ? styles['unplay'] : ''
+            }`}
+          />
+          <div
+            className={`${styles['userIcon']} ${
+              permission[channelUserGender]
+            } ${permission[`lv-${channelUserPermission}`]}`}
+          />
+          <div className={styles['userTabName']}>{channelUserNickname}</div>
+          <div
+            className={`${styles['userGrade']} ${
+              grade[`lv-${channelUserGrade}`]
+            }`}
+          />
+          <BadgeViewer badges={channelUserBadges} maxDisplay={3} />
+          {channelUser.id === user.id && (
+            <div className={styles['myLocationIcon']} />
+          )}
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 interface ChannelViewerProps {
   channels: Channel[];

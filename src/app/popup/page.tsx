@@ -140,7 +140,7 @@ const Modal = React.memo(() => {
       case popupType.APPLY_MEMBER:
         return <ServerApplication onClose={() => {}} server={undefined} />;
       case popupType.APPLY_FRIEND:
-        return <ApplyFriend onClose={() => {}} />;
+        return <ApplyFriend {...initialData} />;
       case popupType.DIRECT_MESSAGE:
         return; // <DirectMessageModal onClose={() => {}} />;
       case popupType.DIALOG:
