@@ -64,13 +64,13 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
     };
 
     const handleOpenWarningPopup = () => {
-      ipcService.popup.open(popupType.DIALOG);
-      ipcService.initialData.onRequest(popupType.DIALOG, {
+      ipcService.popup.open(popupType.DIALOG_WARNING);
+      ipcService.initialData.onRequest(popupType.DIALOG_WARNING, {
         iconType: 'warning',
         title: '確定要刪除此頻道嗎？',
-        submitTo: popupType.DIALOG,
+        submitTo: popupType.DIALOG_WARNING,
       });
-      ipcService.popup.onSubmit(popupType.DIALOG, () =>
+      ipcService.popup.onSubmit(popupType.DIALOG_WARNING, () =>
         handleDeleteChannel(category.id),
       );
     };
@@ -194,13 +194,13 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     };
 
     const handleOpenWarningPopup = () => {
-      ipcService.popup.open(popupType.DIALOG);
-      ipcService.initialData.onRequest(popupType.DIALOG, {
+      ipcService.popup.open(popupType.DIALOG_WARNING);
+      ipcService.initialData.onRequest(popupType.DIALOG_WARNING, {
         iconType: 'warning',
         title: '確定要刪除此頻道嗎？',
-        submitTo: popupType.DIALOG,
+        submitTo: popupType.DIALOG_WARNING,
       });
-      ipcService.popup.onSubmit(popupType.DIALOG, () =>
+      ipcService.popup.onSubmit(popupType.DIALOG_WARNING, () =>
         handleDeleteChannel(channel.id),
       );
     };

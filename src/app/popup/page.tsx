@@ -114,8 +114,17 @@ const Modal = React.memo(() => {
         return { title: '好友請求', button: ['close'] };
       case popupType.DIRECT_MESSAGE:
         return { title: '私訊', button: ['close'] };
-      case popupType.DIALOG:
+      case popupType.DIALOG_ALERT:
+      case popupType.DIALOG_ALERT2:
+        return { title: '警告', button: ['close'] };
+      case popupType.DIALOG_SUCCESS:
+        return { title: '成功', button: ['close'] };
+      case popupType.DIALOG_WARNING:
+        return { title: '警告', button: ['close'] };
+      case popupType.DIALOG_ERROR:
         return { title: '錯誤', button: ['close'] };
+      case popupType.DIALOG_INFO:
+        return { title: '資訊', button: ['close'] };
       default:
         return undefined;
     }
@@ -138,15 +147,29 @@ const Modal = React.memo(() => {
       case popupType.DELETE_CHANNEL:
       // return <DeleteChannelModal onClose={() => {}} channel={} />;
       case popupType.APPLY_MEMBER:
-        return <ServerApplication onClose={() => {}} server={undefined} />;
+        return <ServerApplication {...initialData} />;
       case popupType.APPLY_FRIEND:
         return <ApplyFriend {...initialData} />;
       case popupType.DIRECT_MESSAGE:
         return; // <DirectMessageModal onClose={() => {}} />;
-      case popupType.DIALOG:
-        return <Dialog {...initialData} />;
+      case popupType.DIALOG_ALERT:
+      case popupType.DIALOG_ALERT2:
+        return <Dialog {...{ ...initialData, iconType: 'ALERT' }} />;
+      case popupType.DIALOG_SUCCESS:
+        return <Dialog {...{ ...initialData, iconType: 'SUCCESS' }} />;
+      case popupType.DIALOG_WARNING:
+        return <Dialog {...{ ...initialData, iconType: 'WARNING' }} />;
+      case popupType.DIALOG_ERROR:
+        return <Dialog {...{ ...initialData, iconType: 'ERROR' }} />;
+      case popupType.DIALOG_INFO:
+        return <Dialog {...{ ...initialData, iconType: 'INFO' }} />;
+
       default:
-        return <></>;
+        return (
+          <Dialog
+            {...{ title: '未知的視窗類型', iconType: 'ERROR', submitTo: null }}
+          />
+        );
     }
   };
 

@@ -284,5 +284,10 @@ export enum popupType {
   APPLY_MEMBER = 'applyMember',
   APPLY_FRIEND = 'applyFriend',
   DIRECT_MESSAGE = 'directMessage',
-  DIALOG = 'dialog',
+  DIALOG_ALERT = 'dialogAlert',
+  DIALOG_ALERT2 = 'dialogAlert2',
+  DIALOG_SUCCESS = 'dialogSuccess',
+  DIALOG_WARNING = 'dialogWarning',
+  DIALOG_ERROR = 'dialogError',
+  DIALOG_INFO = 'dialogInfo',
 }
