@@ -15,17 +15,17 @@ import addChannel from '@/styles/popups/addChannel.module.css';
 import { ipcService } from '@/services/ipc.service';
 
 interface AddChannelModalProps {
-  serverId: string;
-  parent: Channel;
+  serverId: string | null;
+  parent: Channel | null;
 }
 
 const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
   (initialData: AddChannelModalProps) => {
-    const { serverId, parent } = initialData;
     if (!initialData) return null;
 
     // Variables
-    const parentName = parent?.name || '無';
+    const parentName = initialData.parent?.name || '無';
+    const serverId = initialData.serverId || '';
 
     // Socket
     const socket = useSocket();

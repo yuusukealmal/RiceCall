@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 
 // CSS
-import Popup from '@/styles/common/popup.module.css';
-import ApplyFriend from '@/styles/popups/applyFriend.module.css';
+import popup from '@/styles/common/popup.module.css';
+import applyFriend from '@/styles/popups/applyFriend.module.css';
 
 // Types
 import { FriendApplication, User } from '@/types';
@@ -15,14 +15,51 @@ import { useSocket } from '@/providers/SocketProvider';
 import { ipcService } from '@/services/ipc.service';
 
 interface ApplyFriendModalProps {
-  user: User;
-  targetUser: User;
+  user: User | null;
+  targetUser: User | null;
 }
 
 const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
   (initialData: ApplyFriendModalProps) => {
-    const { user, targetUser } = initialData;
-    if (!initialData) return;
+    // Variables
+    const user = initialData.user || {
+      id: '',
+      name: '未知使用者',
+      avatar: '',
+      avatarUrl: '',
+      signature: '',
+      status: 'online',
+      gender: 'Male',
+      level: 0,
+      xp: 0,
+      requiredXp: 0,
+      progress: 0,
+      currentChannelId: '',
+      currentServerId: '',
+      lastActiveAt: 0,
+      createdAt: 0,
+    };
+    const targetUser = initialData.targetUser || {
+      id: '',
+      name: '未知使用者',
+      avatar: '',
+      avatarUrl: '',
+      signature: '',
+      status: 'online',
+      gender: 'Male',
+      level: 0,
+      xp: 0,
+      requiredXp: 0,
+      progress: 0,
+      currentChannelId: '',
+      currentServerId: '',
+      lastActiveAt: 0,
+      createdAt: 0,
+    };
+    const targetUserId = targetUser.id;
+    const targetUserName = targetUser.name;
+    const targetUserAvatarUrl = targetUser.avatarUrl;
+    const friendGroups = user.friendGroups || [];
 
     // Socket
     const socket = useSocket();
@@ -40,51 +77,60 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     };
 
     return (
-      <div className={Popup['popupContainer']}>
-        <div className={`${Popup['popupBody']}`}>
-          <div className={ApplyFriend['body']}>
-            <div className={Popup['label']}>{'您將添加以下聯絡人'}</div>
-            <div className={ApplyFriend['headerBox']}>
-              <div className={ApplyFriend['avatarWrapper']}>
-                <div className={ApplyFriend['avatarPicture']} />
+      <div className={popup['popupContainer']}>
+        <div className={`${popup['popupBody']}`}>
+          <div className={applyFriend['body']}>
+            <div className={popup['label']}>{'您將添加以下聯絡人'}</div>
+            <div className={applyFriend['headerBox']}>
+              <div className={applyFriend['avatarWrapper']}>
+                <div className={applyFriend['avatarPicture']} />
               </div>
-              <div className={ApplyFriend['userInfoWrapper']}>
-                <div className={ApplyFriend['userAccount']}>
-                  {'{targetUser.username}'}
+              <div className={applyFriend['userInfoWrapper']}>
+                <div className={applyFriend['userAccount']}>
+                  {`${targetUserName}`}
                 </div>
-                <div className={ApplyFriend['userName']}>
-                  {'{targetUser.id}'}
+                <div className={applyFriend['userName']}>
+                  {`${targetUserId}`}
                 </div>
               </div>
             </div>
-            <div className={ApplyFriend['split']} />
-            <div className={ApplyFriend['contentBox']}>
-              <div className={Popup['label']}>{'選擇分組：'}</div>
-              <div className={Popup['inputBox']}>
-                <select className={Popup['select']}>
-                  <option>我的好友</option>
-                  <option>閨密</option>
-                  <option>好朋友</option>
+            <div className={applyFriend['split']} />
+            <div className={applyFriend['contentBox']}>
+              <div className={popup['label']}>{'選擇分組：'}</div>
+              <div className={popup['inputBox']}>
+                <select
+                  className={popup['select']}
+                  onChange={(e) => {
+                    setFriendGroup(e.target.value);
+                  }}
+                >
+                  {friendGroups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
                 </select>
-                <div className={ApplyFriend['linkText']}>{'添加分組'}</div>
+                <div className={applyFriend['linkText']}>{'添加分組'}</div>
               </div>
-              <div className={Popup['label']}>{'附言：'}</div>
-              <div className={Popup['inputBox']}>
+              <div className={popup['label']}>{'附言：'}</div>
+              <div className={popup['inputBox']}>
                 <textarea
                   rows={2}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                  }}
                 />
               </div>
-              <div className={ApplyFriend['noteText']}>
+              <div className={applyFriend['noteText']}>
                 {'最多只能輸入120個字元'}
               </div>
             </div>
           </div>
         </div>
-        <div className={Popup['popupFooter']}>
+        <div className={popup['popupFooter']}>
           <button
-            className={`${Popup['button']} ${
-              !description.trim() ? Popup['disabled'] : ''
+            className={`${popup['button']} ${
+              !description.trim() ? popup['disabled'] : ''
             }`}
             disabled={!description.trim()}
             onClick={() => {
@@ -95,7 +141,7 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
             {'傳送請求'}
           </button>
           <button
-            className={Popup['button']}
+            className={popup['button']}
             onClick={() => {
               handleClose();
             }}

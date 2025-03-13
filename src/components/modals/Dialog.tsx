@@ -18,14 +18,18 @@ enum DIALOG_ICON {
 }
 
 interface DialogProps {
-  iconType: keyof typeof DIALOG_ICON;
-  title: React.ReactNode;
-  submitTo: string;
+  iconType: keyof typeof DIALOG_ICON | null;
+  title: React.ReactNode | null;
+  submitTo: string | null;
 }
 
 const Dialog: React.FC<DialogProps> = (initialData: DialogProps) => {
-  const { iconType, title, submitTo } = initialData;
+  // Variables
+  const iconType = initialData.iconType || 'INFO';
+  const title = initialData.title || '未知';
+  const submitTo = initialData.submitTo || '';
 
+  // Handlers
   const handleClose = () => {
     ipcService.window.close();
   };
