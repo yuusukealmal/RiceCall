@@ -12,6 +12,7 @@ const StandardizedError = require('../standardizedError');
 // Handlers
 const userHandler = require('./user');
 const serverHandler = require('./server');
+const memberHandler = require('./member');
 const channelHandler = require('./channel');
 const messageHandler = require('./message');
 const rtcHandler = require('./rtc');
@@ -103,6 +104,10 @@ module.exports = (io) => {
     );
     socket.on('searchServer', async (data) =>
       serverHandler.searchServer(io, socket, data),
+    );
+    // Member
+    socket.on('updateMember', async (data) =>
+      memberHandler.updateMember(io, socket, data),
     );
     // Channel
     socket.on('connectChannel', async (data) =>

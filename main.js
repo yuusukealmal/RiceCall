@@ -373,6 +373,7 @@ function connectSocket(token) {
     ipcMain.on('createServer', (_, data) => socket.emit('createServer', data));
     ipcMain.on('updateServer', (_, data) => socket.emit('updateServer', data));
     ipcMain.on('deleteServer', (_, data) => socket.emit('deleteServer', data));
+    ipcMain.on('updateMember', (_, data) => socket.emit('updateMember', data));
     ipcMain.on('connectChannel', (_, data) =>
       socket.emit('connectChannel', data),
     );

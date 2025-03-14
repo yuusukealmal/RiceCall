@@ -13,10 +13,15 @@ import { ChevronDown, ChevronUp, Search, Check, X } from 'lucide-react';
 
 // Components
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
-import ContextMenu from '@/components/ContextMenu';
 
 // Types
-import type { ServerApplication, Server, Member, User } from '@/types';
+import {
+  type ServerApplication,
+  type Server,
+  type Member,
+  type User,
+  popupType,
+} from '@/types';
 
 // Utils
 import { getPermissionText } from '@/utils/formatters';
@@ -24,6 +29,7 @@ import { validateName, validateDescription } from './CreateServerModal';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
+import { useContextMenu } from '@/providers/ContextMenuProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
@@ -56,6 +62,9 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
 
     // Socket Control
     const socket = useSocket();
+
+    // Context Menu
+    const contextMenu = useContextMenu();
 
     const [markdownContent, setMarkdownContent] = useState<string>('');
     const setServerIcon = useRef<HTMLInputElement>(null);
@@ -168,47 +177,16 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
 
     useEffect(() => {
       if (!socket) return;
-
       const ObjectToArray = (obj: Record<string, any>): any[] => {
         return Object.keys(obj).map((key) => obj[key]);
       };
 
       if (activeTabIndex === 2) {
-        setMembers(ObjectToArray(server?.members || {}));
+        const filteredMembers = ObjectToArray(server?.members || {}).filter(
+          (member) => member.createdAt !== 0,
+        );
+        setMembers(filteredMembers);
       }
-
-      //   // Set up listener for members response
-      //   const handleMembers = (data: any) => {
-      //     setMembers(data);
-      //   };
-
-      //   // Add listener
-      //   socket.on('members', handleMembers);
-
-      //   // Cleanup function
-      //   return () => {
-      //     socket.off('members', handleMembers);
-      //   };
-      // } else if (activeTabIndex === 4) {
-      //   // Emit getApplications event
-      //   socket.emit('getApplications', {
-      //     sessionId: sessionId,
-      //     serverId: server?.id,
-      //   });
-
-      //   // Set up listener for applications response
-      //   const handleApplications = (data: any) => {
-      //     setApplications(data);
-      //   };
-
-      //   // Add listener
-      //   socket.on('applications', handleApplications);
-
-      //   // Cleanup function
-      //   return () => {
-      //     socket.off('applications', handleApplications);
-      //   };
-      // }
     }, [activeTabIndex, socket]);
 
     const handleMemberContextMenu = (e: React.MouseEvent, member: any) => {
@@ -810,114 +788,55 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
           };
 
           const handleKickServer = (target: Member) => {
-            setMembers((prev) =>
-              prev.filter((member) => member?.id !== target?.id),
-            );
+            ipcService.popup.open(popupType.DIALOG_WARNING);
+            ipcService.initialData.onRequest(popupType.DIALOG_WARNING, {
+              iconType: 'warning',
+              title: `確定要踢出 ${target.nickname} 嗎？使用者可以再次申請加入。`,
+              submitTo: popupType.DIALOG_WARNING,
+            });
+            ipcService.popup.onSubmit(popupType.DIALOG_WARNING, () => {
+              setMembers((prev) =>
+                prev.filter((member) => member?.id !== target?.id),
+              );
 
-            // 這裡需修改
-            // socket?.emit('ManageUserAction', {
-            //   sessionId: sessionId,
-            //   serverId: server?.id,
-            //   targetId: target.userId,
-            //   type: 'kick',
-            // });
+              socket?.send.updateMember({
+                serverId: server?.id,
+                targetMember: {
+                  ...target,
+                  permissionLevel: 0,
+                  createdAt: 0,
+                  nickname: '',
+                },
+              });
+            });
           };
 
           const handleBlockUser = (target: Member) => {
-            setMembers((prev) =>
-              prev.filter((member) => member?.id !== target?.id),
-            );
+            ipcService.popup.open(popupType.DIALOG_WARNING);
+            ipcService.initialData.onRequest(popupType.DIALOG_WARNING, {
+              iconType: 'warning',
+              title: `確定要封鎖 ${target.nickname} 嗎？使用者將無法再次申請加入。`,
+              submitTo: popupType.DIALOG_WARNING,
+            });
+            ipcService.popup.onSubmit(popupType.DIALOG_WARNING, () => {
+              setMembers((prev) =>
+                prev.filter((member) => member?.id !== target?.id),
+              );
 
-            // 這裡需修改
-            // socket?.emit('ManageUserAction', {
-            //   sessionId: sessionId,
-            //   serverId: server?.id,
-            //   targetId: target.userId,
-            //   type: 'block',
-            // });
+              socket?.send.updateMember({
+                member: {
+                  ...target,
+                  permissionLevel: 0,
+                  createdAt: 0,
+                  nickname: '',
+                  isBlocked: true,
+                },
+              });
+            });
           };
 
           return (
             <>
-              {memberContextMenu &&
-                (() => {
-                  const isCurrentUser =
-                    memberContextMenu.member.userId === mainUserId;
-                  const menuItems = [
-                    {
-                      label: '傳送即時訊息',
-                      disabled: isCurrentUser,
-                      onClick: () => {},
-                    },
-                    {
-                      label: '檢視個人檔案',
-                      onClick: () => {},
-                    },
-                    {
-                      label: '新增好友',
-                      disabled: isCurrentUser,
-                      onClick: () => {},
-                    },
-                    {
-                      label: '拒聽此人語音',
-                      disabled: isCurrentUser,
-                      onClick: () => {},
-                    },
-                    {
-                      label: '修改群名片',
-                      onClick: () => {},
-                    },
-                    {
-                      label: '移至我的頻道',
-                      disabled: isCurrentUser,
-                      onClick: () => handleUserMove(memberContextMenu.member),
-                    },
-                    {
-                      label: '禁止此人語音',
-                      disabled: isCurrentUser,
-                      onClick: () => {},
-                    },
-                    {
-                      label: '禁止文字',
-                      disabled: isCurrentUser,
-                      onClick: () => {},
-                    },
-                    {
-                      label: '踢出群',
-                      disabled: isCurrentUser,
-                      onClick: () => handleKickServer(memberContextMenu.member),
-                    },
-                    {
-                      label: '封鎖',
-                      disabled: isCurrentUser,
-                      onClick: () => handleBlockUser(memberContextMenu.member),
-                    },
-                    {
-                      label: '會員管理',
-                      disabled: isCurrentUser,
-                      onClick: () => {},
-                    },
-                    {
-                      label: '邀請成為會員',
-                      disabled: isCurrentUser,
-                      onClick: () => {},
-                    },
-                  ];
-
-                  return (
-                    <div className="text-sm">
-                      {
-                        // 這裡需修改
-                        /* <ContextMenu
-                      x={memberContextMenu.x}
-                      y={memberContextMenu.y}
-                      onClose={() => setMemberContextMenu(null)}
-                      items={menuItems}
-                    /> */
-                      }
-                    </div>
-                  );
-                })}
               {/* <div className={EditServer['serverSettingPageBox']}>
                 <div
                   className={`${EditServer['serverSettingItemWrapper']} ${EditServer['markdown']}`}
@@ -1076,9 +995,68 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                               key={member?.id}
                               className="border-b hover:bg-gray-50"
                               onContextMenu={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleMemberContextMenu(e, member);
+                                const isCurrentUser =
+                                  member.userId === mainUserId;
+                                contextMenu.showContextMenu(e.pageX, e.pageY, [
+                                  // {
+                                  //   label: '傳送即時訊息',
+                                  //   disabled: isCurrentUser,
+                                  //   onClick: () => {},
+                                  // },
+                                  // {
+                                  //   label: '檢視個人檔案',
+                                  //   onClick: () => {},
+                                  // },
+                                  // {
+                                  //   label: '新增好友',
+                                  //   disabled: isCurrentUser,
+                                  //   onClick: () => {},
+                                  // },
+                                  // {
+                                  //   label: '拒聽此人語音',
+                                  //   disabled: isCurrentUser,
+                                  //   onClick: () => {},
+                                  // },
+                                  // {
+                                  //   label: '修改群名片',
+                                  //   onClick: () => {},
+                                  // },
+                                  {
+                                    label: '移至我的頻道',
+                                    disabled: isCurrentUser,
+                                    onClick: () => handleUserMove(member),
+                                  },
+                                  // {
+                                  //   label: '禁止此人語音',
+                                  //   disabled: isCurrentUser,
+                                  //   onClick: () => {},
+                                  // },
+                                  // {
+                                  //   label: '禁止文字',
+                                  //   disabled: isCurrentUser,
+                                  //   onClick: () => {},
+                                  // },
+                                  {
+                                    label: '踢出群',
+                                    disabled: isCurrentUser,
+                                    onClick: () => handleKickServer(member),
+                                  },
+                                  {
+                                    label: '封鎖',
+                                    disabled: isCurrentUser,
+                                    onClick: () => handleBlockUser(member),
+                                  },
+                                  {
+                                    label: '會員管理',
+                                    disabled: isCurrentUser,
+                                    onClick: () => {},
+                                  },
+                                  {
+                                    label: '邀請成為會員',
+                                    disabled: isCurrentUser,
+                                    onClick: () => {},
+                                  },
+                                ]);
                               }}
                             >
                               <td className="px-4 py-3 flex items-center gap-2">
@@ -1225,131 +1203,95 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
           });
 
           return (
-            <>
-              {applicationContextMenu &&
-                {
-                  // 這裡需修改
-                  // <ContextMenu
-                  //   x={applicationContextMenu.x}
-                  //   y={applicationContextMenu.y}
-                  //   onClose={() => setApplicationContextMenu(null)}
-                  //   items={[
-                  //     {
-                  //       label: '接受申請',
-                  //       onClick: () => handleApplicationAction('accept'),
-                  //       icon: <Check size={16} className="text-green-500" />,
-                  //       className: 'text-green-600 hover:bg-green-50',
-                  //     },
-                  //     {
-                  //       label: '拒絕申請',
-                  //       onClick: () => handleApplicationAction('reject'),
-                  //       icon: <X size={16} className="text-red-500" />,
-                  //       className: 'text-red-600 hover:bg-red-50',
-                  //     },
-                  //   ]}
-                  // />
-                }}
-              <div className="flex flex-col h-full p-4">
-                <div className="flex justify-between items-center mb-6">
-                  <span className="text-sm font-medium">
-                    申請人數: {sortedApplications.length}
-                  </span>
-                  <button
-                    className="text-sm text-blue-400 hover:underline"
-                    onClick={(e) => {
-                      e.preventDefault();
-                    }}
-                  >
-                    申請設定
-                  </button>
-                </div>
+            <div className="flex flex-col h-full p-4">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-sm font-medium">
+                  申請人數: {sortedApplications.length}
+                </span>
+                <button
+                  className="text-sm text-blue-400 hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  申請設定
+                </button>
+              </div>
 
-                <div className="flex flex-col border rounded-lg overflow-hidden">
-                  <div className="max-h-[500px] overflow-y-auto">
-                    <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-gray-50 text-gray-600 select-none">
-                        <tr>
-                          <th className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 w-32">
-                            <div className="whitespace-nowrap">暱稱</div>
-                          </th>
-                          <th
-                            className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 w-24"
-                            onClick={() => handleSort('applyContribution')}
+              <div className="flex flex-col border rounded-lg overflow-hidden">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-50 text-gray-600 select-none">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 w-32">
+                          <div className="whitespace-nowrap">暱稱</div>
+                        </th>
+                        <th
+                          className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 w-24"
+                          onClick={() => handleSort('applyContribution')}
+                        >
+                          <div className="flex items-center relative pr-6 whitespace-nowrap">
+                            貢獻值
+                            <span className="absolute right-0">
+                              {sortState.field === 'applyContribution' &&
+                                (sortState.direction === 'asc' ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </div>
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 min-w-[300px]">
+                          <div className="whitespace-nowrap">申請說明</div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedApplications.map((application, index) => {
+                        const user = application.user;
+                        const member = server.members?.[user?.id || ''] ?? null;
+                        const userNickname =
+                          member?.nickname ?? user?.name ?? '未知使用者';
+                        const userContributions = member?.contribution ?? 0;
+                        const applicationDesc =
+                          application.description || '該使用者未填寫訊息';
+
+                        return (
+                          <tr
+                            key={index}
+                            className="border-b hover:bg-gray-50"
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleApplicationContextMenu(e, application);
+                            }}
                           >
-                            <div className="flex items-center relative pr-6 whitespace-nowrap">
-                              貢獻值
-                              <span className="absolute right-0">
-                                {sortState.field === 'applyContribution' &&
-                                  (sortState.direction === 'asc' ? (
-                                    <ChevronUp size={16} />
-                                  ) : (
-                                    <ChevronDown size={16} />
-                                  ))}
-                              </span>
-                            </div>
-                          </th>
-                          <th className="px-4 py-3 text-left font-medium border-b cursor-pointer hover:bg-gray-100 min-w-[300px]">
-                            <div className="whitespace-nowrap">申請說明</div>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sortedApplications.map((application, index) => {
-                          const user = application.user;
-                          const member =
-                            server.members?.[user?.id || ''] ?? null;
-                          const userNickname =
-                            member?.nickname ?? user?.name ?? '未知使用者';
-                          const userContributions = member?.contribution ?? 0;
-                          const applicationDesc =
-                            application.description || '該使用者未填寫訊息';
-
-                          return (
-                            <tr
-                              key={index}
-                              className="border-b hover:bg-gray-50"
-                              onContextMenu={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleApplicationContextMenu(e, application);
-                              }}
-                            >
-                              <td className="px-4 py-3 truncate">
-                                <p className="font-medium text-gray-900">
-                                  {userNickname}
-                                </p>
-                              </td>
-                              <td className="px-4 py-3">{userContributions}</td>
-                              <td className="px-4 py-3">{applicationDesc}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className="mt-4 text-right text-sm text-gray-500 select-none">
-                  右鍵可以進行處理
+                            <td className="px-4 py-3 truncate">
+                              <p className="font-medium text-gray-900">
+                                {userNickname}
+                              </p>
+                            </td>
+                            <td className="px-4 py-3">{userContributions}</td>
+                            <td className="px-4 py-3">{applicationDesc}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            </>
+
+              <div className="mt-4 text-right text-sm text-gray-500 select-none">
+                右鍵可以進行處理
+              </div>
+            </div>
           );
 
         case 5:
-          const blockAccountList = {
-            '1': { name: 'test1' },
-            '2': { name: 'test2' },
-            '3': { name: 'test3' },
-            '4': { name: 'test4' },
-            '5': { name: 'test5' },
-            '6': { name: 'test6' },
-            '7': { name: 'test7' },
-            '8': { name: 'test8' },
-            '9': { name: 'test9' },
-            '10': { name: 'test10' },
-          };
-
+          const blockAccountList = Object.values(server.members || {}).filter(
+            (member) => member.isBlocked,
+          );
           const blockAccountPage = (
             <div className="flex flex-col w-full">
               {/* head */}
@@ -1386,8 +1328,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                     </thead>
                     <tbody>
                       {Object.entries(blockAccountList).map(
-                        ([userId, user]) => {
-                          const displayName = user?.name || '未知用戶';
+                        ([userId, member]) => {
+                          const displayName = member.nickname || '未知用戶';
 
                           return (
                             <tr

@@ -238,6 +238,7 @@ export enum SocketClientEvent {
   CREATE_SERVER = 'createServer',
   UPDATE_SERVER = 'updateServer',
   DELETE_SERVER = 'deleteServer',
+  UPDATE_MEMBER = 'updateMember',
   CONNECT_CHANNEL = 'connectChannel',
   DISCONNECT_CHANNEL = 'disconnectChannel',
   CREATE_CHANNEL = 'createChannel',
