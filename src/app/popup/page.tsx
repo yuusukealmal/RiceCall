@@ -1,13 +1,9 @@
-/* eslint-disable react/display-name */
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ReactNode } from 'react';
 
 // CSS
-import popup from '@/styles/common/popup.module.css';
 import header from '@/styles/common/header.module.css';
 
 // Types
@@ -17,7 +13,7 @@ import { popupType } from '@/types';
 import CreateServerModal from '@/components/modals/CreateServerModal';
 import EditServerModal from '@/components/modals/EditServerModal';
 import AddChannelModal from '@/components/modals/AddChannelModal';
-import EditChannelModal from '@/components/modals/EditChannelModal';
+// import EditChannelModal from '@/components/modals/EditChannelModal';
 import ServerApplication from '@/components/modals/ServerApplicationModal';
 import ApplyFriend from '@/components/modals/ApplyFriend';
 
@@ -39,9 +35,8 @@ const Header: React.FC<HeaderProps> = React.memo(({ title, buttons }) => {
 
   // Handlers
   const handleFullscreen = () => {
-    isFullscreen
-      ? ipcService.window.unmaximize()
-      : ipcService.window.maximize();
+    if (isFullscreen) ipcService.window.unmaximize();
+    else ipcService.window.maximize();
     setIsFullscreen(!isFullscreen);
   };
 
@@ -79,112 +74,111 @@ const Header: React.FC<HeaderProps> = React.memo(({ title, buttons }) => {
   );
 });
 
+Header.displayName = 'Header';
+
 const Modal = React.memo(() => {
   // Language
   const lang = useLanguage();
 
-  // Type Control
-  const [type, setType] = useState<popupType | null>(null);
-
-  // initialData Control
+  // States
+  const [header, setHeader] = useState<ReactNode | null>(null);
+  const [content, setContent] = useState<ReactNode | null>(null);
   const [initialData, setInitialData] = useState<any | null>(null);
 
+  // Effects
   useEffect(() => {
     if (window.location.search) {
       const params = new URLSearchParams(window.location.search);
-      const newType = params.get('type') as popupType;
-      setType(newType);
+      const type = params.get('type') as popupType;
+      if (!type) return;
 
-      if (newType) {
-        ipcService.initialData.request(newType, (data) => {
-          setInitialData(data);
-        });
+      ipcService.initialData.request(type, (data) => {
+        setInitialData(data);
+      });
+
+      switch (type) {
+        case popupType.EDIT_USER:
+          setHeader(<Header title={lang.tr.editUser} buttons={['close']} />);
+          // setContent(<EditUserModal {...initialData} />);
+          break;
+        case popupType.CREATE_SERVER:
+          setHeader(
+            <Header title={lang.tr.createServer} buttons={['close']} />,
+          );
+          setContent(<CreateServerModal {...initialData} />);
+          break;
+        case popupType.EDIT_SERVER:
+          setHeader(<Header title={lang.tr.editServer} buttons={['close']} />);
+          setContent(<EditServerModal {...initialData} />);
+          break;
+        case popupType.DELETE_SERVER:
+          setHeader(
+            <Header title={lang.tr.deleteServer} buttons={['close']} />,
+          );
+          break;
+        case popupType.CREATE_CHANNEL:
+          setHeader(
+            <Header title={lang.tr.createChannel} buttons={['close']} />,
+          );
+          setContent(<AddChannelModal {...initialData} />);
+          break;
+        case popupType.EDIT_CHANNEL:
+          setHeader(<Header title={lang.tr.editChannel} buttons={['close']} />);
+          // setContent(<EditChannelModal onClose={() => {}} channel={} />);
+          break;
+        case popupType.DELETE_CHANNEL:
+          // setHeader(<Header title={lang.tr.deleteChannel} buttons={['close']} />);
+          // setContent(<DeleteChannelModal onClose={() => {}} channel={} />);
+          break;
+        case popupType.APPLY_MEMBER:
+          setHeader(<Header title={lang.tr.applyMember} buttons={['close']} />);
+          setContent(<ServerApplication {...initialData} />);
+          break;
+        case popupType.APPLY_FRIEND:
+          setHeader(<Header title={lang.tr.applyFriend} buttons={['close']} />);
+          setContent(<ApplyFriend {...initialData} />);
+          break;
+        case popupType.DIRECT_MESSAGE:
+          // setHeader(<Header title={lang.tr.directMessage} buttons={['close']} />);
+          // setContent(<DirectMessageModal onClose={() => {}} />);
+          break;
+        case popupType.DIALOG_ALERT:
+        case popupType.DIALOG_ALERT2:
+          setHeader(<Header title={lang.tr.dialogAlert} buttons={['close']} />);
+          setContent(<Dialog {...{ ...initialData, iconType: 'ALERT' }} />);
+          break;
+        case popupType.DIALOG_SUCCESS:
+          setHeader(
+            <Header title={lang.tr.dialogSuccess} buttons={['close']} />,
+          );
+          setContent(<Dialog {...{ ...initialData, iconType: 'SUCCESS' }} />);
+          break;
+        case popupType.DIALOG_WARNING:
+          setHeader(
+            <Header title={lang.tr.dialogWarning} buttons={['close']} />,
+          );
+          setContent(<Dialog {...{ ...initialData, iconType: 'WARNING' }} />);
+          break;
+        case popupType.DIALOG_ERROR:
+          setHeader(<Header title={lang.tr.dialogError} buttons={['close']} />);
+          setContent(<Dialog {...{ ...initialData, iconType: 'ERROR' }} />);
+          break;
+        case popupType.DIALOG_INFO:
+          setHeader(<Header title={lang.tr.dialogInfo} buttons={['close']} />);
+          setContent(<Dialog {...{ ...initialData, iconType: 'INFO' }} />);
+          break;
+        default:
+          break;
       }
     }
-  }, []);
-
-  const getTitle = () => {
-    switch (type) {
-      case popupType.EDIT_USER:
-        return { title: lang.tr.editUser, button: ['close'] };
-      case popupType.CREATE_SERVER:
-        return { title: lang.tr.createServer, button: ['close'] };
-      case popupType.EDIT_SERVER:
-        return { title: lang.tr.editServer, button: ['close'] };
-      case popupType.DELETE_SERVER:
-        return { title: lang.tr.deleteServer, button: ['close'] };
-      case popupType.CREATE_CHANNEL:
-        return { title: lang.tr.createChannel, button: ['close'] };
-      case popupType.EDIT_CHANNEL:
-        return { title: lang.tr.editChannel, button: ['close'] };
-      case popupType.DELETE_CHANNEL:
-        return { title: lang.tr.deleteChannel, button: ['close'] };
-      case popupType.APPLY_MEMBER:
-        return { title: lang.tr.applyMember, button: ['close'] };
-      case popupType.APPLY_FRIEND:
-        return { title: lang.tr.applyFriend, button: ['close'] };
-      case popupType.DIRECT_MESSAGE:
-        return { title: lang.tr.directMessage, button: ['close'] };
-      case popupType.DIALOG_ALERT:
-      case popupType.DIALOG_ALERT2:
-        return { title: lang.tr.dialogAlert, button: ['close'] };
-      case popupType.DIALOG_SUCCESS:
-        return { title: lang.tr.dialogSuccess, button: ['close'] };
-      case popupType.DIALOG_WARNING:
-        return { title: lang.tr.dialogWarning, button: ['close'] };
-      case popupType.DIALOG_ERROR:
-        return { title: lang.tr.dialogError, button: ['close'] };
-      case popupType.DIALOG_INFO:
-        return { title: lang.tr.dialogInfo, button: ['close'] };
-      default:
-        return undefined;
-    }
-  };
-
-  const getMainContent = () => {
-    switch (type) {
-      case popupType.EDIT_USER:
-        return; // <EditUserModal {...initialData} />;
-      case popupType.CREATE_SERVER:
-        return <CreateServerModal {...initialData} />;
-      case popupType.EDIT_SERVER:
-        return <EditServerModal {...initialData} />;
-      case popupType.DELETE_SERVER:
-        return; // This one doesn't exist :D
-      case popupType.CREATE_CHANNEL:
-        return <AddChannelModal {...initialData} />;
-      case popupType.EDIT_CHANNEL:
-      // return <EditChannelModal onClose={() => {}} channel={} />;
-      case popupType.DELETE_CHANNEL:
-      // return <DeleteChannelModal onClose={() => {}} channel={} />;
-      case popupType.APPLY_MEMBER:
-        return <ServerApplication {...initialData} />;
-      case popupType.APPLY_FRIEND:
-        return <ApplyFriend {...initialData} />;
-      case popupType.DIRECT_MESSAGE:
-        return; // <DirectMessageModal onClose={() => {}} />;
-      case popupType.DIALOG_ALERT:
-      case popupType.DIALOG_ALERT2:
-        return <Dialog {...{ ...initialData, iconType: 'ALERT' }} />;
-      case popupType.DIALOG_SUCCESS:
-        return <Dialog {...{ ...initialData, iconType: 'SUCCESS' }} />;
-      case popupType.DIALOG_WARNING:
-        return <Dialog {...{ ...initialData, iconType: 'WARNING' }} />;
-      case popupType.DIALOG_ERROR:
-        return <Dialog {...{ ...initialData, iconType: 'ERROR' }} />;
-      case popupType.DIALOG_INFO:
-        return <Dialog {...{ ...initialData, iconType: 'INFO' }} />;
-      default:
-        return <div className={popup['popupContainer']} />;
-    }
-  };
+  }, [lang, initialData]);
 
   return (
     <div className="wrapper">
       {/* Top Nevigation */}
-      <Header title={getTitle()?.title} buttons={getTitle()?.button} />
+      {header}
       {/* Main Content */}
-      {getMainContent()}
+      {content}
     </div>
   );
 });
