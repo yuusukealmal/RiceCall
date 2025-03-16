@@ -9,24 +9,24 @@ import header from '@/styles/common/header.module.css';
 // Types
 import { popupType } from '@/types';
 
-// Modals
+// Components
 import CreateServerModal from '@/components/modals/CreateServerModal';
 import EditServerModal from '@/components/modals/EditServerModal';
 import AddChannelModal from '@/components/modals/AddChannelModal';
 // import EditChannelModal from '@/components/modals/EditChannelModal';
 import ServerApplication from '@/components/modals/ServerApplicationModal';
 import ApplyFriend from '@/components/modals/ApplyFriend';
+import Dialog from '@/components/modals/Dialog';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import Dialog from '@/components/modals/Dialog';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
 
 interface HeaderProps {
-  title?: string;
-  buttons?: string[];
+  title: string;
+  buttons: ('minimize' | 'maxsize' | 'close')[];
 }
 
 const Header: React.FC<HeaderProps> = React.memo(({ title, buttons }) => {
@@ -51,22 +51,22 @@ const Header: React.FC<HeaderProps> = React.memo(({ title, buttons }) => {
   return (
     <div className={header['header']}>
       <div className={header['titleBox']}>
-        {title && <span className={header['title']}>{title}</span>}
+        <span className={header['title']}>{title}</span>
       </div>
       <div className={header['buttons']}>
-        {buttons?.includes('minimize') && (
+        {buttons.includes('minimize') && (
           <div
             className={header['minimize']}
             onClick={() => handleMinimize()}
           />
         )}
-        {buttons?.includes('maxsize') && (
+        {buttons.includes('maxsize') && (
           <div
             className={isFullscreen ? header['restore'] : header['maxsize']}
             onClick={() => handleFullscreen()}
           />
         )}
-        {buttons?.includes('close') && (
+        {buttons.includes('close') && (
           <div className={header['close']} onClick={() => handleClose()} />
         )}
       </div>
