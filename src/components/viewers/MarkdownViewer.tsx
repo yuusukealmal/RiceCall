@@ -2,7 +2,7 @@
 /* eslint-disable react/display-name */
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import type { Components } from 'react-markdown';
+import { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import DOMPurify from 'dompurify';
@@ -16,55 +16,52 @@ interface PurifyConfig {
   ALLOWED_URI_REGEXP: RegExp;
 }
 
+const PURIFY_CONFIG: PurifyConfig = {
+  ALLOWED_TAGS: [
+    'img',
+    'p',
+    'h1',
+    'h2',
+    'h3',
+    'ul',
+    'ol',
+    'li',
+    'blockquote',
+    'a',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
+    'hr',
+    'br',
+    'strong',
+    'em',
+    'code',
+    'pre',
+  ],
+  ALLOWED_ATTR: ['src', 'alt', 'class', 'href'],
+  ALLOWED_URI_REGEXP: /^\/smiles\//,
+};
+
 interface MarkdownProps {
   markdownText: string;
 }
 
 const Markdown: React.FC<MarkdownProps> = React.memo(({ markdownText }) => {
   const safeMarkdownText = typeof markdownText === 'string' ? markdownText : '';
-
-  const purifyConfig: PurifyConfig = {
-    ALLOWED_TAGS: [
-      'img',
-      'p',
-      'h1',
-      'h2',
-      'h3',
-      'ul',
-      'ol',
-      'li',
-      'blockquote',
-      'a',
-      'table',
-      'thead',
-      'tbody',
-      'tr',
-      'th',
-      'td',
-      'hr',
-      'br',
-      'strong',
-      'em',
-      'code',
-      'pre',
-    ],
-    ALLOWED_ATTR: ['src', 'alt', 'class', 'href'],
-    ALLOWED_URI_REGEXP: /^\/smiles\//,
-  };
-
-  const processEmojis = (text: string): string => {
-    return text.replace(/\[emoji_(\d+)\]/g, (match: string, id: string) => {
+  const withEmojis = safeMarkdownText.replace(
+    /\[emoji_(\d+)\]/g,
+    (match: string, id: string) => {
       const emojiId = parseInt(id);
       if (!emojis.find((emoji) => emoji.id === emojiId)) return match;
       return `<img src="/smiles/${
         emojiId + 1
       }.gif" alt="[emoji_${id}]" class="inline-block w-5 h-5 align-text-bottom" />`;
-    });
-  };
-
-  const withEmojis = processEmojis(safeMarkdownText);
-  const sanitized = DOMPurify.sanitize(withEmojis, purifyConfig);
-
+    },
+  );
+  const sanitized = DOMPurify.sanitize(withEmojis, PURIFY_CONFIG);
   const components: Components = {
     h1: ({ node, ...props }) => (
       <h1 className="text-2xl font-bold mb-2 text-gray-900" {...props} />
@@ -136,12 +133,11 @@ const Markdown: React.FC<MarkdownProps> = React.memo(({ markdownText }) => {
 });
 
 interface MarkdownViewerProps {
-  markdownText: string | null;
+  markdownText: string;
 }
 
 const MarkdownViewer: React.FC<MarkdownViewerProps> = React.memo(
   ({ markdownText }) => {
-    if (!markdownText) return null;
     return (
       <div className="flex-1 overflow-x-hidden">
         <div className="max-w-full overflow-x-auto">
