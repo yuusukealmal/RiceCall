@@ -89,7 +89,7 @@ const memberHandler = {
       const server = servers[serverId];
       if (!server) {
         throw new StandardizedError(
-          `伺服器(${serverId})不存在`,
+          `群組(${serverId})不存在`,
           'ValidationError',
           'CONNECTSERVER',
           'SERVER',
@@ -147,6 +147,35 @@ const memberHandler = {
         );
       }
 
+      // Validate additional data
+      if (targetMember.nickname) {
+        const nicknameError = Func.validateNickname(targetMember.nickname);
+        if (nicknameError) {
+          throw new StandardizedError(
+            nicknameError,
+            'ValidationError',
+            'UPDATEMEMBER',
+            'NICKNAME',
+            400,
+          );
+        }
+      }
+
+      if (typeof targetMember.permissionLevel !== 'undefined') {
+        const permissionError = Func.validatePermissionLevel(
+          targetMember.permissionLevel,
+        );
+        if (permissionError) {
+          throw new StandardizedError(
+            permissionError,
+            'ValidationError',
+            'UPDATEMEMBER',
+            'PERMISSION',
+            400,
+          );
+        }
+      }
+
       // Update member
       await Set.member(`${targetMember.id}`, targetMember);
 
@@ -159,7 +188,7 @@ const memberHandler = {
     } catch (error) {
       if (!error instanceof StandardizedError) {
         error = new StandardizedError(
-          `更新使用者時發生無法預期的錯誤: ${error.message}`,
+          `更新使用者時發生無法預期的錯誤: ${error.error_message}`,
           'MemberError',
           'UPDATEMEMBER',
           'EXCEPTION_ERROR',
@@ -170,7 +199,9 @@ const memberHandler = {
       // Emit error data (only to the user)
       io.to(socket.id).emit('error', error);
 
-      new Logger('Server').error(`Error updating member: ${error.message}`);
+      new Logger('Server').error(
+        `Error updating member: ${error.error_message}`,
+      );
     }
   },
 };

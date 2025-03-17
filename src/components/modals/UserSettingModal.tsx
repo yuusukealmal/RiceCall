@@ -1,213 +1,331 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-
-// Components
-// import Modal from '@/components/Modal';
+import React, { useState, useEffect } from 'react';
 
 // Types
 import type { User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
-interface BasicInfoTabProps {
-  user: Partial<User>;
-  setUser: (user: Partial<User>) => void;
-  onLogout: () => void;
-}
+// Services
+import { ipcService } from '@/services/ipc.service';
 
-const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
-  user,
-  setUser,
-  onLogout,
-}) => {
-  // User data
-  const userAvatar = user?.avatarUrl ?? '/im/IMLogo.png';
-  const userName = user?.name ?? '';
-  const userGender = user?.gender ?? 'Male';
-  const userCreatedAt = new Date(user?.createdAt ?? 0).toLocaleString();
-
-  return (
-    <div className="flex flex-1 p-4">
-      <div className="flex-1">
-        <div className="mb-4">
-          <div className="flex items-center gap-4 mb-2 select-none">
-            <label className="w-20 text-right text-black text-sm">
-              顯示名稱
-            </label>
-            <input
-              type="text"
-              value={userName}
-              onChange={(e) => setUser({ ...user, name: e.target.value })}
-              className="flex-1 p-1 border rounded text-black text-sm"
-            />
-          </div>
-          <div className="flex items-center gap-4 mb-2">
-            <label className="w-20 text-right text-sm text-black select-none">
-              ID
-            </label>
-            <input
-              type="text"
-              value="27054971"
-              className="w-32 p-1 border rounded text-black text-sm"
-              disabled
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-4 select-none">
-            <label className="w-20 text-right text-sm text-black select-none">
-              性別
-            </label>
-            <select
-              value={userGender}
-              onChange={(e) =>
-                setUser({
-                  ...user,
-                  gender: e.target.value as 'Male' | 'Female',
-                })
-              }
-              className="p-1 border rounded text-black text-sm"
-              disabled
-            >
-              <option value="Male">男性</option>
-              <option value="Female">女性</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-4 select-none">
-            <label className="w-20 text-right text-black text-sm">
-              創建時間
-            </label>
-            <label className="w-48 p-1 rounded text-black text-sm">
-              {userCreatedAt}
-            </label>
-          </div>
-
-          <div className="flex justify-center select-none">
-            <button
-              className="px-6 py-1 mt-5 bg-red-600 text-white rounded hover:bg-red-700"
-              onClick={(e) => onLogout()}
-            >
-              登出
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="w-48 flex flex-col items-center select-none">
-        <img
-          src={userAvatar}
-          alt="Icon"
-          className="w-32 h-32 border-2 border-gray-300 mb-2 rounded-full object-cover"
-        />
-        {/* <button className="px-4 py-1 bg-blue-50 hover:bg-blue-100 rounded text-sm">
-          更換頭像
-        </button> */}
-        <input
-          id="avatar-upload"
-          type="file"
-          className="hidden"
-          onChange={(e) => {}}
-          accept="image/*"
-        />
-        <label
-          htmlFor="avatar-upload"
-          className="px-4 py-1 bg-blue-50 hover:bg-blue-100 rounded text-sm cursor-pointer transition-colors text-black"
-        >
-          更換頭像
-        </label>
-      </div>
-    </div>
-  );
-};
+// CSS
+import UserSetting from '@/styles/popups/userSetting.module.css';
+import grade from '@/styles/common/grade.module.css';
 
 interface UserSettingModalProps {
-  onClose: () => void;
+  user: User;
 }
 
-const UserSettingModal: React.FC<UserSettingModalProps> = ({ onClose }) => {
-  // Redux
-  const user = useSelector((state: { user: User }) => state.user);
-
-  // Socket
-  const socket = useSocket();
-
-  // Tabs Control
-  const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
-
-  // User data (temporary)
-  const [editedUser, setEditedUser] = useState<Partial<User>>({
-    name: user.name,
-    gender: user.gender,
-    avatarUrl: user.avatarUrl,
-    createdAt: user.createdAt,
-  });
-
-  // Error Control
-  const [error, setError] = useState('');
-
-  const handleSubmit = async () => {
-    socket?.send.updateUser({ user: { ...editedUser } });
-    onClose();
-  };
-  const handleLogout = () => {
-    // socket?.disconnectUser();
-    onClose();
-  };
-
-  const renderContent = () => {
-    if (!user) return null;
-    switch (activeTabIndex) {
-      case 0:
-        return (
-          <BasicInfoTab
-            user={editedUser}
-            setUser={setEditedUser}
-            onLogout={handleLogout}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return null;
-  // <Modal
-  //   title="個人資料設定"
-  //   onClose={onClose}
-  //   onSubmit={handleSubmit}
-  //   tabs={[
-  //     {
-  //       id: '基本資料',
-  //       label: '基本資料',
-  //       onClick: () => setActiveTabIndex(0),
-  //     },
-  //   ]}
-  //   buttons={[
-  //     {
-  //       label: '取消',
-  //       style: 'secondary',
-  //       onClick: onClose,
-  //     },
-  //     {
-  //       label: '確定',
-  //       style: 'primary',
-  //       type: 'submit',
-  //       onClick: () => {},
-  //     },
-  //   ]}
-  // >
-  //   {error && (
-  //     <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
-  //       {error}
-  //     </div>
-  //   )}
-  //   {renderContent()}
-  // </Modal>
+const handleClose = () => {
+  ipcService.window.close();
 };
+
+const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
+  (initialData: UserSettingModalProps) => {
+    const { user } = initialData;
+
+    // Socket
+    const socket = useSocket();
+
+    // Language Control
+    const lang = useLanguage();
+
+    const userGrade = Math.min(56, Math.ceil(user?.level / 5)); // 56 is max level
+    const userAvatar = user?.avatar;
+
+    // Error Control
+    const [error, setError] = useState('');
+
+    // 生成年份選項 (例如從1900年到當前年份)
+    const currentYear = new Date().getFullYear();
+    const years = Array.from(
+      { length: currentYear - 1900 + 1 },
+      (_, i) => currentYear - i,
+    );
+
+    // 生成月份選項 (1-12)
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+
+    // 生成日期選項 (1-31)
+    const days = Array.from({ length: 31 }, (_, i) => i + 1);
+
+    const [formData, setFormData] = useState<Partial<User>>({
+      name: user?.name || '',
+      gender: user?.gender || 'Male',
+      signature: user?.signature || '',
+      // birthYear: user?.birthYear || currentYear,
+      // birthMonth: user?.birthMonth || 1,
+      // birthDay: user?.birthDay || 1,
+    });
+
+    useEffect(() => {
+      if (user) {
+        setFormData({
+          name: user.name,
+          gender: user.gender,
+          signature: user.signature,
+        });
+      }
+    }, [user]);
+
+    const handleChange = (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >,
+    ) => {
+      const { id, value } = e.target;
+      setFormData((prev) => ({
+        ...prev,
+        [id === 'profile-form-nickname'
+          ? 'name'
+          : id === 'profile-form-signature'
+          ? 'signature'
+          : id]: value,
+      }));
+    };
+
+    const handleSubmit = () => {
+      const updates: Partial<User> = {};
+
+      if (formData.name !== user?.name) {
+        updates.name = formData.name;
+      }
+      if (formData.gender !== user?.gender) {
+        updates.gender = formData.gender;
+      }
+      if (formData.signature !== user?.signature) {
+        updates.signature = formData.signature;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        handleClose();
+        return;
+      }
+
+      socket?.send.updateUser({
+        user: updates,
+      });
+
+      handleClose();
+    };
+
+    return (
+      <>
+        <div className={UserSetting['header']}>
+          <div className={UserSetting['header-bg']}></div>
+        </div>
+
+        <div className={UserSetting['dialog-message-wrapper']}>
+          <div className={UserSetting['profile-header-avatar-box']}>
+            <div className={UserSetting['profile-header-avatar-border']}></div>
+            <div
+              className={UserSetting['profile-header-avatar']}
+              style={
+                userAvatar ? { backgroundImage: `url(${userAvatar})` } : {}
+              }
+            />
+            <div className={UserSetting['profile-header-user-info']}>
+              <span className={UserSetting['profile-header-display-name']}>
+                {user?.name}
+              </span>
+              <div className={UserSetting['profile-header-icons']}>
+                <div
+                  className={`${UserSetting['userGrade']} ${
+                    grade[`lv-${userGrade}`]
+                  }`}
+                />{' '}
+                <span
+                  className={UserSetting['profile-header-base-info-weath']}
+                ></span>
+              </div>
+              <span className={UserSetting['profile-header-username']}>
+                @{user?.name}
+              </span>
+              <div className={UserSetting['profile-header-other-info']}>
+                <span className={UserSetting['profile-header-gender']}></span>
+                <span className={UserSetting['profile-header-year-old']}>
+                  0
+                </span>
+                <span className={UserSetting['profile-header-country']}>
+                  台灣
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className={UserSetting['profile-tab']}>
+            <div
+              className={`${UserSetting['profile-me']} ${UserSetting.active}`}
+            ></div>
+            <div className={UserSetting['profile-groups']}></div>
+          </div>
+          <div className={UserSetting['profile-form-wrapper']}>
+            <div className={UserSetting['profile-form-buttons']}>
+              <div
+                className={`${UserSetting['profile-form-button']} ${UserSetting.blue}`}
+                onClick={handleSubmit}
+              >
+                {lang.tr.confirm}
+              </div>
+              <div
+                className={UserSetting['profile-form-button']}
+                onClick={handleClose}
+              >
+                {lang.tr.cancel}
+              </div>
+            </div>
+
+            <div className={UserSetting['profile-form-input-wrapper']}>
+              <div className={UserSetting['profile-form-row']}>
+                <div className={UserSetting['profile-form-group']}>
+                  <label
+                    className={UserSetting.label}
+                    htmlFor="profile-form-nickname"
+                  >
+                    {lang.tr.nickname}
+                  </label>
+                  <input
+                    className={UserSetting.input}
+                    type="text"
+                    id="profile-form-nickname"
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className={UserSetting['profile-form-group']}>
+                  <label
+                    className={UserSetting.label}
+                    htmlFor="profile-form-gender"
+                  >
+                    {lang.tr.gender}
+                  </label>
+                  <div className={UserSetting['select-wrapper']}>
+                    <select
+                      className={UserSetting.select}
+                      id="profile-form-gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                    >
+                      <option value="Male">男性</option>
+                      <option value="Female">女性</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className={UserSetting['profile-form-row']}>
+                <div className={UserSetting['profile-form-group']}>
+                  <label
+                    className={UserSetting.label}
+                    htmlFor="profile-form-country"
+                  >
+                    {lang.tr.country}
+                  </label>
+                  <div className={UserSetting['select-wrapper']}>
+                    <select
+                      className={UserSetting.select}
+                      id="profile-form-country"
+                      value={'台灣'}
+                      onChange={handleChange}
+                    >
+                      <option value="台灣">台灣</option>
+                    </select>
+                  </div>
+                </div>
+                <div className={UserSetting['profile-form-group']}>
+                  <label
+                    className={UserSetting.label}
+                    htmlFor="profile-form-birthdate"
+                  >
+                    {lang.tr.birthdate}
+                  </label>
+                  <div className={UserSetting['profile-form-birthdate-group']}>
+                    <div className={UserSetting['select-wrapper']}>
+                      <select
+                        className={UserSetting.select}
+                        id="birthYear"
+                        // value={formData.birthYear}
+                        onChange={handleChange}
+                      >
+                        {years.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className={UserSetting['select-wrapper']}>
+                      <select
+                        className={UserSetting.select}
+                        id="birthMonth"
+                        // value={formData.birthMonth}
+                        onChange={handleChange}
+                      >
+                        {months.map((month) => (
+                          <option key={month} value={month}>
+                            {month.toString().padStart(2, '0')}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className={UserSetting['select-wrapper']}>
+                      <select
+                        className={UserSetting.select}
+                        id="birthDay"
+                        // value={formData.birthDay}
+                        onChange={handleChange}
+                      >
+                        {days.map((day) => (
+                          <option key={day} value={day}>
+                            {day.toString().padStart(2, '0')}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={UserSetting['profile-form-group']}>
+                <label
+                  className={UserSetting.label}
+                  htmlFor="profile-form-signature"
+                >
+                  {lang.tr.signature}
+                </label>
+                <input
+                  className={UserSetting.input}
+                  type="text"
+                  id="profile-form-signature"
+                  value={formData.signature}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className={UserSetting['profile-form-group']}>
+                <label
+                  className={UserSetting.label}
+                  htmlFor="profile-form-about"
+                >
+                  {lang.tr.about}
+                </label>
+                <textarea
+                  className={UserSetting.textarea}
+                  id="profile-form-about"
+                  value={''}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  },
+);
 
 UserSettingModal.displayName = 'UserSettingModal';
 

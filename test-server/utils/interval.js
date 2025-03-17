@@ -1,15 +1,5 @@
-const { QuickDB } = require('quick.db');
-const db = new QuickDB();
-const fs = require('fs').promises;
-const path = require('path');
 // Constants
-const {
-  XP_SYSTEM,
-  UPLOADS_DIR,
-  MIME_TYPES,
-  CLEANUP_INTERVAL_MS,
-  SERVER_AVATAR_DIR,
-} = require('../constant');
+const { XP_SYSTEM } = require('../constant');
 // Utils
 const Logger = require('./logger');
 const Map = require('./map');
@@ -49,7 +39,7 @@ const interval = {
       );
     } catch (error) {
       new Logger('XPSystem').error(
-        'Error setting up contribution interval: ' + error.message,
+        'Error setting up contribution interval: ' + error.error_message,
       );
     }
   },
@@ -80,7 +70,7 @@ const interval = {
       );
     } catch (error) {
       new Logger('XPSystem').error(
-        'Error clearing contribution interval: ' + error.message,
+        'Error clearing contribution interval: ' + error.error_message,
       );
     }
   },
@@ -97,7 +87,7 @@ const interval = {
   //     await cleanupUnusedAvatars();
   //   } catch (error) {
   //     new Logger('Cleanup').error(
-  //       `Error setting up cleanup interval: ${error.message}`,
+  //       `Error setting up cleanup interval: ${error.error_message}`,
   //     );
   //   }
   // },
@@ -135,7 +125,7 @@ const interval = {
 //         new Logger('Cleanup').success(`Deleted unused avatar: ${file}`);
 //       } catch (error) {
 //         new Logger('Cleanup').error(
-//           `Error deleting file ${file}: ${error.message}`,
+//           `Error deleting file ${file}: ${error.error_message}`,
 //         );
 //       }
 //     }
@@ -148,7 +138,7 @@ const interval = {
 //       );
 //     }
 //   } catch (error) {
-//     new Logger('Cleanup').error(`Avatar cleanup failed: ${error.message}`);
+//     new Logger('Cleanup').error(`Avatar cleanup failed: ${error.error_message}`);
 //   }
 // };
 
@@ -204,7 +194,7 @@ const obtainXp = async (socket, userId) => {
     );
   } catch (error) {
     new Logger('XPSystem').error(
-      `Error obtaining user(${userId}) xp: ${error.message}`,
+      `Error obtaining user(${userId}) xp: ${error.error_message}`,
     );
   }
 };

@@ -99,6 +99,18 @@ const messageHandler = {
         );
       }
 
+      // Validate message content
+      const messageError = Func.validateMessage(message.content);
+      if (messageError) {
+        throw new StandardizedError(
+          messageError,
+          'ValidationError',
+          'SENDMESSAGE',
+          'CONTENT',
+          400,
+        );
+      }
+
       // Create new message
       const messageId = uuidv4();
       await Set.message(messageId, {
@@ -120,7 +132,7 @@ const messageHandler = {
     } catch (error) {
       if (!error instanceof StandardizedError) {
         error = new StandardizedError(
-          `傳送訊息時發生無法預期的錯誤: ${error.message}`,
+          `傳送訊息時發生無法預期的錯誤: ${error.error_message}`,
           'ServerError',
           'SENDMESSAGE',
           'EXCEPTION_ERROR',
@@ -131,7 +143,9 @@ const messageHandler = {
       // Emit error data (only to the user)
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error('Error sending message: ' + error.message);
+      new Logger('WebSocket').error(
+        'Error sending message: ' + error.error_message,
+      );
     }
   },
   sendDirectMessage: async (io, socket, data) => {
@@ -234,7 +248,7 @@ const messageHandler = {
     } catch (error) {
       if (!error instanceof StandardizedError) {
         error = new StandardizedError(
-          `傳送私訊時發生無法預期的錯誤: ${error.message}`,
+          `傳送私訊時發生無法預期的錯誤: ${error.error_message}`,
           'ServerError',
           'SENDDIRECTMESSAGE',
           'EXCEPTION_ERROR',
@@ -246,7 +260,7 @@ const messageHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('WebSocket').error(
-        'Error sending direct message: ' + error.message,
+        'Error sending direct message: ' + error.error_message,
       );
     }
   },

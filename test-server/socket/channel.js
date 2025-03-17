@@ -13,6 +13,7 @@ const JWT = utils.jwt;
 const StandardizedError = require('../standardizedError');
 // Handlers
 const rtcHandler = require('./rtc');
+const Func = require('../utils/func');
 
 const channelHandler = {
   connectChannel: async (io, socket, data) => {
@@ -148,7 +149,7 @@ const channelHandler = {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
-          message: `加入頻道時發生無法預期的錯誤: ${error.message}`,
+          message: `加入頻道時發生無法預期的錯誤: ${error.error_message}`,
           part: 'JOINCHANNEL',
           tag: 'EXCEPTION_ERROR',
           status_code: 500,
@@ -156,7 +157,7 @@ const channelHandler = {
       }
 
       new Logger('WebSocket').error(
-        `Error connecting to channel: ${error.message}`,
+        `Error connecting to channel: ${error.error_message}`,
       );
     }
   },
@@ -275,7 +276,7 @@ const channelHandler = {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
-          message: `離開頻道時發生無法預期的錯誤: ${error.message}`,
+          message: `離開頻道時發生無法預期的錯誤: ${error.error_message}`,
           part: 'DISCONNECTCHANNEL',
           tag: 'EXCEPTION_ERROR',
           status_code: 500,
@@ -283,7 +284,7 @@ const channelHandler = {
       }
 
       new Logger('WebSocket').error(
-        `Error disconnecting from channel: ${error.message}`,
+        `Error disconnecting from channel: ${error.error_message}`,
       );
     }
   },
@@ -377,13 +378,25 @@ const channelHandler = {
           404,
         );
       }
-      const userPermission = members[user.id].permission;
-      if (userPermission < 4) {
+      const userPermission = members[user.id].permissionLevel;
+      if (!userPermission || userPermission < 4) {
         throw new StandardizedError(
           'Insufficient permissions',
           'UPDATECHANNEL',
           'USER_PERMISSION',
           403,
+        );
+      }
+
+      // Validate channel name
+      const nameError = Func.validateChannelName(channel.name);
+      if (nameError) {
+        throw new StandardizedError(
+          nameError,
+          'ValidationError',
+          'CREATECHANNEL',
+          'NAME',
+          400,
         );
       }
 
@@ -410,14 +423,16 @@ const channelHandler = {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
-          message: `新增頻道時發生無法預期的錯誤: ${error.message}`,
+          message: `新增頻道時發生無法預期的錯誤: ${error.error_message}`,
           part: 'CREATECHANNEL',
           tag: 'EXCEPTION_ERROR',
           status_code: 500,
         });
       }
 
-      new Logger('WebSocket').error('Error adding channel: ' + error.message);
+      new Logger('WebSocket').error(
+        'Error adding channel: ' + error.error_message,
+      );
     }
   },
   updateChannel: async (io, socket, data) => {
@@ -520,14 +535,58 @@ const channelHandler = {
           404,
         );
       }
-      const userPermission = members[user.id].permission;
-      if (userPermission < 4) {
+      const userPermission = members[user.id].permissionLevel;
+      if (!userPermission || userPermission < 4) {
         throw new StandardizedError(
           'Insufficient permissions',
           'UPDATECHANNEL',
           'USER_PERMISSION',
           403,
         );
+      }
+
+      // Validate channel name
+      const nameError = Func.validateChannelName(editedChannel.name);
+      if (nameError) {
+        throw new StandardizedError(
+          nameError,
+          'ValidationError',
+          'UPDATECHANNEL',
+          'NAME',
+          400,
+        );
+      }
+
+      // Validate channel visibility
+      if (editedChannel.settings?.visibility) {
+        const visibilityError = Func.validateChannelVisibility(
+          editedChannel.settings.visibility,
+        );
+        if (visibilityError) {
+          throw new StandardizedError(
+            visibilityError,
+            'ValidationError',
+            'UPDATECHANNEL',
+            'VISIBILITY',
+            400,
+          );
+        }
+      }
+
+      // Validate user limit
+      if (typeof editedChannel.settings?.userLimit !== 'undefined') {
+        const userLimitError = Func.validateUserLimit(
+          editedChannel.settings.userLimit,
+        );
+        if (userLimitError) {
+          throw new StandardizedError(
+            userLimitError,
+            'ValidationError',
+            'UPDATECHANNEL',
+            'USER_LIMIT',
+            400,
+          );
+        }
       }
 
       // Update channel
@@ -552,14 +611,16 @@ const channelHandler = {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
-          message: `編輯頻道時發生無法預期的錯誤: ${error.message}`,
+          message: `編輯頻道時發生無法預期的錯誤: ${error.error_message}`,
           part: 'UPDATECHANNEL',
           tag: 'EXCEPTION_ERROR',
           status_code: 500,
         });
       }
 
-      new Logger('WebSocket').error('Error updating channel: ' + error.message);
+      new Logger('WebSocket').error(
+        'Error updating channel: ' + error.error_message,
+      );
     }
   },
   deleteChannel: async (io, socket, data) => {
@@ -659,14 +720,16 @@ const channelHandler = {
         io.to(socket.id).emit('error', error);
       } else {
         io.to(socket.id).emit('error', {
-          message: `刪除頻道時發生無法預期的錯誤: ${error.message}`,
+          message: `刪除頻道時發生無法預期的錯誤: ${error.error_message}`,
           part: 'DELETECHANNEL',
           tag: 'EXCEPTION_ERROR',
           status_code: 500,
         });
       }
 
-      new Logger('WebSocket').error('Error deleting channel: ' + error.message);
+      new Logger('WebSocket').error(
+        'Error deleting channel: ' + error.error_message,
+      );
     }
   },
 };

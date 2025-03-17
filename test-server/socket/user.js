@@ -96,7 +96,7 @@ const userHandler = {
     } catch (error) {
       if (!error instanceof StandardizedError) {
         error = new StandardizedError(
-          `取得使用者時發生無法預期的錯誤: ${error.message}`,
+          `取得使用者時發生無法預期的錯誤: ${error.error_message}`,
           'ServerError',
           'CONNECTUSER',
           'EXCEPTION_ERROR',
@@ -108,7 +108,9 @@ const userHandler = {
       io.to(socket.id).emit('userDisconnect', null);
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(`Error connecting user: ${error.message}`);
+      new Logger('WebSocket').error(
+        `Error connecting user: ${error.error_message}`,
+      );
     }
   },
   disconnectUser: async (io, socket) => {
@@ -197,7 +199,7 @@ const userHandler = {
     } catch (error) {
       if (!error instanceof StandardizedError) {
         error = new StandardizedError(
-          `斷開使用者時發生無法預期的錯誤: ${error.message}`,
+          `斷開使用者時發生無法預期的錯誤: ${error.error_message}`,
           'ServerError',
           'DISCONNECTUSER',
           'EXCEPTION_ERROR',
@@ -209,7 +211,7 @@ const userHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('WebSocket').error(
-        `Error disconnecting user: ${error.message}`,
+        `Error disconnecting user: ${error.error_message}`,
       );
     }
   },
@@ -286,6 +288,31 @@ const userHandler = {
         );
       }
 
+      if (editedUser.name) {
+        const nameError = Func.validateUsername(editedUser.name);
+        if (nameError) {
+          throw new StandardizedError(
+            nameError,
+            'ValidationError',
+            'UPDATEUSER',
+            'USERNAME',
+            401,
+          );
+        }
+      }
+      if (editedUser.signature) {
+        const signatureError = Func.validateSignature(editedUser.signature);
+        if (signatureError) {
+          throw new StandardizedError(
+            signatureError,
+            'ValidationError',
+            'UPDATEUSER',
+            'SIGNATURE',
+            401,
+          );
+        }
+      }
+
       // Update user data
       await Set.user(userId, editedUser);
 
@@ -296,7 +323,7 @@ const userHandler = {
     } catch (error) {
       if (!error instanceof StandardizedError) {
         error = new StandardizedError(
-          `更新使用者時發生無法預期的錯誤: ${error.message}`,
+          `更新使用者時發生無法預期的錯誤: ${error.error_message}`,
           'ServerError',
           'UPDATEUSER',
           'EXCEPTION_ERROR',
@@ -307,7 +334,9 @@ const userHandler = {
       // Emit data (only to the user)
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(`Error updating user: ${error.message}`);
+      new Logger('WebSocket').error(
+        `Error updating user: ${error.error_message}`,
+      );
     }
   },
   refreshUser: async (io, socket) => {
@@ -372,7 +401,7 @@ const userHandler = {
     } catch (error) {
       if (!error instanceof StandardizedError) {
         error = new StandardizedError(
-          `刷新使用者時發生無法預期的錯誤: ${error.message}`,
+          `刷新使用者時發生無法預期的錯誤: ${error.error_message}`,
           'ServerError',
           'REFRESHUSER',
           'EXCEPTION_ERROR',
@@ -383,7 +412,9 @@ const userHandler = {
       // Emit data (only to the user)
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(`Error refreshing user: ${error.message}`);
+      new Logger('WebSocket').error(
+        `Error refreshing user: ${error.error_message}`,
+      );
     }
   },
 };

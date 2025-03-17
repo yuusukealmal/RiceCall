@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const utils = require('./utils');
 const Logger = utils.logger;
+const Func = utils.func;
 const Set = utils.set;
 const Get = utils.get;
 const JWT = utils.jwt;
@@ -101,8 +102,8 @@ const server = http.createServer((req, res) => {
         });
         new Logger('Auth').success(`User logged in: ${account}`);
       } catch (error) {
-        sendError(res, 500, `登入時發生錯誤: ${error.message}`);
-        new Logger('Auth').error(`Login error: ${error.message}`);
+        sendError(res, 500, `登入時發生錯誤: ${error.error_message}`);
+        new Logger('Auth').error(`Login error: ${error.error_message}`);
       }
     });
     return;
@@ -169,6 +170,19 @@ const server = http.createServer((req, res) => {
           throw new Error('帳號已存在');
         }
 
+        const accountError = Func.validateAccount(account);
+        if (accountError) {
+          throw new Error(accountError);
+        }
+        const passwordError = Func.validatePassword(password);
+        if (passwordError) {
+          throw new Error(passwordError);
+        }
+        const usernameError = Func.validateUsername(username);
+        if (usernameError) {
+          throw new Error(usernameError);
+        }
+
         // Create user data
         const userId = uuidv4();
         await Set.user(userId, { name: username });
@@ -185,8 +199,8 @@ const server = http.createServer((req, res) => {
         });
         new Logger('Auth').success(`User registered: ${account}`);
       } catch (error) {
-        sendError(res, 500, `註冊時發生錯誤: ${error.message}`);
-        new Logger('Auth').error(`Register error: ${error.message}`);
+        sendError(res, 500, `註冊時發生錯誤: ${error.error_message}`);
+        new Logger('Auth').error(`Register error: ${error.error_message}`);
       }
     });
     return;
@@ -208,13 +222,13 @@ require('./socket/index')(io, db);
 
 // Error Handling
 server.on('error', (error) => {
-  new Logger('Server').error(`Server error: ${error.message}`);
+  new Logger('Server').error(`Server error: ${error.error_message}`);
 });
 process.on('uncaughtException', (error) => {
-  new Logger('Server').error(`Uncaught Exception: ${error.message}`);
+  new Logger('Server').error(`Uncaught Exception: ${error.error_message}`);
 });
 process.on('unhandledRejection', (error) => {
-  new Logger('Server').error(`Unhandled Rejection: ${error.message}`);
+  new Logger('Server').error(`Unhandled Rejection: ${error.error_message}`);
 });
 
 // Start Server

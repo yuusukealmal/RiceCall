@@ -174,6 +174,11 @@ export interface Translation {
   eventStaff: string;
   official: string;
   yesterday: string;
+  gender: string;
+  country: string;
+  birthdate: string;
+  signature: string;
+  about: string;
 }
 
 export type LanguageKey = 'tw' | 'cn' | 'en' | 'jp' | 'ru';
@@ -210,7 +215,7 @@ export const translations: Record<LanguageKey, Translation> = {
     personalExclusive: '個人專屬',
     fileSizeError: '檔案大小不能超過 5MB',
     fileTypeError: '不支援的檔案格式',
-    updateServerError: '更新伺服器失敗',
+    updateServerError: '更新群組失敗',
     name: '名稱',
     id: 'ID',
     slogan: '口號',
@@ -358,6 +363,11 @@ export const translations: Record<LanguageKey, Translation> = {
     eventStaff: '官方客服',
     official: '超級管理員',
     yesterday: '昨天',
+    gender: '性別',
+    country: '國家',
+    birthdate: '生日',
+    signature: '簽名',
+    about: '關於我',
   },
   cn: {
     RPCHomePage: '正在浏览主页',
@@ -538,6 +548,11 @@ export const translations: Record<LanguageKey, Translation> = {
     eventStaff: '官方客服',
     official: '超级管理员',
     yesterday: '昨天',
+    gender: '性别',
+    country: '国家',
+    birthdate: '生日',
+    signature: '签名',
+    about: '关于我',
   },
   en: {
     RPCHomePage: 'Browsing Homepage',
@@ -720,6 +735,11 @@ export const translations: Record<LanguageKey, Translation> = {
     eventStaff: 'Event staff',
     official: 'Official',
     yesterday: 'Yesterday',
+    gender: 'Gender',
+    country: 'Country',
+    birthdate: 'Birthdate',
+    signature: 'Signature',
+    about: 'About',
   },
   jp: {
     RPCHomePage: 'ホームページを閲覧中',
@@ -900,6 +920,11 @@ export const translations: Record<LanguageKey, Translation> = {
     eventStaff: '公式カスタマーサービス',
     official: 'スーパー管理者',
     yesterday: '昨日',
+    gender: '性別',
+    country: '国',
+    birthdate: '誕生日',
+    signature: '署名',
+    about: '自己紹介',
   },
   ru: {
     RPCHomePage: 'Просмотр главной страницы',
@@ -1083,6 +1108,11 @@ export const translations: Record<LanguageKey, Translation> = {
     eventStaff: 'Официальная поддержка',
     official: 'Супер администратор',
     yesterday: 'Вчера',
+    gender: 'Пол',
+    country: 'Страна',
+    birthdate: 'Дата рождения',
+    signature: 'Подпись',
+    about: 'О себе',
   },
 };
 
@@ -1328,6 +1358,7 @@ export enum SocketClientEvent {
   CREATE_SERVER = 'createServer',
   UPDATE_SERVER = 'updateServer',
   DELETE_SERVER = 'deleteServer',
+  CREATE_SERVER_APPLICATION = 'createServerApplication',
   UPDATE_MEMBER = 'updateMember',
   CONNECT_CHANNEL = 'connectChannel',
   DISCONNECT_CHANNEL = 'disconnectChannel',
@@ -1352,6 +1383,7 @@ export enum SocketServerEvent {
   SERVER_CONNECT = 'serverConnect',
   SERVER_DISCONNECT = 'serverDisconnect',
   SERVER_UPDATE = 'serverUpdate',
+  CREATE_SERVER_APPLICATION = 'createServerApplication',
   CHANNEL_CONNECT = 'channelConnect',
   CHANNEL_DISCONNECT = 'channelDisconnect',
   CHANNEL_UPDATE = 'channelUpdate',
