@@ -39,5 +39,12 @@
         "rpm",
         "zip"
     ]
-  }
+  },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "NerdyHomeReOpen",
+      "repo": "RiceCall"
+    }
+  ]
 }

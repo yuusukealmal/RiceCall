@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
-const { app, BrowserWindow, ipcMain, session } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const serve = require('electron-serve');
 const net = require('net');
 const DiscordRPC = require('discord-rpc');
 const { io } = require('socket.io-client');
+const { autoUpdater } = require('electron-updater');
 
 let isDev = process.argv.includes('--dev');
 
@@ -427,6 +428,7 @@ rpc.on('ready', () => {
 app.on('ready', async () => {
   await createAuthWindow();
   await createMainWindow();
+  autoUpdater.checkForUpdatesAndNotify();
 
   mainWindow.hide();
   authWindow.show();
@@ -523,6 +525,29 @@ app.on('activate', async () => {
     mainWindow.hide();
     authWindow.show();
   }
+});
+
+autoUpdater.on('update-available', () => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: '有新版本可用',
+    message: '正在下載新版本，請稍後...',
+  });
+});
+
+autoUpdater.on('update-downloaded', () => {
+  dialog
+    .showMessageBox({
+      type: 'question',
+      title: '更新已下載',
+      message: '應用程式已下載新版本，請重新啟動以完成更新。',
+      buttons: ['立即重啟'],
+    })
+    .then((result) => {
+      if (result.response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
 });
 
 rpc.login({ clientId }).catch(() => {
