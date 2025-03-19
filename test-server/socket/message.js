@@ -1,17 +1,14 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { v4: uuidv4 } = require('uuid');
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
 // Utils
 const utils = require('../utils');
+const StandardizedError = utils.standardizedError;
 const Logger = utils.logger;
-const Map = utils.map;
 const Get = utils.get;
-const Interval = utils.interval;
-const Func = utils.func;
 const Set = utils.set;
-const JWT = utils.jwt;
-// Socket error
-const StandardizedError = require('../standardizedError');
+const Func = utils.func;
 
 const messageHandler = {
   sendMessage: async (io, socket, data) => {
@@ -28,38 +25,8 @@ const messageHandler = {
       // console.log(data);
 
       // Validate data
-      const jwt = socket.jwt;
-      if (!jwt) {
-        throw new StandardizedError(
-          '無可用的 JWT',
-          'SENDMESSAGE',
-          'ValidationError',
-          'TOKEN_MISSING',
-          401,
-        );
-      }
-      const sessionId = socket.sessionId;
-      if (!sessionId) {
-        throw new StandardizedError(
-          '無可用的 session ID',
-          'SENDMESSAGE',
-          'ValidationError',
-          'SESSION_MISSING',
-          401,
-        );
-      }
-      const result = JWT.verifyToken(jwt);
-      if (!result.valid) {
-        throw new StandardizedError(
-          '無效的 token',
-          'SENDMESSAGE',
-          'ValidationError',
-          'TOKEN_INVALID',
-          401,
-        );
-      }
-      const { message } = data;
-      if (!message) {
+      const { message: _message } = data;
+      if (!_message) {
         throw new StandardizedError(
           '無效的資料',
           'SENDMESSAGE',
@@ -68,71 +35,32 @@ const messageHandler = {
           401,
         );
       }
-      const userId = Map.sessionToUser.get(sessionId);
-      if (!userId) {
-        throw new StandardizedError(
-          `無效的 session ID(${sessionId})`,
-          'ValidationError',
-          'SENDMESSAGE',
-          'SESSION_EXPIRED',
-          401,
-        );
-      }
-      const user = users[userId];
-      if (!user) {
-        throw new StandardizedError(
-          `使用者(${userId})不存在`,
-          'ValidationError',
-          'SENDMESSAGE',
-          'USER',
-          404,
-        );
-      }
-      const channel = channels[message.channelId];
-      if (!channel) {
-        throw new StandardizedError(
-          `頻道(${message.channelId})不存在`,
-          'ValidationError',
-          'SENDMESSAGE',
-          'CHANNEL',
-          404,
-        );
-      }
+      const message = await Func.validate.message(_message);
+      const user = await Func.validate.user(users[message.senderId]);
+      const channel = await Func.validate.channel(channels[message.channelId]);
 
-      // Validate message content
-      const messageError = Func.validateMessage(message.content);
-      if (messageError) {
-        throw new StandardizedError(
-          messageError,
-          'ValidationError',
-          'SENDMESSAGE',
-          'CONTENT',
-          400,
-        );
-      }
+      // Validate operation
+      await Func.validate.socket(socket);
 
       // Create new message
       const messageId = uuidv4();
       await Set.message(messageId, {
-        content: message.content,
-        permissionLevel: message.permissionLevel,
-        channelId: message.channelId,
-        senderId: message.senderId,
+        ...message,
         timestamp: Date.now().valueOf(),
       });
 
       // Emit updated data (to all users in the channel)
       io.to(`channel_${channel.id}`).emit('channelUpdate', {
-        messages: (await Get.channel(channel.id)).messages,
+        messages: await Get.channelMessages(channel.id),
       });
 
-      new Logger('WebSocket').info(
+      new Logger('WebSocket').success(
         `User(${user.id}) sent ${message.content} to channel(${channel.id})`,
       );
     } catch (error) {
-      if (!error instanceof StandardizedError) {
+      if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
-          `傳送訊息時發生無法預期的錯誤: ${error.error_message}`,
+          `傳送訊息時發生無法預期的錯誤: ${error.message}`,
           'ServerError',
           'SENDMESSAGE',
           'EXCEPTION_ERROR',
@@ -162,38 +90,8 @@ const messageHandler = {
       // console.log(data);
 
       // Validate data
-      const jwt = socket.jwt;
-      if (!jwt) {
-        throw new StandardizedError(
-          '無可用的 JWT',
-          'SENDDIRECTMESSAGE',
-          'ValidationError',
-          'TOKEN_MISSING',
-          401,
-        );
-      }
-      const sessionId = socket.sessionId;
-      if (!sessionId) {
-        throw new StandardizedError(
-          '無可用的 session ID',
-          'SENDDIRECTMESSAGE',
-          'ValidationError',
-          'SESSION_MISSING',
-          401,
-        );
-      }
-      const result = JWT.verifyToken(jwt);
-      if (!result.valid) {
-        throw new StandardizedError(
-          '無效的 token',
-          'SENDDIRECTMESSAGE',
-          'ValidationError',
-          'TOKEN_INVALID',
-          401,
-        );
-      }
-      const { message } = data;
-      if (!message) {
+      const { directMessage: _directMessage } = data;
+      if (!_directMessage) {
         throw new StandardizedError(
           '無效的資料',
           'SENDDIRECTMESSAGE',
@@ -202,53 +100,34 @@ const messageHandler = {
           401,
         );
       }
-      const userId = Map.sessionToUser.get(sessionId);
-      if (!userId) {
-        throw new StandardizedError(
-          `無效的 session ID(${sessionId})`,
-          'ValidationError',
-          'SENDDIRECTMESSAGE',
-          'SESSION_EXPIRED',
-          401,
-        );
-      }
-      const user = users[userId];
-      if (!user) {
-        throw new StandardizedError(
-          `使用者(${userId})不存在`,
-          'ValidationError',
-          'SENDDIRECTMESSAGE',
-          'USER',
-          404,
-        );
-      }
-      const friend = friends[directMessage.friendId];
-      if (!friend) {
-        throw new StandardizedError(
-          `好友私訊頻道(${directMessage.friendId})不存在`,
-          'ValidationError',
-          'SENDDIRECTMESSAGE',
-          'FRIEND',
-          404,
-        );
-      }
+      const directMessage = await Func.validate.directMessage(_directMessage);
+      const user = await Func.validate.user(users[directMessage.senderId]);
+      const friend = await Func.validate.friend(
+        friends[directMessage.friendId],
+      );
+
+      // Validate operation
+      await Func.validate.socket(socket);
 
       // Create new message
       const directMessageId = uuidv4();
       await Set.directMessage(directMessageId, {
-        content: directMessage.content,
-        friendId: directMessage.friendId,
-        senderId: directMessage.senderId,
+        ...directMessage,
         timestamp: Date.now().valueOf(),
       });
 
-      new Logger('WebSocket').info(
+      // Emit updated data (to all users in the friend)
+      io.to(`friend_${friend.id}`).emit('friendUpdate', {
+        directMessages: await Get.friendDirectMessages(friend.id),
+      });
+
+      new Logger('WebSocket').success(
         `User(${user.id}) sent ${directMessage.content} to direct message(${friend.id})`,
       );
     } catch (error) {
-      if (!error instanceof StandardizedError) {
+      if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
-          `傳送私訊時發生無法預期的錯誤: ${error.error_message}`,
+          `傳送私訊時發生無法預期的錯誤: ${error.message}`,
           'ServerError',
           'SENDDIRECTMESSAGE',
           'EXCEPTION_ERROR',

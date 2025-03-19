@@ -2,20 +2,23 @@
 const { v4: uuidv4 } = require('uuid');
 // Utils
 const utils = require('../utils');
-// const Logger = utils.logger;
-// const Map = utils.map;
-// const Get = utils.get;
-// const Interval = utils.interval;
+const StandardizedError = utils.standardizedError;
+const Map = utils.map;
 const JWT = utils.jwt;
-// Socket error
-const StandardizedError = require('../standardizedError');
 // Handlers
 const userHandler = require('./user');
 const serverHandler = require('./server');
 const memberHandler = require('./member');
 const channelHandler = require('./channel');
 const messageHandler = require('./message');
+const friendGroupHandler = require('./friendGroup');
+const friendHandler = require('./friend');
+const friendApplicationHandler = require('./friendApplication');
+const memberApplicationHandler = require('./memberApplication');
 const rtcHandler = require('./rtc');
+
+// TODO:
+// - make validation a Func
 
 module.exports = (io) => {
   io.use((socket, next) => {
@@ -63,9 +66,13 @@ module.exports = (io) => {
       socket.jwt = jwt;
       socket.sessionId = sessionId;
 
+      // Save maps
+      Map.createUserIdSessionIdMap(userId, socket.sessionId);
+      Map.createUserIdSocketIdMap(userId, socket.id);
+
       return next();
     } catch (error) {
-      if (!error instanceof StandardizedError) {
+      if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `驗證時發生無法預期的錯誤: ${error.error_message}`,
           'ServerError',
@@ -79,17 +86,28 @@ module.exports = (io) => {
     }
   });
 
-  // Connect
   io.on('connection', (socket) => {
+    // Connect
     userHandler.connectUser(io, socket);
     // Disconnect
     socket.on('disconnect', () => userHandler.disconnectUser(io, socket));
     // User
-    socket.on('refreshUser', async () => userHandler.refreshUser(io, socket));
+    socket.on('searchUser', async (data) =>
+      userHandler.searchUser(io, socket, data),
+    );
+    socket.on('refreshUser', async (data) =>
+      userHandler.refreshUser(io, socket, data),
+    );
     socket.on('updateUser', async (data) =>
       userHandler.updateUser(io, socket, data),
     );
     // Server
+    socket.on('searchServer', async (data) =>
+      serverHandler.searchServer(io, socket, data),
+    );
+    socket.on('refreshServer', async (data) =>
+      serverHandler.refreshServer(io, socket, data),
+    );
     socket.on('connectServer', async (data) =>
       serverHandler.connectServer(io, socket, data),
     );
@@ -102,17 +120,10 @@ module.exports = (io) => {
     socket.on('updateServer', async (data) =>
       serverHandler.updateServer(io, socket, data),
     );
-    socket.on('createServerApplication', async (data) =>
-      serverHandler.createServerApplication(io, socket, data),
-    );
-    socket.on('searchServer', async (data) =>
-      serverHandler.searchServer(io, socket, data),
-    );
-    // Member
-    socket.on('updateMember', async (data) =>
-      memberHandler.updateMember(io, socket, data),
-    );
     // Channel
+    socket.on('refreshChannel', async (data) =>
+      channelHandler.refreshChannel(io, socket, data),
+    );
     socket.on('connectChannel', async (data) =>
       channelHandler.connectChannel(io, socket, data),
     );
@@ -127,6 +138,59 @@ module.exports = (io) => {
     );
     socket.on('deleteChannel', async (data) =>
       channelHandler.deleteChannel(io, socket, data),
+    );
+    // Friend Group
+    socket.on('refreshFriendGroup', async (data) =>
+      friendGroupHandler.refreshFriendGroup(io, socket, data),
+    );
+    socket.on('createFriendGroup', async (data) =>
+      friendGroupHandler.createFriendGroup(io, socket, data),
+    );
+    socket.on('updateFriendGroup', async (data) =>
+      friendGroupHandler.updateFriendGroup(io, socket, data),
+    );
+    socket.on('deleteFriendGroup', async (data) =>
+      friendGroupHandler.deleteFriendGroup(io, socket, data),
+    );
+    // Member
+    socket.on('refreshMember', async (data) =>
+      memberHandler.refreshMember(io, socket, data),
+    );
+    socket.on('updateMember', async (data) =>
+      memberHandler.updateMember(io, socket, data),
+    );
+    // Friend
+    socket.on('refreshFriend', async (data) =>
+      friendHandler.refreshFriend(io, socket, data),
+    );
+    socket.on('updateFriend', async (data) =>
+      friendHandler.updateFriend(io, socket, data),
+    );
+    // Member Application
+    socket.on('refreshMemberApplication', async (data) =>
+      memberApplicationHandler.refreshMemberApplication(io, socket, data),
+    );
+    socket.on('createMemberApplication', async (data) =>
+      memberApplicationHandler.createMemberApplication(io, socket, data),
+    );
+    socket.on('updateMemberApplication', async (data) =>
+      memberApplicationHandler.updateMemberApplication(io, socket, data),
+    );
+    socket.on('deleteMemberApplication', async (data) =>
+      memberApplicationHandler.deleteMemberApplication(io, socket, data),
+    );
+    // Friend Application
+    socket.on('refreshFriendApplication', async (data) =>
+      friendApplicationHandler.refreshFriendApplication(io, socket, data),
+    );
+    socket.on('createFriendApplication', async (data) =>
+      friendApplicationHandler.createFriendApplication(io, socket, data),
+    );
+    socket.on('updateFriendApplication', async (data) =>
+      friendApplicationHandler.updateFriendApplication(io, socket, data),
+    );
+    socket.on('deleteFriendApplication', async (data) =>
+      friendApplicationHandler.deleteFriendApplication(io, socket, data),
     );
     // Message
     socket.on('message', async (data) =>

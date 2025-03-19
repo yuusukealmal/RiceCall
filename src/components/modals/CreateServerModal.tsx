@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
 import createServer from '@/styles/popups/createServer.module.css';
 
 // Types
-import { User, Server, popupType } from '@/types';
+import { User, Server, PopupType, SocketServerEvent } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -14,6 +14,9 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+
+// Utils
+import { createDefault } from '@/utils/default';
 
 // Validation
 export const validateName = (name: string): string => {
@@ -33,7 +36,7 @@ export const validateSlogan = (slogan: string): string => {
 };
 
 interface CreateServerModalProps {
-  user: User | null;
+  userId: string;
 }
 
 const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
@@ -42,12 +45,21 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     const lang = useLanguage();
     const socket = useSocket();
 
-    // Variables
-    const maxGroups = 3;
-    const userId = initialData.user?.id || '';
-    const userOwnedServers = initialData.user?.ownedServers || [];
-    const remainingGroups = maxGroups - userOwnedServers.length;
-    const canCreate = remainingGroups > 0;
+    // Constant
+    const serverType: { value: Server['type']; name: string }[] = [
+      {
+        value: 'game',
+        name: lang.tr.game,
+      },
+      {
+        value: 'community',
+        name: lang.tr.entertainment,
+      },
+      {
+        value: 'other',
+        name: lang.tr.other,
+      },
+    ];
 
     // States
     const [section, setSection] = useState<number>(0);
@@ -55,27 +67,16 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       name: '',
       description: '',
     });
-    const [server, setServer] = useState<Server>({
-      id: '',
-      name: '',
-      avatar: null,
-      avatarUrl: null,
-      level: 0,
-      description: '',
-      wealth: 0,
-      slogan: '',
-      announcement: '',
-      type: '',
-      displayId: '',
-      lobbyId: '',
-      ownerId: '',
-      settings: {
-        allowDirectMessage: true,
-        visibility: 'public',
-        defaultChannelId: '',
-      },
-      createdAt: 0,
-    });
+
+    const [user, setUser] = useState<User>(createDefault.user());
+    const [server, setServer] = useState<Server>(createDefault.server());
+
+    // Variables
+    const maxGroups = 3;
+    const userId = initialData.userId;
+    const userOwnedServers = user.ownedServers || [];
+    const remainingGroups = maxGroups - userOwnedServers.length;
+    const canCreate = remainingGroups > 0;
 
     // Handlers
     const handleClose = () => {
@@ -84,16 +85,45 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
 
     const handleCreateServer = (server: Server) => {
       if (!socket) return;
-      socket.send.createServer({ server: server });
+      socket.send.createServer({ server: server, userId: userId });
     };
 
     const handleOpenErrorDialog = (message: string) => {
-      ipcService.popup.open(popupType.DIALOG_ERROR);
-      ipcService.initialData.onRequest(popupType.DIALOG_ERROR, {
+      ipcService.popup.open(PopupType.DIALOG_ERROR);
+      ipcService.initialData.onRequest(PopupType.DIALOG_ERROR, {
         title: message,
-        submitTo: popupType.DIALOG_ERROR,
+        submitTo: PopupType.DIALOG_ERROR,
       });
     };
+
+    const handleUserUpdate = (data: Partial<User> | null) => {
+      if (!data) data = createDefault.user();
+      setUser((prev) => ({ ...prev, ...data }));
+    };
+
+    // Effects
+    useEffect(() => {
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
+      if (!socket) return;
+      if (userId) socket.send.refreshUser({ userId: userId });
+    }, [socket]);
 
     switch (section) {
       // Server Type Selection Section
@@ -119,19 +149,24 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                   {lang.tr.selectGroupTypeDescription}
                 </label>
                 <div className={createServer['buttonGroup']}>
-                  {[lang.tr.game, lang.tr.entertainment, lang.tr.other].map(
-                    (type) => (
-                      <div
-                        key={type}
-                        className={`${createServer['button']} ${
-                          server.type === type ? createServer['selected'] : ''
-                        }`}
-                        onClick={() => setServer((prev) => ({ ...prev, type }))}
-                      >
-                        {type}
-                      </div>
-                    ),
-                  )}
+                  {serverType.map((type) => (
+                    <div
+                      key={type.value}
+                      className={`${createServer['button']} ${
+                        server.type === type.value
+                          ? createServer['selected']
+                          : ''
+                      }`}
+                      onClick={() =>
+                        setServer((prev) => ({
+                          ...prev,
+                          type: type.value as Server['type'],
+                        }))
+                      }
+                    >
+                      {type.name}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -280,7 +315,10 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                 }`}
                 disabled={!server.name.trim() || !canCreate}
                 onClick={() => {
-                  handleCreateServer({ ...server, ownerId: userId });
+                  handleCreateServer({
+                    ...server,
+                    ownerId: userId,
+                  });
                   handleClose();
                 }}
               >

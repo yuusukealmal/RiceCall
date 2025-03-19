@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // Types
-import { Channel } from '@/types';
+import { Channel, SocketServerEvent, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -14,9 +14,13 @@ import addChannel from '@/styles/popups/addChannel.module.css';
 // Services
 import { ipcService } from '@/services/ipc.service';
 
+// Utils
+import { createDefault } from '@/utils/default';
+
 interface AddChannelModalProps {
-  parent: Channel | null;
-  serverId: string | null;
+  userId: string;
+  categoryId: string | null;
+  serverId: string;
 }
 
 const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
@@ -25,28 +29,18 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     const socket = useSocket();
     const lang = useLanguage();
 
+    // States
+    const [user, setUser] = useState<User>(createDefault.user());
+    const [parent, setParent] = useState<Channel>(createDefault.channel());
+    const [channel, setChannel] = useState<Channel>(createDefault.channel());
+
     // Variables
-    const isRoot = !!initialData.parent;
-    const parent = initialData.parent || {
-      id: '',
-      name: '無',
-      isRoot: false,
-      isCategory: false,
-      isLobby: false,
-      voiceMode: 'free',
-      chatMode: 'free',
-      order: 0,
-      serverId: '',
-      settings: {
-        bitrate: 0,
-        slowmode: false,
-        userLimit: -1,
-        visibility: 'public',
-      },
-      createdAt: 0,
-    };
+    const userId = initialData.userId;
+    const categoryId = initialData.categoryId;
+    const serverId = initialData.serverId;
     const parentName = parent.name;
-    const serverId = initialData.serverId || '';
+    const channelName = channel.name;
+    const isRoot = !categoryId;
 
     // Handlers
     const handleClose = () => {
@@ -55,28 +49,44 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
 
     const handleCreateChannel = (channel: Channel) => {
       if (!socket) return;
-      socket.send.createChannel({ channel: channel });
+      socket.send.createChannel({ channel: channel, userId: user.id });
     };
 
-    // States
-    const [channel, setChannel] = useState<Channel>({
-      id: '',
-      name: '',
-      isLobby: false,
-      isCategory: false,
-      isRoot: false,
-      serverId: '',
-      voiceMode: 'free',
-      chatMode: 'free',
-      order: 0,
-      settings: {
-        bitrate: 0,
-        visibility: 'public',
-        slowmode: false,
-        userLimit: 0,
-      },
-      createdAt: 0,
-    });
+    const handleChannelUpdate = (data: Partial<Channel> | null) => {
+      if (!data) data = createDefault.channel();
+      setParent((prev) => ({ ...prev, ...data }));
+    };
+
+    const handleUserUpdate = (data: Partial<User> | null) => {
+      if (!data) data = createDefault.user();
+      setUser((prev) => ({ ...prev, ...data }));
+    };
+
+    // Effects
+    useEffect(() => {
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
+        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
+      if (!socket) return;
+      if (categoryId) socket.send.refreshChannel({ channelId: categoryId });
+      if (userId) socket.send.refreshUser({ userId: userId });
+    }, [socket]);
 
     return (
       <div className={popup['popupContainer']}>
@@ -97,7 +107,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
                 <input
                   className={popup['input']}
                   type="text"
-                  value={channel.name}
+                  value={channelName}
                   onChange={(e) =>
                     setChannel((prev) => ({ ...prev, name: e.target.value }))
                   }
@@ -110,13 +120,14 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
         <div className={popup['popupFooter']}>
           <button
             className={`${popup['button']} ${
-              !channel.name.trim() ? popup['disabled'] : ''
+              !channelName.trim() ? popup['disabled'] : ''
             }`}
-            disabled={!channel.name.trim()}
+            disabled={!channelName.trim()}
             onClick={() => {
               handleCreateChannel({
                 ...channel,
                 isRoot: isRoot,
+                categoryId: categoryId,
                 serverId: serverId,
               });
               handleClose();

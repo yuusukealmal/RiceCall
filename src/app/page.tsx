@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { CircleX } from 'lucide-react';
 
 // CSS
@@ -9,12 +8,11 @@ import header from '@/styles/common/header.module.css';
 
 // Types
 import {
-  popupType,
-  Channel,
-  Server,
-  User,
+  PopupType,
   SocketServerEvent,
   LanguageKey,
+  Server,
+  User,
 } from '@/types';
 
 // Pages
@@ -27,6 +25,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // Utils
 import { errorHandler, StandardizedError } from '@/utils/errorHandler';
+import { createDefault } from '@/utils/default';
 
 // Providers
 import WebRTCProvider from '@/providers/WebRTCProvider';
@@ -37,28 +36,15 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import { ipcService } from '@/services/ipc.service';
 import authService from '@/services/auth.service';
 
-// Redux
-import store from '@/redux/store';
-import { clearServer, setServer } from '@/redux/serverSlice';
-import { clearUser, setUser } from '@/redux/userSlice';
-import { clearChannel, setChannel } from '@/redux/channelSlice';
-
 interface HeaderProps {
-  selectedId: number;
-  setSelectedTabId: (tabId: number) => void;
+  user: User;
+  server: Server;
+  selectedId: 'home' | 'friends' | 'server';
+  setSelectedTabId: (tabId: 'home' | 'friends' | 'server') => void;
 }
 
 const Header: React.FC<HeaderProps> = React.memo(
-  ({ selectedId = 1, setSelectedTabId }) => {
-    // Redux
-    const user = useSelector((state: { user: User }) => state.user);
-    const server = useSelector((state: { server: Server }) => state.server);
-
-    // Variables
-    const userCurrentServerId = user.currentServerId;
-    const userName = user.name;
-    const userStatus = user.status;
-
+  ({ user, server, selectedId, setSelectedTabId }) => {
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
@@ -68,28 +54,18 @@ const Header: React.FC<HeaderProps> = React.memo(
     const [showMenu, setShowMenu] = useState(false);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
-    // Tab Control
-    const MAIN_TABS = [
-      {
-        id: 1,
-        label: lang.tr.home,
-        onClick: () => {},
-      },
-      {
-        id: 2,
-        label: lang.tr.friends,
-        onClick: () => {},
-      },
-      server.id
-        ? {
-            id: 3,
-            label: server.name,
-            onClick: () => {},
-          }
-        : null,
-    ].filter(Boolean);
+    // Variables
+    const serverId = server.id;
+    const userId = user.id;
+    const userName = user.name;
+    const userStatus = user.status;
 
-    // Status Dropdown Control
+    // Constants
+    const MAIN_TABS = [
+      { id: 'home', label: lang.tr.home },
+      { id: 'friends', label: lang.tr.friends },
+      { id: 'server', label: server.name },
+    ];
     const STATUS_OPTIONS = [
       { status: 'online', label: lang.tr.online },
       { status: 'dnd', label: lang.tr.dnd },
@@ -99,20 +75,17 @@ const Header: React.FC<HeaderProps> = React.memo(
 
     // Handlers
     const handleLogout = () => {
-      store.dispatch(clearChannel());
-      store.dispatch(clearServer());
-      store.dispatch(clearUser());
       authService.logout();
     };
 
-    const handleLeaveServer = (serverId: string) => {
+    const handleLeaveServer = () => {
       if (!socket) return;
-      socket.send.disconnectServer({ serverId: serverId });
+      socket.send.disconnectServer({ serverId: serverId, userId: userId });
     };
 
     const handleUpdateStatus = (status: User['status']) => {
       if (!socket) return;
-      socket.send.updateUser({ user: { status } });
+      socket.send.updateUser({ user: { id: userId, status } });
     };
 
     const handleCreateError = (error: StandardizedError) => {
@@ -143,8 +116,8 @@ const Header: React.FC<HeaderProps> = React.memo(
     };
 
     const handleShowEditUser = () => {
-      ipcService.popup.open(popupType.EDIT_USER);
-      ipcService.initialData.onRequest(popupType.EDIT_USER, {
+      ipcService.popup.open(PopupType.EDIT_USER);
+      ipcService.initialData.onRequest(PopupType.EDIT_USER, {
         user: user,
       });
     };
@@ -193,29 +166,25 @@ const Header: React.FC<HeaderProps> = React.memo(
         {/* Main Tabs */}
         <div className={header['mainTabs']}>
           {MAIN_TABS.map((Tab) => {
-            if (!Tab) return null;
-
             const TabId = Tab.id;
             const TabLable = Tab.label;
-
+            const TabClose = TabId === 'server';
+            if (TabId === 'server' && !serverId) return null;
             return (
               <div
                 key={`Tabs-${TabId}`}
                 className={`${header['tab']} ${
                   TabId === selectedId ? header['selected'] : ''
                 }`}
-                onClick={() => {
-                  setSelectedTabId(TabId);
-                  Tab.onClick();
-                }}
+                onClick={() =>
+                  setSelectedTabId(TabId as 'home' | 'friends' | 'server')
+                }
               >
                 <div className={header['tabLable']}>{TabLable}</div>
                 <div className={header['tabBg']}></div>
-                {TabId > 2 && (
+                {TabClose && (
                   <CircleX
-                    onClick={() => {
-                      handleLeaveServer(userCurrentServerId);
-                    }}
+                    onClick={() => handleLeaveServer()}
                     size={16}
                     className={header['tabClose']}
                   />
@@ -365,24 +334,21 @@ const Home = () => {
   const lang = useLanguage();
 
   // States
-  const [selectedTabId, setSelectedTabId] = useState<number>(1);
+  const [user, setUser] = useState<User>(createDefault.user());
+  const [server, setServer] = useState<Server>(createDefault.server());
+  const [selectedTabId, setSelectedTabId] = useState<
+    'home' | 'friends' | 'server'
+  >('home');
 
   // Effects
   useEffect(() => {
     if (!socket) return;
 
     const eventHandlers = {
-      [SocketServerEvent.CONNECT]: () => handleConnect,
-      [SocketServerEvent.DISCONNECT]: () => handleDisconnect,
-      [SocketServerEvent.USER_CONNECT]: handleUserConnect,
-      [SocketServerEvent.USER_DISCONNECT]: handleUserDisconnect,
+      [SocketServerEvent.CONNECT]: handleConnect,
+      [SocketServerEvent.DISCONNECT]: handleDisconnect,
       [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
-      [SocketServerEvent.SERVER_CONNECT]: handleServerConnect,
-      [SocketServerEvent.SERVER_DISCONNECT]: handleServerDisconnect,
       [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
-      [SocketServerEvent.CHANNEL_CONNECT]: handleChannelConnect,
-      [SocketServerEvent.CHANNEL_DISCONNECT]: handleChannelDisconnect,
-      [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
       [SocketServerEvent.ERROR]: handleError,
     };
     const unsubscribe: (() => void)[] = [];
@@ -406,76 +372,41 @@ const Home = () => {
   // Handlers
   const handleConnect = () => {
     console.log('Socket connected');
+    setSelectedTabId('home');
   };
 
   const handleDisconnect = () => {
     console.log('Socket disconnected');
+    setUser(createDefault.user());
+    setServer(createDefault.server());
+    setSelectedTabId('home');
   };
 
   const handleError = (error: StandardizedError) => {
     new errorHandler(error).show();
   };
 
-  const handleUserConnect = (user: User) => {
-    console.log('User connected: ', user);
-    store.dispatch(setUser(user));
-    setSelectedTabId(1);
+  const handleUserUpdate = (data: Partial<User> | null) => {
+    if (!data) data = createDefault.user();
+    setUser((prev) => ({ ...prev, ...data }));
   };
 
-  const handleUserDisconnect = () => {
-    console.log('User disconnected');
-    store.dispatch(clearChannel());
-    store.dispatch(clearServer());
-    store.dispatch(clearUser());
-    authService.logout();
-  };
-
-  const handleUserUpdate = (data: Partial<User>) => {
-    console.log('User update: ', data);
-    store.dispatch(setUser(data));
-  };
-
-  const handleServerConnect = (server: Server) => {
-    console.log('Server connected: ', server);
-    store.dispatch(setServer(server));
-    setSelectedTabId(3);
-  };
-
-  const handleServerDisconnect = () => {
-    console.log('Server disconnected');
-    store.dispatch(clearServer());
-    setSelectedTabId(1);
-  };
-
-  const handleServerUpdate = (data: Partial<Server>) => {
-    console.log('Server update: ', data);
-    store.dispatch(setServer(data));
-  };
-
-  const handleChannelConnect = (channel: Channel) => {
-    console.log('Channel connected: ', channel);
-    store.dispatch(setChannel(channel));
-  };
-
-  const handleChannelDisconnect = () => {
-    console.log('Channel disconnected');
-    store.dispatch(clearChannel());
-  };
-
-  const handleChannelUpdate = (data: Partial<Channel>) => {
-    console.log('Channel update: ', data);
-    store.dispatch(setChannel(data));
+  const handleServerUpdate = (data: Partial<Server> | null) => {
+    console.log('Server updated', data);
+    setSelectedTabId(data ? 'server' : 'home');
+    if (!data) data = createDefault.server();
+    setServer((prev) => ({ ...prev, ...data }));
   };
 
   const getMainContent = () => {
     if (!socket) return <LoadingSpinner />;
     switch (selectedTabId) {
-      case 1:
-        return <HomePage />;
-      case 2:
-        return <FriendPage />;
-      case 3:
-        return <ServerPage />;
+      case 'home':
+        return <HomePage user={user} />;
+      case 'friends':
+        return <FriendPage user={user} />;
+      case 'server':
+        return <ServerPage user={user} server={server} />;
     }
   };
 
@@ -483,6 +414,8 @@ const Home = () => {
     <div className="wrapper">
       <WebRTCProvider>
         <Header
+          user={user}
+          server={server}
           selectedId={selectedTabId}
           setSelectedTabId={setSelectedTabId}
         />

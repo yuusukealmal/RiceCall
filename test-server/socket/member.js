@@ -1,63 +1,85 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
 // Utils
 const utils = require('../utils');
+const StandardizedError = utils.standardizedError;
 const Logger = utils.logger;
-const Map = utils.map;
 const Get = utils.get;
-const Interval = utils.interval;
-const Func = utils.func;
 const Set = utils.set;
-const JWT = utils.jwt;
-// Socket error
-const StandardizedError = require('../standardizedError');
+const Func = utils.func;
 
 const memberHandler = {
-  updateMember: async (io, socket, data) => {
+  refreshMember: async (io, socket, data) => {
     // Get database
-    const users = (await db.get('users')) || {};
-    const servers = (await db.get('servers')) || {};
     const members = (await db.get('members')) || {};
 
     try {
       // data = {
-      //   serverId:
+      //   userId: string;
+      //   serverId: string;
       // }
       // console.log(data);
 
       // Validate data
-      const jwt = socket.jwt;
-      if (!jwt) {
+      const { userId, serverId } = data;
+      if (!userId || !serverId) {
         throw new StandardizedError(
-          '無可用的 JWT',
+          '無效的資料',
           'ValidationError',
-          'UPDATEMEMBER',
-          'TOKEN_MISSING',
+          'REFRESHMEMBER',
+          'DATA_INVALID',
           401,
         );
       }
-      const sessionId = socket.sessionId;
-      if (!sessionId) {
-        throw new StandardizedError(
-          '無可用的 session ID',
-          'ValidationError',
-          'UPDATEMEMBER',
-          'SESSION_MISSING',
-          401,
+      const member = await Func.validate.member(
+        members[`mb_${userId}-${serverId}`],
+      );
+
+      // Validate operation
+      await Func.validate.socket(socket);
+
+      // Emit updated data to the user
+      io.to(socket.id).emit(
+        'memberUpdate',
+        await Get.member(member.userId, member.serverId),
+      );
+    } catch (error) {
+      if (!(error instanceof StandardizedError)) {
+        error = new StandardizedError(
+          `更新成員時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'REFRESHMEMBER',
+          'EXCEPTION_ERROR',
+          500,
         );
       }
-      const result = JWT.verifyToken(jwt);
-      if (!result.valid) {
-        throw new StandardizedError(
-          '無效的 token',
-          'ValidationError',
-          'UPDATEMEMBER',
-          'TOKEN_INVALID',
-          401,
-        );
-      }
-      const { serverId, targetMember } = data;
-      if (!serverId || !targetMember) {
+
+      // Emit error data (only to the user)
+      io.to(socket.id).emit('error', error);
+
+      new Logger('Server').error(
+        `Error refreshing member: ${error.error_message}`,
+      );
+    }
+  },
+  updateMember: async (io, socket, data) => {
+    // Get database
+    // const users = (await db.get('users')) || {};
+    const members = (await db.get('members')) || {};
+
+    try {
+      // data = {
+      //   userId: string;
+      //   member: {
+      //     ...
+      //   },
+      // }
+      // console.log(data);
+
+      // Validate data
+      const { member: _editedMember, userId } = data;
+      if (!_editedMember || !userId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -66,130 +88,44 @@ const memberHandler = {
           401,
         );
       }
-      const userId = Map.sessionToUser.get(sessionId);
-      if (!userId) {
-        throw new StandardizedError(
-          `無效的 session ID(${sessionId})`,
-          'ValidationError',
-          'CONNECTSERVER',
-          'SESSION_EXPIRED',
-          401,
-        );
-      }
-      const user = users[userId];
-      if (!user) {
-        throw new StandardizedError(
-          `使用者(${userId})不存在`,
-          'ValidationError',
-          'CONNECTSERVER',
-          'USER',
-          404,
-        );
-      }
-      const server = servers[serverId];
-      if (!server) {
-        throw new StandardizedError(
-          `群組(${serverId})不存在`,
-          'ValidationError',
-          'CONNECTSERVER',
-          'SERVER',
-          404,
-        );
-      }
-      const member = members[targetMember.id];
-      if (!member) {
-        throw new StandardizedError(
-          `成員(${targetMember.id})不存在`,
-          'ValidationError',
-          'CONNECTSERVER',
-          'MEMBER',
-          404,
-        );
-      }
-      if (member.permissionLevel > user.permissionLevel) {
-        throw new StandardizedError(
-          '權限不足',
-          'ValidationError',
-          'CONNECTSERVER',
-          'PERMISSION_DENIED',
-          401,
-        );
-      }
+      // const user = await Func.validate.user(users[userId]);
+      const editedMember = await Func.validate.member(_editedMember);
+      const member = await Func.validate.member(members[editedMember.id]);
 
-      // Check if the update data contains permissionLevel or isBlocked
-      if (targetMember.permissionLevel) {
-        if (targetMember.userId === user.id) {
-          throw new StandardizedError(
-            '無法更改自己的權限',
-            'ValidationError',
-            'UPDATEMEMBER',
-            'PERMISSION_DENIED',
-            401,
-          );
-        }
-        if (targetMember.permissionLevel > user.permissionLevel) {
-          throw new StandardizedError(
-            '無法更改比自己權限高的使用者',
-            'ValidationError',
-            'UPDATEMEMBER',
-            'PERMISSION_DENIED',
-            401,
-          );
-        }
-      }
-      if (targetMember.isBlocked && targetMember.userId === user.id) {
-        throw new StandardizedError(
-          '無法封鎖自己',
-          'ValidationError',
-          'UPDATEMEMBER',
-          'PERMISSION_DENIED',
-          401,
-        );
-      }
+      // Validate operation
+      await Func.validate.socket(socket);
 
-      // Validate additional data
-      if (targetMember.nickname) {
-        const nicknameError = Func.validateNickname(targetMember.nickname);
-        if (nicknameError) {
-          throw new StandardizedError(
-            nicknameError,
-            'ValidationError',
-            'UPDATEMEMBER',
-            'NICKNAME',
-            400,
-          );
-        }
-      }
-
-      if (typeof targetMember.permissionLevel !== 'undefined') {
-        const permissionError = Func.validatePermissionLevel(
-          targetMember.permissionLevel,
-        );
-        if (permissionError) {
-          throw new StandardizedError(
-            permissionError,
-            'ValidationError',
-            'UPDATEMEMBER',
-            'PERMISSION',
-            400,
-          );
-        }
-      }
+      // if (member.permissionLevel < editedMember.permissionLevel) {
+      //   throw new StandardizedError(
+      //     '你沒有權限更改此成員的權限',
+      //     'ValidationError',
+      //     'UPDATEMEMBER',
+      //     'PERMISSION_DENIED',
+      //     403,
+      //   );
+      // }
+      // if (member.id === editedMember.id) {
+      //   throw new StandardizedError(
+      //     '無法更改自己的權限',
+      //     'ValidationError',
+      //     'UPDATEMEMBER',
+      //     'PERMISSION_DENIED',
+      //     403,
+      //   );
+      // }
 
       // Update member
-      await Set.member(`${targetMember.id}`, targetMember);
+      await Set.member(member.id, editedMember);
 
       // Emit updated data to all users in the server
-      io.to(serverId).emit('serverUpdate', await Get.server(serverId));
+      io.to(socket.id).emit('memberUpdate', editedMember);
 
-      new Logger('Server').info(
-        `User ${userId} updated member ${targetMember.id} in server ${serverId}`,
-      );
+      new Logger('Server').success(`Member(${member.id}) updated`);
     } catch (error) {
-      if (!error instanceof StandardizedError) {
+      if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
-          `更新使用者時發生無法預期的錯誤: ${error.error_message}`,
-          'MemberError',
+          `更新成員時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
           'UPDATEMEMBER',
           'EXCEPTION_ERROR',
           500,

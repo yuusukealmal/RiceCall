@@ -8,6 +8,97 @@ const DiscordRPC = require('discord-rpc');
 const { io } = require('socket.io-client');
 const { autoUpdater } = require('electron-updater');
 
+const SocketClientEvent = {
+  // User
+  SEARCH_USER: 'searchUser',
+  REFRESH_USER: 'refreshUser',
+  UPDATE_USER: 'updateUser',
+  // Server
+  SEARCH_SERVER: 'searchServer',
+  REFRESH_SERVER: 'refreshServer',
+  CONNECT_SERVER: 'connectServer',
+  DISCONNECT_SERVER: 'disconnectServer',
+  CREATE_SERVER: 'createServer',
+  UPDATE_SERVER: 'updateServer',
+  DELETE_SERVER: 'deleteServer',
+  // Category
+  REFRESH_CATEGORY: 'refreshCategory',
+  CREATE_CATEGORY: 'createCategory',
+  UPDATE_CATEGORY: 'updateCategory',
+  DELETE_CATEGORY: 'deleteCategory',
+  // Channel
+  REFRESH_CHANNEL: 'refreshChannel',
+  CONNECT_CHANNEL: 'connectChannel',
+  DISCONNECT_CHANNEL: 'disconnectChannel',
+  CREATE_CHANNEL: 'createChannel',
+  UPDATE_CHANNEL: 'updateChannel',
+  DELETE_CHANNEL: 'deleteChannel',
+  // Friend Group
+  REFRESH_FRIEND_GROUP: 'refreshFriendGroup',
+  CREATE_FRIEND_GROUP: 'createFriendGroup',
+  UPDATE_FRIEND_GROUP: 'updateFriendGroup',
+  DELETE_FRIEND_GROUP: 'deleteFriendGroup',
+  // Member
+  REFRESH_MEMBER: 'refreshMember',
+  UPDATE_MEMBER: 'updateMember',
+  // Friend
+  REFRESH_FRIEND: 'refreshFriend',
+  UPDATE_FRIEND: 'updateFriend',
+  // Member Application
+  REFRESH_MEMBER_APPLICATION: 'refreshMemberApplication',
+  CREATE_MEMBER_APPLICATION: 'createMemberApplication',
+  UPDATE_MEMBER_APPLICATION: 'updateMemberApplication',
+  DELETE_MEMBER_APPLICATION: 'deleteMemberApplication',
+  // Friend Application
+  REFRESH_FRIEND_APPLICATION: 'refreshFriendApplication',
+  CREATE_FRIEND_APPLICATION: 'createFriendApplication',
+  UPDATE_FRIEND_APPLICATION: 'updateFriendApplication',
+  DELETE_FRIEND_APPLICATION: 'deleteFriendApplication',
+  // Message
+  SEND_MESSAGE: 'message',
+  SEND_DIRECT_MESSAGE: 'directMessage',
+  // RTC
+  RTC_OFFER: 'RTCOffer',
+  RTC_ANSWER: 'RTCAnswer',
+  RTC_ICE_CANDIDATE: 'RTCIceCandidate',
+};
+
+const SocketServerEvent = {
+  // Socket
+  CONNECT: 'connect',
+  DISCONNECT: 'disconnect',
+  // Notification
+  NOTIFICATION: 'notification', // not used yet
+  // User
+  USER_SEARCH: 'userSearch',
+  USER_UPDATE: 'userUpdate',
+  // Server
+  SERVER_SEARCH: 'serverSearch',
+  SERVER_UPDATE: 'serverUpdate',
+  // Channel
+  CHANNEL_UPDATE: 'channelUpdate',
+  // Category
+  CATEGORY_UPDATE: 'categoryUpdate',
+  // Friend Group
+  FRIEND_GROUP_UPDATE: 'friendGroupUpdate',
+  // Member
+  MEMBER_UPDATE: 'memberUpdate',
+  // Member Application
+  MEMBER_APPLICATION_UPDATE: 'memberApplicationUpdate',
+  // Friend
+  FRIEND_UPDATE: 'friendUpdate',
+  // Friend Application
+  FRIEND_APPLICATION_UPDATE: 'friendApplicationUpdate',
+  // RTC
+  RTC_OFFER: 'RTCOffer',
+  RTC_ANSWER: 'RTCAnswer',
+  RTC_ICE_CANDIDATE: 'RTCIceCandidate',
+  RTC_JOIN: 'RTCJoin',
+  RTC_LEAVE: 'RTCLeave',
+  // Error
+  ERROR: 'error',
+};
+
 let isDev = process.argv.includes('--dev');
 
 const appServe = app.isPackaged
@@ -258,120 +349,33 @@ function connectSocket(token) {
     },
   });
 
-  const ipcHandlers = {
-    refreshUser: () => socket.emit('refreshUser'),
-    connectUser: (_, data) => socket.emit('connectUser', data),
-    updateUser: (_, data) => socket.emit('updateUser', data),
-    connectServer: (_, data) => socket.emit('connectServer', data),
-    searchServer: (_, data) => socket.emit('searchServer', data),
-    disconnectServer: (_, data) => socket.emit('disconnectServer', data),
-    createServer: (_, data) => socket.emit('createServer', data),
-    updateServer: (_, data) => socket.emit('updateServer', data),
-    deleteServer: (_, data) => socket.emit('deleteServer', data),
-    createServerApplication: (_, data) =>
-      socket.emit('createServerApplication', data),
-    updateMember: (_, data) => socket.emit('updateMember', data),
-    connectChannel: (_, data) => socket.emit('connectChannel', data),
-    disconnectChannel: (_, data) => socket.emit('disconnectChannel', data),
-    updateChannel: (_, data) => socket.emit('updateChannel', data),
-    createChannel: (_, data) => socket.emit('createChannel', data),
-    deleteChannel: (_, data) => socket.emit('deleteChannel', data),
-    message: (_, data) => socket.emit('message', data),
-    directMessage: (_, data) => socket.emit('directMessage', data),
-    RTCOffer: (_, data) => socket.emit('RTCOffer', data),
-    RTCAnswer: (_, data) => socket.emit('RTCAnswer', data),
-    RTCIceCandidate: (_, data) => socket.emit('RTCIceCandidate', data),
-  };
+  // 定義所有 IPC 處理器
+  const ipcHandlers = Object.values(SocketClientEvent).reduce((acc, event) => {
+    acc[event] = (_, data) => socket.emit(event, data);
+    return acc;
+  }, {});
 
   socket.on('connect', () => {
+    // 註冊 IPC 處理器
     Object.entries(ipcHandlers).forEach(([event, handler]) => {
       ipcMain.on(event, handler);
     });
 
-    BrowserWindow.getAllWindows().forEach((window) => {
-      window.webContents.send('connect', socket.id);
-    });
-    socket.on('connect_error', (error) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('connect_error', error),
-      );
-    });
-    socket.on('error', (error) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('error', error),
-      );
-    });
-    socket.on('disconnect', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('disconnect', data),
-      );
-    });
-    socket.on('userConnect', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('userConnect', data),
-      );
-    });
-    socket.on('userDisconnect', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('userDisconnect', data),
-      );
-    });
-    socket.on('userUpdate', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('userUpdate', data),
-      );
-    });
-    socket.on('serverConnect', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('serverConnect', data),
-      );
-    });
-    socket.on('serverDisconnect', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('serverDisconnect', data),
-      );
-    });
-    socket.on('serverUpdate', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('serverUpdate', data),
-      );
-    });
-    socket.on('RTCConnect', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('RTCConnect', data),
-      );
-    });
-    socket.on('RTCOffer', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('RTCOffer', data),
-      );
-    });
-    socket.on('RTCAnswer', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('RTCAnswer', data),
-      );
-    });
-    socket.on('RTCIceCandidate', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('RTCIceCandidate', data),
-      );
-    });
-    socket.on('RTCJoin', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('RTCJoin', data),
-      );
-    });
-    socket.on('RTCLeave', (data) => {
-      BrowserWindow.getAllWindows().forEach((window) =>
-        window.webContents.send('RTCLeave', data),
-      );
+    // 註冊所有 Socket 事件
+    Object.values(SocketServerEvent).forEach((event) => {
+      socket.on(event, (data) => {
+        console.log('Socket event:', event);
+        BrowserWindow.getAllWindows().forEach((window) => {
+          window.webContents.send(event, data);
+        });
+      });
     });
 
     mainWindow?.show();
     authWindow?.hide();
   });
 
-  // 将处理函数存储在 socket 实例上,以便后续清理
+  // 將處理函數存儲在 socket 實例上，以便後續清理
   socket.ipcHandlers = ipcHandlers;
 
   return socket;
@@ -380,14 +384,13 @@ function connectSocket(token) {
 function disconnectSocket(socket) {
   if (!socket) return null;
 
-  // 移除所有 IPC 事件处理函数
+  // 移除所有 IPC 事件處理函數
   if (socket.ipcHandlers) {
     Object.entries(socket.ipcHandlers).forEach(([event, handler]) => {
       ipcMain.removeListener(event, handler);
     });
   }
 
-  socket.disconnect();
   return null;
 }
 
@@ -431,6 +434,7 @@ app.on('ready', async () => {
   ipcMain.on('logout', () => {
     mainWindow.hide();
     authWindow.show();
+    socketInstance.disconnect();
     socketInstance = disconnectSocket(socketInstance);
   });
 

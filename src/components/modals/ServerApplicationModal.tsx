@@ -1,12 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // CSS
 import Popup from '@/styles/common/popup.module.css';
 import applyMember from '@/styles/popups/serverApplication.module.css';
 
 // Types
-import { popupType, User, Server, ServerApplication } from '@/types';
+import {
+  PopupType,
+  User,
+  Server,
+  SocketServerEvent,
+  MemberApplication,
+} from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -15,9 +21,12 @@ import { useSocket } from '@/providers/SocketProvider';
 // Services
 import { ipcService } from '@/services/ipc.service';
 
+// Utils
+import { createDefault } from '@/utils/default';
+
 interface ServerApplicationModalProps {
-  server: Server | null;
-  user: User | null;
+  serverId: string;
+  userId: string;
 }
 
 const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
@@ -26,40 +35,36 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
     const lang = useLanguage();
     const socket = useSocket();
 
-    // Variables
-    const userId = initialData.user?.id || '';
-    const serverId = initialData.server?.id || '';
-    const serverName = initialData.server?.name || '';
-    const serverDisplayId = initialData.server?.displayId || '';
-    const serverAvatar = initialData.server?.avatar || null;
-
     // State
-    const [application, setApplication] = useState<ServerApplication>({
-      id: '',
-      userId: '',
-      serverId: '',
-      description: '',
-      createdAt: 0,
-    });
+    const [user, setUser] = useState<User>(createDefault.user());
+    const [server, setServer] = useState<Server>(createDefault.server());
+    const [application, setApplication] = useState<MemberApplication>(
+      createDefault.memberApplication(),
+    );
+
+    // Variables
+    const userId = initialData.userId;
+    const serverId = initialData.serverId;
+    const serverName = server.name;
+    const serverDisplayId = server.displayId;
+    const serverAvatar = server.avatar;
+    const applicationDescription = application.description;
 
     // Section Control
     const [section, setSection] = useState<number>(0);
 
-    const handleCreatMemberApplication = (application: ServerApplication) => {
-      socket?.send.createServerApplication({ application: application });
-
-      socket?.on.createServerApplication((data) => {
-        if (data) handleOpenSuccessDialog();
-      });
+    const handleCreatMemberApplication = (application: MemberApplication) => {
+      if (!socket) return;
+      socket.send.createMemberApplication({ memberApplication: application });
     };
 
     const handleOpenSuccessDialog = () => {
-      ipcService.popup.open(popupType.DIALOG_SUCCESS);
-      ipcService.initialData.onRequest(popupType.DIALOG_SUCCESS, {
+      ipcService.popup.open(PopupType.DIALOG_SUCCESS);
+      ipcService.initialData.onRequest(PopupType.DIALOG_SUCCESS, {
         title: lang.tr.serverApply,
-        submitTo: popupType.DIALOG_SUCCESS,
+        submitTo: PopupType.DIALOG_SUCCESS,
       });
-      ipcService.popup.onSubmit(popupType.DIALOG_SUCCESS, () => {
+      ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
         setSection(1);
       });
     };
@@ -67,6 +72,56 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
     const handleClose = () => {
       ipcService.window.close();
     };
+
+    const handleUserUpdate = (data: Partial<User> | null) => {
+      if (!data) data = createDefault.user();
+      setUser((prev) => ({ ...prev, ...data }));
+    };
+
+    const handleServerUpdate = (data: Partial<Server> | null) => {
+      if (!data) data = createDefault.server();
+      setServer((prev) => ({ ...prev, ...data }));
+    };
+
+    const handleMemberApplicationUpdate = (
+      data: Partial<MemberApplication> | null,
+    ) => {
+      if (!data) data = createDefault.memberApplication();
+      setApplication((prev) => ({ ...prev, ...data }));
+    };
+
+    // UseEffect
+    useEffect(() => {
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+        [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
+        // [SocketServerEvent.MEMBER_APPLICATION_UPDATE]:
+        //   handleMemberApplicationUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
+      if (!socket) return;
+      if (userId) socket.send.refreshUser({ userId: userId });
+      if (serverId) socket.send.refreshServer({ serverId: serverId });
+      if (userId && serverId)
+        socket.send.refreshMemberApplication({
+          senderId: userId,
+          receiverId: serverId,
+        });
+    }, [socket]);
 
     switch (section) {
       // Member Application Form
@@ -79,11 +134,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
                   <div className={applyMember['avatarWrapper']}>
                     <div
                       className={applyMember['avatarPicture']}
-                      style={
-                        serverAvatar
-                          ? { backgroundImage: `url(${serverAvatar})` }
-                          : {}
-                      }
+                      style={{ backgroundImage: `url(${serverAvatar})` }}
                     />
                   </div>
                   <div className={applyMember['serverInfoWrapper']}>
@@ -115,7 +166,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
                           description: e.target.value,
                         }))
                       }
-                      value={application.description}
+                      value={applicationDescription}
                     />
                   </div>
                 </div>
@@ -131,6 +182,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
                     serverId: serverId,
                     userId: userId,
                   });
+                  handleOpenSuccessDialog();
                 }}
               >
                 {lang.tr.submit}

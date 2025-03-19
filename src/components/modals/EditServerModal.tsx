@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 // CSS
@@ -12,7 +11,14 @@ import permission from '@/styles/common/permission.module.css';
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 
 // Types
-import { ServerApplication, Server, Member, popupType } from '@/types';
+import {
+  MemberApplication,
+  Server,
+  PopupType,
+  ServerMember,
+  SocketServerEvent,
+  User,
+} from '@/types';
 
 // Utils
 import { getPermissionText } from '@/utils/formatters';
@@ -24,6 +30,10 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+
+// Utils
+import { createDefault } from '@/utils/default';
+import { createSorter } from '@/utils/sort';
 
 interface ServerSettingModalProps {
   serverId: string;
@@ -37,81 +47,168 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     const socket = useSocket();
     const contextMenu = useContextMenu();
 
-    // Variables
-    const serverId = initialData.serverId;
-    const userId = initialData.userId;
+    // Constants
+    const MEMBER_FIELDS = [
+      {
+        name: `名字`,
+        field: 'name',
+      },
+      {
+        name: `權限`,
+        field: 'permissionLevel',
+      },
+      {
+        name: `貢獻`,
+        field: 'contribution',
+      },
+      {
+        name: `加入時間`,
+        field: 'createdAt',
+      },
+    ];
+    const APPLICATION_FIELDS = [
+      {
+        name: `名字`,
+        field: 'name',
+      },
+      {
+        name: `描述`,
+        field: 'description',
+      },
+    ];
+    const BLOCK_MEMBER_FIELDS = [
+      {
+        name: `名字`,
+        field: 'name',
+      },
+    ];
 
     // States
-    const [server, setServer] = useState<Server>({
-      id: '',
-      name: '未知伺服器',
-      avatar: '',
-      avatarUrl: '/logo_server_def.png',
-      announcement: '',
-      description: '',
-      type: 'other',
-      displayId: '00000000',
-      slogan: '',
-      level: 0,
-      wealth: 0,
-      lobbyId: '',
-      ownerId: '',
-      settings: {
-        allowDirectMessage: false,
-        visibility: 'public',
-        defaultChannelId: '',
-      },
-      createdAt: 0,
-    });
-    const [serverMembers, setserverMembers] = useState<Member[]>([]);
-    const [serverApplications, setserverApplications] = useState<
-      ServerApplication[]
-    >([]);
-
-    const [sortedMembers, setSortedMembers] = useState<Member[]>([]);
-    const [sortedApplications, setSortedApplications] = useState<
-      ServerApplication[]
-    >([]);
-    const [sortedBlockMembers, setSortedBlockMembers] = useState<Member[]>([]);
+    const [user, setUser] = useState<User>(createDefault.user());
+    const [server, setServer] = useState<Server>(createDefault.server());
 
     const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
 
     const setServerIcon = useRef<HTMLInputElement>(null);
 
-    const [sortState, setSortState] = useState<number>(-1);
-    const [sortField, setSortField] = useState<string>('name');
+    const [sortState, setSortState] = useState<1 | -1>(-1);
+    const [sortField, setSortField] = useState<string>('');
 
-    const handleSort = (field: string, array: any[], direction: number) => {
-      setSortField(field);
-      setSortState(direction);
-      return array.sort((a, b) => direction * (a[field] - b[field]));
+    // Variables
+    const serverId = initialData.serverId;
+    const userId = initialData.userId;
+    const serverName = server.name;
+    const serverAvatar = server.avatar;
+    const serverAnnouncement = server.announcement;
+    const serverDescription = server.description;
+    const serverType = server.type;
+    const serverDisplayId = server.displayId;
+    const serverSlogan = server.slogan;
+    const serverLevel = server.level;
+    const serverWealth = server.wealth;
+    const serverCreatedAt = server.createdAt;
+    const serverVisibility = server.visibility;
+    const serverMembers = server.members || [];
+    const serverApplications = server.memberApplications || [];
+    const serverBlockMembers = serverMembers.filter((mb) => mb.isBlocked);
+
+    // Handlers
+    const handleSort = <T extends ServerMember | MemberApplication>(
+      field: keyof T,
+      array: T[],
+    ) => {
+      const newDirection =
+        sortField === String(field) ? (sortState === 1 ? -1 : 1) : -1;
+      setSortField(String(field));
+      setSortState(newDirection);
+      return [...array].sort(createSorter(field, newDirection));
+    };
+
+    const handleBlockMemberSort = (field: keyof ServerMember) => {
+      const sortedMembers = handleSort(field, [...serverBlockMembers]);
+      setServer((prev) => ({
+        ...prev,
+        blockMembers: sortedMembers,
+      }));
+    };
+
+    const handleMemberSort = (field: keyof ServerMember) => {
+      const sortedMembers = handleSort(field, [...serverMembers]);
+      setServer((prev) => ({
+        ...prev,
+        members: sortedMembers,
+      }));
+    };
+
+    const handleApplicationSort = (field: keyof MemberApplication) => {
+      const sortedApplications = handleSort(field, [...serverApplications]);
+      setServer((prev) => ({
+        ...prev,
+        memberApplications: sortedApplications,
+      }));
     };
 
     const handleOpenErrorDialog = (message: string) => {
-      ipcService.popup.open(popupType.DIALOG_ERROR);
-      ipcService.initialData.onRequest(popupType.DIALOG_ERROR, {
+      ipcService.popup.open(PopupType.DIALOG_ERROR);
+      ipcService.initialData.onRequest(PopupType.DIALOG_ERROR, {
         title: message,
-        submitTo: popupType.DIALOG_ERROR,
+        submitTo: PopupType.DIALOG_ERROR,
       });
     };
-
-    const handleApplicationAction = (action: 'accept' | 'reject') => {};
 
     const handleClose = () => {
       ipcService.window.close();
     };
 
-    const handleSubmit = () => {
+    const handleUpdateServer = () => {
       if (!socket) return;
-      socket.send.updateServer({ server: server });
+      socket.send.updateServer({ server: server, userId: user.id });
       handleClose();
     };
 
-    const handleUserMove = (target: Member) => {};
+    const handleApplicationAction = (action: 'accept' | 'reject') => {};
 
-    const handleKickServer = (target: Member) => {};
+    const handleUserMove = () => {};
 
-    const handleBlockUser = (target: Member) => {};
+    const handleKickServer = () => {};
+
+    const handleBlockUser = () => {};
+
+    const handleServerUpdate = (data: Partial<Server> | null) => {
+      if (!data) data = createDefault.server();
+      setServer((prev) => ({ ...prev, ...data }));
+    };
+
+    const handleUserUpdate = (data: Partial<User> | null) => {
+      if (!data) data = createDefault.user();
+      setUser((prev) => ({ ...prev, ...data }));
+    };
+
+    // Effects
+    useEffect(() => {
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
+        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
+      if (!socket) return;
+      if (serverId) socket.send.refreshServer({ serverId: serverId });
+      if (userId) socket.send.refreshUser({ userId: userId });
+    }, [socket]);
 
     return (
       <div className={Popup['popupContainer']}>
@@ -160,7 +257,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                             <div className={Popup['label']}>{lang.tr.name}</div>
                             <input
                               type="text"
-                              value={server?.name ?? server?.name}
+                              value={serverName}
                               onChange={(e) => {
                                 setServer((prev) => ({
                                   ...prev,
@@ -175,7 +272,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                             <div className={Popup['label']}>{lang.tr.id}</div>
                             <input
                               type="text"
-                              value={server?.displayId || server?.id}
+                              value={serverDisplayId}
                               disabled
                             />
                           </div>
@@ -184,7 +281,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           <div className={Popup['label']}>{lang.tr.slogan}</div>
                           <input
                             type="text"
-                            value={server.slogan}
+                            value={serverSlogan}
                             onChange={(e) => {
                               setServer((prev) => ({
                                 ...prev,
@@ -195,7 +292,15 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                         </div>
                         <div className={`${Popup['inputBox']} ${Popup['col']}`}>
                           <div className={Popup['label']}>{lang.tr.type}</div>
-                          <select>
+                          <select
+                            value={serverType}
+                            onChange={(e) => {
+                              setServer((prev) => ({
+                                ...prev,
+                                type: e.target.value as Server['type'],
+                              }));
+                            }}
+                          >
                             <option>{lang.tr.other}</option>
                             <option>{lang.tr.game}</option>
                             <option>{lang.tr.entertainment}</option>
@@ -206,7 +311,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                         <div
                           className={EditServer['avatarPicture']}
                           style={{
-                            backgroundImage: `url(${'/logo_server_def.png'})`,
+                            backgroundImage: `url(${serverAvatar})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                           }}
@@ -259,11 +364,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                       >
                         <div className={`${Popup['inputBox']} ${Popup['col']}`}>
                           <div className={Popup['label']}>{lang.tr.level}</div>
-                          <input
-                            type="text"
-                            value={server?.level || 0}
-                            disabled
-                          />
+                          <input type="text" value={serverLevel} disabled />
                         </div>
                         <div className={`${Popup['inputBox']} ${Popup['col']}`}>
                           <div className={Popup['label']}>
@@ -271,7 +372,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           </div>
                           <input
                             type="text"
-                            value={new Date(server?.createdAt).toLocaleString()}
+                            value={new Date(serverCreatedAt).toLocaleString()}
                             disabled
                           />
                         </div>
@@ -281,11 +382,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           >
                             {lang.tr.wealth}
                           </div>
-                          <input
-                            type="text"
-                            value={server?.wealth || 0}
-                            disabled
-                          />
+                          <input type="text" value={serverWealth} disabled />
                         </div>
                       </div>
                       <div className={`${Popup['inputBox']} ${Popup['col']}`}>
@@ -293,7 +390,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           {lang.tr.description}
                         </div>
                         <textarea
-                          value={server?.description ?? server?.description}
+                          value={serverDescription}
                           onChange={(e) =>
                             setServer((prev) => ({
                               ...prev,
@@ -312,7 +409,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                       </div>
                       <textarea
                         style={{ minHeight: '200px' }}
-                        value={server?.announcement}
+                        value={serverAnnouncement}
                         onChange={(e) =>
                           setServer((prev) => ({
                             ...prev,
@@ -335,7 +432,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                   <>
                     <div className={`${Popup['inputBox']} ${Popup['col']}`}>
                       <div className={Popup['label']}>
-                        {lang.tr.members}: {sortedMembers.length}
+                        {lang.tr.members}: {serverMembers.length}
                       </div>
                       {/* <div className={EditServer['search']}>
                         <input
@@ -350,63 +447,46 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                       <table style={{ minHeight: '280px' }}>
                         <thead>
                           <tr>
-                            {[
-                              'name',
-                              'permission',
-                              'contribution',
-                              'joinDate',
-                            ].map((field) => {
-                              return (
-                                <th
-                                  key={field}
-                                  onClick={() => {
-                                    const _sortedMember = handleSort(
-                                      field,
-                                      Object.values(server.members || {}),
-                                      sortState,
-                                    );
-                                    setSortedMembers(_sortedMember);
-                                  }}
-                                >
-                                  {field}
-                                  <span className="absolute right-0">
-                                    {sortField === field &&
-                                      (sortState === 1 ? (
-                                        <ChevronUp size={16} />
-                                      ) : (
-                                        <ChevronDown size={16} />
-                                      ))}
-                                  </span>
-                                </th>
-                              );
-                            })}
+                            {MEMBER_FIELDS.map((field) => (
+                              <th
+                                key={field.field}
+                                onClick={() =>
+                                  handleMemberSort(
+                                    field.field as keyof ServerMember,
+                                  )
+                                }
+                              >
+                                {field.name}
+                                <span className="absolute right-0">
+                                  {sortField === field.field &&
+                                    (sortState === 1 ? (
+                                      <ChevronUp size={16} />
+                                    ) : (
+                                      <ChevronDown size={16} />
+                                    ))}
+                                </span>
+                              </th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {sortedMembers.map((member) => {
-                            const memberUser = member.user;
-                            const userGender = memberUser?.gender ?? 'Male';
-                            const userNickname = member.nickname;
+                          {serverMembers.map((member) => {
+                            const userGender = member.gender;
+                            const userNickname = member.nickname || member.name;
                             const userPermission = member.permissionLevel;
                             const userContributions = member.contribution;
-                            const userJoinDate = new Date(
-                              member.createdAt,
-                            ).toLocaleString();
-
+                            const userJoinDate = member.createdAt;
                             return (
                               <tr
-                                key={member?.id}
+                                key={member.id}
                                 onContextMenu={(e) => {
-                                  const isCurrentUser =
-                                    // member.userId === user.id; // FIXME
-                                    false;
+                                  if (member.userId === user.id) return;
                                   contextMenu.showContextMenu(
                                     e.pageX,
                                     e.pageY,
                                     [
                                       {
                                         label: '傳送即時訊息',
-                                        disabled: isCurrentUser,
                                         onClick: () => {},
                                       },
                                       {
@@ -415,12 +495,10 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       },
                                       {
                                         label: '新增好友',
-                                        disabled: isCurrentUser,
                                         onClick: () => {},
                                       },
                                       {
                                         label: '拒聽此人語音',
-                                        disabled: isCurrentUser,
                                         onClick: () => {},
                                       },
                                       {
@@ -429,37 +507,30 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       },
                                       {
                                         label: lang.tr.moveToMyChannel,
-                                        disabled: isCurrentUser,
-                                        onClick: () => handleUserMove(member),
+                                        onClick: () => handleUserMove(),
                                       },
                                       {
                                         label: '禁止此人語音',
-                                        disabled: isCurrentUser,
                                         onClick: () => {},
                                       },
                                       {
                                         label: '禁止文字',
-                                        disabled: isCurrentUser,
                                         onClick: () => {},
                                       },
                                       {
                                         label: lang.tr.kickOut,
-                                        disabled: isCurrentUser,
-                                        onClick: () => handleKickServer(member),
+                                        onClick: () => handleKickServer(),
                                       },
                                       {
                                         label: lang.tr.block,
-                                        disabled: isCurrentUser,
-                                        onClick: () => handleBlockUser(member),
+                                        onClick: () => handleBlockUser(),
                                       },
                                       {
                                         label: lang.tr.memberManagement,
-                                        disabled: isCurrentUser,
                                         onClick: () => {},
                                       },
                                       {
                                         label: lang.tr.inviteToBeMember,
-                                        disabled: isCurrentUser,
                                         onClick: () => {},
                                       },
                                     ],
@@ -478,7 +549,9 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                   {getPermissionText(userPermission, lang.tr)}
                                 </td>
                                 <td>{userContributions}</td>
-                                <td>{userJoinDate}</td>
+                                <td>
+                                  {new Date(userJoinDate).toLocaleString()}
+                                </td>
                               </tr>
                             );
                           })}
@@ -504,16 +577,13 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           name="permission"
                           value="public"
                           className="mr-3"
-                          checked={server.settings.visibility === 'public'}
+                          checked={serverVisibility === 'public'}
                           onChange={(e) => {
                             if (e.target.checked)
-                              setServer({
-                                ...server,
-                                settings: {
-                                  ...server.settings,
-                                  visibility: 'public',
-                                },
-                              });
+                              setServer((prev) => ({
+                                ...prev,
+                                visibility: 'public',
+                              }));
                           }}
                         />
                         <div className={Popup['label']}>
@@ -527,16 +597,13 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           name="permission"
                           value="members"
                           className="mr-3"
-                          checked={server.settings.visibility === 'private'}
+                          checked={serverVisibility === 'private'}
                           onChange={(e) => {
                             if (e.target.checked)
-                              setServer({
-                                ...server,
-                                settings: {
-                                  ...server.settings,
-                                  visibility: 'private',
-                                },
-                              });
+                              setServer((prev) => ({
+                                ...prev,
+                                visibility: 'private',
+                              }));
                           }}
                         />
                         <div>
@@ -555,16 +622,13 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           name="permission"
                           value="private"
                           className="mr-3"
-                          checked={server.settings.visibility === 'invisible'}
+                          checked={serverVisibility === 'invisible'}
                           onChange={(e) => {
                             if (e.target.checked)
-                              setServer({
-                                ...server,
-                                settings: {
-                                  ...server.settings,
-                                  visibility: 'invisible',
-                                },
-                              });
+                              setServer((prev) => ({
+                                ...prev,
+                                visibility: 'invisible',
+                              }));
                           }}
                         />
                         <div>
@@ -582,7 +646,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                   <>
                     <div className={`${Popup['inputBox']} ${Popup['col']}`}>
                       <div className={Popup['label']}>
-                        {lang.tr.applicants}: {sortedApplications.length}
+                        {lang.tr.applicants}: {serverApplications.length}
                       </div>
                       {/* <div className={EditServer['search']}>
                         <input
@@ -597,37 +661,32 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                       <table style={{ minHeight: '280px' }}>
                         <thead>
                           <tr>
-                            {['name', 'contribution', 'description'].map(
-                              (field) => {
-                                return (
-                                  <th
-                                    key={field}
-                                    onClick={() => {
-                                      const _sortedMember = handleSort(
-                                        field,
-                                        Object.values(server.members || {}),
-                                        sortState,
-                                      );
-                                      setSortedMembers(_sortedMember);
-                                    }}
-                                  >
-                                    {field}
-                                    <span className="absolute right-0">
-                                      {sortField === field &&
-                                        (sortState === 1 ? (
-                                          <ChevronUp size={16} />
-                                        ) : (
-                                          <ChevronDown size={16} />
-                                        ))}
-                                    </span>
-                                  </th>
-                                );
-                              },
-                            )}
+                            {APPLICATION_FIELDS.map((field) => (
+                              <th
+                                key={field.field}
+                                onClick={() =>
+                                  handleApplicationSort(
+                                    field.field as keyof MemberApplication,
+                                  )
+                                }
+                              >
+                                {field.name}
+                                <span className="absolute right-0">
+                                  {sortField === field.field &&
+                                    (sortState === 1 ? (
+                                      <ChevronUp size={16} />
+                                    ) : (
+                                      <ChevronDown size={16} />
+                                    ))}
+                                </span>
+                              </th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {sortedApplications.map((application) => {
+                          {serverApplications.map((application) => {
+                            const userName = application.name;
+                            const userDescription = application.description;
                             return (
                               <tr
                                 key={application.id}
@@ -639,10 +698,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                   );
                                 }}
                               >
-                                {/* FIXME */}
-                                {/* <td>{application.user.name}</td> */}
-                                {/* <td>{application.contribution}</td> */}
-                                {/* <td>{application.description}</td> */}
+                                <td>{userName}</td>
+                                <td>{userDescription}</td>
                               </tr>
                             );
                           })}
@@ -657,7 +714,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                   <>
                     <div className={`${Popup['inputBox']} ${Popup['col']}`}>
                       <div className={Popup['label']}>
-                        {lang.tr.blacklist}: {sortedBlockMembers.length}
+                        {lang.tr.blacklist}: {serverBlockMembers.length}
                       </div>
                       {/* <div className={EditServer['search']}>
                         <input
@@ -672,37 +729,32 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                       <table style={{ minHeight: '280px' }}>
                         <thead>
                           <tr>
-                            {['name', 'contribution', 'description'].map(
-                              (field) => {
-                                return (
-                                  <th
-                                    key={field}
-                                    onClick={() => {
-                                      const _sortedMember = handleSort(
-                                        field,
-                                        Object.values(server.members || {}),
-                                        sortState,
-                                      );
-                                      setSortedMembers(_sortedMember);
-                                    }}
-                                  >
-                                    {field}
-                                    <span className="absolute right-0">
-                                      {sortField === field &&
-                                        (sortState === 1 ? (
-                                          <ChevronUp size={16} />
-                                        ) : (
-                                          <ChevronDown size={16} />
-                                        ))}
-                                    </span>
-                                  </th>
-                                );
-                              },
-                            )}
+                            {BLOCK_MEMBER_FIELDS.map((field) => (
+                              <th
+                                key={field.field}
+                                onClick={() =>
+                                  handleBlockMemberSort(
+                                    field.field as keyof ServerMember,
+                                  )
+                                }
+                              >
+                                {field.name}
+                                <span className="absolute right-0">
+                                  {sortField === field.field &&
+                                    (sortState === 1 ? (
+                                      <ChevronUp size={16} />
+                                    ) : (
+                                      <ChevronDown size={16} />
+                                    ))}
+                                </span>
+                              </th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {sortedBlockMembers.map((blockMember) => {
+                          {serverBlockMembers.map((blockMember) => {
+                            const userName = blockMember.name;
+                            const userContribution = blockMember.contribution;
                             return (
                               <tr
                                 key={blockMember.id}
@@ -714,10 +766,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                   );
                                 }}
                               >
-                                {/* FIXME */}
-                                {/* <td>{blockMember.user.name}</td> */}
-                                {/* <td>{blockMember.contribution}</td> */}
-                                {/* <td>{blockMember.description}</td> */}
+                                <td>{userName}</td>
+                                <td>{userContribution}</td>
                               </tr>
                             );
                           })}
@@ -735,7 +785,10 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
         </div>
 
         <div className={Popup['popupFooter']}>
-          <button className={Popup['button']} onClick={() => handleSubmit()}>
+          <button
+            className={Popup['button']}
+            onClick={() => handleUpdateServer()}
+          >
             {lang.tr.confirm}
           </button>
           <button
@@ -752,4 +805,5 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
 );
 
 EditServerModal.displayName = 'EditServerModal';
+
 export default EditServerModal;

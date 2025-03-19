@@ -1128,11 +1128,11 @@ export const enum Permission {
   Official = 8,
 }
 
-export interface User {
+export type User = {
   id: string;
   name: string;
-  avatar: string | null;
-  avatarUrl: string | null;
+  avatar: string;
+  // avatarUrl: string;
   signature: string;
   status: 'online' | 'dnd' | 'idle' | 'gn';
   gender: 'Male' | 'Female';
@@ -1145,178 +1145,143 @@ export interface User {
   lastActiveAt: number;
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  members?: {
-    [serverId: string]: Member;
-  };
   badges?: Badge[];
-  friends?: Friend[];
+  friends?: UserFriend[];
   friendGroups?: FriendGroup[];
   friendApplications?: FriendApplication[];
+  joinedServers?: Server[];
   recentServers?: Server[];
   ownedServers?: Server[];
   favServers?: Server[];
-}
+};
 
-export interface Badge {
+export type Badge = {
   id: string;
   name: string;
   description: string;
   order: number;
-}
+};
 
-export interface Friend {
-  id: string;
-  isBlocked: boolean;
-  groupId: string;
-  user1Id: string;
-  user2Id: string;
-  createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  user?: User;
-  directMessages?: DirectMessage[];
-}
-
-export interface FriendGroup {
+export type FriendGroup = {
   id: string;
   name: string;
   order: number;
   userId: string;
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  friends?: Friend[];
-}
+  friends?: UserFriend[];
+};
 
-export interface FriendApplication {
-  id: string;
+export type FriendApplication = User & {
   senderId: string;
   receiverId: string;
   description: string;
   createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-}
+};
 
-export interface Member {
+export type Server = {
   id: string;
+  name: string;
+  avatar: string;
+  // avatarUrl: string;
+  announcement: string;
+  description: string;
+  type: 'game' | 'community' | 'other';
+  displayId: string;
+  slogan: string;
+  level: number;
+  wealth: number;
+  allowDirectMessage: boolean;
+  visibility: 'public' | 'private' | 'invisible';
+  lobbyId: string;
+  ownerId: string;
+  createdAt: number;
+  // THESE WERE NOT SAVE IN THE DATABASE
+  lobby?: Channel;
+  owner?: ServerMember;
+  channels?: (Channel | Category)[];
+  members?: ServerMember[];
+  memberApplications?: MemberApplication[];
+};
+
+export type MemberApplication = User & {
+  description: string;
+  userId: string;
+  serverId: string;
+  createdAt: number;
+};
+
+export type BaseChannel = {
+  id: string;
+  name: string;
+  isRoot: boolean;
+  type: 'category' | 'channel';
+  order: number;
+  serverId: string;
+};
+
+export type Category = BaseChannel & {
+  type: 'category';
+};
+
+export type Channel = BaseChannel & {
+  type: 'channel';
+  isLobby: boolean;
+  voiceMode: 'free' | 'queue' | 'forbidden';
+  chatMode: 'free' | 'forbidden';
+  bitrate: number;
+  slowmode: boolean;
+  userLimit: number;
+  visibility: Visibility;
+  categoryId: string | null;
+  createdAt: number;
+  // THESE WERE NOT SAVE IN THE DATABASE
+  messages?: Message[];
+};
+
+export type Member = {
   isBlocked: boolean;
-  nickname: string;
+  nickname: string | null;
   contribution: number;
   permissionLevel: Permission;
   userId: string;
   serverId: string;
   createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  user: User | null;
-}
+};
 
-export interface Server {
-  id: string;
-  name: string;
-  avatar: string | null;
-  avatarUrl: string | null;
-  announcement: string;
-  description: string;
-  type: string;
-  displayId: string;
-  slogan: string;
-  level: number;
-  wealth: number; // 財富值，但不知道是做什麼用的
-  lobbyId: string;
-  ownerId: string;
-  settings: {
-    allowDirectMessage: boolean;
-    visibility: 'public' | 'private' | 'invisible';
-    defaultChannelId: string;
-  };
+export type UserMember = Member & Server;
+
+export type ServerMember = Member & User;
+
+export type Friend = {
+  isBlocked: boolean;
+  friendGroupId: string;
+  user1Id: string;
+  user2Id: string;
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  lobby?: Channel;
-  owner?: User;
-  users?: User[];
-  channels?: Channel[];
-  applications?: ServerApplication[];
-  members?: {
-    [userId: string]: Member;
-  };
-}
+  directMessages?: DirectMessage[]; // Change to another sheet
+};
 
-export interface ServerApplication {
-  id: string;
-  description: string;
-  userId: string;
-  serverId: string;
-  createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  user?: User | null;
-}
+export type UserFriend = Friend & User;
 
-export interface Channel {
-  id: string;
-  name: string;
-  isRoot: boolean;
-  isCategory: boolean;
-  isLobby: boolean;
-  voiceMode: 'free' | 'queue' | 'forbidden';
-  chatMode: 'free' | 'forbidden';
-  order: number;
-  serverId: string;
-  settings: {
-    bitrate: number;
-    slowmode: boolean;
-    userLimit: number;
-    visibility: Visibility;
-  };
-  createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  subChannels?: Channel[];
-  messages?: Message[];
-  users?: User[];
-  rtcConnections?: string[];
-}
-
-export interface voicePresences {
-  id: string;
-  username: string;
-  isSpeaker: boolean;
-  isSpeaking: boolean;
-  isMuted: boolean;
-}
-
-export interface Message {
-  id: string;
+export type Message = ServerMember & {
   content: string;
   type: 'general' | 'info';
-  permissionLevel: Permission;
   senderId: string;
   channelId: string;
   timestamp: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  sender?: User | null;
-}
+};
 
-export interface DirectMessage {
-  id: string;
+export type DirectMessage = UserFriend & {
   content: string;
   type: 'general' | 'info';
   senderId: string;
   friendId: string;
   timestamp: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  sender?: User | null;
-}
+};
 
-export interface ModalTabItem {
-  id: string;
-  label: string;
-  onClick: () => void;
-}
-export interface ModalButton {
-  label: string;
-  type?: 'submit';
-  style: 'primary' | 'secondary' | 'danger';
-  onClick: () => void;
-}
-
-export interface ContextMenuItem {
+export type ContextMenuItem = {
   id?: string;
   label: string;
   show?: boolean;
@@ -1324,15 +1289,15 @@ export interface ContextMenuItem {
   onClick: () => void;
   icon?: React.ReactNode;
   className?: string;
-}
+};
 
-export interface Emoji {
+export type Emoji = {
   id: number;
   alt: string;
   path: string;
-}
+};
 
-export interface discordPresence {
+export type DiscordPresence = {
   details: string;
   state: string;
   largeImageKey: string;
@@ -1344,59 +1309,100 @@ export interface discordPresence {
     label: string;
     url: string;
   }[];
-}
+};
 
 export enum SocketClientEvent {
+  // User
   SEARCH_USER = 'searchUser',
-  CONNECT_USER = 'connectUser',
-  DISCONNECT_USER = 'disconnectUser',
   REFRESH_USER = 'refreshUser',
   UPDATE_USER = 'updateUser',
+  // Server
   SEARCH_SERVER = 'searchServer',
+  REFRESH_SERVER = 'refreshServer',
   CONNECT_SERVER = 'connectServer',
   DISCONNECT_SERVER = 'disconnectServer',
   CREATE_SERVER = 'createServer',
   UPDATE_SERVER = 'updateServer',
   DELETE_SERVER = 'deleteServer',
-  CREATE_SERVER_APPLICATION = 'createServerApplication',
-  UPDATE_MEMBER = 'updateMember',
+  // Category
+  REFRESH_CATEGORY = 'refreshCategory',
+  CREATE_CATEGORY = 'createCategory',
+  UPDATE_CATEGORY = 'updateCategory',
+  DELETE_CATEGORY = 'deleteCategory',
+  // Channel
+  REFRESH_CHANNEL = 'refreshChannel',
   CONNECT_CHANNEL = 'connectChannel',
   DISCONNECT_CHANNEL = 'disconnectChannel',
   CREATE_CHANNEL = 'createChannel',
   UPDATE_CHANNEL = 'updateChannel',
   DELETE_CHANNEL = 'deleteChannel',
+  // Friend Group
+  REFRESH_FRIEND_GROUP = 'refreshFriendGroup',
+  CREATE_FRIEND_GROUP = 'createFriendGroup',
+  UPDATE_FRIEND_GROUP = 'updateFriendGroup',
+  DELETE_FRIEND_GROUP = 'deleteFriendGroup',
+  // Member
+  REFRESH_MEMBER = 'refreshMember',
+  UPDATE_MEMBER = 'updateMember',
+  // Friend
+  REFRESH_FRIEND = 'refreshFriend',
+  UPDATE_FRIEND = 'updateFriend',
+  // Member Application
+  REFRESH_MEMBER_APPLICATION = 'refreshMemberApplication',
+  CREATE_MEMBER_APPLICATION = 'createMemberApplication',
+  UPDATE_MEMBER_APPLICATION = 'updateMemberApplication',
+  DELETE_MEMBER_APPLICATION = 'deleteMemberApplication',
+  // Friend Application
+  REFRESH_FRIEND_APPLICATION = 'refreshFriendApplication',
+  CREATE_FRIEND_APPLICATION = 'createFriendApplication',
+  UPDATE_FRIEND_APPLICATION = 'updateFriendApplication',
+  DELETE_FRIEND_APPLICATION = 'deleteFriendApplication',
+  // Message
   SEND_MESSAGE = 'message',
   SEND_DIRECT_MESSAGE = 'directMessage',
+  // RTC
   RTC_OFFER = 'RTCOffer',
   RTC_ANSWER = 'RTCAnswer',
   RTC_ICE_CANDIDATE = 'RTCIceCandidate',
 }
 
 export enum SocketServerEvent {
+  // Socket
   CONNECT = 'connect',
   DISCONNECT = 'disconnect',
+  // Notification
   NOTIFICATION = 'notification', // not used yet
-  USER_CONNECT = 'userConnect', // deprecated
-  USER_DISCONNECT = 'userDisconnect', // deprecated
+  // User
+  USER_SEARCH = 'userSearch',
   USER_UPDATE = 'userUpdate',
+  // Server
   SERVER_SEARCH = 'serverSearch',
-  SERVER_CONNECT = 'serverConnect',
-  SERVER_DISCONNECT = 'serverDisconnect',
   SERVER_UPDATE = 'serverUpdate',
-  CREATE_SERVER_APPLICATION = 'createServerApplication',
-  CHANNEL_CONNECT = 'channelConnect',
-  CHANNEL_DISCONNECT = 'channelDisconnect',
+  // Channel
   CHANNEL_UPDATE = 'channelUpdate',
-  ERROR = 'error',
-  RTC_CONNECT = 'RTCConnect',
+  // Category
+  CATEGORY_UPDATE = 'categoryUpdate',
+  // Friend Group
+  FRIEND_GROUP_UPDATE = 'friendGroupUpdate',
+  // Member
+  MEMBER_UPDATE = 'memberUpdate',
+  // Member Application
+  MEMBER_APPLICATION_UPDATE = 'memberApplicationUpdate',
+  // Friend
+  FRIEND_UPDATE = 'friendUpdate',
+  // Friend Application
+  FRIEND_APPLICATION_UPDATE = 'friendApplicationUpdate',
+  // RTC
   RTC_OFFER = 'RTCOffer',
   RTC_ANSWER = 'RTCAnswer',
   RTC_ICE_CANDIDATE = 'RTCIceCandidate',
   RTC_JOIN = 'RTCJoin',
   RTC_LEAVE = 'RTCLeave',
+  // Error
+  ERROR = 'error',
 }
 
-export enum popupType {
+export enum PopupType {
   CREATE_SERVER = 'createServer',
   EDIT_SERVER = 'editServer',
   DELETE_SERVER = 'deleteServer',

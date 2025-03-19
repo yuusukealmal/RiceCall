@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
 import applyFriend from '@/styles/popups/applyFriend.module.css';
 
 // Types
-import { popupType, User } from '@/types';
+import { FriendApplication, PopupType, SocketServerEvent, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -15,9 +15,12 @@ import { useLanguage } from '@/providers/LanguageProvider';
 // Services
 import { ipcService } from '@/services/ipc.service';
 
+// Utils
+import { createDefault } from '@/utils/default';
+
 interface ApplyFriendModalProps {
-  user: User | null;
-  targetUser: User | null;
+  userId: string;
+  targetId: string;
 }
 
 const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
@@ -26,28 +29,31 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     const lang = useLanguage();
     const socket = useSocket();
 
-    // Variables
-    const targetUserId = initialData.targetUser?.id || '';
-    const targetUserName = initialData.targetUser?.name || '';
-    const targetUserAvatarUrl = initialData.targetUser?.avatarUrl || '';
-    const friendGroups = initialData.user?.friendGroups || [];
-
     // State
     const [description, setDescription] = useState('');
     const [friendGroup, setFriendGroup] = useState('');
 
-    // const handleCreateFriendApplication = (application: FriendApplication) => {
-    //   // socket?.send.createFriendApplication({});
-    // };
+    const [user, setUser] = useState<User>(createDefault.user());
+    const [target, setTarget] = useState<User>(createDefault.user());
+    const [application, setApplication] = useState<FriendApplication>(
+      createDefault.friendApplication(),
+    );
+
+    // Variables
+    const userId = initialData.userId;
+    const targetId = initialData.targetId;
+    const targetName = target.name;
+    const targetAvatar = target.avatar;
+    const userFriendGroups = user.friendGroups || [];
 
     // Handlers
-    const handleOpenSuccessPopup = () => {
-      ipcService.popup.open(popupType.DIALOG_SUCCESS);
-      ipcService.initialData.onRequest(popupType.DIALOG_SUCCESS, {
+    const handleOpenSuccessDialog = () => {
+      ipcService.popup.open(PopupType.DIALOG_SUCCESS);
+      ipcService.initialData.onRequest(PopupType.DIALOG_SUCCESS, {
         title: lang.tr.friendApply,
-        submitTo: popupType.DIALOG_SUCCESS,
+        submitTo: PopupType.DIALOG_SUCCESS,
       });
-      ipcService.popup.onSubmit(popupType.DIALOG_SUCCESS, () => {
+      ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
         handleClose();
       });
     };
@@ -55,6 +61,54 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     const handleClose = () => {
       ipcService.window.close();
     };
+
+    const handleCreateFriendApplication = (application: FriendApplication) => {
+      // socket?.send.createFriendApplication({});
+    };
+
+    const handleUserUpdate = (data: Partial<User> | null) => {
+      if (!data) data = createDefault.user();
+      if (data.id === userId) setUser((prev) => ({ ...prev, ...data }));
+      if (data.id === targetId) setTarget((prev) => ({ ...prev, ...data }));
+    };
+
+    const handleFriendApplicationUpdate = (
+      data: Partial<FriendApplication> | null,
+    ) => {
+      if (!data) data = createDefault.friendApplication();
+      setApplication((prev) => ({ ...prev, ...data }));
+    };
+
+    // Effects
+    useEffect(() => {
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+        // [SocketServerEvent.FRIEND_APPLICATION_UPDATE]: handleFriendApplicationUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
+      if (!socket) return;
+      if (userId) socket.send.refreshUser({ userId: userId });
+      if (targetId) socket.send.refreshUser({ userId: targetId });
+      if (userId && targetId)
+        socket.send.refreshFriendApplication({
+          senderId: userId,
+          receiverId: targetId,
+        });
+    }, [socket]);
 
     return (
       <div className={popup['popupContainer']}>
@@ -67,11 +121,9 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
               </div>
               <div className={applyFriend['userInfoWrapper']}>
                 <div className={applyFriend['userAccount']}>
-                  {`${targetUserName}`}
+                  {`${targetId}`}
                 </div>
-                <div className={applyFriend['userName']}>
-                  {`${targetUserId}`}
-                </div>
+                <div className={applyFriend['userName']}>{`${targetName}`}</div>
               </div>
             </div>
             <div className={applyFriend['split']} />
@@ -82,7 +134,7 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
                   className={popup['select']}
                   onChange={(e) => setFriendGroup(e.target.value)}
                 >
-                  {friendGroups.map((group) => (
+                  {userFriendGroups.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
                     </option>
@@ -113,7 +165,7 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
             disabled={!description.trim()}
             onClick={() => {
               // handleCreateFriendApplication();
-              handleOpenSuccessPopup();
+              handleOpenSuccessDialog();
             }}
           >
             {lang.tr.sendRequest}

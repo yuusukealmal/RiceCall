@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Edit, Plus, Trash } from 'lucide-react';
 
 // CSS
@@ -8,7 +7,15 @@ import grade from '@/styles/common/grade.module.css';
 import permission from '@/styles/common/permission.module.css';
 
 // Types
-import { popupType, type Channel, type Server, type User } from '@/types';
+import {
+  PopupType,
+  ServerMember,
+  Channel,
+  Server,
+  User,
+  Member,
+  Category,
+} from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -22,58 +29,63 @@ import BadgeViewer from '@/components/viewers/BadgeViewer';
 import { ipcService } from '@/services/ipc.service';
 
 interface CategoryTabProps {
-  category: Channel;
+  user: User;
+  server: Server;
+  category: Category;
   canEdit: boolean;
 }
 
 const CategoryTab: React.FC<CategoryTabProps> = React.memo(
-  ({ category, canEdit }) => {
+  ({ user, server, category, canEdit }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
     const contextMenu = useContextMenu();
 
     // Variables
+    const serverChannels = server.channels || [];
     const categoryName = category.name;
     const categoryIsRoot = category.isRoot;
-    const categoryIsLobby = category.isLobby;
-    const categoryVisibility = category.settings.visibility;
-    const categoryChannels = category.subChannels || [];
+    const categoryChannel = serverChannels
+      .filter((ch) => ch.type === 'channel')
+      .filter((ch) => ch.categoryId === category.id);
 
     // States
     const [expanded, setExpanded] = useState<boolean>(true);
 
     // Handlers
-    const handleOpenEditChannelPopup = () => {
-      ipcService.popup.open(popupType.EDIT_CHANNEL);
-      ipcService.initialData.onRequest(popupType.EDIT_CHANNEL, {
-        channel: category,
+    const handleOpenEditChannel = () => {
+      ipcService.popup.open(PopupType.EDIT_CHANNEL);
+      ipcService.initialData.onRequest(PopupType.EDIT_CHANNEL, {
+        channelId: category.id,
+        userId: user.id,
       });
     };
 
-    const handleOpenCreateChannelPopup = () => {
-      ipcService.popup.open(popupType.CREATE_CHANNEL);
-      ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
+    const handleOpenCreateChannel = () => {
+      ipcService.popup.open(PopupType.CREATE_CHANNEL);
+      ipcService.initialData.onRequest(PopupType.CREATE_CHANNEL, {
         serverId: category.serverId,
-        parent: category,
+        parentId: category.id,
+        userId: user.id,
       });
     };
 
-    const handleOpenWarningPopup = () => {
-      ipcService.popup.open(popupType.DIALOG_WARNING);
-      ipcService.initialData.onRequest(popupType.DIALOG_WARNING, {
+    const handleOpenWarning = () => {
+      ipcService.popup.open(PopupType.DIALOG_WARNING);
+      ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
         iconType: 'warning',
         title: lang.tr.warningDeleteChannel,
-        submitTo: popupType.DIALOG_WARNING,
+        submitTo: PopupType.DIALOG_WARNING,
       });
-      ipcService.popup.onSubmit(popupType.DIALOG_WARNING, () =>
+      ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () =>
         handleDeleteChannel(category.id),
       );
     };
 
     const handleDeleteChannel = (channelId: string) => {
       if (!socket) return;
-      socket.send.deleteChannel({ channelId });
+      socket.send.deleteChannel({ channelId, userId: user.id });
     };
 
     return (
@@ -83,10 +95,8 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
           className={`
             ${styles['channelTab']} 
             ${expanded ? styles['expanded'] : ''} 
-            ${categoryIsLobby ? styles['lobby'] : styles[categoryVisibility]}`}
-          onClick={() =>
-            setExpanded(categoryVisibility != 'readonly' ? !expanded : false)
-          }
+            ${styles['public']}`}
+          onClick={() => setExpanded(!expanded)}
           onContextMenu={(e) => {
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
@@ -94,21 +104,21 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
                 icon: <Edit size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.edit,
                 show: canEdit,
-                onClick: () => handleOpenEditChannelPopup(),
+                onClick: () => handleOpenEditChannel(),
               },
               {
                 id: 'add',
                 icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.add,
-                show: canEdit && !categoryIsLobby && categoryIsRoot,
-                onClick: () => handleOpenCreateChannelPopup(),
+                show: canEdit && !categoryIsRoot,
+                onClick: () => handleOpenCreateChannel(),
               },
               {
                 id: 'delete',
                 icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.delete,
-                show: canEdit && !categoryIsLobby,
-                onClick: () => handleOpenWarningPopup(),
+                show: canEdit,
+                onClick: () => handleOpenWarning(),
               },
             ]);
           }}
@@ -119,23 +129,17 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
         {/* Expanded Sections */}
         {expanded && (
           <div className={styles['channelList']}>
-            {categoryChannels
+            {categoryChannel
               .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-              .map((channel) =>
-                channel.isCategory ? (
-                  <CategoryTab
-                    key={channel.id}
-                    category={channel}
-                    canEdit={canEdit}
-                  />
-                ) : (
-                  <ChannelTab
-                    key={channel.id}
-                    channel={channel}
-                    canEdit={canEdit}
-                  />
-                ),
-              )}
+              .map((channel) => (
+                <ChannelTab
+                  key={channel.id}
+                  user={user}
+                  server={server}
+                  channel={channel}
+                  canEdit={canEdit}
+                />
+              ))}
           </div>
         )}
       </div>
@@ -146,29 +150,27 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
 CategoryTab.displayName = 'CategoryTab';
 
 interface ChannelTabProps {
+  user: User;
+  server: Server;
   channel: Channel;
   canEdit: boolean;
 }
 
 const ChannelTab: React.FC<ChannelTabProps> = React.memo(
-  ({ channel, canEdit }) => {
-    // Redux
-    const user = useSelector((state: { user: User }) => state.user);
-    const server = useSelector((state: { server: Server }) => state.server);
-
+  ({ user, server, channel, canEdit }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
     const contextMenu = useContextMenu();
 
     // Variables
-    const serverUsers = server.users || [];
+    const serverMembers = server.members || [];
     const channelName = channel.name;
     const channelIsRoot = channel.isRoot;
     const channelIsLobby = channel.isLobby;
-    const channelVisibility = channel.settings.visibility;
-    const channelUsers = serverUsers.filter(
-      (u) => u.currentChannelId === channel.id,
+    const channelVisibility = channel.visibility;
+    const channelMembers = serverMembers.filter(
+      (mb) => mb.currentChannelId === channel.id,
     );
     const userInChannel = user.currentChannelId === channel.id;
 
@@ -176,41 +178,43 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     const [expanded, setExpanded] = useState<boolean>(true);
 
     // Handlers
-    const handleOpenEditChannelPopup = () => {
-      ipcService.popup.open(popupType.EDIT_CHANNEL);
-      ipcService.initialData.onRequest(popupType.EDIT_CHANNEL, {
-        channel: channel,
+    const handleOpenEditChannel = () => {
+      ipcService.popup.open(PopupType.EDIT_CHANNEL);
+      ipcService.initialData.onRequest(PopupType.EDIT_CHANNEL, {
+        channelId: channel.id,
+        userId: user.id,
       });
     };
 
-    const handleOpenCreateChannelPopup = () => {
-      ipcService.popup.open(popupType.CREATE_CHANNEL);
-      ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
+    const handleOpenCreateChannel = () => {
+      ipcService.popup.open(PopupType.CREATE_CHANNEL);
+      ipcService.initialData.onRequest(PopupType.CREATE_CHANNEL, {
         serverId: channel.serverId,
-        parent: channel,
+        parentId: channel.id,
+        userId: user.id,
       });
     };
 
-    const handleOpenWarningPopup = () => {
-      ipcService.popup.open(popupType.DIALOG_WARNING);
-      ipcService.initialData.onRequest(popupType.DIALOG_WARNING, {
+    const handleOpenWarning = () => {
+      ipcService.popup.open(PopupType.DIALOG_WARNING);
+      ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
         iconType: 'warning',
         title: lang.tr.warningDeleteChannel,
-        submitTo: popupType.DIALOG_WARNING,
+        submitTo: PopupType.DIALOG_WARNING,
       });
-      ipcService.popup.onSubmit(popupType.DIALOG_WARNING, () =>
+      ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () =>
         handleDeleteChannel(channel.id),
       );
     };
 
     const handleDeleteChannel = (channelId: string) => {
       if (!socket) return;
-      socket.send.deleteChannel({ channelId });
+      socket.send.deleteChannel({ channelId, userId: user.id });
     };
 
     const handleJoinChannel = (channelId: string) => {
       if (!socket) return;
-      socket.send.connectChannel({ channelId });
+      socket.send.connectChannel({ channelId, userId: user.id });
     };
 
     return (
@@ -237,28 +241,28 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
                 icon: <Edit size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.edit,
                 show: canEdit,
-                onClick: () => handleOpenEditChannelPopup(),
+                onClick: () => handleOpenEditChannel(),
               },
               {
                 id: 'add',
                 icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.add,
                 show: canEdit && !channelIsLobby && channelIsRoot,
-                onClick: () => handleOpenCreateChannelPopup(),
+                onClick: () => handleOpenCreateChannel(),
               },
               {
                 id: 'delete',
                 icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.delete,
                 show: canEdit && !channelIsLobby,
-                onClick: () => handleOpenWarningPopup(),
+                onClick: () => handleOpenWarning(),
               },
             ]);
           }}
         >
           <div className={styles['channelTabLable']}>{channelName}</div>
           <div className={styles['channelTabCount']}>
-            {`(${channelUsers.length})`}
+            {`(${channelMembers.length})`}
           </div>
           {userInChannel && !expanded && (
             <div className={styles['myLocationIcon']} />
@@ -267,10 +271,15 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
         {/* Expanded Sections */}
         {expanded && (
           <div className={styles['userList']}>
-            {channelUsers
+            {channelMembers
               .sort((a, b) => a.name.localeCompare(b.name))
-              .map((user: User) => (
-                <UserTab key={user.id} channelUser={user} canEdit={canEdit} />
+              .map((channelMember) => (
+                <UserTab
+                  key={channelMember.id}
+                  user={user}
+                  channelMember={channelMember}
+                  canEdit={canEdit}
+                />
               ))}
           </div>
         )}
@@ -282,60 +291,42 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 ChannelTab.displayName = 'ChannelTab';
 
 interface UserTabProps {
-  channelUser: User;
+  user: User;
+  channelMember: ServerMember;
   canEdit: boolean;
 }
 
 const UserTab: React.FC<UserTabProps> = React.memo(
-  ({ channelUser, canEdit }) => {
-    // Redux
-    const user = useSelector((state: { user: User }) => state.user);
-    const server = useSelector((state: { server: Server }) => state.server);
-
+  ({ user, channelMember, canEdit }) => {
     // Hooks
     const lang = useLanguage();
     const contextMenu = useContextMenu();
 
     // Variables
-    const serverMembers = server.members || {};
-    const channelUserMember = serverMembers[channelUser.id] || {
-      id: '',
-      isBlocked: false,
-      nickname: '',
-      permissionLevel: 0,
-      userId: '',
-      serverId: '',
-      createdAt: 0,
-    };
-    const channelUserPermission = channelUserMember.permissionLevel;
-    const channelUserNickname = channelUserMember.nickname;
-    const channelUserLevel = channelUser.level;
-    const channelUserGrade = Math.min(56, Math.ceil(channelUserLevel / 5)); // 56 is max level
-    const channelUserGender = channelUser.gender;
-    const channelUserBadges = channelUser.badges || [];
-    const isCurrentUser = user.id === channelUser.id;
+    const channelMemberPermission = channelMember.permissionLevel;
+    const channelMemberNickname = channelMember.nickname || channelMember.name;
+    const channelMemberLevel = channelMember.level;
+    const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max level
+    const channelMemberGender = channelMember.gender;
+    const channelMemberBadges = channelMember.badges || [];
+    const isCurrentUser = user.id === channelMember.userId;
 
     // Handlers
-    const handleOpenApplyFriendPopup = () => {
-      ipcService.popup.open(popupType.APPLY_FRIEND);
-      ipcService.initialData.onRequest(popupType.APPLY_FRIEND, {
-        user: user,
-        targetUser: channelUser,
+    const handleOpenApplyFriend = () => {
+      ipcService.popup.open(PopupType.APPLY_FRIEND);
+      ipcService.initialData.onRequest(PopupType.APPLY_FRIEND, {
+        userId: user.id,
+        targetUserId: channelMember.id,
       });
     };
 
     return (
-      <div key={channelUser.id}>
+      <div key={channelMember.id}>
         {/* User View */}
         <div
           className={`${styles['userTab']}`}
           onDoubleClick={(e) => {
-            contextMenu.showUserInfoBlock(
-              e.pageX,
-              e.pageY,
-              channelUser,
-              server,
-            );
+            contextMenu.showUserInfoBlock(e.pageX, e.pageY, channelMember);
           }}
           onContextMenu={(e) => {
             contextMenu.showContextMenu(e.pageX, e.pageY, [
@@ -343,7 +334,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 id: 'kick',
                 icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.kick,
-                show: canEdit && user.id != channelUser.id,
+                show: canEdit && user.id != channelMember.id,
                 onClick: () => {
                   // handleKickUser(user.id);
                 },
@@ -352,8 +343,8 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 id: 'addFriend',
                 icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.addFriend,
-                show: canEdit && user.id != channelUser.id,
-                onClick: () => handleOpenApplyFriendPopup(),
+                show: canEdit && user.id != channelMember.id,
+                onClick: () => handleOpenApplyFriend(),
               },
             ]);
           }}
@@ -365,16 +356,16 @@ const UserTab: React.FC<UserTabProps> = React.memo(
           />
           <div
             className={`${styles['userIcon']} ${
-              permission[channelUserGender]
-            } ${permission[`lv-${channelUserPermission}`]}`}
+              permission[channelMemberGender]
+            } ${permission[`lv-${channelMemberPermission}`]}`}
           />
-          <div className={styles['userTabName']}>{channelUserNickname}</div>
+          <div className={styles['userTabName']}>{channelMemberNickname}</div>
           <div
             className={`${styles['userGrade']} ${
-              grade[`lv-${channelUserGrade}`]
+              grade[`lv-${channelMemberGrade}`]
             }`}
           />
-          <BadgeViewer badges={channelUserBadges} maxDisplay={3} />
+          <BadgeViewer badges={channelMemberBadges} maxDisplay={3} />
           {isCurrentUser && <div className={styles['myLocationIcon']} />}
         </div>
       </div>
@@ -385,62 +376,37 @@ const UserTab: React.FC<UserTabProps> = React.memo(
 UserTab.displayName = 'UserTab';
 
 interface ChannelViewerProps {
-  channels: Channel[];
+  user: User;
+  server: Server;
+  member: Member;
+  currentChannel: Channel;
 }
 
-const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
-  // Redux
-  const user = useSelector((state: { user: User }) => state.user);
-  const server = useSelector((state: { server: Server }) => state.server);
-
+const ChannelViewer: React.FC<ChannelViewerProps> = ({
+  user,
+  server,
+  member,
+  currentChannel,
+}) => {
   // Hooks
   const lang = useLanguage();
   const contextMenu = useContextMenu();
 
   // Variables
   const connectStatus = 3;
-  const serverMembers = server.members || {};
-  const userCurrentChannelId = user.currentChannelId;
-  const userCurrentChannel = channels.find(
-    (ch) => ch.id === userCurrentChannelId,
-  ) || {
-    id: '',
-    name: lang.tr.unknownChannel,
-    isRoot: false,
-    isCategory: false,
-    isLobby: false,
-    voiceMode: 'free',
-    chatMode: 'free',
-    order: 0,
-    serverId: '',
-    settings: {
-      bitrate: 0,
-      slowmode: false,
-      userLimit: -1,
-      visibility: 'public',
-    },
-    createdAt: 0,
-  };
-  const userCurrentChannelName = userCurrentChannel.name;
-  const userCurrentChannelVoiceMode = userCurrentChannel.voiceMode;
-  const userMember = serverMembers[user.id] || {
-    id: '',
-    isBlocked: false,
-    nickname: '',
-    permissionLevel: 0,
-    userId: '',
-    serverId: '',
-    createdAt: 0,
-  };
-  const userPermission = userMember.permissionLevel;
-  const canEdit = userPermission >= 5;
+  const userCurrentChannelName = currentChannel.name;
+  const userCurrentChannelVoiceMode = currentChannel.voiceMode;
+  const serverChannels = server.channels || [];
+  const memberPermission = member.permissionLevel;
+  const canEdit = memberPermission >= 5;
 
   // Handlers
-  const handleOpenCreateChannelPopup = () => {
-    ipcService.popup.open(popupType.CREATE_CHANNEL);
-    ipcService.initialData.onRequest(popupType.CREATE_CHANNEL, {
+  const handleOpenCreateChannel = () => {
+    ipcService.popup.open(PopupType.CREATE_CHANNEL);
+    ipcService.initialData.onRequest(PopupType.CREATE_CHANNEL, {
       serverId: server.id,
-      parent: null,
+      parentId: null,
+      userId: user.id,
     });
   };
 
@@ -487,7 +453,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
               icon: <Plus size={14} className="w-5 h-5 mr-2" />,
               label: lang.tr.add,
               show: canEdit,
-              onClick: () => handleOpenCreateChannelPopup(),
+              onClick: () => handleOpenCreateChannel(),
             },
           ]);
         }}
@@ -496,20 +462,24 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({ channels }) => {
       </div>
       {/* Channel List */}
       <div className={styles['channelList']}>
-        {channels
+        {serverChannels
           .filter((c) => c.isRoot)
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .map((channel) =>
-            channel.isCategory ? (
+          .map((item) =>
+            item.type === 'category' ? (
               <CategoryTab
-                key={channel.id}
-                category={channel}
+                key={item.id}
+                user={user}
+                server={server}
+                category={item}
                 canEdit={canEdit}
               />
             ) : (
               <ChannelTab
-                key={channel.id}
-                channel={channel}
+                key={item.id}
+                user={user}
+                server={server}
+                channel={item}
                 canEdit={canEdit}
               />
             ),

@@ -5,7 +5,7 @@ import Popup from '@/styles/common/popup.module.css';
 import editChannel from '@/styles/popups/editChannel.module.css';
 
 // Types
-import { Channel, Visibility } from '@/types';
+import { Channel, SocketServerEvent, User, Visibility } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -14,8 +14,12 @@ import { useSocket } from '@/providers/SocketProvider';
 // Services
 import { ipcService } from '@/services/ipc.service';
 
+// Utils
+import { createDefault } from '@/utils/default';
+
 interface EditChannelModalProps {
-  channel: Channel | null;
+  userId: string;
+  channelId: string;
 }
 
 const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
@@ -24,41 +28,16 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const lang = useLanguage();
     const socket = useSocket();
 
-    // Variables
-    const channel = React.useMemo(
-      () =>
-        initialData.channel || {
-          id: '',
-          name: '未知頻道',
-          isRoot: false,
-          isCategory: false,
-          isLobby: false,
-          voiceMode: 'free',
-          chatMode: 'free',
-          order: 0,
-          serverId: '',
-          settings: {
-            bitrate: 0,
-            slowmode: false,
-            userLimit: -1,
-            visibility: 'public' as Visibility,
-          },
-          createdAt: 0,
-        },
-      [initialData.channel],
-    );
-
     // States
-    const [editedChannel, setEditedChannel] = useState<Partial<Channel>>({
-      id: '',
-      name: '',
-      settings: {
-        bitrate: 0,
-        slowmode: false,
-        userLimit: -1,
-        visibility: 'public',
-      },
-    });
+    const [user, setUser] = useState<User>(createDefault.user());
+    const [channel, setChannel] = useState<Channel>(createDefault.channel());
+
+    // Variables
+    const userId = initialData.userId;
+    const channelId = initialData.channelId;
+    const channelName = channel.name;
+    const channelVisibility = channel.visibility;
+    // const isCategory = channel.isCategory;
 
     // Handlers
     const handleClose = () => {
@@ -67,16 +46,44 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
 
     const handleUpdateChannel = async () => {
       if (!socket) return;
-      socket.send.updateChannel({ channel: editedChannel });
+      socket.send.updateChannel({ channel: channel, userId: user.id });
     };
 
+    const handleChannelUpdate = (data: Partial<Channel> | null) => {
+      if (!data) data = createDefault.channel();
+      setChannel((prev) => ({ ...prev, ...data }));
+    };
+
+    const handleUserUpdate = (data: Partial<User> | null) => {
+      if (!data) data = createDefault.user();
+      setUser((prev) => ({ ...prev, ...data }));
+    };
+
+    // Effects
     useEffect(() => {
-      setEditedChannel({
-        id: channel.id,
-        name: channel.name,
-        settings: channel.settings,
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
+        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
       });
-    }, [channel]);
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
+      if (!socket) return;
+      if (channelId) socket.send.refreshChannel({ channelId: channelId });
+      if (userId) socket.send.refreshUser({ userId: userId });
+    }, [socket]);
 
     return (
       <div className={Popup['popupContainer']}>
@@ -85,16 +92,14 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
             <div className={editChannel['inputGroup']}>
               <div className={Popup['inputBox']}>
                 <div className={Popup['label']}>
-                  {`${
-                    channel?.isCategory ? lang.tr.category : lang.tr.channel
-                  }${lang.tr.name}`}
+                  {`${lang.tr.channel}${lang.tr.name}`}
                 </div>
                 <div className={Popup['input']}>
                   <input
                     type="text"
-                    value={editedChannel.name}
+                    value={channelName}
                     onChange={(e) =>
-                      setEditedChannel((prev) => ({
+                      setChannel((prev) => ({
                         ...prev,
                         name: e.target.value,
                       }))
@@ -108,16 +113,12 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                 </div>
                 <select
                   className={Popup['input']}
-                  value={editedChannel.settings?.visibility}
+                  value={channelVisibility}
                   onChange={(e) =>
-                    setEditedChannel((prev) => {
-                      const settings = prev.settings ?? channel.settings;
+                    setChannel((prev) => {
                       return {
                         ...prev,
-                        settings: {
-                          ...settings,
-                          visibility: e.target.value as Visibility,
-                        },
+                        visibility: e.target.value as Visibility,
                       };
                     })
                   }
