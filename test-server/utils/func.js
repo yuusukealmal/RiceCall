@@ -497,7 +497,7 @@ const func = {
       }
       if (
         channel.visibility &&
-        !['public', 'private'].includes(channel.visibility)
+        !['public', 'private', 'readonly'].includes(channel.visibility)
       ) {
         throw new StandardizedError(
           '無效的頻道可見度',
