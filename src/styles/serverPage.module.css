@@ -291,6 +291,10 @@
   padding: 0.125rem 20px 0.125rem 1.7rem;
 }
 
+.lobby {
+  color: red;
+}
+
 .userList {
   display: flex;
   flex-direction: column;

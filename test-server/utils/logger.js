@@ -52,9 +52,10 @@ const getCallerFile = () => {
     Error.prepareStackTrace = function (err, stack) {
       return stack;
     };
-    currentfile = err.stack.shift().getFileName().replace(process.cwd(), '');
-    while (err.stack.length) {
-      callerfile = err.stack.shift().getFileName().replace(process.cwd(), '');
+    const stack = err.stack;
+    currentfile = stack.shift().getFileName().replace(process.cwd(), '');
+    while (stack.length) {
+      callerfile = stack.shift().getFileName().replace(process.cwd(), '');
       if (currentfile !== callerfile) break;
     }
   } catch (e) {}
@@ -71,9 +72,10 @@ const getCallerLine = () => {
     Error.prepareStackTrace = function (err, stack) {
       return stack;
     };
-    currentline = err.stack.shift().getLineNumber();
-    while (err.stack.length) {
-      callerline = err.stack.shift().getLineNumber();
+    const stack = err.stack;
+    currentline = stack.shift().getLineNumber();
+    while (stack.length) {
+      callerline = stack.shift().getLineNumber();
       if (currentline !== callerline) break;
     }
   } catch (e) {}
