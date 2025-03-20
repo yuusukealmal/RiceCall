@@ -18,13 +18,15 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+import { apiService } from '@/services/api.service';
 
 interface FriendPageProps {
   user: User;
+  setUser: (user: User) => void;
 }
 
 const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
-  ({ user }) => {
+  ({ user, setUser }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -109,11 +111,17 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     }, [lang, userName]);
 
     useEffect(() => {
-      if (!socket || !userId) return;
+      if (!userId || !setUser) return;
       if (refreshed.current) return;
-      socket.send.refreshUser({ userId: userId });
-      refreshed.current = true;
-    }, [socket, userId]);
+      const refresh = async () => {
+        refreshed.current = true;
+        const user = await apiService.post('/refresh/user', {
+          userId: userId,
+        });
+        setUser(user);
+      };
+      refresh();
+    }, [userId, setUser]);
 
     return (
       <div className={friendPage['friendWrapper']}>

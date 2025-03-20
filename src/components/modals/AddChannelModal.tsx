@@ -14,7 +14,7 @@ import addChannel from '@/styles/popups/addChannel.module.css';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-
+import { apiService } from '@/services/api.service';
 // Utils
 import { createDefault } from '@/utils/default';
 
@@ -58,30 +58,17 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
 
     // Effects
     useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
-      };
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
-
-    useEffect(() => {
-      if (!socket || !categoryId || !userId) return;
+      if (!categoryId) return;
       if (refreshRef.current) return;
-      socket.send.refreshChannel({ channelId: categoryId });
-      socket.send.refreshUser({ userId: userId });
-      refreshRef.current = true;
-    }, [socket, categoryId, userId]);
+      const refresh = async () => {
+        refreshRef.current = true;
+        const channel = await apiService.post('/refresh/channel', {
+          channelId: categoryId,
+        });
+        handleChannelUpdate(channel);
+      };
+      refresh();
+    }, [categoryId]);
 
     return (
       <div className={popup['popupContainer']}>

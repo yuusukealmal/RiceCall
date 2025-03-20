@@ -1,13 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef, useState } from 'react';
-import defaultAvatar from '../../../public/logo_server_def.png';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
 import createServer from '@/styles/popups/createServer.module.css';
 
 // Types
-import { User, Server, PopupType, SocketServerEvent } from '@/types';
+import { User, Server, PopupType } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -15,26 +13,10 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
-
-// Validation
-export const validateName = (name: string): string => {
-  if (!name?.trim()) return '請輸入群組名稱';
-  if (name.length > 30) return '群組名稱不能超過30個字符';
-  return '';
-};
-export const validateDescription = (description: string): string => {
-  if (!description?.trim()) return '';
-  if (description.length > 200) return '口號不能超過200個字符';
-  return '';
-};
-export const validateSlogan = (slogan: string): string => {
-  if (!slogan?.trim()) return '';
-  if (slogan.length > 30) return '口號不能超過30個字符';
-  return '';
-};
 
 interface CreateServerModalProps {
   userId: string;
@@ -105,40 +87,17 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
 
     // Effects
     useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
-      };
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
-
-    useEffect(() => {
-      if (!socket || !userId) return;
+      if (!userId) return;
       if (refreshRef.current) return;
-      socket.send.refreshUser({ userId: userId });
-      refreshRef.current = true;
-    }, [socket, userId]);
-
-    useEffect(() => {
-      fetch(defaultAvatar.src)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const reader = new FileReader();
-          reader.onloadend = () => setServerAvatar(reader.result as string);
-          reader.readAsDataURL(blob);
-        })
-        .catch((err) => console.error('預設圖片讀取失敗:', err));
-    }, []);
+      const refresh = async () => {
+        refreshRef.current = true;
+        const user = await apiService.post('/refresh/user', {
+          userId: userId,
+        });
+        handleUserUpdate(user);
+      };
+      refresh();
+    }, [userId]);
 
     switch (section) {
       // Server Type Selection Section

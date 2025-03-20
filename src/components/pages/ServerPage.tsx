@@ -12,32 +12,28 @@ import ChannelViewer from '@/components/viewers/ChannelViewer';
 import MessageInputBox from '@/components/MessageInputBox';
 
 // Types
-import {
-  PopupType,
-  User,
-  Server,
-  Message,
-  Channel,
-  SocketServerEvent,
-  Member,
-} from '@/types';
+import { PopupType, User, Server, Message, Channel, Member } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useSocket } from '@/providers/SocketProvider';
+import { useWebRTC } from '@/providers/WebRTCProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { useWebRTC } from '@/providers/WebRTCProvider';
+import { apiService } from '@/services/api.service';
+
+// Utils
 import { createDefault } from '@/utils/default';
 
 interface ServerPageProps {
   user: User;
   server: Server;
+  setServer: (server: Server) => void;
 }
 
 const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
-  ({ user, server }) => {
+  ({ user, server, setServer }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -100,16 +96,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       });
     };
 
-    const handleChannelUpdate = (channel: Partial<Channel>) => {
-      if (!channel) channel = createDefault.channel();
-      setCurrentChannel((prev) => ({ ...prev, ...channel }));
-    };
-
-    const handleMemberUpdate = (member: Partial<Member>) => {
-      if (!member) member = createDefault.member();
-      setMember((prev) => ({ ...prev, ...member }));
-    };
-
     const handleStartResizing = useCallback((e: React.MouseEvent) => {
       e.preventDefault();
       setIsResizing(true);
@@ -165,32 +151,26 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     }, [handleResize, handleStopResizing]);
 
     useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
-        [SocketServerEvent.MEMBER_UPDATE]: handleMemberUpdate,
-      };
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
-
-    useEffect(() => {
-      if (!socket || !userId) return;
+      if (!userId || !serverId || !setServer) return;
       if (refreshed.current) return;
-      socket.send.refreshServer({ serverId: serverId });
-      socket.send.refreshChannel({ channelId: userCurrentChannelId });
-      socket.send.refreshMember({ userId: userId, serverId: serverId });
-      refreshed.current = true;
-    }, [socket, userId, serverId, userCurrentChannelId]);
+      const refresh = async () => {
+        refreshed.current = true;
+        const server = await apiService.post('/refresh/server', {
+          serverId: serverId,
+        });
+        setServer(server);
+        const channel = await apiService.post('/refresh/channel', {
+          channelId: userCurrentChannelId,
+        });
+        setCurrentChannel(channel);
+        const member = await apiService.post('/refresh/member', {
+          userId: userId,
+          serverId: serverId,
+        });
+        setMember(member);
+      };
+      refresh();
+    }, [userId, serverId, setServer]);
 
     useEffect(() => {
       ipcService.discord.updatePresence({

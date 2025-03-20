@@ -212,172 +212,287 @@ const server = http.createServer((req, res) => {
   }
 
   // Refresh
-  if (req.method == 'GET' && req.url == '/refresh') {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk.toString();
-    });
-    req.on('end', async () => {
-      try {
-        const _data = JSON.parse(body);
-        const { type, data } = _data;
-        if (!type || !data) {
-          throw new StandardizedError(
-            '無效的資料',
-            'ValidationError',
-            'REFRESH',
-            'DATA_INVALID',
-          );
-        }
-
+  if (req.method == 'POST' && req.url.startsWith('/refresh')) {
+    if (req.url == '/refresh/user') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', async () => {
         const users = (await db.get('users')) || {};
+        try {
+          const data = JSON.parse(body);
+          const { userId } = data;
+          if (!userId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHUSER',
+              'DATA_INVALID',
+            );
+          }
+          await Func.validate.user(users[userId]);
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.user(userId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHUSER',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+    if (req.url == '/refresh/server') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', async () => {
         const servers = (await db.get('servers')) || {};
-
-        switch (type) {
-          case 'user':
-            const { userId } = data;
-            if (!userId) {
-              throw new StandardizedError(
-                '無效的資料',
-                'ValidationError',
-                'REFRESHUSER',
-                'DATA_INVALID',
-              );
-            }
-            const user = await Func.validate.user(users[userId]);
-            sendSuccess(res, {
-              message: 'success',
-              data: {
-                user: await Get.user(user.id),
-              },
-            });
-            break;
-          case 'channel':
-            const { channelId } = data;
-            if (!channelId) {
-              throw new StandardizedError(
-                '無效的資料',
-                'ValidationError',
-                'REFRESHUSER',
-                'DATA_INVALID',
-              );
-            }
-            const channels = (await db.get('channels')) || {};
-            const channel = await Func.validate.channel(channels[channelId]);
-            sendSuccess(res, {
-              message: 'success',
-              data: {
-                channel: await Get.channel(channel.id),
-              },
-            });
-            break;
-          case 'server':
-            const { serverId } = data;
-            if (!serverId) {
-              throw new StandardizedError(
-                '無效的資料',
-                'ValidationError',
-                'REFRESHUSER',
-                'DATA_INVALID',
-              );
-            }
-            const server = await Func.validate.server(servers[serverId]);
-            sendSuccess(res, {
-              message: 'success',
-              data: {
-                server: await Get.server(server.id),
-              },
-            });
-            break;
-          case 'memberApplication':
-            const { senderId: memberSenderId, receiverId: memberReceiverId } =
-              data;
-            if (!memberSenderId || !memberReceiverId) {
-              throw new StandardizedError(
-                '無效的資料',
-                'ValidationError',
-                'REFRESHUSER',
-                'DATA_INVALID',
-              );
-            }
-            const memberSender = await Func.validate.user(
-              users[memberSenderId],
+        try {
+          const data = JSON.parse(body);
+          const { serverId } = data;
+          if (!serverId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHSERVER',
+              'DATA_INVALID',
             );
-            const memberReceiver = await Func.validate.user(
-              servers[memberReceiverId],
+          }
+          await Func.validate.server(servers[serverId]);
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.server(serverId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHSERVER',
+              'EXCEPTION_ERROR',
+              500,
             );
-            sendSuccess(res, {
-              message: 'success',
-              data: {
-                memberApplication: await Get.memberApplication(
-                  memberSender.id,
-                  memberReceiver.id,
-                ),
-              },
-            });
-            break;
-          case 'friendApplication':
-            const { senderId: friendSenderId, receiverId: friendReceiverId } =
-              data;
-            if (!friendSenderId || !friendReceiverId) {
-              throw new StandardizedError(
-                '無效的資料',
-                'ValidationError',
-                'REFRESHUSER',
-                'DATA_INVALID',
-              );
-            }
-            const friendSender = await Func.validate.user(
-              users[friendSenderId],
-            );
-            const friendReceiver = await Func.validate.user(
-              users[friendReceiverId],
-            );
-            sendSuccess(res, {
-              message: 'success',
-              data: {
-                friendApplication: await Get.friendApplication(
-                  friendSender.id,
-                  friendReceiver.id,
-                ),
-              },
-            });
-            break;
-          case 'friend':
-            const { target1Id, target2Id } = data;
-            if (!target1Id || !target2Id) {
-              throw new StandardizedError(
-                '無效的資料',
-                'ValidationError',
-                'REFRESHUSER',
-                'DATA_INVALID',
-              );
-            }
-            const user1 = await Func.validate.user(users[target1Id]);
-            const user2 = await Func.validate.user(users[target2Id]);
-            sendSuccess(res, {
-              message: 'success',
-              data: {
-                friend: await Get.friend(user1.id, user2.id),
-              },
-            });
-            break;
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
         }
-      } catch (error) {
-        if (!(error instanceof StandardizedError)) {
-          error = new StandardizedError(
-            `刷新資料時發生預期外的錯誤: ${error.message}`,
-            'ServerError',
-            'REFRESH',
-            'SERVER_ERROR',
-            500,
+      });
+      return;
+    }
+    if (req.url == '/refresh/channel') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', async () => {
+        const channels = (await db.get('channels')) || {};
+        try {
+          const data = JSON.parse(body);
+          const { channelId } = data;
+          if (!channelId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHCHANNEL',
+              'DATA_INVALID',
+            );
+          }
+          await Func.validate.channel(channels[channelId]);
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.channel(channelId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHCHANNEL',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+    if (req.url == '/refresh/member') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', async () => {
+        const members = (await db.get('members')) || {};
+        try {
+          const data = JSON.parse(body);
+          const { userId, serverId } = data;
+          if (!userId || !serverId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHMEMBER',
+              'DATA_INVALID',
+            );
+          }
+          await Func.validate.member(members[`mb_${userId}-${serverId}`]);
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.member(userId, serverId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHMEMBER',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+    if (req.url == '/refresh/memberApplication') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', async () => {
+        const memberApplications = (await db.get('memberApplications')) || {};
+        try {
+          const data = JSON.parse(body);
+          const { senderId, receiverId } = data;
+          if (!senderId || !receiverId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHMEMBERAPPLICATION',
+              'DATA_INVALID',
+            );
+          }
+          await Func.validate.memberApplication(
+            memberApplications[`ma_${senderId}-${receiverId}`],
           );
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.memberApplication(senderId, receiverId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHMEMBERAPPLICATION',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
         }
-
-        sendError(res, error.status_code, error.error_message);
-        new Logger('Server').error(`Refresh error: ${error.error_message}`);
-      }
-    });
+      });
+      return;
+    }
+    if (req.url == '/refresh/friend') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', async () => {
+        const friends = (await db.get('friends')) || {};
+        try {
+          const data = JSON.parse(body);
+          const { userId, targetId } = data;
+          if (!userId || !targetId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHFRIEND',
+              'DATA_INVALID',
+            );
+          }
+          await Func.validate.friend(
+            friends[`fd_${userId}-${targetId}`] ||
+              friends[`fd_${targetId}-${userId}`],
+          );
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.friend(userId, targetId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHFRIEND',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+    if (req.url == '/refresh/friendApplication') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', async () => {
+        const friendApplications = (await db.get('friendApplications')) || {};
+        try {
+          const data = JSON.parse(body);
+          const { senderId, receiverId } = data;
+          if (!senderId || !receiverId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHFRIENDAPPLICATION',
+              'DATA_INVALID',
+            );
+          }
+          await Func.validate.friendApplication(
+            friendApplications[`fa_${senderId}-${receiverId}`],
+          );
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.friendApplication(senderId, receiverId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHFRIENDAPPLICATION',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
     return;
   }
 

@@ -1,9 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { User, DirectMessage, SocketServerEvent } from '@/types';
+import { User, DirectMessage } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -12,6 +12,9 @@ import { useSocket } from '@/providers/SocketProvider';
 // Components
 import MessageViewer from '@/components/viewers/MessageViewer';
 import MessageInputBox from '@/components/MessageInputBox';
+
+// Services
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -26,6 +29,9 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
+
+    // Refs
+    const refreshRef = useRef(false);
 
     // States
     const [friendAvatar, setFriendAvatar] = useState<User['avatar']>('');
@@ -53,28 +59,17 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
 
     // Effects
     useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
+      if (!userId) return;
+      if (refreshRef.current) return;
+      const refresh = async () => {
+        refreshRef.current = true;
+        const friend = await apiService.post('/refresh/user', {
+          userId: friendId,
+        });
+        handleUserUpdate(friend);
       };
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
-
-    useEffect(() => {
-      if (!socket) return;
-      socket.send.refreshUser({ userId: userId });
-      socket.send.refreshUser({ userId: friendId });
-    }, [socket]);
+      refresh();
+    }, [userId]);
 
     return null;
     // <Modal title={friendName} onClose={onClose} width="600px" height="600px">

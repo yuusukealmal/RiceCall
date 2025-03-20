@@ -6,13 +6,7 @@ import Popup from '@/styles/common/popup.module.css';
 import applyMember from '@/styles/popups/serverApplication.module.css';
 
 // Types
-import {
-  PopupType,
-  User,
-  Server,
-  SocketServerEvent,
-  MemberApplication,
-} from '@/types';
+import { PopupType, Server, MemberApplication } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -20,6 +14,7 @@ import { useSocket } from '@/providers/SocketProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -74,11 +69,6 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
       ipcService.window.close();
     };
 
-    // const handleUserUpdate = (data: Partial<User> | null) => {
-    //   if (!data) data = createDefault.user();
-    //   setUser((prev) => ({ ...prev, ...data }));
-    // };
-
     const handleServerUpdate = (data: Server | null) => {
       if (!data) data = createDefault.server();
       setServerName(data.name);
@@ -93,36 +83,25 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
 
     // UseEffect
     useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
-        // [SocketServerEvent.MEMBER_APPLICATION_UPDATE]:
-        //   handleMemberApplicationUpdate,
-      };
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
-
-    useEffect(() => {
-      if (!socket || !userId || !serverId) return;
+      if (!serverId || !userId) return;
       if (refreshRef.current) return;
-      socket.send.refreshUser({ userId: userId });
-      socket.send.refreshServer({ serverId: serverId });
-      socket.send.refreshMemberApplication({
-        senderId: userId,
-        receiverId: serverId,
-      });
-      refreshRef.current = true;
-    }, [socket, userId, serverId]);
+      const refresh = async () => {
+        const server = await apiService.post('/refresh/server', {
+          serverId: serverId,
+        });
+        handleServerUpdate(server);
+        const memberApplication = await apiService.post(
+          '/refresh/memberApplication',
+          {
+            senderId: userId,
+            receiverId: serverId,
+          },
+        );
+        handleMemberApplicationUpdate(memberApplication);
+        refreshRef.current = true;
+      };
+      refresh();
+    }, [serverId, userId]);
 
     switch (section) {
       // Member Application Form

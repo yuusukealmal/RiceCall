@@ -407,11 +407,11 @@ const Home = () => {
     if (!socket) return <LoadingSpinner />;
     switch (selectedTabId) {
       case 'home':
-        return <HomePage user={user} />;
+        return <HomePage user={user} setUser={setUser} />;
       case 'friends':
-        return <FriendPage user={user} />;
+        return <FriendPage user={user} setUser={setUser} />;
       case 'server':
-        return <ServerPage user={user} server={server} />;
+        return <ServerPage user={user} server={server} setServer={setServer} />;
     }
   };
 

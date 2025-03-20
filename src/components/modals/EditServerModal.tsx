@@ -11,13 +11,7 @@ import permission from '@/styles/common/permission.module.css';
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 
 // Types
-import {
-  MemberApplication,
-  Server,
-  PopupType,
-  ServerMember,
-  SocketServerEvent,
-} from '@/types';
+import { MemberApplication, Server, PopupType, ServerMember } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -26,6 +20,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -200,37 +195,19 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       setServerBlockMembers(data.members?.filter((mb) => mb.isBlocked) || []);
     };
 
-    // const handleUserUpdate = (data: Partial<User> | null) => {
-    //   if (!data) data = createDefault.user();
-    //   setUser((prev) => ({ ...prev, ...data }));
-    // };
-
     // Effects
     useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
-      };
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
-
-    useEffect(() => {
-      if (!socket || !serverId || !userId) return;
+      if (!serverId) return;
       if (refreshRef.current) return;
-      socket.send.refreshServer({ serverId: serverId });
-      socket.send.refreshUser({ userId: userId });
-      refreshRef.current = true;
-    }, [socket, serverId, userId]);
+      const refresh = async () => {
+        refreshRef.current = true;
+        const server = await apiService.post('/refresh/server', {
+          serverId: serverId,
+        });
+        handleServerUpdate(server);
+      };
+      refresh();
+    }, [serverId]);
 
     return (
       <div className={Popup['popupContainer']}>

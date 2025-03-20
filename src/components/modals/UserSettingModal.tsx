@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // Types
 import type { User } from '@/types';
@@ -10,6 +10,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+import { apiService } from '@/services/api.service';
 
 // CSS
 import UserSetting from '@/styles/popups/userSetting.module.css';
@@ -27,6 +28,9 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
+
+    // Refs
+    const refreshRef = useRef(false);
 
     // States
     const [userName, setUserName] = useState<User['name']>('');
@@ -69,6 +73,20 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
       setUserGender(data.gender);
       setUserSignature(data.signature);
     };
+
+    // Effects
+    useEffect(() => {
+      if (!userId) return;
+      if (refreshRef.current) return;
+      const refresh = async () => {
+        refreshRef.current = true;
+        const user = await apiService.post('/refresh/user', {
+          userId: userId,
+        });
+        handleUserUpdate(user);
+      };
+      refresh();
+    }, [userId]);
 
     return (
       <>

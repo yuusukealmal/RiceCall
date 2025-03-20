@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { authService } from './auth.service';
+import { errorHandler, StandardizedError } from '@/utils/errorHandler';
 export const API_URL = 'http://localhost:4500';
 
 const axiosInstance = axios.create({
@@ -68,9 +69,21 @@ const handleResponse = async (response: Response): Promise<any> => {
   if (!response.ok) {
     // Handle specific error codes
     if (response.status === 409) {
-      throw new Error(data.error || '資源已存在');
+      throw new StandardizedError(
+        'ServerError',
+        `資源已存在: ${data.error}`,
+        'API_GET',
+        'DATA_EXIST',
+        409,
+      );
     }
-    throw new Error(data.error || '請求失敗');
+    throw new StandardizedError(
+      'ServerError',
+      `請求失敗: ${data.error}`,
+      'API_GET',
+      'FETCH',
+      500,
+    );
   }
 
   return data.data;
@@ -86,7 +99,16 @@ export const apiService = {
       // Handle response
       return handleResponse(response);
     } catch (error: Error | any) {
-      throw new Error(error.error_message || '獲取資料失敗');
+      if (!(error instanceof StandardizedError)) {
+        throw new StandardizedError(
+          'ServerError',
+          `獲取資料時發生預期外的錯誤: ${error.message}`,
+          'API_GET',
+          'EXCEPTION_ERROR',
+          500,
+        );
+      }
+      new errorHandler(error).show();
     }
   },
 
@@ -97,9 +119,8 @@ export const apiService = {
     options?: RequestOptions,
   ) => {
     try {
-      const isFormData = data instanceof FormData;
       const headers = new Headers({
-        ...(isFormData ? {} : { 'Content-Type': 'application/json' }), // Set content type to JSON if not FormData
+        'Content-Type': 'application/json',
         ...(options?.headers || {}),
       });
       // Fetch
@@ -107,12 +128,21 @@ export const apiService = {
         method: 'POST',
         headers: headers,
         credentials: options?.credentials || 'omit',
-        body: isFormData ? data : JSON.stringify(data),
+        body: JSON.stringify(data),
       });
       // Handle response
       return handleResponse(response);
     } catch (error: Error | any) {
-      throw new Error(error.error_message || '提交資料失敗');
+      if (!(error instanceof StandardizedError)) {
+        throw new StandardizedError(
+          'ServerError',
+          `提交資料時發生預期外的錯誤: ${error.message}`,
+          'API_POST',
+          'EXCEPTION_ERROR',
+          500,
+        );
+      }
+      new errorHandler(error).show();
     }
   },
 
@@ -130,7 +160,16 @@ export const apiService = {
       // Handle response
       return handleResponse(response);
     } catch (error: Error | any) {
-      throw new Error(error.error_message || '更新資料失敗');
+      if (!(error instanceof StandardizedError)) {
+        throw new StandardizedError(
+          'ServerError',
+          `更新資料時發生預期外的錯誤: ${error.message}`,
+          'API_PATCH',
+          'EXCEPTION_ERROR',
+          500,
+        );
+      }
+      new errorHandler(error).show();
     }
   },
   axiosInstance,

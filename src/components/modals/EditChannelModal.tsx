@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
 import Popup from '@/styles/common/popup.module.css';
 import editChannel from '@/styles/popups/editChannel.module.css';
 
 // Types
-import { Channel, SocketServerEvent, User, Visibility } from '@/types';
+import { Channel } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -14,6 +13,7 @@ import { useSocket } from '@/providers/SocketProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -28,6 +28,9 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
+
+    // Refs
+    const refreshRef = useRef(false);
 
     // States
     const [channelName, setChannelName] = useState<Channel['name']>('');
@@ -65,28 +68,17 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
 
     // Effects
     useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
+      if (!channelId) return;
+      if (refreshRef.current) return;
+      const refresh = async () => {
+        refreshRef.current = true;
+        const channel = await apiService.post('/refresh/channel', {
+          channelId: channelId,
+        });
+        handleChannelUpdate(channel);
       };
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
-
-    useEffect(() => {
-      if (!socket || !channelId || !userId) return;
-      socket.send.refreshChannel({ channelId: channelId });
-      socket.send.refreshUser({ userId: userId });
-    }, [socket, channelId, userId]);
+      refresh();
+    }, [channelId]);
 
     return (
       <div className={Popup['popupContainer']}>
@@ -114,7 +106,9 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     className={Popup['input']}
                     value={channelVisibility}
                     onChange={(e) =>
-                      setChannelVisibility(e.target.value as Visibility)
+                      setChannelVisibility(
+                        e.target.value as Channel['visibility'],
+                      )
                     }
                   >
                     <option value="public">{lang.tr.channelPublic}</option>

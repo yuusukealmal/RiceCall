@@ -7,13 +7,7 @@ import popup from '@/styles/common/popup.module.css';
 import applyFriend from '@/styles/popups/applyFriend.module.css';
 
 // Types
-import {
-  FriendApplication,
-  FriendGroup,
-  PopupType,
-  SocketServerEvent,
-  User,
-} from '@/types';
+import { FriendApplication, FriendGroup, PopupType, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -21,6 +15,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -90,35 +85,29 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
 
     // Effects
     useEffect(() => {
-      if (!socket) return;
-
-      const eventHandlers = {
-        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
-        // [SocketServerEvent.FRIEND_APPLICATION_UPDATE]: handleFriendApplicationUpdate,
-      };
-      const unsubscribe: (() => void)[] = [];
-
-      Object.entries(eventHandlers).map(([event, handler]) => {
-        const unsub = socket.on[event as SocketServerEvent](handler);
-        unsubscribe.push(unsub);
-      });
-
-      return () => {
-        unsubscribe.forEach((unsub) => unsub());
-      };
-    }, [socket]);
-
-    useEffect(() => {
-      if (!socket || !userId || !targetId) return;
+      if (!userId || !targetId) return;
       if (refreshRef.current) return;
-      socket.send.refreshUser({ userId: userId });
-      socket.send.refreshUser({ userId: targetId });
-      socket.send.refreshFriendApplication({
-        senderId: userId,
-        receiverId: targetId,
-      });
-      refreshRef.current = true;
-    }, [socket, userId, targetId]);
+      const refresh = async () => {
+        refreshRef.current = true;
+        const user = await apiService.post('/refresh/user', {
+          userId: userId,
+        });
+        handleUserUpdate(user);
+        const target = await apiService.post('/refresh/user', {
+          userId: targetId,
+        });
+        handleUserUpdate(target);
+        const friendApplication = await apiService.post(
+          '/refresh/friendApplication',
+          {
+            senderId: userId,
+            receiverId: targetId,
+          },
+        );
+        handleFriendApplicationUpdate(friendApplication);
+      };
+      refresh();
+    }, [userId, targetId]);
 
     return (
       <div className={popup['popupContainer']}>
