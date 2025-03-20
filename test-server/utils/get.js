@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
+// Utils
+const Func = require('./func');
 
 const get = {
   // Avatar
@@ -57,8 +59,8 @@ const get = {
       .filter((us) => us.userId === userId && us.recent)
       .map((us) => servers[us.serverId])
       .sort((a, b) => b.timestamp - a.timestamp)
-      .filter((_, index) => index < 10)
-      .filter((s) => s);
+      .filter((s) => s)
+      .slice(0, 10);
   },
   userOwnedServers: async (userId) => {
     const userServers = (await db.get('userServers')) || {};
@@ -116,6 +118,25 @@ const get = {
   },
 
   // Server
+  searchServer: async (query) => {
+    const servers = (await db.get('servers')) || {};
+
+    const isServerMatch = (server, query) => {
+      const _query = String(query).trim().toLowerCase();
+      const _name = String(server.name).trim().toLowerCase();
+      const _displayId = String(server.displayId).trim().toLowerCase();
+      let isMatch = false;
+      if (server.visibility != 'invisible')
+        isMatch = isMatch || Func.calculateSimilarity(_name, _query) >= 0.6; // FIXME: THIS HAS ISSUE
+      isMatch = isMatch || _displayId === _query;
+      return isMatch;
+    };
+
+    return Object.values(servers)
+      .filter((s) => isServerMatch(s, query))
+      .filter((s) => s)
+      .slice(0, 10);
+  },
   server: async (serverId) => {
     const servers = (await db.get('servers')) || {};
     const server = servers[serverId];

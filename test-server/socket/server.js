@@ -37,46 +37,7 @@ const serverHandler = {
       // Validate operation
       await Func.validate.socket(socket);
 
-      // FIXME: search logic
-      const isServerMatch = (server, query) => {
-        const queryStr = query.trim().toLowerCase();
-        return (
-          String(server.displayId).trim().toLowerCase() === queryStr ||
-          server.name.toLowerCase().includes(queryStr) ||
-          Func.calculateSimilarity(server.name.toLowerCase(), queryStr) >= 0.6
-        );
-      };
-
-      const maxResults = 20;
-
-      const exactMatch = Object.values(servers).find(
-        (server) =>
-          String(server.displayId).trim().toLowerCase() ===
-          query.trim().toLowerCase(),
-      );
-
-      const searchResults = exactMatch
-        ? [exactMatch]
-        : Object.values(servers)
-            .filter(
-              (server) =>
-                isServerMatch(server, query) &&
-                (server.settings.visibility === 'public' ||
-                  server.settings.visibility === 'private' ||
-                  server.ownerId === userId ||
-                  members[`mb_${userId}-${server.id}`]?.permissionLevel > 1),
-            )
-            .slice(0, maxResults);
-      const results = await Promise.all(
-        searchResults.map(async (server) => ({
-          ...server,
-          avatar: server.avatarUrl
-            ? `data:image/png;base64,${server.avatarUrl}`
-            : null,
-        })),
-      );
-
-      io.to(socket.id).emit('serverSearch', results);
+      io.to(socket.id).emit('serverSearch', await Get.searchServer(query));
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
