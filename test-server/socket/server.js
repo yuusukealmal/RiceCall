@@ -164,9 +164,6 @@ const serverHandler = {
       }
       const user = await Func.validate.user(users[userId]);
       const server = await Func.validate.server(servers[serverId]);
-      const member = await Func.validate.member(
-        members[`mb_${user.id}-${server.id}`],
-      );
 
       // Validate operation
       await Func.validate.socket(socket);
@@ -194,6 +191,7 @@ const serverHandler = {
       // }
 
       // Create new membership if there isn't one
+      const member = members[`mb_${user.id}-${server.id}`];
       if (!member) {
         await Set.member(`mb_${user.id}-${server.id}`, {
           nickname: user.name,
@@ -394,17 +392,17 @@ const serverHandler = {
       // Create member
       await Set.member(`mb_${user.id}-${serverId}`, {
         permissionLevel: 6,
-        serverId: serverId,
         userId: user.id,
+        serverId: serverId,
         createdAt: Date.now(),
       });
 
       // Create user-server
       await Set.userServer(`us_${user.id}-${serverId}`, {
-        userId: user.id,
-        serverId: serverId,
         recent: true,
         owned: true,
+        userId: user.id,
+        serverId: serverId,
         timestamp: Date.now(),
       });
 
