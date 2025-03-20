@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef, useState } from 'react';
+import defaultAvatar from '../../../public/logo_server_def.png';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
@@ -135,6 +136,22 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       socket.send.refreshUser({ userId: userId });
       refreshRef.current = true;
     }, [socket, userId]);
+
+    useEffect(() => {
+      fetch(defaultAvatar.src)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setServer((prev) => ({
+              ...prev,
+              avatar: reader.result as string,
+            }));
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch((err) => console.error('預設圖片讀取失敗:', err));
+    }, []);
 
     switch (section) {
       // Server Type Selection Section
