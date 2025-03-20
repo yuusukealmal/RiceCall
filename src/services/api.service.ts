@@ -97,7 +97,8 @@ export const apiService = {
       // Fetch
       const response = await fetch(`${API_URL}${endpoint}`);
       // Handle response
-      return handleResponse(response);
+      const result = await handleResponse(response);
+      return result;
     } catch (error: Error | any) {
       if (!(error instanceof StandardizedError)) {
         throw new StandardizedError(
@@ -131,7 +132,8 @@ export const apiService = {
         body: JSON.stringify(data),
       });
       // Handle response
-      return handleResponse(response);
+      const result = await handleResponse(response);
+      return result;
     } catch (error: Error | any) {
       if (!(error instanceof StandardizedError)) {
         throw new StandardizedError(
@@ -158,7 +160,8 @@ export const apiService = {
         body: JSON.stringify(data),
       });
       // Handle response
-      return handleResponse(response);
+      const result = await handleResponse(response);
+      return result;
     } catch (error: Error | any) {
       if (!(error instanceof StandardizedError)) {
         throw new StandardizedError(
