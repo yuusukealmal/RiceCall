@@ -50,7 +50,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
 
     const handleCreateChannel = (channel: Channel) => {
       if (!socket) return;
-      socket.send.createChannel({ channel: channel, userId: user.id });
+      socket.send.createChannel({ channel: channel, userId: userId });
     };
 
     const handleChannelUpdate = (data: Partial<Channel> | null) => {
