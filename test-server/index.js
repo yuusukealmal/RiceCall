@@ -219,7 +219,6 @@ const server = http.createServer((req, res) => {
         body += chunk.toString();
       });
       req.on('end', async () => {
-        const users = (await db.get('users')) || {};
         try {
           const data = JSON.parse(body);
           const { userId } = data;
@@ -231,7 +230,6 @@ const server = http.createServer((req, res) => {
               'DATA_INVALID',
             );
           }
-          await Func.validate.user(users[userId]);
           sendSuccess(res, {
             message: 'success',
             data: await Get.user(userId),
@@ -258,7 +256,6 @@ const server = http.createServer((req, res) => {
         body += chunk.toString();
       });
       req.on('end', async () => {
-        const servers = (await db.get('servers')) || {};
         try {
           const data = JSON.parse(body);
           const { serverId } = data;
@@ -270,7 +267,6 @@ const server = http.createServer((req, res) => {
               'DATA_INVALID',
             );
           }
-          await Func.validate.server(servers[serverId]);
           sendSuccess(res, {
             message: 'success',
             data: await Get.server(serverId),
@@ -297,7 +293,6 @@ const server = http.createServer((req, res) => {
         body += chunk.toString();
       });
       req.on('end', async () => {
-        const channels = (await db.get('channels')) || {};
         try {
           const data = JSON.parse(body);
           const { channelId } = data;
@@ -309,7 +304,6 @@ const server = http.createServer((req, res) => {
               'DATA_INVALID',
             );
           }
-          await Func.validate.channel(channels[channelId]);
           sendSuccess(res, {
             message: 'success',
             data: await Get.channel(channelId),
@@ -336,7 +330,6 @@ const server = http.createServer((req, res) => {
         body += chunk.toString();
       });
       req.on('end', async () => {
-        const members = (await db.get('members')) || {};
         try {
           const data = JSON.parse(body);
           const { userId, serverId } = data;
@@ -348,7 +341,6 @@ const server = http.createServer((req, res) => {
               'DATA_INVALID',
             );
           }
-          await Func.validate.member(members[`mb_${userId}-${serverId}`]);
           sendSuccess(res, {
             message: 'success',
             data: await Get.member(userId, serverId),
@@ -375,7 +367,6 @@ const server = http.createServer((req, res) => {
         body += chunk.toString();
       });
       req.on('end', async () => {
-        const memberApplications = (await db.get('memberApplications')) || {};
         try {
           const data = JSON.parse(body);
           const { senderId, receiverId } = data;
@@ -387,9 +378,6 @@ const server = http.createServer((req, res) => {
               'DATA_INVALID',
             );
           }
-          await Func.validate.memberApplication(
-            memberApplications[`ma_${senderId}-${receiverId}`],
-          );
           sendSuccess(res, {
             message: 'success',
             data: await Get.memberApplication(senderId, receiverId),
@@ -416,7 +404,6 @@ const server = http.createServer((req, res) => {
         body += chunk.toString();
       });
       req.on('end', async () => {
-        const friends = (await db.get('friends')) || {};
         try {
           const data = JSON.parse(body);
           const { userId, targetId } = data;
@@ -428,10 +415,6 @@ const server = http.createServer((req, res) => {
               'DATA_INVALID',
             );
           }
-          await Func.validate.friend(
-            friends[`fd_${userId}-${targetId}`] ||
-              friends[`fd_${targetId}-${userId}`],
-          );
           sendSuccess(res, {
             message: 'success',
             data: await Get.friend(userId, targetId),
@@ -458,7 +441,6 @@ const server = http.createServer((req, res) => {
         body += chunk.toString();
       });
       req.on('end', async () => {
-        const friendApplications = (await db.get('friendApplications')) || {};
         try {
           const data = JSON.parse(body);
           const { senderId, receiverId } = data;
@@ -470,9 +452,6 @@ const server = http.createServer((req, res) => {
               'DATA_INVALID',
             );
           }
-          await Func.validate.friendApplication(
-            friendApplications[`fa_${senderId}-${receiverId}`],
-          );
           sendSuccess(res, {
             message: 'success',
             data: await Get.friendApplication(senderId, receiverId),
