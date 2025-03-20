@@ -34,14 +34,11 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
-    const [user, setUser] = useState<User>(createDefault.user());
-    const [parent, setParent] = useState<Channel>(createDefault.channel());
-    const [channel, setChannel] = useState<Channel>(createDefault.channel());
+    const [parentName, setParentName] = useState<Channel['name']>('');
+    const [channelName, setChannelName] = useState<Channel['name']>('');
 
     // Variables
     const { userId, categoryId, serverId } = initialData;
-    const { name: parentName } = parent;
-    const { name: channelName } = channel;
     const isRoot = !categoryId;
 
     // Handlers
@@ -49,19 +46,14 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
       ipcService.window.close();
     };
 
-    const handleCreateChannel = (channel: Channel) => {
+    const handleCreateChannel = (channel: Partial<Channel>) => {
       if (!socket) return;
       socket.send.createChannel({ channel: channel, userId: userId });
     };
 
-    const handleChannelUpdate = (data: Partial<Channel> | null) => {
+    const handleChannelUpdate = (data: Channel | null) => {
       if (!data) data = createDefault.channel();
-      setParent((prev) => ({ ...prev, ...data }));
-    };
-
-    const handleUserUpdate = (data: Partial<User> | null) => {
-      if (!data) data = createDefault.user();
-      setUser((prev) => ({ ...prev, ...data }));
+      setParentName(data.name);
     };
 
     // Effects
@@ -70,7 +62,6 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
 
       const eventHandlers = {
         [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
-        [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
       };
       const unsubscribe: (() => void)[] = [];
 
@@ -112,9 +103,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
                   className={popup['input']}
                   type="text"
                   value={channelName}
-                  onChange={(e) =>
-                    setChannel((prev) => ({ ...prev, name: e.target.value }))
-                  }
+                  onChange={(e) => setChannelName(e.target.value)}
                   required
                 />
               </div>
@@ -129,7 +118,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
             disabled={!channelName.trim()}
             onClick={() => {
               handleCreateChannel({
-                ...channel,
+                name: channelName,
                 isRoot: isRoot,
                 categoryId: categoryId,
                 serverId: serverId,

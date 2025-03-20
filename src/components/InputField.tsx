@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { ChangeEvent, FocusEvent, useState } from 'react';
+import React, { ChangeEvent, FocusEvent } from 'react';
 
 // CSS
 import styles from '@/styles/inputField.module.css';
@@ -17,7 +16,7 @@ interface InputFieldProps {
 
 const InputField: React.FC<InputFieldProps> = React.memo(
   ({ type, name, value, placeholder, style, onChange, onBlur }) => {
-    const [showPassword, setShowPassword] = useState(false);
+    // const [showPassword, setShowPassword] = useState(false);
     return (
       <input
         type={type}

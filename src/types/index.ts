@@ -1257,7 +1257,7 @@ export type Channel = BaseChannel & {
   bitrate: number;
   slowmode: boolean;
   userLimit: number;
-  visibility: Visibility;
+  visibility: 'public' | 'private' | 'readonly';
   categoryId: string | null;
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE

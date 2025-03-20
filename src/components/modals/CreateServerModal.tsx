@@ -67,24 +67,16 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     ];
 
     // States
+    const [userOwnedServers, setUserOwnedServers] = useState<Server[]>([]);
+    const [serverName, setServerName] = useState<Server['name']>('');
+    const [serverType, setServerType] = useState<Server['type']>('game');
+    const [serverAvatar, setServerAvatar] = useState<Server['avatar']>('');
+    const [serverDescription, setServerDescription] =
+      useState<Server['description']>('');
     const [section, setSection] = useState<number>(0);
-    const [errors, setErrors] = useState<{ [key: string]: string }>({
-      name: '',
-      description: '',
-    });
-
-    const [user, setUser] = useState<User>(createDefault.user());
-    const [server, setServer] = useState<Server>(createDefault.server());
 
     // Variables
     const { userId } = initialData;
-    const { ownedServers: userOwnedServers = [] } = user;
-    const {
-      name: serverName,
-      avatar: serverAvatar,
-      description: serverDescription,
-      type: serverType,
-    } = server;
     const remainingGroups = MAX_GROUPS - userOwnedServers.length;
     const canCreate = remainingGroups > 0;
 
@@ -93,7 +85,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       ipcService.window.close();
     };
 
-    const handleCreateServer = (server: Server) => {
+    const handleCreateServer = (server: Partial<Server>) => {
       if (!socket) return;
       socket.send.createServer({ server: server, userId: userId });
     };
@@ -106,9 +98,9 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       });
     };
 
-    const handleUserUpdate = (data: Partial<User> | null) => {
+    const handleUserUpdate = (data: User | null) => {
       if (!data) data = createDefault.user();
-      setUser((prev) => ({ ...prev, ...data }));
+      setUserOwnedServers(data.ownedServers || []);
     };
 
     // Effects
@@ -142,12 +134,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
         .then((res) => res.blob())
         .then((blob) => {
           const reader = new FileReader();
-          reader.onloadend = () => {
-            setServer((prev) => ({
-              ...prev,
-              avatar: reader.result as string,
-            }));
-          };
+          reader.onloadend = () => setServerAvatar(reader.result as string);
           reader.readAsDataURL(blob);
         })
         .catch((err) => console.error('預設圖片讀取失敗:', err));
@@ -186,10 +173,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                           : ''
                       }`}
                       onClick={() =>
-                        setServer((prev) => ({
-                          ...prev,
-                          type: type.value as Server['type'],
-                        }))
+                        setServerType(type.value as Server['type'])
                       }
                     >
                       {type.name}
@@ -252,12 +236,8 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                         return;
                       }
                       const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setServer((prev) => ({
-                          ...prev,
-                          avatar: reader.result as string,
-                        }));
-                      };
+                      reader.onloadend = () =>
+                        setServerAvatar(reader.result as string);
                       reader.readAsDataURL(file);
                     }}
                   />
@@ -276,7 +256,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       className={popup['input']}
                       type="text"
                       disabled
-                      value={lang.tr[server.type as keyof typeof lang.tr]}
+                      value={lang.tr[serverType as keyof typeof lang.tr]}
                     />
                   </div>
                   <div className={popup['inputBox']}>
@@ -287,18 +267,13 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       className={popup['input']}
                       type="text"
                       value={serverName}
-                      onChange={(e) =>
-                        setServer((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      onBlur={() =>
-                        setErrors((prev) => ({
-                          ...prev,
-                          name: validateName(serverName),
-                        }))
-                      }
+                      onChange={(e) => setServerName(e.target.value)}
+                      // onBlur={() =>
+                      //   setErrors((prev) => ({
+                      //     ...prev,
+                      //     name: validateName(serverName),
+                      //   }))
+                      // }
                       placeholder={lang.tr.groupNamePlaceholder}
                     />
                     {/* {errors.name && <p className="text-red-500">{errors.name}</p>} */}
@@ -308,18 +283,13 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                     <textarea
                       className={popup['input']}
                       value={serverDescription}
-                      onChange={(e) =>
-                        setServer((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                      onBlur={() =>
-                        setErrors((prev) => ({
-                          ...prev,
-                          description: validateDescription(serverDescription),
-                        }))
-                      }
+                      onChange={(e) => setServerDescription(e.target.value)}
+                      // onBlur={() =>
+                      //   setErrors((prev) => ({
+                      //     ...prev,
+                      //     description: validateDescription(serverDescription),
+                      //   }))
+                      // }
                       placeholder={lang.tr.groupSloganPlaceholder}
                     />
                     {/* {errors.description && (
@@ -340,7 +310,10 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                 disabled={!serverName.trim() || !canCreate}
                 onClick={() => {
                   handleCreateServer({
-                    ...server,
+                    name: serverName,
+                    avatar: serverAvatar,
+                    description: serverDescription,
+                    type: serverType,
                     ownerId: userId,
                   });
                   handleClose();
