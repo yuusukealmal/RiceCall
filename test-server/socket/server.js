@@ -379,10 +379,6 @@ const serverHandler = {
         displayId: await Func.generateUniqueDisplayId(),
         lobbyId: channelId,
         ownerId: user.id,
-        settings: {
-          ...newServer.settings,
-          defaultChannelId: channelId,
-        },
         createdAt: Date.now(),
       });
 
@@ -390,7 +386,7 @@ const serverHandler = {
       await Set.channel(channelId, {
         name: '大廳',
         isLobby: true,
-        isMain: true,
+        isRoot: true,
         serverId: serverId,
         createdAt: Date.now(),
       });
