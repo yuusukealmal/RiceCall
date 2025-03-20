@@ -1240,6 +1240,7 @@ export type Channel = BaseChannel & {
 };
 
 export type Member = {
+  id: string;
   isBlocked: boolean;
   nickname: string | null;
   contribution: number;
