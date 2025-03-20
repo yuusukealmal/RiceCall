@@ -22,12 +22,23 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
   // Hooks
   const socket = useSocket();
 
+  // Variables
+  const { id: userId } = user;
+  const {
+    id: serverId,
+    name: serverName,
+    avatar: serverAvatar,
+    displayId: serverDisplayId,
+    slogan: serverSlogan,
+    ownerId: serverOwnerId,
+  } = server;
+  const isOwner = serverOwnerId === userId;
+
   // Handlers
-  const handleServerSelect = (serverId: string) => {
+  const handleServerSelect = () => {
     if (!socket) return;
     if (user.currentServerId === serverId) return;
-
-    socket.send.connectServer({ serverId, userId: user.id });
+    socket.send.connectServer({ serverId: serverId, userId: userId });
   };
 
   const handleError = (error: StandardizedError) => {
@@ -59,45 +70,31 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
     };
   }, [socket]);
 
-  // Variables
-  const {
-    name: serverName,
-    avatar: serverAvatar,
-    displayId: serverDisplayId,
-    slogan: serverSlogan,
-  } = server;
-
   return (
-    <>
+    <div
+      className={homePage['myGroupsRoomItemBox']}
+      onClick={() => handleServerSelect()}
+    >
       <div
-        className={homePage['myGroupsRoomItemBox']}
-        onClick={() => {
-          handleServerSelect(server.id);
-        }}
-      >
-        <div
-          className={homePage['myGroupsRoomAvatarPicture']}
-          style={
-            serverAvatar ? { backgroundImage: `url(${serverAvatar})` } : {}
-          }
-        ></div>
-        <div className={homePage['myGroupsRoomInfo']}>
-          <div className={homePage['myGroupsRoomName']}>{serverName}</div>
-          <div className={homePage['myGroupsRoomIDBox']}>
-            <div
-              className={`${homePage['myGroupsRoomIDTitle']} ${
-                server.ownerId === user?.id ? homePage['IsOwner'] : ''
-              }`}
-              data-key="10063"
-            >
-              ID:
-            </div>
-            <div className={homePage['myGroupsRoomID']}>{serverDisplayId}</div>
+        className={homePage['myGroupsRoomAvatarPicture']}
+        style={serverAvatar ? { backgroundImage: `url(${serverAvatar})` } : {}}
+      ></div>
+      <div className={homePage['myGroupsRoomInfo']}>
+        <div className={homePage['myGroupsRoomName']}>{serverName}</div>
+        <div className={homePage['myGroupsRoomIDBox']}>
+          <div
+            className={`${homePage['myGroupsRoomIDTitle']} ${
+              isOwner ? homePage['IsOwner'] : ''
+            }`}
+            data-key="10063"
+          >
+            ID:
           </div>
-          <div className={homePage['myGroupsRoomSlogen']}>{serverSlogan}</div>
+          <div className={homePage['myGroupsRoomID']}>{serverDisplayId}</div>
         </div>
+        <div className={homePage['myGroupsRoomSlogen']}>{serverSlogan}</div>
       </div>
-    </>
+    </div>
   );
 });
 

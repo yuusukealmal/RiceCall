@@ -55,10 +55,8 @@ const Header: React.FC<HeaderProps> = React.memo(
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
     // Variables
-    const serverId = server.id;
-    const userId = user.id;
-    const userName = user.name;
-    const userStatus = user.status;
+    const { id: serverId } = server;
+    const { id: userId, name: userName, status: userStatus } = user;
 
     // Constants
     const MAIN_TABS = [

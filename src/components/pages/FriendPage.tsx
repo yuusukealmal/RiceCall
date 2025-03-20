@@ -57,7 +57,7 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     // Handlers
     const handleChangeSignature = (signature: User['signature']) => {
       if (!socket) return;
-      socket.send.updateUser({ user: { id: user.id, signature } });
+      socket.send.updateUser({ user: { id: userId, signature } });
     };
 
     const handleStartResizing = useCallback((e: React.MouseEvent) => {

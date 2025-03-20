@@ -33,13 +33,13 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
     const [expanded, setExpanded] = useState<boolean>(true);
 
     // Variables
-    const { name: friendGroupName } = friendGroup;
+    const { id: friendGroupId, name: friendGroupName } = friendGroup;
     const friendGroupFriends = friends.filter(
-      (fd) => fd.friendGroupId === friendGroup.id,
+      (fd) => fd.friendGroupId === friendGroupId,
     );
 
     return (
-      <div key={friendGroup.id}>
+      <div key={friendGroupId}>
         {/* Tab View */}
         <div
           className={styles['tab']}
@@ -92,24 +92,31 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
 
   // Variables
   const {
+    id: friendId,
     name: friendName,
     avatar: friendAvatar,
     signature: friendSignature,
     level: friendLevel,
+    user1Id: friendUserId1,
+    user2Id: friendUserId2,
     badges: friendBadges = [],
   } = friend;
   const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
 
   // Handlers
-  const handleOpenDirectMessagePopup = () => {
+  const handleOpenDirectMessagePopup = (
+    userId: User['id'],
+    targetId: User['id'],
+  ) => {
     ipcService.popup.open(PopupType.DIRECT_MESSAGE);
     ipcService.initialData.onRequest(PopupType.DIRECT_MESSAGE, {
-      user: friend,
+      userId: userId,
+      targetId: targetId,
     });
   };
 
   return (
-    <div key={friend.id}>
+    <div key={friendId}>
       {/* User View */}
       <div
         className={styles['friendCard']}
@@ -126,7 +133,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
           ]);
         }}
         onDoubleClick={() => {
-          handleOpenDirectMessagePopup();
+          handleOpenDirectMessagePopup(friendUserId1, friendUserId2);
         }}
       >
         <div
@@ -171,10 +178,10 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
     const [selectedTabId, setSelectedTabId] = useState<number>(0);
 
     // Handlers
-    const handleOpenApplyFriendPopup = () => {
+    const handleOpenApplyFriendPopup = (userId: User['id']) => {
       ipcService.popup.open(PopupType.APPLY_FRIEND);
       ipcService.initialData.onRequest(PopupType.APPLY_FRIEND, {
-        user: user,
+        userId: userId,
       });
     };
 
@@ -237,7 +244,7 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
               <div
                 className={styles['button']}
                 datatype="addFriend"
-                onClick={() => handleOpenApplyFriendPopup()}
+                onClick={() => handleOpenApplyFriendPopup('FIXME')}
               >
                 {lang.tr.addFriend}
               </div>
