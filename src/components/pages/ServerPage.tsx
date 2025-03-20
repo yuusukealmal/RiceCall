@@ -65,6 +65,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       announcement: serverAnnouncement,
       members: serverMembers = [],
     } = server;
+    const userMember = serverMembers.find((m) => m.userId === userId);
 
     // Handlers
     const handleSendMessage = (message: Message): void => {
@@ -208,19 +209,25 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 </div>
               </div>
               <div className={styles['optionBox']}>
-                <div
-                  className={styles['invitation']}
-                  onClick={() => {
-                    handleOpenApplyMember();
-                  }}
-                />
-                <div className={styles['saperator']} />
-                <div
-                  className={styles['setting']}
-                  onClick={() => {
-                    handleOpenServerSettings();
-                  }}
-                />
+                {!userMember && (
+                  <>
+                    <div
+                      className={styles['invitation']}
+                      onClick={() => {
+                        handleOpenApplyMember();
+                      }}
+                    />
+                    <div className={styles['saperator']} />
+                  </>
+                )}
+                {userMember && userMember.permissionLevel > 4 && (
+                  <div
+                    className={styles['setting']}
+                    onClick={() => {
+                      handleOpenServerSettings();
+                    }}
+                  />
+                )}
               </div>
             </div>
             <ChannelViewer

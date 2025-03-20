@@ -22,6 +22,7 @@ export interface Translation {
   logout: string;
   exit: string;
   searchPlaceholder: string;
+  searchResult: string;
   recentVisits: string;
   myGroups: string;
   favoriteGroups: string;
@@ -208,6 +209,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: '登出',
     exit: '退出',
     searchPlaceholder: '輸入群ID或群名稱',
+    searchResult: '搜尋結果',
     recentVisits: '最近訪問',
     myGroups: '我的語音群',
     favoriteGroups: '收藏的語音群',
@@ -227,7 +229,7 @@ export const translations: Record<LanguageKey, Translation> = {
     creationTime: '創建時間',
     wealth: '財富值',
     description: '介紹',
-    changeImage: '更換新增圖像',
+    changeImage: '更換圖像',
     inputAnnouncement: '輸入公告內容',
     edit: '編輯',
     preview: '預覽',
@@ -393,6 +395,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: '登出',
     exit: '退出',
     searchPlaceholder: '输入群ID或群名称',
+    searchResult: '搜索结果',
     recentVisits: '最近访问',
     myGroups: '我的语音群',
     favoriteGroups: '收藏的语音群',
@@ -578,6 +581,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: 'Logout',
     exit: 'Exit',
     searchPlaceholder: 'Enter group ID or name',
+    searchResult: 'Search Result',
     recentVisits: 'Recent Visits',
     myGroups: 'My Voice Groups',
     favoriteGroups: 'Favorite Voice Groups',
@@ -765,6 +769,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: 'ログアウト',
     exit: '終了',
     searchPlaceholder: 'グループIDまたは名前を入力',
+    searchResult: '検索結果',
     recentVisits: '最近の訪問',
     myGroups: '私のボイスグループ',
     favoriteGroups: 'お気に入りのボイスグループ',
@@ -950,6 +955,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: 'Выйти',
     exit: 'Выход',
     searchPlaceholder: 'Введите ID группы или название',
+    searchResult: 'Результаты поиска',
     recentVisits: 'Недавние посещения',
     myGroups: 'Мои голосовые группы',
     favoriteGroups: 'Избранные голосовые группы',
@@ -1186,7 +1192,7 @@ export type Server = {
   // avatarUrl: string;
   announcement: string;
   description: string;
-  type: 'game' | 'community' | 'other';
+  type: 'game' | 'entertainment' | 'other';
   displayId: string;
   slogan: string;
   level: number;

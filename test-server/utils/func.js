@@ -380,7 +380,7 @@ const func = {
       }
       if (
         server.type &&
-        !['game', 'community', 'other'].includes(server.type)
+        !['game', 'entertainment', 'other'].includes(server.type)
       ) {
         throw new StandardizedError(
           '無效的群組類型',

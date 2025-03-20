@@ -104,27 +104,29 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   />
                 </div>
               </div>
-              <div className={Popup['inputBox']}>
-                <div className={Popup['label']}>
-                  {lang.tr.channelPermission}
+              {!channel.isLobby && (
+                <div className={Popup['inputBox']}>
+                  <div className={Popup['label']}>
+                    {lang.tr.channelPermission}
+                  </div>
+                  <select
+                    className={Popup['input']}
+                    value={channelVisibility}
+                    onChange={(e) =>
+                      setChannel((prev) => {
+                        return {
+                          ...prev,
+                          visibility: e.target.value as Visibility,
+                        };
+                      })
+                    }
+                  >
+                    <option value="public">{lang.tr.channelPublic}</option>
+                    <option value="private">{lang.tr.channelPrivate}</option>
+                    <option value="readonly">{lang.tr.channelReadonly}</option>
+                  </select>
                 </div>
-                <select
-                  className={Popup['input']}
-                  value={channelVisibility}
-                  onChange={(e) =>
-                    setChannel((prev) => {
-                      return {
-                        ...prev,
-                        visibility: e.target.value as Visibility,
-                      };
-                    })
-                  }
-                >
-                  <option value="public">{lang.tr.channelPublic}</option>
-                  <option value="private">{lang.tr.channelPrivate}</option>
-                  <option value="readonly">{lang.tr.channelReadonly}</option>
-                </select>
-              </div>
+              )}
             </div>
           </div>
         </div>

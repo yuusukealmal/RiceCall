@@ -164,7 +164,7 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(({ user }) => {
             {searchResults.length > 0 && (
               <div className={homePage['myGroupsItem']}>
                 <div className={homePage['myGroupsTitle']} data-key="60005">
-                  {lang.tr.recentVisits}
+                  {lang.tr.searchResult}
                 </div>
                 <ServerListViewer user={user} servers={searchResults} />
               </div>

@@ -56,7 +56,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
         name: lang.tr.game,
       },
       {
-        value: 'community',
+        value: 'entertainment',
         name: lang.tr.entertainment,
       },
       {
@@ -259,7 +259,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       className={popup['input']}
                       type="text"
                       disabled
-                      value={serverType}
+                      value={lang.tr[server.type as keyof typeof lang.tr]}
                     />
                   </div>
                   <div className={popup['inputBox']}>
