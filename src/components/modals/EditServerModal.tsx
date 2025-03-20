@@ -558,9 +558,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                   {memberNickname || memberName}
                                 </td>
                                 <td>
-                                  {getPermissionText(
+                                  {lang.getPermissionText(
                                     memberPermissionLevel,
-                                    lang.tr,
                                   )}
                                 </td>
                                 <td>{memberContribution}</td>
