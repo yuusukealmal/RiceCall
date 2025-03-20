@@ -65,7 +65,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       announcement: serverAnnouncement,
       members: serverMembers = [],
     } = server;
-    const userMember = serverMembers.find((m) => m.userId === userId);
 
     // Handlers
     const handleSendMessage = (message: Message): void => {
@@ -73,19 +72,25 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       socket.send.message({ message });
     };
 
-    const handleOpenServerSettings = () => {
+    const handleOpenServerSettings = (
+      userId: User['id'],
+      serverId: Server['id'],
+    ) => {
       ipcService.popup.open(PopupType.EDIT_SERVER);
       ipcService.initialData.onRequest(PopupType.EDIT_SERVER, {
-        serverId: server.id,
-        userId: user.id,
+        serverId: serverId,
+        userId: userId,
       });
     };
 
-    const handleOpenApplyMember = () => {
+    const handleOpenApplyMember = (
+      userId: User['id'],
+      serverId: Server['id'],
+    ) => {
       ipcService.popup.open(PopupType.APPLY_MEMBER);
       ipcService.initialData.onRequest(PopupType.APPLY_MEMBER, {
-        serverId: server.id,
-        userId: user.id,
+        userId: userId,
+        serverId: serverId,
       });
     };
 
@@ -209,22 +214,22 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 </div>
               </div>
               <div className={styles['optionBox']}>
-                {!userMember && (
+                {!member && (
                   <>
                     <div
                       className={styles['invitation']}
                       onClick={() => {
-                        handleOpenApplyMember();
+                        handleOpenApplyMember(userId, serverId);
                       }}
                     />
                     <div className={styles['saperator']} />
                   </>
                 )}
-                {userMember && userMember.permissionLevel > 4 && (
+                {member && member.permissionLevel > 4 && (
                   <div
                     className={styles['setting']}
                     onClick={() => {
-                      handleOpenServerSettings();
+                      handleOpenServerSettings(userId, serverId);
                     }}
                   />
                 )}

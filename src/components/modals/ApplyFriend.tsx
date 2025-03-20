@@ -120,10 +120,8 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
                 <div className={applyFriend['avatarPicture']} />
               </div>
               <div className={applyFriend['userInfoWrapper']}>
-                <div className={applyFriend['userAccount']}>
-                  {`${targetId}`}
-                </div>
-                <div className={applyFriend['userName']}>{`${targetName}`}</div>
+                <div className={applyFriend['userAccount']}>{targetName}</div>
+                <div className={applyFriend['userName']}>{targetId}</div>
               </div>
             </div>
             <div className={applyFriend['split']} />

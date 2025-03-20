@@ -165,6 +165,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     // Variables
     const { members: serverMembers = [] } = server;
     const {
+      id: channelId,
       name: channelName,
       isRoot: channelIsRoot,
       isLobby: channelIsLobby,
@@ -219,7 +220,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     };
 
     return (
-      <div key={channel.id}>
+      <div key={channelId}>
         {/* Channel View */}
         <div
           className={`
@@ -304,28 +305,34 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     const contextMenu = useContextMenu();
 
     // Variables
+    const { id: userId } = user;
     const {
+      id: channelMemberId,
       name: channelMemberName,
       permissionLevel: channelMemberPermission,
       nickname: channelMemberNickname,
+      userId: channelMemberUserId,
       level: channelMemberLevel,
       gender: channelMemberGender,
       badges: channelMemberBadges = [],
     } = channelMember;
     const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max level
-    const isCurrentUser = user.id === channelMember.userId;
+    const isCurrentUser = userId === channelMemberId;
 
     // Handlers
-    const handleOpenApplyFriend = () => {
+    const handleOpenApplyFriend = (
+      userId: User['id'],
+      targetId: User['id'],
+    ) => {
       ipcService.popup.open(PopupType.APPLY_FRIEND);
       ipcService.initialData.onRequest(PopupType.APPLY_FRIEND, {
-        userId: user.id,
-        targetUserId: channelMember.id,
+        userId: userId,
+        targetId: targetId,
       });
     };
 
     return (
-      <div key={channelMember.id}>
+      <div key={channelMemberId}>
         {/* User View */}
         <div
           className={`${styles['userTab']}`}
@@ -338,7 +345,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 id: 'kick',
                 icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.kick,
-                show: canEdit && user.id != channelMember.id,
+                show: canEdit && !isCurrentUser,
                 onClick: () => {
                   // handleKickUser(user.id);
                 },
@@ -347,8 +354,9 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 id: 'addFriend',
                 icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.addFriend,
-                show: canEdit && user.id != channelMember.id,
-                onClick: () => handleOpenApplyFriend(),
+                show: canEdit && !isCurrentUser,
+                onClick: () =>
+                  handleOpenApplyFriend(userId, channelMemberUserId),
               },
             ]);
           }}
