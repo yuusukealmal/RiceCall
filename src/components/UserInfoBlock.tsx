@@ -14,7 +14,6 @@ import BadgeViewer from '@/components/viewers/BadgeViewer';
 
 // Types
 import type { ServerMember } from '@/types';
-import { getPermissionText } from '@/utils/formatters';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -105,7 +104,7 @@ const MemberInfoBlock: React.FC<MemberInfoBlockProps> = React.memo(
               } ${Permission[`lv-${memberPermission}`]}`}
             ></div>
             <div className={UserInfoCard['userInfoPermissionText']}>
-              {getPermissionText(memberPermission, lang.tr)}
+              {lang.getPermissionText(memberPermission)}
             </div>
             <div className={styles['saperator']}></div>
             <div className={UserInfoCard['userInfoContributionBox']}>

@@ -11,9 +11,6 @@ import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 // Types
 import type { DirectMessage, Message } from '@/types';
 
-// Util
-import { formatTimestamp } from '@/utils/formatters';
-
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
 
@@ -33,7 +30,7 @@ const MessageTab: React.FC<MessageTabProps> = React.memo(({ messageGroup }) => {
     contents: messageContents,
     timestamp: messageTimestamp,
   } = messageGroup;
-  const timestamp = formatTimestamp(messageTimestamp, lang.key, lang.tr);
+  const timestamp = lang.getFormatTimestamp(messageTimestamp);
 
   return (
     <>
