@@ -20,7 +20,6 @@ export class errorHandler {
 
   constructor(error: StandardizedError) {
     this.error = error;
-    console.log(error);
   }
 
   show() {

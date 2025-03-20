@@ -1426,6 +1426,8 @@ export enum SocketServerEvent {
   FRIEND_UPDATE = 'friendUpdate',
   // Friend Application
   FRIEND_APPLICATION_UPDATE = 'friendApplicationUpdate',
+  // Popup
+  OPEN_POPUP = 'openPopup',
   // RTC
   RTC_OFFER = 'RTCOffer',
   RTC_ANSWER = 'RTCAnswer',

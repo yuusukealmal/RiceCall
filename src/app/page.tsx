@@ -347,6 +347,7 @@ const Home = () => {
       [SocketServerEvent.DISCONNECT]: handleDisconnect,
       [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
       [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
+      [SocketServerEvent.OPEN_POPUP]: handleOpenPopup,
       [SocketServerEvent.ERROR]: handleError,
     };
     const unsubscribe: (() => void)[] = [];
@@ -393,6 +394,12 @@ const Home = () => {
     setSelectedTabId(data ? 'server' : 'home');
     if (!data) data = createDefault.server();
     setServer((prev) => ({ ...prev, ...data }));
+  };
+
+  const handleOpenPopup = (data: any) => {
+    const { popupType, initialData } = data;
+    ipcService.popup.open(popupType);
+    ipcService.initialData.onRequest(popupType, initialData);
   };
 
   const getMainContent = () => {

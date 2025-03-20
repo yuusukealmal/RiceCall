@@ -326,7 +326,7 @@ const channelHandler = {
       // };
       // console.log(data);
 
-      // Validate data
+      // Validate
       const { userId, channel: _editedChannel } = data;
       if (!userId || !_editedChannel) {
         throw new StandardizedError(

@@ -37,39 +37,9 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
 
   // Handlers
   const handleServerSelect = () => {
-    if (!socket) return;
-    if (user.currentServerId === serverId) return;
+    if (!socket || user.currentServerId === serverId) return;
     socket.send.connectServer({ serverId: serverId, userId: userId });
   };
-
-  const handleError = (error: StandardizedError) => {
-    if (error.tag === 'VISIBILITY') {
-      ipcService.popup.open(PopupType.APPLY_MEMBER);
-      ipcService.initialData.onRequest(PopupType.APPLY_MEMBER, {
-        server: server,
-        user: user,
-      });
-    }
-  };
-
-  // Effects
-  useEffect(() => {
-    if (!socket) return;
-
-    const eventHandlers = {
-      [SocketServerEvent.ERROR]: handleError,
-    };
-    const unsubscribe: (() => void)[] = [];
-
-    Object.entries(eventHandlers).map(([event, handler]) => {
-      const unsub = socket.on[event as SocketServerEvent](handler);
-      unsubscribe.push(unsub);
-    });
-
-    return () => {
-      unsubscribe.forEach((unsub) => unsub());
-    };
-  }, [socket]);
 
   return (
     <div
@@ -78,7 +48,7 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
     >
       <div
         className={homePage['myGroupsRoomAvatarPicture']}
-        style={serverAvatar ? { backgroundImage: `url(${serverAvatar})` } : {}}
+        style={{ backgroundImage: `url(${serverAvatar})` }}
       ></div>
       <div className={homePage['myGroupsRoomInfo']}>
         <div className={homePage['myGroupsRoomName']}>{serverName}</div>

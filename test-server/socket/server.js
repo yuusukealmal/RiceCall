@@ -128,6 +128,20 @@ const serverHandler = {
 
       // Create new membership if there isn't one
       const member = members[`mb_${user.id}-${server.id}`];
+      if (
+        server.visibility == 'invisible' &&
+        (!member || member.permissionLevel < 2)
+      ) {
+        io.to(socket.id).emit('openPopup', {
+          popupType: 'applyMember',
+          initialData: {
+            serverId: server.id,
+            userId: user.id,
+          },
+        });
+        return;
+      }
+
       if (!member) {
         await Set.member(`mb_${user.id}-${server.id}`, {
           nickname: user.name,
@@ -135,16 +149,6 @@ const serverHandler = {
           userId: user.id,
           createdAt: Date.now(),
         });
-      }
-
-      if (server.visibility === 'invisible' && member.permissionLevel < 2) {
-        throw new StandardizedError( // TODO: Need show server application page
-          '此群組為私密群組，您無法加入',
-          'ValidationError',
-          'CONNECTSERVER',
-          'SERVER_INVISIBLE',
-          403,
-        );
       }
 
       // Leave prev server
