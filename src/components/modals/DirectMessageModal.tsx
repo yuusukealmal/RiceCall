@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 
 // Types
-import { User, UserFriend, DirectMessage, SocketServerEvent } from '@/types';
+import { User, DirectMessage, SocketServerEvent } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -28,17 +28,13 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
     const socket = useSocket();
 
     // States
-    const [user, setUser] = useState<User>(createDefault.user());
-    const [friend, setFriend] = useState<User>(createDefault.user());
+    const [friendAvatar, setFriendAvatar] = useState<User['avatar']>('');
+    const [friendName, setFriendName] = useState<User['name']>('');
+    const [friendLevel, setFriendLevel] = useState<User['level']>(0);
 
     // Variables
-    const userId = user.id;
-    const friendId = friend.id;
-    const friendAvatar = friend.avatar;
-    const friendName = friend.name;
-    const friendLevel = friend.level;
+    const { friendId, userId } = initialData;
     const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
-    // const friendDirectMessages = friend.directMessages || [];
 
     // Handlers
     const handleSendMessage = (directMessage: DirectMessage) => {
@@ -46,10 +42,13 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
       socket.send.directMessage({ directMessage });
     };
 
-    const handleUserUpdate = (data: Partial<User> | null) => {
+    const handleUserUpdate = (data: User | null) => {
       if (!data) data = createDefault.user();
-      if (data.id === userId) setUser((prev) => ({ ...prev, ...data }));
-      if (data.id === friendId) setFriend((prev) => ({ ...prev, ...data }));
+      if (data.id === friendId) {
+        setFriendAvatar(data.avatar);
+        setFriendName(data.name);
+        setFriendLevel(data.level);
+      }
     };
 
     // Effects

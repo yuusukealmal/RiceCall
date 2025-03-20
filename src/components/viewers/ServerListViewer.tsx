@@ -1,18 +1,13 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect } from 'react';
+import React from 'react';
 
 // CSS
 import homePage from '@/styles/homePage.module.css';
 
 // Type
-import { Server, SocketServerEvent, User, PopupType } from '@/types';
+import { Server, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
-import { ipcService } from '@/services/ipc.service';
-
-// Utils
-import { StandardizedError } from '@/utils/errorHandler';
 
 interface ServerCardProps {
   user: User;
