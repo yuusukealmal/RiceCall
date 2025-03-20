@@ -33,7 +33,7 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
     const [expanded, setExpanded] = useState<boolean>(true);
 
     // Variables
-    const friendGroupName = friendGroup.name;
+    const { name: friendGroupName } = friendGroup;
     const friendGroupFriends = friends.filter(
       (fd) => fd.friendGroupId === friendGroup.id,
     );
@@ -91,12 +91,14 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
   const contextMenu = useContextMenu();
 
   // Variables
-  const friendName = friend.name;
-  const friendAvatar = friend.avatar;
-  const friendSignature = friend.signature;
-  const friendLevel = friend.level;
+  const {
+    name: friendName,
+    avatar: friendAvatar,
+    signature: friendSignature,
+    level: friendLevel,
+    badges: friendBadges = [],
+  } = friend;
   const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
-  const friendBadges = friend.badges || [];
 
   // Handlers
   const handleOpenDirectMessagePopup = () => {
@@ -158,8 +160,8 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
     const lang = useLanguage();
 
     // Variables
-    const userFriends = user.friends || [];
-    const userFriendGroups = user.friendGroups || [];
+    const { friends: userFriends = [], friendGroups: userFriendGroups = [] } =
+      user;
     const filteredFriends = userFriends.filter((fd) =>
       fd.name.includes(searchQuery),
     );

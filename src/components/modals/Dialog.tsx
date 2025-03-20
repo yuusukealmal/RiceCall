@@ -30,9 +30,7 @@ const Dialog: React.FC<DialogProps> = (initialData: DialogProps) => {
   const lang = useLanguage();
 
   // Variables
-  const iconType = initialData.iconType;
-  const title = initialData.title;
-  const submitTo = initialData.submitTo;
+  const { iconType, title, submitTo } = initialData;
 
   // Handlers
   const handleClose = () => {

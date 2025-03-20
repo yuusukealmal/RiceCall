@@ -18,6 +18,9 @@ import {
   ServerMember,
   SocketServerEvent,
   User,
+  Member,
+  Channel,
+  Permission,
 } from '@/types';
 
 // Utils
@@ -83,6 +86,9 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       },
     ];
 
+    // Refs
+    const refreshRef = useRef(false);
+
     // States
     const [user, setUser] = useState<User>(createDefault.user());
     const [server, setServer] = useState<Server>(createDefault.server());
@@ -95,21 +101,22 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     const [sortField, setSortField] = useState<string>('');
 
     // Variables
-    const serverId = initialData.serverId;
-    const userId = initialData.userId;
-    const serverName = server.name;
-    const serverAvatar = server.avatar;
-    const serverAnnouncement = server.announcement;
-    const serverDescription = server.description;
-    const serverType = server.type;
-    const serverDisplayId = server.displayId;
-    const serverSlogan = server.slogan;
-    const serverLevel = server.level;
-    const serverWealth = server.wealth;
-    const serverCreatedAt = server.createdAt;
-    const serverVisibility = server.visibility;
-    const serverMembers = server.members || [];
-    const serverApplications = server.memberApplications || [];
+    const { serverId, userId } = initialData;
+    const {
+      name: serverName,
+      avatar: serverAvatar,
+      announcement: serverAnnouncement,
+      description: serverDescription,
+      type: serverType,
+      displayId: serverDisplayId,
+      slogan: serverSlogan,
+      level: serverLevel,
+      wealth: serverWealth,
+      createdAt: serverCreatedAt,
+      visibility: serverVisibility,
+      members: serverMembers = [],
+      memberApplications: serverApplications = [],
+    } = server;
     const serverBlockMembers = serverMembers.filter((mb) => mb.isBlocked);
 
     // Handlers
@@ -162,7 +169,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
 
     const handleUpdateServer = () => {
       if (!socket) return;
-      socket.send.updateServer({ server: server, userId: user.id });
+      socket.send.updateServer({ server: server, userId: userId });
       handleClose();
     };
 
@@ -205,10 +212,12 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!socket) return;
-      if (serverId) socket.send.refreshServer({ serverId: serverId });
-      if (userId) socket.send.refreshUser({ userId: userId });
-    }, [socket]);
+      if (!socket || !serverId || !userId) return;
+      if (refreshRef.current) return;
+      socket.send.refreshServer({ serverId: serverId });
+      socket.send.refreshUser({ userId: userId });
+      refreshRef.current = true;
+    }, [socket, serverId, userId]);
 
     return (
       <div className={Popup['popupContainer']}>
@@ -471,16 +480,22 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                         </thead>
                         <tbody>
                           {serverMembers.map((member) => {
-                            const userGender = member.gender;
-                            const userNickname = member.nickname || member.name;
-                            const userPermission = member.permissionLevel;
-                            const userContributions = member.contribution;
-                            const userJoinDate = member.createdAt;
+                            const {
+                              id: memberId,
+                              userId: memberUserId,
+                              serverId: memberServerId,
+                              nickname: memberNickname,
+                              name: memberName,
+                              gender: memberGender,
+                              permissionLevel: memberPermissionLevel,
+                              contribution: memberContribution,
+                              createdAt: memberJoinDate,
+                            } = member;
                             return (
                               <tr
-                                key={member.id}
+                                key={memberId}
                                 onContextMenu={(e) => {
-                                  if (member.userId === user.id) return;
+                                  if (memberUserId === userId) return;
                                   contextMenu.showContextMenu(
                                     e.pageX,
                                     e.pageY,
@@ -539,18 +554,21 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                               >
                                 <td>
                                   <div
-                                    className={`${permission[userGender]} ${
-                                      permission[`lv-${userPermission}`]
+                                    className={`${permission[memberGender]} ${
+                                      permission[`lv-${memberPermissionLevel}`]
                                     }`}
                                   />
-                                  {userNickname}
+                                  {memberNickname || memberName}
                                 </td>
                                 <td>
-                                  {getPermissionText(userPermission, lang.tr)}
+                                  {getPermissionText(
+                                    memberPermissionLevel,
+                                    lang.tr,
+                                  )}
                                 </td>
-                                <td>{userContributions}</td>
+                                <td>{memberContribution}</td>
                                 <td>
-                                  {new Date(userJoinDate).toLocaleString()}
+                                  {new Date(memberJoinDate).toLocaleString()}
                                 </td>
                               </tr>
                             );
@@ -685,11 +703,16 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                         </thead>
                         <tbody>
                           {serverApplications.map((application) => {
-                            const userName = application.name;
-                            const userDescription = application.description;
+                            const {
+                              id: applicationId,
+                              userId: applicationUserId,
+                              serverId: applicationServerId,
+                              name: applicationName,
+                              description: applicationDescription,
+                            } = application;
                             return (
                               <tr
-                                key={application.id}
+                                key={applicationId}
                                 onContextMenu={(e) => {
                                   contextMenu.showContextMenu(
                                     e.pageX,
@@ -698,8 +721,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                   );
                                 }}
                               >
-                                <td>{userName}</td>
-                                <td>{userDescription}</td>
+                                <td>{applicationName}</td>
+                                <td>{applicationDescription}</td>
                               </tr>
                             );
                           })}
@@ -753,11 +776,17 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                         </thead>
                         <tbody>
                           {serverBlockMembers.map((blockMember) => {
-                            const userName = blockMember.name;
-                            const userContribution = blockMember.contribution;
+                            const {
+                              id: blockMemberId,
+                              userId: blockMemberUserId,
+                              serverId: blockMemberServerId,
+                              nickname: blockMemberNickname,
+                              name: blockMemberName,
+                              contribution: blockMemberContribution,
+                            } = blockMember;
                             return (
                               <tr
-                                key={blockMember.id}
+                                key={blockMemberId}
                                 onContextMenu={(e) => {
                                   contextMenu.showContextMenu(
                                     e.pageX,
@@ -766,8 +795,10 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                   );
                                 }}
                               >
-                                <td>{userName}</td>
-                                <td>{userContribution}</td>
+                                <td>
+                                  {blockMemberNickname || blockMemberName}
+                                </td>
+                                <td>{blockMemberContribution}</td>
                               </tr>
                             );
                           })}

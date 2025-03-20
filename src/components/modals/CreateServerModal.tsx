@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
@@ -45,8 +45,12 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     const lang = useLanguage();
     const socket = useSocket();
 
+    // Refs
+    const refreshRef = useRef(false);
+
     // Constant
-    const serverType: { value: Server['type']; name: string }[] = [
+    const MAX_GROUPS = 3;
+    const SERVER_TYPES: { value: Server['type']; name: string }[] = [
       {
         value: 'game',
         name: lang.tr.game,
@@ -72,10 +76,15 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     const [server, setServer] = useState<Server>(createDefault.server());
 
     // Variables
-    const maxGroups = 3;
-    const userId = initialData.userId;
-    const userOwnedServers = user.ownedServers || [];
-    const remainingGroups = maxGroups - userOwnedServers.length;
+    const { userId } = initialData;
+    const { ownedServers: userOwnedServers = [] } = user;
+    const {
+      name: serverName,
+      avatar: serverAvatar,
+      description: serverDescription,
+      type: serverType,
+    } = server;
+    const remainingGroups = MAX_GROUPS - userOwnedServers.length;
     const canCreate = remainingGroups > 0;
 
     // Handlers
@@ -121,9 +130,11 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!socket) return;
-      if (userId) socket.send.refreshUser({ userId: userId });
-    }, [socket]);
+      if (!socket || !userId) return;
+      if (refreshRef.current) return;
+      socket.send.refreshUser({ userId: userId });
+      refreshRef.current = true;
+    }, [socket, userId]);
 
     switch (section) {
       // Server Type Selection Section
@@ -149,11 +160,11 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                   {lang.tr.selectGroupTypeDescription}
                 </label>
                 <div className={createServer['buttonGroup']}>
-                  {serverType.map((type) => (
+                  {SERVER_TYPES.map((type) => (
                     <div
                       key={type.value}
                       className={`${createServer['button']} ${
-                        server.type === type.value
+                        serverType === type.value
                           ? createServer['selected']
                           : ''
                       }`}
@@ -173,9 +184,9 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
             <div className={popup['popupFooter']}>
               <button
                 className={`${popup['button']} ${
-                  !server.type || !canCreate ? popup['disabled'] : ''
+                  !serverType || !canCreate ? popup['disabled'] : ''
                 }`}
-                disabled={!server.type || !canCreate}
+                disabled={!serverType || !canCreate}
                 onClick={() => setSection(1)}
               >
                 {lang.tr.next}
@@ -206,11 +217,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                 <div className={createServer['avatarWrapper']}>
                   <div
                     className={createServer['avatarPicture']}
-                    style={
-                      server.avatar
-                        ? { backgroundImage: `url(${server.avatar})` }
-                        : {}
-                    }
+                    style={{ backgroundImage: `url(${serverAvatar})` }}
                   />
                   <input
                     type="file"
@@ -252,7 +259,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       className={popup['input']}
                       type="text"
                       disabled
-                      value={server.type}
+                      value={serverType}
                     />
                   </div>
                   <div className={popup['inputBox']}>
@@ -262,7 +269,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                     <input
                       className={popup['input']}
                       type="text"
-                      value={server.name}
+                      value={serverName}
                       onChange={(e) =>
                         setServer((prev) => ({
                           ...prev,
@@ -272,7 +279,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       onBlur={() =>
                         setErrors((prev) => ({
                           ...prev,
-                          name: validateName(server.name),
+                          name: validateName(serverName),
                         }))
                       }
                       placeholder={lang.tr.groupNamePlaceholder}
@@ -283,7 +290,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                     <div className={popup['label']}>{lang.tr.groupSlogan}</div>
                     <textarea
                       className={popup['input']}
-                      value={server.description}
+                      value={serverDescription}
                       onChange={(e) =>
                         setServer((prev) => ({
                           ...prev,
@@ -293,7 +300,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       onBlur={() =>
                         setErrors((prev) => ({
                           ...prev,
-                          description: validateDescription(server.description),
+                          description: validateDescription(serverDescription),
                         }))
                       }
                       placeholder={lang.tr.groupSloganPlaceholder}
@@ -311,9 +318,9 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
               </button>
               <button
                 className={`${popup['button']} ${
-                  !server.name.trim() || !canCreate ? popup['disabled'] : ''
+                  !serverName.trim() || !canCreate ? popup['disabled'] : ''
                 }`}
-                disabled={!server.name.trim() || !canCreate}
+                disabled={!serverName.trim() || !canCreate}
                 onClick={() => {
                   handleCreateServer({
                     ...server,

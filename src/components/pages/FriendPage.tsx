@@ -29,7 +29,10 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     const lang = useLanguage();
     const socket = useSocket();
 
-    //
+    // Constants
+    const MAXLENGTH = 300;
+
+    // Refs
     const refreshed = useRef(false);
 
     // States
@@ -41,14 +44,15 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     const [isResizing, setIsResizing] = useState<boolean>(false);
 
     // Variables
-    const MAXLENGTH = 300;
-    const userId = user.id;
-    const userName = user.name;
-    const userAvatar = user.avatar;
-    const userSignature = user.signature;
-    const userLevel = user.level;
+    const {
+      id: userId,
+      name: userName,
+      avatar: userAvatar,
+      signature: userSignature,
+      level: userLevel,
+      badges: userBadges = [],
+    } = user;
     const userGrade = Math.min(56, Math.ceil(userLevel / 5)); // 56 is max level
-    const userBadges = user.badges || [];
 
     // Handlers
     const handleChangeSignature = (signature: User['signature']) => {

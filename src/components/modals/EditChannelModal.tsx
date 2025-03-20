@@ -33,11 +33,8 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const [channel, setChannel] = useState<Channel>(createDefault.channel());
 
     // Variables
-    const userId = initialData.userId;
-    const channelId = initialData.channelId;
-    const channelName = channel.name;
-    const channelVisibility = channel.visibility;
-    // const isCategory = channel.isCategory;
+    const { userId, channelId } = initialData;
+    const { name: channelName, visibility: channelVisibility } = channel;
 
     // Handlers
     const handleClose = () => {
@@ -46,7 +43,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
 
     const handleUpdateChannel = async () => {
       if (!socket) return;
-      socket.send.updateChannel({ channel: channel, userId: user.id });
+      socket.send.updateChannel({ channel: channel, userId: userId });
     };
 
     const handleChannelUpdate = (data: Partial<Channel> | null) => {
@@ -80,10 +77,10 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!socket) return;
-      if (channelId) socket.send.refreshChannel({ channelId: channelId });
-      if (userId) socket.send.refreshUser({ userId: userId });
-    }, [socket]);
+      if (!socket || !channelId || !userId) return;
+      socket.send.refreshChannel({ channelId: channelId });
+      socket.send.refreshUser({ userId: userId });
+    }, [socket, channelId, userId]);
 
     return (
       <div className={Popup['popupContainer']}>

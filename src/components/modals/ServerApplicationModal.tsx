@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
 import Popup from '@/styles/common/popup.module.css';
@@ -35,6 +35,9 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
     const lang = useLanguage();
     const socket = useSocket();
 
+    // Refs
+    const refreshRef = useRef(false);
+
     // State
     const [user, setUser] = useState<User>(createDefault.user());
     const [server, setServer] = useState<Server>(createDefault.server());
@@ -43,12 +46,13 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
     );
 
     // Variables
-    const userId = initialData.userId;
-    const serverId = initialData.serverId;
-    const serverName = server.name;
-    const serverDisplayId = server.displayId;
-    const serverAvatar = server.avatar;
-    const applicationDescription = application.description;
+    const { userId, serverId } = initialData;
+    const {
+      name: serverName,
+      displayId: serverDisplayId,
+      avatar: serverAvatar,
+    } = server;
+    const { description: applicationDescription } = application;
 
     // Section Control
     const [section, setSection] = useState<number>(0);
@@ -113,15 +117,16 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
     }, [socket]);
 
     useEffect(() => {
-      if (!socket) return;
-      if (userId) socket.send.refreshUser({ userId: userId });
-      if (serverId) socket.send.refreshServer({ serverId: serverId });
-      if (userId && serverId)
-        socket.send.refreshMemberApplication({
-          senderId: userId,
-          receiverId: serverId,
-        });
-    }, [socket]);
+      if (!socket || !userId || !serverId) return;
+      if (refreshRef.current) return;
+      socket.send.refreshUser({ userId: userId });
+      socket.send.refreshServer({ serverId: serverId });
+      socket.send.refreshMemberApplication({
+        senderId: userId,
+        receiverId: serverId,
+      });
+      refreshRef.current = true;
+    }, [socket, userId, serverId]);
 
     switch (section) {
       // Member Application Form

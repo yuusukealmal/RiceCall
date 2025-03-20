@@ -43,10 +43,9 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
     const contextMenu = useContextMenu();
 
     // Variables
-    const serverChannels = server.channels || [];
-    const categoryName = category.name;
-    const categoryIsRoot = category.isRoot;
-    const categoryChannel = serverChannels
+    const { channels: serverChannels = [] } = server;
+    const { name: categoryName, isRoot: categoryIsRoot } = category;
+    const categoryChannels = serverChannels
       .filter((ch) => ch.type === 'channel')
       .filter((ch) => ch.categoryId === category.id);
 
@@ -129,7 +128,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
         {/* Expanded Sections */}
         {expanded && (
           <div className={styles['channelList']}>
-            {categoryChannel
+            {categoryChannels
               .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
               .map((channel) => (
                 <ChannelTab
@@ -164,11 +163,13 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     const contextMenu = useContextMenu();
 
     // Variables
-    const serverMembers = server.members || [];
-    const channelName = channel.name;
-    const channelIsRoot = channel.isRoot;
-    const channelIsLobby = channel.isLobby;
-    const channelVisibility = channel.visibility;
+    const { members: serverMembers = [] } = server;
+    const {
+      name: channelName,
+      isRoot: channelIsRoot,
+      isLobby: channelIsLobby,
+      visibility: channelVisibility,
+    } = channel;
     const channelMembers = serverMembers.filter(
       (mb) => mb.currentChannelId === channel.id,
     );
@@ -303,12 +304,15 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     const contextMenu = useContextMenu();
 
     // Variables
-    const channelMemberPermission = channelMember.permissionLevel;
-    const channelMemberNickname = channelMember.nickname || channelMember.name;
-    const channelMemberLevel = channelMember.level;
+    const {
+      name: channelMemberName,
+      permissionLevel: channelMemberPermission,
+      nickname: channelMemberNickname,
+      level: channelMemberLevel,
+      gender: channelMemberGender,
+      badges: channelMemberBadges = [],
+    } = channelMember;
     const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max level
-    const channelMemberGender = channelMember.gender;
-    const channelMemberBadges = channelMember.badges || [];
     const isCurrentUser = user.id === channelMember.userId;
 
     // Handlers
@@ -359,7 +363,9 @@ const UserTab: React.FC<UserTabProps> = React.memo(
               permission[channelMemberGender]
             } ${permission[`lv-${channelMemberPermission}`]}`}
           />
-          <div className={styles['userTabName']}>{channelMemberNickname}</div>
+          <div className={styles['userTabName']}>
+            {channelMemberNickname || channelMemberName}
+          </div>
           <div
             className={`${styles['userGrade']} ${
               grade[`lv-${channelMemberGrade}`]
@@ -394,10 +400,10 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
 
   // Variables
   const connectStatus = 3;
-  const userCurrentChannelName = currentChannel.name;
-  const userCurrentChannelVoiceMode = currentChannel.voiceMode;
-  const serverChannels = server.channels || [];
-  const memberPermission = member.permissionLevel;
+  const { channels: serverChannels = [] } = server;
+  const { permissionLevel: memberPermission } = member;
+  const { name: currentChannelName, voiceMode: currentChannelVoiceMode } =
+    currentChannel;
   const canEdit = memberPermission >= 5;
 
   // Handlers
@@ -419,12 +425,10 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
             styles[`status${connectStatus}`]
           }`}
         />
-        <div className={styles['currentChannelText']}>
-          {userCurrentChannelName}
-        </div>
+        <div className={styles['currentChannelText']}>{currentChannelName}</div>
       </div>
       {/* Mic Queue */}
-      {userCurrentChannelVoiceMode === 'queue' && (
+      {currentChannelVoiceMode === 'queue' && (
         <>
           <div className={styles['sectionTitle']}>{lang.tr.micOrder}</div>
           <div className={styles['micQueueBox']}>

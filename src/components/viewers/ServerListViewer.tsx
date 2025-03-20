@@ -4,12 +4,13 @@ import React, { useEffect } from 'react';
 import homePage from '@/styles/homePage.module.css';
 
 // Type
-import { Server, SocketServerEvent, User } from '@/types';
+import { Server, SocketServerEvent, User, PopupType } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
 import { ipcService } from '@/services/ipc.service';
-import { PopupType } from '@/types';
+
+// Utils
 import { StandardizedError } from '@/utils/errorHandler';
 
 interface ServerCardProps {
@@ -59,10 +60,12 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
   }, [socket]);
 
   // Variables
-  const serverName = server.name;
-  const serverAvatar = server.avatar;
-  const serverDisplayId = server.displayId;
-  const serverSlogan = server.slogan;
+  const {
+    name: serverName,
+    avatar: serverAvatar,
+    displayId: serverDisplayId,
+    slogan: serverSlogan,
+  } = server;
 
   return (
     <>

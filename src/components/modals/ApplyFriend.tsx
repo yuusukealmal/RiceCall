@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
@@ -29,10 +29,10 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     const lang = useLanguage();
     const socket = useSocket();
 
-    // State
-    const [description, setDescription] = useState('');
-    const [friendGroup, setFriendGroup] = useState('');
+    // Refs
+    const refreshRef = useRef(false);
 
+    // State
     const [user, setUser] = useState<User>(createDefault.user());
     const [target, setTarget] = useState<User>(createDefault.user());
     const [application, setApplication] = useState<FriendApplication>(
@@ -40,11 +40,10 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     );
 
     // Variables
-    const userId = initialData.userId;
-    const targetId = initialData.targetId;
-    const targetName = target.name;
-    const targetAvatar = target.avatar;
-    const userFriendGroups = user.friendGroups || [];
+    const { userId, targetId } = initialData;
+    const { friendGroups: userFriendGroups = [] } = user;
+    const { name: targetName, avatar: targetAvatar } = target;
+    const { description: applicationDescription } = application;
 
     // Handlers
     const handleOpenSuccessDialog = () => {
@@ -100,15 +99,16 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!socket) return;
-      if (userId) socket.send.refreshUser({ userId: userId });
-      if (targetId) socket.send.refreshUser({ userId: targetId });
-      if (userId && targetId)
-        socket.send.refreshFriendApplication({
-          senderId: userId,
-          receiverId: targetId,
-        });
-    }, [socket]);
+      if (!socket || !userId || !targetId) return;
+      if (refreshRef.current) return;
+      socket.send.refreshUser({ userId: userId });
+      socket.send.refreshUser({ userId: targetId });
+      socket.send.refreshFriendApplication({
+        senderId: userId,
+        receiverId: targetId,
+      });
+      refreshRef.current = true;
+    }, [socket, userId, targetId]);
 
     return (
       <div className={popup['popupContainer']}>
@@ -132,7 +132,9 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
               <div className={popup['inputBox']}>
                 <select
                   className={popup['select']}
-                  onChange={(e) => setFriendGroup(e.target.value)}
+                  onChange={(e) => {
+                    // FIXME
+                  }}
                 >
                   {userFriendGroups.map((group) => (
                     <option key={group.id} value={group.id}>
@@ -148,7 +150,12 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
               <div className={popup['inputBox']}>
                 <textarea
                   rows={2}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) =>
+                    setApplication((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className={applyFriend['noteText']}>
@@ -160,11 +167,11 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
         <div className={popup['popupFooter']}>
           <button
             className={`${popup['button']} ${
-              !description.trim() ? popup['disabled'] : ''
+              !applicationDescription.trim() ? popup['disabled'] : ''
             }`}
-            disabled={!description.trim()}
+            disabled={!applicationDescription.trim()}
             onClick={() => {
-              // handleCreateFriendApplication();
+              handleCreateFriendApplication(application);
               handleOpenSuccessDialog();
             }}
           >

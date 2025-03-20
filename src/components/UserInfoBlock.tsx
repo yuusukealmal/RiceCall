@@ -30,17 +30,19 @@ const MemberInfoBlock: React.FC<MemberInfoBlockProps> = React.memo(
     // Language
     const lang = useLanguage();
 
-    const memberName = member.name;
-    const memberAvatar = member.avatar;
-    const memberGender = member.gender;
-    const memberLevel = member.level;
+    const {
+      name: memberName,
+      avatar: memberAvatar,
+      gender: memberGender,
+      level: memberLevel,
+      xp: memberXp,
+      progress: memberXpProgress,
+      requiredXp: memberRequiredXp,
+      badges: memberBadges = [],
+      permissionLevel: memberPermission,
+      contribution: memberContributions,
+    } = member;
     const memberGrade = Math.min(56, Math.ceil(memberLevel / 5));
-    const memberXp = member.xp;
-    const memberXpProgress = member.progress;
-    const memberRequiredXp = member.requiredXp;
-    const memberBadges = member.badges || [];
-    const memberPermission = member.permissionLevel;
-    const memberContributions = member.contribution;
 
     return (
       <div

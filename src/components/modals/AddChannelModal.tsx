@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Types
 import { Channel, SocketServerEvent, User } from '@/types';
@@ -29,17 +29,18 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     const socket = useSocket();
     const lang = useLanguage();
 
+    // Refs
+    const refreshRef = useRef(false);
+
     // States
     const [user, setUser] = useState<User>(createDefault.user());
     const [parent, setParent] = useState<Channel>(createDefault.channel());
     const [channel, setChannel] = useState<Channel>(createDefault.channel());
 
     // Variables
-    const userId = initialData.userId;
-    const categoryId = initialData.categoryId;
-    const serverId = initialData.serverId;
-    const parentName = parent.name;
-    const channelName = channel.name;
+    const { userId, categoryId, serverId } = initialData;
+    const { name: parentName } = parent;
+    const { name: channelName } = channel;
     const isRoot = !categoryId;
 
     // Handlers
@@ -83,10 +84,12 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!socket) return;
-      if (categoryId) socket.send.refreshChannel({ channelId: categoryId });
-      if (userId) socket.send.refreshUser({ userId: userId });
-    }, [socket]);
+      if (!socket || !categoryId || !userId) return;
+      if (refreshRef.current) return;
+      socket.send.refreshChannel({ channelId: categoryId });
+      socket.send.refreshUser({ userId: userId });
+      refreshRef.current = true;
+    }, [socket, categoryId, userId]);
 
     return (
       <div className={popup['popupContainer']}>

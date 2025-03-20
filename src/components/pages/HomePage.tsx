@@ -33,11 +33,13 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(({ user }) => {
   const [searchResults, setSearchResults] = useState<Server[]>([]);
 
   // Variables
-  const userId = user.id;
-  const userName = user.name;
-  const userOwnedServers = user.ownedServers || [];
-  const userRecentServers = user.recentServers || [];
-  const userFavServers = user.favServers || [];
+  const {
+    id: userId,
+    name: userName,
+    ownedServers: userOwnedServers = [],
+    recentServers: userRecentServers = [],
+    favServers: userFavServers = [],
+  } = user;
 
   // Handlers
   const handleSearchServer = (query: string) => {
