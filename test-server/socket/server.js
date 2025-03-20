@@ -14,9 +14,6 @@ const channelHandler = require('./channel');
 
 const serverHandler = {
   searchServer: async (io, socket, data) => {
-    const servers = (await db.get('servers')) || {};
-    const members = (await db.get('members')) || {};
-
     try {
       // data = {
       //   query:
@@ -138,6 +135,16 @@ const serverHandler = {
           userId: user.id,
           createdAt: Date.now(),
         });
+      }
+
+      if (server.visibility === 'invisible' && member.permissionLevel < 2) {
+        throw new StandardizedError( // TODO: Need show server application page
+          '此群組為私密群組，您無法加入',
+          'ValidationError',
+          'CONNECTSERVER',
+          'SERVER_INVISIBLE',
+          403,
+        );
       }
 
       // Leave prev server

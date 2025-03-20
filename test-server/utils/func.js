@@ -28,6 +28,8 @@ const func = {
           );
         }
       }
+
+      return matrix[str1.length][str2.length];
     };
 
     if (longer.length === 0) return 1.0;

@@ -125,11 +125,14 @@ const get = {
       const _query = String(query).trim().toLowerCase();
       const _name = String(server.name).trim().toLowerCase();
       const _displayId = String(server.displayId).trim().toLowerCase();
-      let isMatch = false;
-      if (server.visibility != 'invisible')
-        isMatch = isMatch || Func.calculateSimilarity(_name, _query) >= 0.6; // FIXME: THIS HAS ISSUE
-      isMatch = isMatch || _displayId === _query;
-      return isMatch;
+
+      if (server.visibility === 'invisible' && _displayId !== _query)
+        return false;
+      return (
+        Func.calculateSimilarity(_name, _query) >= 0.5 ||
+        _name.includes(_query) ||
+        _displayId === _query
+      );
     };
 
     return Object.values(servers)
