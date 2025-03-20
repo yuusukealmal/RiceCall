@@ -17,9 +17,6 @@ const friendApplicationHandler = require('./friendApplication');
 const memberApplicationHandler = require('./memberApplication');
 const rtcHandler = require('./rtc');
 
-// TODO:
-// - make validation a Func
-
 module.exports = (io) => {
   io.use((socket, next) => {
     try {

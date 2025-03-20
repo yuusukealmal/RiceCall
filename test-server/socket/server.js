@@ -129,28 +129,6 @@ const serverHandler = {
       // Validate operation
       await Func.validate.socket(socket);
 
-      // if (
-      //   server.settings.visibility === 'invisible' &&
-      //   !(member?.permissionLevel > 1)
-      // ) {
-      //   throw new StandardizedError(
-      //     '該群組為私人群組',
-      //     'ValidationError',
-      //     'CONNECTSERVER',
-      //     'VISIBILITY',
-      //     403,
-      //   );
-      // }
-      // if (member?.isBlocked) {
-      //   throw new StandardizedError(
-      //     '您已被該群組封鎖',
-      //     'ValidationError',
-      //     'CONNECTSERVER',
-      //     'BLOCKED',
-      //     403,
-      //   );
-      // }
-
       // Create new membership if there isn't one
       const member = members[`mb_${user.id}-${server.id}`];
       if (!member) {
