@@ -27,7 +27,6 @@ const DirectMessageTab: React.FC<DirectMessageTabProps> = React.memo(
 
     // Variables
     const {
-      gender: senderGender,
       name: senderName,
       contents: messageContents,
       timestamp: messageTimestamp,
@@ -35,20 +34,17 @@ const DirectMessageTab: React.FC<DirectMessageTabProps> = React.memo(
     const timestamp = lang.getFormatTimestamp(messageTimestamp);
 
     return (
-      <>
-        <div />
-        <div className={styles['messageBox']}>
-          <div className={styles['header']}>
-            <span className={styles['name']}>{senderName}</span>
-            <span className={styles['timestamp']}>{timestamp}</span>
-          </div>
-          {messageContents.map((content, index) => (
-            <div key={index} className={styles['content']}>
-              <MarkdownViewer markdownText={content} />
-            </div>
-          ))}
+      <div className={styles['messageBox']}>
+        <div className={styles['header']}>
+          <span className={styles['name']}>{senderName}</span>
+          <span className={styles['timestamp']}>{timestamp}</span>
         </div>
-      </>
+        {messageContents.map((content, index) => (
+          <div key={index} className={styles['content']}>
+            <MarkdownViewer markdownText={content} />
+          </div>
+        ))}
+      </div>
     );
   },
 );
