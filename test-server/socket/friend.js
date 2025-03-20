@@ -10,59 +10,6 @@ const Get = utils.get;
 const Set = utils.set;
 
 const friendHandler = {
-  refreshFriend: async (io, socket, data) => {
-    // Get database
-    const friends = (await db.get('friends')) || {};
-
-    try {
-      // data = {
-      //   userId: string
-      //   targetId: string
-      // }
-
-      // Validate data
-      const { userId, targetId } = data;
-      if (!userId || !targetId) {
-        throw new StandardizedError(
-          '無效的資料',
-          'ValidationError',
-          'REFRESHFRIEND',
-          'DATA_INVALID',
-          401,
-        );
-      }
-      const friend = await Func.validate.friend(
-        friends[`fd_${userId}_${targetId}`] ||
-          friends[`fd_${targetId}_${userId}`],
-      );
-
-      // Validate operation
-      await Func.validate.socket(socket);
-
-      // Emit data (only to the user)
-      io.to(socket.id).emit(
-        'friendUpdate',
-        await Get.friend(friend.user1Id, friend.user2Id),
-      );
-    } catch (error) {
-      if (!(error instanceof StandardizedError)) {
-        error = new StandardizedError(
-          `刷新好友列表時發生無法預期的錯誤: ${error.message}`,
-          'ServerError',
-          'REFRESHFRIEND',
-          'EXCEPTION_ERROR',
-          500,
-        );
-      }
-
-      // Emit data (only to the user)
-      io.to(socket.id).emit('error', error);
-
-      new Logger('Friend').error(
-        `Error refreshing friend list: ${error.error_message}`,
-      );
-    }
-  },
   updateFriend: async (io, socket, data) => {
     // Get database
     // const users = (await db.get('users')) || {};

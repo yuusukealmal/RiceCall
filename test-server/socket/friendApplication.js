@@ -13,10 +13,6 @@ const Set = utils.set;
 const JWT = utils.jwt;
 
 const friendApplicationHandler = {
-  refreshFriendApplication: async (io, socket, data) => {
-    // Get database
-    const friendApplications = (await db.get('friendApplications')) || {};
-  },
   createFriendApplication: async (io, socket, data) => {
     // Get database
     const friendApplications = (await db.get('friendApplications')) || {};

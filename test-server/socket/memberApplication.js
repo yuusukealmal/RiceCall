@@ -13,10 +13,6 @@ const Set = utils.set;
 const JWT = utils.jwt;
 
 const memberApplicationHandler = {
-  refreshMemberApplication: async (io, socket, data) => {
-    // Get database
-    const memberApplications = (await db.get('memberApplications')) || {};
-  },
   createMemberApplication: async (io, socket, data) => {
     // Get database
     const memberApplications = (await db.get('memberApplications')) || {};

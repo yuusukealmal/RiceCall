@@ -10,59 +10,6 @@ const Set = utils.set;
 const Func = utils.func;
 
 const memberHandler = {
-  refreshMember: async (io, socket, data) => {
-    // Get database
-    const members = (await db.get('members')) || {};
-
-    try {
-      // data = {
-      //   userId: string;
-      //   serverId: string;
-      // }
-      // console.log(data);
-
-      // Validate data
-      const { userId, serverId } = data;
-      if (!userId || !serverId) {
-        throw new StandardizedError(
-          '無效的資料',
-          'ValidationError',
-          'REFRESHMEMBER',
-          'DATA_INVALID',
-          401,
-        );
-      }
-      const member = await Func.validate.member(
-        members[`mb_${userId}-${serverId}`],
-      );
-
-      // Validate operation
-      await Func.validate.socket(socket);
-
-      // Emit updated data to the user
-      io.to(socket.id).emit(
-        'memberUpdate',
-        await Get.member(member.userId, member.serverId),
-      );
-    } catch (error) {
-      if (!(error instanceof StandardizedError)) {
-        error = new StandardizedError(
-          `更新成員時發生無法預期的錯誤: ${error.message}`,
-          'ServerError',
-          'REFRESHMEMBER',
-          'EXCEPTION_ERROR',
-          500,
-        );
-      }
-
-      // Emit error data (only to the user)
-      io.to(socket.id).emit('error', error);
-
-      new Logger('Server').error(
-        `Error refreshing member: ${error.error_message}`,
-      );
-    }
-  },
   updateMember: async (io, socket, data) => {
     // Get database
     // const users = (await db.get('users')) || {};

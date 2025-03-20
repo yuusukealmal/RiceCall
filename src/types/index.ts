@@ -1348,46 +1348,37 @@ export type DiscordPresence = {
 export enum SocketClientEvent {
   // User
   SEARCH_USER = 'searchUser',
-  REFRESH_USER = 'refreshUser',
   UPDATE_USER = 'updateUser',
   // Server
   SEARCH_SERVER = 'searchServer',
-  REFRESH_SERVER = 'refreshServer',
   CONNECT_SERVER = 'connectServer',
   DISCONNECT_SERVER = 'disconnectServer',
   CREATE_SERVER = 'createServer',
   UPDATE_SERVER = 'updateServer',
   DELETE_SERVER = 'deleteServer',
   // Category
-  REFRESH_CATEGORY = 'refreshCategory',
   CREATE_CATEGORY = 'createCategory',
   UPDATE_CATEGORY = 'updateCategory',
   DELETE_CATEGORY = 'deleteCategory',
   // Channel
-  REFRESH_CHANNEL = 'refreshChannel',
   CONNECT_CHANNEL = 'connectChannel',
   DISCONNECT_CHANNEL = 'disconnectChannel',
   CREATE_CHANNEL = 'createChannel',
   UPDATE_CHANNEL = 'updateChannel',
   DELETE_CHANNEL = 'deleteChannel',
   // Friend Group
-  REFRESH_FRIEND_GROUP = 'refreshFriendGroup',
   CREATE_FRIEND_GROUP = 'createFriendGroup',
   UPDATE_FRIEND_GROUP = 'updateFriendGroup',
   DELETE_FRIEND_GROUP = 'deleteFriendGroup',
   // Member
-  REFRESH_MEMBER = 'refreshMember',
   UPDATE_MEMBER = 'updateMember',
   // Friend
-  REFRESH_FRIEND = 'refreshFriend',
   UPDATE_FRIEND = 'updateFriend',
   // Member Application
-  REFRESH_MEMBER_APPLICATION = 'refreshMemberApplication',
   CREATE_MEMBER_APPLICATION = 'createMemberApplication',
   UPDATE_MEMBER_APPLICATION = 'updateMemberApplication',
   DELETE_MEMBER_APPLICATION = 'deleteMemberApplication',
   // Friend Application
-  REFRESH_FRIEND_APPLICATION = 'refreshFriendApplication',
   CREATE_FRIEND_APPLICATION = 'createFriendApplication',
   UPDATE_FRIEND_APPLICATION = 'updateFriendApplication',
   DELETE_FRIEND_APPLICATION = 'deleteFriendApplication',

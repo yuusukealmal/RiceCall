@@ -60,50 +60,6 @@ const userHandler = {
       );
     }
   },
-  refreshUser: async (io, socket, data) => {
-    const users = (await db.get('users')) || {};
-
-    try {
-      // data = {
-      //   userId:
-      // }
-
-      // Validate data
-      const { userId } = data;
-      if (!userId) {
-        throw new StandardizedError(
-          '無效的資料',
-          'ValidationError',
-          'REFRESHUSER',
-          'DATA_INVALID',
-        );
-      }
-      const user = await Func.validate.user(users[userId]);
-
-      // Validate operation
-      await Func.validate.socket(socket);
-
-      // Emit data (only to the user)
-      io.to(socket.id).emit('userUpdate', await Get.user(user.id));
-    } catch (error) {
-      if (!(error instanceof StandardizedError)) {
-        error = new StandardizedError(
-          `刷新使用者時發生無法預期的錯誤: ${error.message}`,
-          'ServerError',
-          'REFRESHUSER',
-          'EXCEPTION_ERROR',
-          500,
-        );
-      }
-
-      // Emit data (only to the user)
-      io.to(socket.id).emit('error', error);
-
-      new Logger('WebSocket').error(
-        `Error refreshing user: ${error.error_message}`,
-      );
-    }
-  },
   connectUser: async (io, socket) => {
     const users = (await db.get('users')) || {};
 
