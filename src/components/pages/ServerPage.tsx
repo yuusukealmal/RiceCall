@@ -53,6 +53,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       createDefault.channel(),
     );
     const [member, setMember] = useState<Member>(createDefault.member());
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     // Variables
     const { id: userId, currentChannelId: userCurrentChannelId } = user;
@@ -68,6 +69,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       id: currentChannelId,
       messages: channelMessages = [],
       bitrate: channelBitrate,
+      chatMode: channelChatMode,
     } = currentChannel;
 
     // Handlers
@@ -126,6 +128,31 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       },
       [isResizing],
     );
+
+    const handleChangeChatMode = (mode: Channel['chatMode']) => {
+      if (!socket) return;
+      socket.send.updateChannel({
+        channel: {
+          id: currentChannelId,
+          serverId: serverId,
+          chatMode: mode,
+        },
+        userId: userId,
+      });
+
+      handleSendMessage({
+        id: '',
+        type: 'info',
+        content:
+          mode === 'free'
+            ? lang.tr.changeToFreeSpeech
+            : lang.tr.changeToForbiddenSpeech,
+        senderId: userId,
+        recieverId: serverId,
+        channelId: currentChannelId,
+        timestamp: 0,
+      });
+    };
 
     // Effects
     useEffect(() => {
@@ -218,7 +245,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 </div>
               </div>
               <div className={styles['optionBox']}>
-                {!member && (
+                {(!member || member?.permissionLevel < 2) && (
                   <>
                     <div
                       className={styles['invitation']}
@@ -226,7 +253,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         handleOpenApplyMember(userId, serverId);
                       }}
                     />
-                    <div className={styles['saperator']} />
+                    {/* <div className={styles['saperator']} /> */}
                   </>
                 )}
                 {member && member.permissionLevel > 4 && (
@@ -263,36 +290,63 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
             <div className={styles['inputArea']}>
               <MessageInputBox
                 onSendMessage={(msg) => {
-                  if (msg.startsWith('/')) {
-                    handleSendMessage({
-                      id: '',
-                      type: 'info',
-                      content: msg,
-                      senderId: userId,
-                      recieverId: serverId,
-                      channelId: currentChannelId,
-                      timestamp: 0,
-                    });
-                  } else {
-                    handleSendMessage({
-                      id: '',
-                      type: 'general',
-                      content: msg,
-                      senderId: userId,
-                      recieverId: serverId,
-                      channelId: currentChannelId,
-                      timestamp: 0,
-                    });
-                  }
+                  handleSendMessage({
+                    id: '',
+                    type: 'general',
+                    content: msg,
+                    senderId: userId,
+                    recieverId: serverId,
+                    channelId: currentChannelId,
+                    timestamp: 0,
+                  });
                 }}
+                locked={
+                  channelChatMode === 'forbidden' && member.permissionLevel < 3
+                }
               />
             </div>
             <div className={styles['buttonArea']}>
               <div className={styles['buttons']}>
-                <div className={styles['voiceModeButton']}>
-                  {lang.tr.freeSpeech}
+                <div
+                  className={styles['voiceModeDropdown']}
+                  onClick={() =>
+                    member &&
+                    member.permissionLevel > 2 &&
+                    setIsDropdownOpen(!isDropdownOpen)
+                  }
+                >
+                  {channelChatMode === 'free'
+                    ? lang.tr.freeSpeech
+                    : lang.tr.forbiddenSpeech}
+                  {isDropdownOpen && (
+                    <div className={styles['dropdownMenu']}>
+                      {channelChatMode === 'forbidden' && (
+                        <div
+                          className={styles['dropdownItem']}
+                          onClick={() => {
+                            handleChangeChatMode('free');
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          {lang.tr.freeSpeech}
+                        </div>
+                      )}
+                      {channelChatMode === 'free' && (
+                        <div
+                          className={styles['dropdownItem']}
+                          onClick={() => {
+                            handleChangeChatMode('forbidden');
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          {lang.tr.forbiddenSpeech}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
+
               <div
                 className={`${styles['micButton']} ${
                   webRTC.isMute ? '' : styles['active']

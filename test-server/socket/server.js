@@ -377,7 +377,7 @@ const serverHandler = {
     // Get database
     const users = (await db.get('users')) || {};
     const servers = (await db.get('servers')) || {};
-    // const members = (await db.get('members')) || {};
+    const members = (await db.get('members')) || {};
 
     try {
       // data = {
@@ -406,20 +406,20 @@ const serverHandler = {
       // Validate operation
       await Func.validate.socket(socket);
 
-      // const member = await Func.validate.member(
-      //   members[`mb_${user.id}-${server.id}`],
-      // );
+      const member = await Func.validate.member(
+        members[`mb_${user.id}-${server.id}`],
+      );
 
-      // const permission = member.permissionLevel;
-      // if (!permission || permission < 4) {
-      //   throw new StandardizedError(
-      //     '您沒有權限更新群組',
-      //     'ValidationError',
-      //     'UPDATESERVER',
-      //     'USER_PERMISSION',
-      //     403,
-      //   );
-      // }
+      const permission = member.permissionLevel;
+      if (!permission || permission < 5) {
+        throw new StandardizedError(
+          '您沒有權限更新群組',
+          'ValidationError',
+          'UPDATESERVER',
+          'USER_PERMISSION',
+          403,
+        );
+      }
 
       if (editedServer.avatar) {
         editedServer.avatar = await Func.generateImageData(editedServer.avatar);

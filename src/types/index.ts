@@ -148,6 +148,9 @@ export interface Translation {
   nicknameHint: string;
   register: string;
   freeSpeech: string;
+  forbiddenSpeech: string;
+  changeToFreeSpeech: string;
+  changeToForbiddenSpeech: string;
   takeMic: string;
   takenMic: string;
   mixing: string;
@@ -338,6 +341,9 @@ export const translations: Record<LanguageKey, Translation> = {
     nicknameHint: '2-10位，支持中英文',
     register: '註冊',
     freeSpeech: '自由發言',
+    forbiddenSpeech: '限制發言',
+    changeToFreeSpeech: '該頻道已被設為自由發言',
+    changeToForbiddenSpeech: '該頻道已被設為僅管理員發言',
     takeMic: '拿麥發言',
     takenMic: '已拿麥',
     mixing: '混音',
@@ -524,6 +530,9 @@ export const translations: Record<LanguageKey, Translation> = {
     nicknameHint: '2-10位，支持中英文',
     register: '注册',
     freeSpeech: '自由发言',
+    forbiddenSpeech: '限制发言',
+    changeToFreeSpeech: '该频道已被设为自由发言',
+    changeToForbiddenSpeech: '该频道已被设为仅管理员发言',
     takeMic: '拿麦发言',
     takenMic: '已拿麦',
     mixing: '混音',
@@ -712,6 +721,9 @@ export const translations: Record<LanguageKey, Translation> = {
     nicknameHint: '2-10 characters, supports Chinese and English',
     register: 'Register',
     freeSpeech: 'Free speech',
+    forbiddenSpeech: 'Restricted speech',
+    changeToFreeSpeech: 'The channel has been set to free speech',
+    changeToForbiddenSpeech: 'The channel has been set to admin-only speech',
     takeMic: 'Take mic',
     takenMic: 'Mic taken',
     mixing: 'Mixing',
@@ -898,6 +910,9 @@ export const translations: Record<LanguageKey, Translation> = {
     nicknameHint: '2〜10文字、中国語と英語をサポート',
     register: '登録',
     freeSpeech: '自由な発言',
+    forbiddenSpeech: '発言を制限',
+    changeToFreeSpeech: 'チャンネルは自由な発言に設定されています',
+    changeToForbiddenSpeech: 'チャンネルは管理者のみの発言に設定されています',
     takeMic: 'マイクを取る',
     takenMic: 'マイクを取った',
     mixing: 'ミキシング',
@@ -1087,6 +1102,10 @@ export const translations: Record<LanguageKey, Translation> = {
     nicknameHint: '2-10 символов, поддерживает китайский и английский',
     register: 'Зарегистрироваться',
     freeSpeech: 'Свободная речь',
+    forbiddenSpeech: 'Ограниченная речь',
+    changeToFreeSpeech: 'Канал установлен на свободную речь',
+    changeToForbiddenSpeech:
+      'Канал установлен на речь только для администраторов',
     takeMic: 'Взять микрофон',
     takenMic: 'Микрофон взят',
     mixing: 'Смешивание',

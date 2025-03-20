@@ -559,6 +559,46 @@
   background-position: -18px 0;
 }
 
+.voiceModeDropdown {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 5px;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: none;
+  color: #777777;
+  font-size: 12px;
+  text-align: center;
+  position: relative;
+}
+
+.voiceModeDropdown:after {
+  content: '';
+  background: url(../../public/channel/triangle.png) no-repeat center center;
+  min-height: 8px;
+  min-width: 8px;
+  background-position: 0 0;
+  cursor: pointer;
+  display: block;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: none;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.dropdownItem {
+  cursor: pointer;
+  text-align: center;
+}
+
 .bkgModeButton {
   display: flex;
   align-items: center;

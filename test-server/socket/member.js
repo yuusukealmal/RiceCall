@@ -95,24 +95,34 @@ const memberHandler = {
       // Validate operation
       await Func.validate.socket(socket);
 
-      // if (member.permissionLevel < editedMember.permissionLevel) {
-      //   throw new StandardizedError(
-      //     '你沒有權限更改此成員的權限',
-      //     'ValidationError',
-      //     'UPDATEMEMBER',
-      //     'PERMISSION_DENIED',
-      //     403,
-      //   );
-      // }
-      // if (member.id === editedMember.id) {
-      //   throw new StandardizedError(
-      //     '無法更改自己的權限',
-      //     'ValidationError',
-      //     'UPDATEMEMBER',
-      //     'PERMISSION_DENIED',
-      //     403,
-      //   );
-      // }
+      const permission = member.permissionLevel;
+      if (!permission || permission < 2) {
+        throw new StandardizedError(
+          '無足夠的權限',
+          'ValidationError',
+          'UPDATEMEMBER',
+          'USER_PERMISSION',
+          403,
+        );
+      }
+      if (permission < editedMember.permissionLevel) {
+        throw new StandardizedError(
+          '你沒有權限更改此成員的權限',
+          'ValidationError',
+          'UPDATEMEMBER',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
+      if (member.id === editedMember.id) {
+        throw new StandardizedError(
+          '無法更改自己的權限',
+          'ValidationError',
+          'UPDATEMEMBER',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
 
       // Update member
       await Set.member(member.id, editedMember);
