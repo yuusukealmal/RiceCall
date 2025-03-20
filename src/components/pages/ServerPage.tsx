@@ -54,8 +54,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const [member, setMember] = useState<Member>(createDefault.member());
 
     // Variables
-    const { messages: channelMessages = [], bitrate: channelBitrate } =
-      currentChannel;
     const { id: userId, currentChannelId: userCurrentChannelId } = user;
     const {
       id: serverId,
@@ -65,6 +63,11 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       announcement: serverAnnouncement,
       members: serverMembers = [],
     } = server;
+    const {
+      id: currentChannelId,
+      messages: channelMessages = [],
+      bitrate: channelBitrate,
+    } = currentChannel;
 
     // Handlers
     const handleSendMessage = (message: Message): void => {
@@ -259,15 +262,27 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
             <div className={styles['inputArea']}>
               <MessageInputBox
                 onSendMessage={(msg) => {
-                  handleSendMessage({
-                    type: 'general',
-                    content: msg,
-                    senderId: userId,
-                    channelId: userCurrentChannelId,
-                    timestamp: 0,
-                    ...member,
-                    ...user,
-                  });
+                  if (msg.startsWith('/')) {
+                    handleSendMessage({
+                      id: '',
+                      type: 'info',
+                      content: msg,
+                      senderId: userId,
+                      recieverId: serverId,
+                      channelId: currentChannelId,
+                      timestamp: 0,
+                    });
+                  } else {
+                    handleSendMessage({
+                      id: '',
+                      type: 'general',
+                      content: msg,
+                      senderId: userId,
+                      recieverId: serverId,
+                      channelId: currentChannelId,
+                      timestamp: 0,
+                    });
+                  }
                 }}
               />
             </div>

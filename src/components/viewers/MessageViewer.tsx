@@ -9,96 +9,132 @@ import permission from '@/styles/common/permission.module.css';
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 
 // Types
-import type { DirectMessage, Message } from '@/types';
+import type { ChannelMessage, DirectMessage, InfoMessage } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
 
-interface MessageTabProps {
-  messageGroup: MessageGroup;
+interface DirectMessageTabProps {
+  messageGroup: DirectMessage & {
+    contents: string[];
+  };
 }
 
-const MessageTab: React.FC<MessageTabProps> = React.memo(({ messageGroup }) => {
-  // Hooks
-  const lang = useLanguage();
+const DirectMessageTab: React.FC<DirectMessageTabProps> = React.memo(
+  ({ messageGroup }) => {
+    // Hooks
+    const lang = useLanguage();
 
-  // Variables
-  const {
-    gender: senderGender,
-    name: senderName,
-    permissionLevel: messagePermission,
-    contents: messageContents,
-    timestamp: messageTimestamp,
-  } = messageGroup;
-  const timestamp = lang.getFormatTimestamp(messageTimestamp);
+    // Variables
+    const {
+      gender: senderGender,
+      name: senderName,
+      contents: messageContents,
+      timestamp: messageTimestamp,
+    } = messageGroup;
+    const timestamp = lang.getFormatTimestamp(messageTimestamp);
 
-  return (
-    <>
-      <div
-        className={`${styles['senderIcon']} ${permission[senderGender]} ${
-          permission[`lv-${messagePermission}`]
-        }`}
-      />
-      <div className={styles['messageBox']}>
-        <div className={styles['header']}>
-          <span className={styles['name']}>{senderName}</span>
-          <span className={styles['timestamp']}>{timestamp}</span>
-        </div>
-        {messageContents.map((content, index) => (
-          <div key={index} className={styles['content']}>
-            <MarkdownViewer markdownText={content} />
+    return (
+      <>
+        <div />
+        <div className={styles['messageBox']}>
+          <div className={styles['header']}>
+            <span className={styles['name']}>{senderName}</span>
+            <span className={styles['timestamp']}>{timestamp}</span>
           </div>
-        ))}
-      </div>
-    </>
-  );
-});
+          {messageContents.map((content, index) => (
+            <div key={index} className={styles['content']}>
+              <MarkdownViewer markdownText={content} />
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  },
+);
 
-MessageTab.displayName = 'MessageTab';
+DirectMessageTab.displayName = 'DirectMessageTab';
 
-interface InfoTabProps {
-  messageGroup: MessageGroup;
+interface ChannelMessageTabProps {
+  messageGroup: ChannelMessage & {
+    contents: string[];
+  };
 }
 
-const InfoTab: React.FC<InfoTabProps> = React.memo(({ messageGroup }) => {
-  // Variables
-  const { contents: messageContents } = messageGroup;
+const ChannelMessageTab: React.FC<ChannelMessageTabProps> = React.memo(
+  ({ messageGroup }) => {
+    // Hooks
+    const lang = useLanguage();
 
-  return (
-    <>
-      <img
-        src={'/channel/NT_NOTIFY.png'}
-        alt={'NT_NOTIFY'}
-        className="select-none flex-shrink-0 mt-1"
-      />
-      <div className="flex-1 min-w-0">
-        <div className="text-gray-700">
+    // Variables
+    const {
+      gender: senderGender,
+      name: senderName,
+      permissionLevel: messagePermission,
+      contents: messageContents,
+      timestamp: messageTimestamp,
+    } = messageGroup;
+    const timestamp = lang.getFormatTimestamp(messageTimestamp);
+
+    return (
+      <>
+        <div
+          className={`${styles['senderIcon']} ${permission[senderGender]} ${
+            permission[`lv-${messagePermission}`]
+          }`}
+        />
+        <div className={styles['messageBox']}>
+          <div className={styles['header']}>
+            <span className={styles['name']}>{senderName}</span>
+            <span className={styles['timestamp']}>{timestamp}</span>
+          </div>
+          {messageContents.map((content, index) => (
+            <div key={index} className={styles['content']}>
+              <MarkdownViewer markdownText={content} />
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  },
+);
+
+ChannelMessageTab.displayName = 'ChannelMessageTab';
+
+interface InfoMessageTabProps {
+  messageGroup: InfoMessage & {
+    contents: string[];
+  };
+}
+
+const InfoMessageTab: React.FC<InfoMessageTabProps> = React.memo(
+  ({ messageGroup }) => {
+    // Variables
+    const { contents: messageContents } = messageGroup;
+
+    return (
+      <>
+        <div className={styles['infoIcon']} />
+        <div className={styles['messageBox']}>
           {messageContents.map((content, index) => (
             <div key={index} className="break-words">
               <MarkdownViewer markdownText={content} />
             </div>
           ))}
         </div>
-      </div>
-    </>
-  );
-});
+      </>
+    );
+  },
+);
 
-InfoTab.displayName = 'InfoTab';
+InfoMessageTab.displayName = 'InfoMessageTab';
 
-interface MessageGroup {
-  id: string;
-  type: 'general' | 'info';
+type MessageGroup = (DirectMessage | ChannelMessage | InfoMessage) & {
   contents: string[];
-  gender: string;
-  name: string;
-  permissionLevel: number | null;
-  senderId: string;
-  timestamp: number;
-}
+};
 
 interface MessageViewerProps {
-  messages: Message[] | DirectMessage[];
+  messages: DirectMessage[] | ChannelMessage[] | InfoMessage[];
 }
 
 const MessageViewer: React.FC<MessageViewerProps> = React.memo(
@@ -113,18 +149,15 @@ const MessageViewer: React.FC<MessageViewerProps> = React.memo(
         const timeDiff = lastGroup && message.timestamp - lastGroup.timestamp;
         const nearTime = lastGroup && timeDiff <= 5 * 60 * 1000;
         const sameSender = lastGroup && message.senderId === lastGroup.senderId;
-        const isInfoMsg = message.type == 'info';
+        const sameType = lastGroup && message.type === lastGroup.type;
+        const isInfo = message.type === 'info';
 
-        if (sameSender && nearTime && !isInfoMsg) {
+        if (sameSender && nearTime && sameType && !isInfo) {
           lastGroup.contents.push(message.content);
         } else {
           acc.push({
             ...message,
             contents: [message.content],
-            permissionLevel:
-              'permissionLevel' in message ? message.permissionLevel : null,
-            gender: message.gender,
-            name: message.name,
           });
         }
         return acc;
@@ -149,10 +182,12 @@ const MessageViewer: React.FC<MessageViewerProps> = React.memo(
           return (
             <div key={messageGroup.id} className={styles['messageWrapper']}>
               {messageGroup.type === 'info' ? (
-                <InfoTab messageGroup={messageGroup} />
-              ) : (
-                <MessageTab messageGroup={messageGroup} />
-              )}
+                <InfoMessageTab messageGroup={messageGroup} />
+              ) : messageGroup.type === 'general' ? (
+                <ChannelMessageTab messageGroup={messageGroup} />
+              ) : messageGroup.type === 'dm' ? (
+                <DirectMessageTab messageGroup={messageGroup} />
+              ) : null}
             </div>
           );
         })}

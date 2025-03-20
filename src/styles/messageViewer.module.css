@@ -15,6 +15,14 @@
 .senderIcon {
   display: flex;
 }
+.infoIcon {
+  display: flex;
+  min-width: 12px;
+  min-height: 12px;
+  background-image: url('/channel/NT_NOTIFY.png');
+  background-repeat: no-repeat;
+  background-position: center;
+}
 
 .messageBox {
   display: flex;

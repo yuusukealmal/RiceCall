@@ -1,19 +1,17 @@
 .Male {
-  content: '';
-  background: url(../../../public/channel/UserIconsMale.png) no-repeat center
-    center;
-  background-position: 0 0;
   min-height: 15px;
   min-width: 15px;
+  background-image: url(../../../public/channel/UserIconsMale.png);
+  background-repeat: no-repeat;
+  background-position: 0 0;
 }
 
 .Female {
-  content: '';
-  background: url(../../../public/channel/UserIconsFemale.png) no-repeat center
-    center;
-  background-position: 0 0;
   min-height: 15px;
   min-width: 15px;
+  background-image: url(../../../public/channel/UserIconsFemale.png);
+  background-repeat: no-repeat;
+  background-position: 0 0;
 }
 
 .lv-1 {

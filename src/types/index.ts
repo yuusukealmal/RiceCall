@@ -1242,7 +1242,16 @@ export type Channel = BaseChannel & {
   categoryId: string | null;
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
-  messages?: Message[];
+  messages?: ChannelMessage[];
+};
+
+export type ChannelMessage = Message &
+  ServerMember & {
+    type: 'general';
+  };
+
+export type InfoMessage = Message & {
+  type: 'info';
 };
 
 export type Member = {
@@ -1270,21 +1279,20 @@ export type Friend = {
   directMessages?: DirectMessage[]; // Change to another sheet
 };
 
+export type DirectMessage = Message &
+  UserFriend & {
+    type: 'dm';
+  };
+
 export type UserFriend = Friend & User;
 
-export type Message = ServerMember & {
+export type Message = {
+  id: string;
   content: string;
-  type: 'general' | 'info';
   senderId: string;
+  recieverId: string;
   channelId: string;
-  timestamp: number;
-};
-
-export type DirectMessage = UserFriend & {
-  content: string;
-  type: 'general' | 'info';
-  senderId: string;
-  friendId: string;
+  type: 'general' | 'dm' | 'info';
   timestamp: number;
 };
 

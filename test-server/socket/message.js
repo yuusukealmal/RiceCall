@@ -51,7 +51,10 @@ const messageHandler = {
 
       // Emit updated data (to all users in the channel)
       io.to(`channel_${channel.id}`).emit('channelUpdate', {
-        messages: await Get.channelMessages(channel.id),
+        messages: [
+          ...(await Get.channelMessages(channel.id)),
+          ...(await Get.channelInfoMessages(channel.id)),
+        ],
       });
 
       new Logger('WebSocket').success(
@@ -103,7 +106,7 @@ const messageHandler = {
       const directMessage = await Func.validate.directMessage(_directMessage);
       const user = await Func.validate.user(users[directMessage.senderId]);
       const friend = await Func.validate.friend(
-        friends[directMessage.friendId],
+        friends[directMessage.channelId],
       );
 
       // Validate operation
@@ -111,7 +114,7 @@ const messageHandler = {
 
       // Create new message
       const directMessageId = uuidv4();
-      await Set.directMessage(directMessageId, {
+      await Set.message(directMessageId, {
         ...directMessage,
         timestamp: Date.now().valueOf(),
       });

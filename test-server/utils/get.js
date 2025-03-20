@@ -208,18 +208,32 @@ const get = {
     if (!channel) return null;
     return {
       ...channel,
-      messages: await get.channelMessages(channelId),
+      messages: [
+        ...(await get.channelMessages(channelId)),
+        ...(await get.channelInfoMessages(channelId)),
+      ],
     };
   },
   channelMessages: async (channelId) => {
     const messages = (await db.get('messages')) || {};
+    const members = (await db.get('members')) || {};
     const users = (await db.get('users')) || {};
     return Object.values(messages)
-      .filter((msg) => msg.channelId === channelId)
+      .filter((msg) => msg.channelId === channelId && msg.type === 'general')
       .map((msg) => {
-        // Concat user data with message data
+        // Concat user and member data with message data
+        const member = members[`mb_${msg.senderId}-${msg.recieverId}`];
         const user = users[msg.senderId];
-        return { ...user, ...msg };
+        return { ...user, ...member, ...msg };
+      })
+      .filter((msg) => msg);
+  },
+  channelInfoMessages: async (channelId) => {
+    const messages = (await db.get('messages')) || {};
+    return Object.values(messages)
+      .filter((msg) => msg.channelId === channelId && msg.type === 'info')
+      .map((msg) => {
+        return { ...msg };
       })
       .filter((msg) => msg);
   },
@@ -257,14 +271,18 @@ const get = {
     };
   },
   friendDirectMessages: async (friendId) => {
-    const directMessages = (await db.get('directMessages')) || {};
+    const messages = (await db.get('messages')) || {};
+    const friends = (await db.get('friends')) || {};
     const users = (await db.get('users')) || {};
-    return Object.values(directMessages)
-      .filter((dm) => dm.friendId === friendId)
+    return Object.values(messages)
+      .filter((dm) => dm.channelId === friendId && dm.type === 'dm')
       .map((dm) => {
         // Concat user data with direct message data
+        const friend =
+          friends[`fd_${dm.senderId}-${dm.recieverId}`] ||
+          friends[`fd_${dm.recieverId}-${dm.senderId}`];
         const user = users[dm.senderId];
-        return { ...user, ...dm };
+        return { ...user, ...friend, ...dm };
       })
       .filter((dm) => dm);
   },

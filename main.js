@@ -364,7 +364,6 @@ function connectSocket(token) {
     // 註冊所有 Socket 事件
     Object.values(SocketServerEvent).forEach((event) => {
       socket.on(event, (data) => {
-        console.log('Socket event:', event);
         BrowserWindow.getAllWindows().forEach((window) => {
           window.webContents.send(event, data);
         });
