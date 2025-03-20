@@ -93,7 +93,7 @@ const set = {
       isLobby: false,
       isRoot: false,
       slowmode: false,
-      bitrate: 0,
+      bitrate: 64000,
       userLimit: 0,
       order: 0,
       serverId: '',

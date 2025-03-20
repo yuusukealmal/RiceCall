@@ -41,7 +41,7 @@ export const createDefault = {
     isLobby: false,
     isRoot: false,
     slowmode: false,
-    bitrate: 0,
+    bitrate: 64000,
     userLimit: 0,
     order: 0,
     serverId: '',
@@ -85,6 +85,7 @@ export const createDefault = {
   }),
 
   member: (overrides: Partial<Member> = {}): Member => ({
+    id: '',
     isBlocked: false,
     nickname: null,
     contribution: 0,

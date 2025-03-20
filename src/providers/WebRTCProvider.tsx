@@ -35,10 +35,10 @@ interface RTCIceCandidateProps {
 }
 
 interface WebRTCContextType {
-  // joinVoiceChannel?: (channelId: string) => void;
-  // leaveVoiceChannel?: () => void;
   toggleMute?: () => void;
+  updateBitrate?: (newBitrate: number) => void;
   isMute?: boolean;
+  bitrate?: number;
 }
 
 const WebRTCContext = createContext<WebRTCContextType>({});
@@ -54,8 +54,10 @@ interface WebRTCProviderProps {
 const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
   // States
   const [isMute, setIsMute] = useState<boolean>(false);
+  const [bitrate, setBitrate] = useState<number>(128000);
 
   // Refs
+  const lastBitrateRef = useRef<number>(128000);
   const localStream = useRef<MediaStream | null>(null);
   const peerStreams = useRef<{ [id: string]: MediaStream }>({});
   const peerAudioRefs = useRef<{ [id: string]: HTMLAudioElement }>({});
@@ -191,9 +193,6 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
       .then((stream) => {
         localStream.current = stream;
         stream.getTracks().forEach((track) => {
-          track.onended = () => {
-            console.log('WebRTC: local audio track ended');
-          };
           track.enabled = !isMute;
           Object.values(peerConnections.current).forEach((peerConnection) => {
             peerConnection.addTrack(track, stream);
@@ -211,7 +210,6 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
   }, []);
 
   const createPeerConnection = async (rtcConnection: string) => {
-    console.log('WebRTC: create peer connection, target user:', rtcConnection);
     const peerConnection = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -224,20 +222,10 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
       if (event.candidate)
         handleSendRTCIceCandidate(rtcConnection, event.candidate);
     };
-    peerConnection.onicegatheringstatechange = () => {
-      console.log(
-        'WebRTC: ICE gathering state:',
-        peerConnection.iceGatheringState,
-      );
-    };
-    peerConnection.onconnectionstatechange = () => {
-      console.log('WebRTC: Connection state:', peerConnection.connectionState);
-    };
-    peerConnection.onsignalingstatechange = () => {
-      console.log('WebRTC: Signaling state:', peerConnection.signalingState);
-    };
+    peerConnection.onicegatheringstatechange = () => {};
+    peerConnection.onconnectionstatechange = () => {};
+    peerConnection.onsignalingstatechange = () => {};
     peerConnection.ontrack = (event) => {
-      console.log('WebRTC: receive remote audio track');
       if (!peerAudioRefs.current[rtcConnection]) {
         peerAudioRefs.current[rtcConnection] = document.createElement('audio');
         peerAudioRefs.current[rtcConnection].autoplay = true;
@@ -255,14 +243,12 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
   };
 
   const removePeerConnection = async (rtcConnection: string) => {
-    console.log('WebRTC: remove peer connection, target user:', rtcConnection);
     peerConnections.current[rtcConnection].close();
     delete peerConnections.current[rtcConnection];
     delete peerAudioRefs.current[rtcConnection];
   };
 
   const toggleMute = () => {
-    console.log('WebRTC: toggle mute, current state:', isMute);
     if (!localStream.current) return;
     const audioTracks = localStream.current.getAudioTracks();
     audioTracks.forEach((track) => {
@@ -271,8 +257,27 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
     setIsMute(!isMute);
   };
 
+  const updateBitrate = (newBitrate: number) => {
+    if (newBitrate === lastBitrateRef.current) return;
+    Object.entries(peerConnections.current).forEach(async ([_, connection]) => {
+      const senders = connection.getSenders();
+      for (const sender of senders) {
+        const parameters = sender.getParameters();
+        if (!parameters.encodings) {
+          parameters.encodings = [{}];
+        }
+        parameters.encodings[0].maxBitrate = newBitrate;
+        await sender.setParameters(parameters);
+      }
+    });
+    lastBitrateRef.current = newBitrate;
+    setBitrate(newBitrate);
+  };
+
   return (
-    <WebRTCContext.Provider value={{ toggleMute, isMute }}>
+    <WebRTCContext.Provider
+      value={{ toggleMute, updateBitrate, isMute, bitrate }}
+    >
       {Object.keys(peerStreams).map((rtcConnection) => (
         <audio
           key={rtcConnection}

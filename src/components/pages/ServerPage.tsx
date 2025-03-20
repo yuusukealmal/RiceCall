@@ -51,16 +51,17 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const [member, setMember] = useState<Member>(createDefault.member());
 
     // Variables
-    const channelMessages = currentChannel.messages || [];
-    const serverId = server.id;
-    const serverName = server.name;
-    const serverAvatar = server.avatar;
-    const serverDisplayId = server.displayId;
-    const serverAnnouncement = server.announcement;
-    const serverMembers = server.members || [];
-    const serverMemberCount = serverMembers.length;
-    const userId = user.id;
-    const userCurrentChannelId = user.currentChannelId;
+    const { messages: channelMessages = [], bitrate: channelBitrate } =
+      currentChannel;
+    const { id: userId, currentChannelId: userCurrentChannelId } = user;
+    const {
+      id: serverId,
+      name: serverName,
+      avatar: serverAvatar,
+      displayId: serverDisplayId,
+      announcement: serverAnnouncement,
+      members: serverMembers = [],
+    } = server;
 
     // Handlers
     const handleSendMessage = (message: Message): void => {
@@ -154,7 +155,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     useEffect(() => {
       ipcService.discord.updatePresence({
         details: `${lang.tr.in} ${serverName}`,
-        state: `${lang.tr.with} ${serverMemberCount} `,
+        state: `${lang.tr.with} ${serverMembers.length} `,
         largeImageKey: 'app_icon',
         largeImageText: 'RC Voice',
         smallImageKey: 'home_icon',
@@ -167,7 +168,12 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
           },
         ],
       });
-    }, [lang, serverName, serverMemberCount]);
+    }, [lang, serverName, serverMembers]);
+
+    useEffect(() => {
+      if (!webRTC.updateBitrate || !channelBitrate) return;
+      webRTC.updateBitrate(channelBitrate);
+    }, [webRTC.updateBitrate, channelBitrate]);
 
     return (
       <div className={styles['serverWrapper']}>
@@ -194,7 +200,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                   <div className={styles['idText']}>{serverDisplayId}</div>
                   <div className={styles['memberIcon']} />
                   <div className={styles['memberText']}>
-                    {serverMemberCount}
+                    {serverMembers.length}
                   </div>
                 </div>
               </div>
