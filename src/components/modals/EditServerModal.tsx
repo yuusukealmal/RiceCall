@@ -23,9 +23,6 @@ import {
   Permission,
 } from '@/types';
 
-// Utils
-import { getPermissionText } from '@/utils/formatters';
-
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
 import { useContextMenu } from '@/providers/ContextMenuProvider';
