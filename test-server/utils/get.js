@@ -146,13 +146,20 @@ const get = {
     if (!server) return null;
     return {
       ...server,
-      lobby: await get.channel(server.lobbyId),
-      owner: await get.user(server.ownerId),
+      lobby: await get.serverChannel(serverId, server.lobbyId),
+      owner: await get.serverUser(serverId, server.ownerId),
       users: await get.serverUsers(serverId),
       channels: await get.serverChannels(serverId),
       members: await get.serverMembers(serverId),
       memberApplications: await get.serverApplications(serverId),
     };
+  },
+  serverUser: async (serverId, userId) => {
+    const users = (await db.get('users')) || {};
+    return Object.values(users)
+      .filter((u) => u.currentServerId === serverId && u.id === userId)
+      .sort((a, b) => b.lastActiveAt - a.lastActiveAt)
+      .filter((u) => u);
   },
   serverUsers: async (serverId) => {
     const users = (await db.get('users')) || {};
@@ -160,6 +167,13 @@ const get = {
       .filter((u) => u.currentServerId === serverId)
       .sort((a, b) => b.lastActiveAt - a.lastActiveAt)
       .filter((u) => u);
+  },
+  serverChannel: async (serverId, channelId) => {
+    const channels = (await db.get('channels')) || {};
+    const categories = (await db.get('categories')) || {};
+    return Object.values({ ...channels, ...categories })
+      .filter((ch) => ch.serverId === serverId && ch.id === channelId)
+      .filter((ch) => ch);
   },
   serverChannels: async (serverId) => {
     const channels = (await db.get('channels')) || {};
