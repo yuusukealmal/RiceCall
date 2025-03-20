@@ -65,6 +65,7 @@ const channelHandler = {
     // Get database
     const users = (await db.get('users')) || {};
     const channels = (await db.get('channels')) || {};
+    const servers = (await db.get('servers')) || {};
 
     try {
       // data = {
@@ -86,9 +87,37 @@ const channelHandler = {
       }
       const user = await Func.validate.user(users[userId]);
       const channel = await Func.validate.channel(channels[channelId]);
+      const server = await Func.validate.server(servers[channel.serverId]);
 
       // Validate operation
       await Func.validate.socket(socket);
+
+      if (!channel.isLobby) {
+        if (server.visibility === 'readonly') {
+          throw new StandardizedError(
+            '該頻道為唯獨頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'SERVER_READONLY',
+            403,
+          );
+        }
+
+        const member = await Get.member(user.id, server.id);
+        if (
+          (server.visibility === 'private' ||
+            channel.visibility === 'private') &&
+          (!member || member.permissionLevel < 2)
+        ) {
+          throw new StandardizedError(
+            '您需要成為該群組的會員才能加入該頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'SERVER_PRIVATE',
+            403,
+          );
+        }
+      }
 
       // Disconnect the user from the current channel
       if (user.currentChannelId) {
@@ -229,7 +258,6 @@ const channelHandler = {
     // Get database
     const users = (await db.get('users')) || {};
     const servers = (await db.get('servers')) || {};
-    const members = (await db.get('members')) || {};
 
     try {
       // data = {
@@ -258,10 +286,7 @@ const channelHandler = {
       // Validate operation
       await Func.validate.socket(socket);
 
-      const member = await Func.validate.member(
-        members[`mb_${user.id}-${server.id}`],
-      );
-
+      const member = await Get.member(user.id, server.id);
       const permission = member.permissionLevel;
       if (!permission || permission < 4) {
         throw new StandardizedError(
@@ -315,7 +340,6 @@ const channelHandler = {
     const users = (await db.get('users')) || {};
     const channels = (await db.get('channels')) || {};
     const servers = (await db.get('servers')) || {};
-    const members = (await db.get('members')) || {};
 
     try {
       // data = {
@@ -347,10 +371,7 @@ const channelHandler = {
       // Validate operation
       await Func.validate.socket(socket);
 
-      const member = await Func.validate.member(
-        members[`mb_${user.id}-${server.id}`],
-      );
-
+      const member = await Get.member(user.id, server.id);
       const permission = member.permissionLevel;
       if (!permission || permission < 3) {
         throw new StandardizedError(
@@ -401,7 +422,6 @@ const channelHandler = {
     const users = (await db.get('users')) || {};
     const channels = (await db.get('channels')) || {};
     const servers = (await db.get('servers')) || {};
-    const members = (await db.get('members')) || {};
 
     try {
       // data = {
@@ -428,10 +448,7 @@ const channelHandler = {
       // Validate operation
       await Func.validate.socket(socket);
 
-      const member = await Func.validate.member(
-        members[`mb_${user.id}-${server.id}`],
-      );
-
+      const member = await Get.member(user.id, server.id);
       const permission = member.permissionLevel;
       if (!permission || permission < 4) {
         throw new StandardizedError(

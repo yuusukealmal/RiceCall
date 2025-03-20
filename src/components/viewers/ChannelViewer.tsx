@@ -257,8 +257,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             setExpanded(channelVisibility != 'readonly' ? !expanded : false)
           }
           onDoubleClick={() => {
-            if (userInChannel) return;
-            if (channelVisibility === 'readonly') return;
+            if (userInChannel || channelVisibility === 'readonly') return;
             handleJoinChannel(channelId, userId);
           }}
           onContextMenu={(e) => {
