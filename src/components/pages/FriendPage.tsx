@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // CSS
 import friendPage from '@/styles/friendPage.module.css';
@@ -28,6 +28,9 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
+
+    //
+    const refreshed = useRef(false);
 
     // States
     const [signatureInput, setSignatureInput] = useState<string>(
@@ -102,9 +105,11 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     }, [lang, userName]);
 
     useEffect(() => {
-      if (!socket) return;
-      if (userId) socket.send.refreshUser({ userId: userId });
-    }, [socket]);
+      if (!socket || !userId) return;
+      if (refreshed.current) return;
+      socket.send.refreshUser({ userId: userId });
+      refreshed.current = true;
+    }, [socket, userId]);
 
     return (
       <div className={friendPage['friendWrapper']}>

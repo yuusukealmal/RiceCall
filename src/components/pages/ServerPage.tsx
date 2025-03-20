@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // CSS
 import styles from '@/styles/serverPage.module.css';
@@ -41,6 +41,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const lang = useLanguage();
     const socket = useSocket();
     const webRTC = useWebRTC();
+
+    // Refs
+    const refreshed = useRef(false);
 
     // States
     const [sidebarWidth, setSidebarWidth] = useState<number>(256);
@@ -144,13 +147,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!socket) return;
-      if (serverId) socket.send.refreshServer({ serverId: serverId });
-      if (userCurrentChannelId)
-        socket.send.refreshChannel({ channelId: userCurrentChannelId });
-      if (userId && serverId)
-        socket.send.refreshMember({ userId: userId, serverId: serverId });
-    }, [socket]);
+      if (!socket || !userId) return;
+      if (refreshed.current) return;
+      socket.send.refreshServer({ serverId: serverId });
+      socket.send.refreshChannel({ channelId: userCurrentChannelId });
+      socket.send.refreshMember({ userId: userId, serverId: serverId });
+      refreshed.current = true;
+    }, [socket, userId, serverId, userCurrentChannelId]);
 
     useEffect(() => {
       ipcService.discord.updatePresence({

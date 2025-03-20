@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // CSS
 import homePage from '@/styles/homePage.module.css';
@@ -25,6 +25,9 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(({ user }) => {
   // Hooks
   const lang = useLanguage();
   const socket = useSocket();
+
+  // Refs
+  const refreshed = useRef(false);
 
   // States
   const [searchResults, setSearchResults] = useState<Server[]>([]);
@@ -73,9 +76,11 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(({ user }) => {
   }, [socket]);
 
   useEffect(() => {
-    if (!socket) return;
-    if (userId) socket.send.refreshUser({ userId: userId });
-  }, [socket]);
+    if (refreshed.current) return;
+    if (!socket || !userId) return;
+    socket.send.refreshUser({ userId });
+    refreshed.current = true;
+  }, [socket, userId]);
 
   useEffect(() => {
     if (!lang) return;
