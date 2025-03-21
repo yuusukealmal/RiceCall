@@ -56,7 +56,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url.startsWith('/uploads/')) {
     try {
       // Get the file path relative to uploads directory
-      const relativePath = req.url.replace('/uploads/', '');
+      const relativePath = req.url.replace('/uploads/', '').split('?')[0];
       const filePath = path.join(UPLOADS_DIR, relativePath);
 
       // Validate file path to prevent directory traversal
@@ -74,9 +74,12 @@ const server = http.createServer((req, res) => {
         .then((data) => {
           res.writeHead(200, {
             'Content-Type': contentType,
-            'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
-            'Access-Control-Allow-Origin': '*', // 允許跨域存取
+            'Cache-Control':
+              'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Expires': '0',
+            'Pragma': 'no-cache',
           });
+
           res.end(data);
         })
         .catch((error) => {
@@ -557,20 +560,39 @@ const server = http.createServer((req, res) => {
         if (dataBuffer.size > 5 * 1024 * 1024)
           throw new Error('File size too large');
 
-        const fileName = `${serverId || userId}.${ext}`;
-        const filePath = path.join(
-          serverId ? SERVER_AVATAR_DIR : USER_AVATAR_DIR,
-          fileName,
-        );
+        const baseFileName = serverId || userId;
+        const dirPath = serverId ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
 
         try {
-          await fs.access(filePath);
-          await fs.unlink(filePath);
+          const files = await fs.readdir(dirPath);
+          const matchingFiles = files.filter((file) =>
+            file.startsWith(`${serverId || userId}`),
+          );
+          await Promise.all(
+            matchingFiles.map((file) => fs.unlink(path.join(dirPath, file))),
+          );
         } catch (error) {
           if (error.code !== 'ENOENT') throw error;
         }
 
+        const fileName = `${baseFileName}.${ext}`;
+        const filePath = path.join(dirPath, fileName);
         await fs.writeFile(filePath, dataBuffer);
+
+        if (serverId) {
+          const servers = (await db.get('servers')) || {};
+          const server = Func.validate.server(servers[serverId]);
+          await Set.server(server.id, {
+            avatar: `/${SERVER_AVATAR_PATH}/${fileName}`,
+          });
+        } else {
+          const users = (await db.get('users')) || {};
+          const user = Func.validate.user(users[userId]);
+          await Set.user(user.id, {
+            avatar: `/${USER_AVATAR_DIR}/${fileName}`,
+          });
+        }
+
         sendSuccess(res, { message: 'success' });
       } catch (error) {
         throw new StandardizedError(
@@ -610,19 +632,23 @@ const server = http.createServer((req, res) => {
         if (dataBuffer.size > 5 * 1024 * 1024)
           throw new Error('File size too large');
 
-        const fileName = `preupload-${userId}.${ext}`;
-        const filePath = path.join(
-          type === 'server' ? SERVER_AVATAR_DIR : USER_AVATAR_DIR,
-          fileName,
-        );
+        const baseFileName = `preupload-${userId}`;
+        const dirPath = type === 'server' ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
 
         try {
-          await fs.access(filePath);
-          await fs.unlink(filePath);
+          const files = await fs.readdir(dirPath);
+          const matchingFiles = files.filter((file) =>
+            file.startsWith(baseFileName),
+          );
+          await Promise.all(
+            matchingFiles.map((file) => fs.unlink(path.join(dirPath, file))),
+          );
         } catch (error) {
           if (error.code !== 'ENOENT') throw error;
         }
 
+        const fileName = `${baseFileName}.${ext}`;
+        const filePath = path.join(dirPath, fileName);
         await fs.writeFile(filePath, dataBuffer);
         sendSuccess(res, { message: 'success', fileName });
       } catch (error) {
@@ -641,6 +667,78 @@ const server = http.createServer((req, res) => {
   sendSuccess(res, { message: 'Hello World!' });
   return;
 });
+
+const handleAvatarUpload = async (req, res, urlType) => {
+  try {
+    if (req.method !== 'POST')
+      return sendSuccess(res, { message: 'Hello World!' });
+
+    const form = new formidable.IncomingForm();
+    form.parse(req, async (err, fields) => {
+      if (err) throw new Error('Error parsing form data');
+
+      const isUpdate = urlType === 'updateAvatar';
+      const _avatar = fields._avatar?.[0];
+      if (!_avatar) throw new Error('Invalid form data');
+
+      const matches = _avatar.match(/^data:image\/(.*?);base64,/);
+      if (!matches) throw new Error('Invalid file data');
+      const ext = matches[1];
+      if (!MIME_TYPES[`.${ext}`]) throw new Error('Invalid file type');
+
+      const base64Data = _avatar.replace(/^data:image\/\w+;base64,/, '');
+      const dataBuffer = Buffer.from(base64Data, 'base64');
+      if (dataBuffer.length > 5 * 1024 * 1024)
+        throw new Error('File size too large');
+
+      let baseFileName, dirPath;
+      if (isUpdate) {
+        const serverId = fields._serverId?.[0] || null;
+        const userId = fields._userId?.[0] || null;
+        if (!serverId && !userId) throw new Error('Invalid form data');
+
+        baseFileName = serverId || userId;
+        dirPath = serverId ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
+      } else {
+        const type = fields._type?.[0];
+        const userId = fields._userId?.[0];
+        if (!type || !userId) throw new Error('Invalid form data');
+
+        baseFileName = `preupload-${userId}`;
+        dirPath = type === 'server' ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
+      }
+
+      try {
+        const files = await fs.readdir(dirPath);
+        const matchingFiles = files.filter((file) =>
+          file.startsWith(baseFileName),
+        );
+        await Promise.all(
+          matchingFiles.map((file) => fs.unlink(path.join(dirPath, file))),
+        );
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+
+      const fileName = `${baseFileName}.${ext}`;
+      const filePath = path.join(dirPath, fileName);
+      await fs.writeFile(filePath, dataBuffer);
+
+      sendSuccess(
+        res,
+        isUpdate ? { message: 'success' } : { message: 'success', fileName },
+      );
+    });
+  } catch (error) {
+    throw new StandardizedError(
+      error.message,
+      'ValidationError',
+      'UPLOADAVATAR',
+      'INVALID_FILE_TYPE',
+      400,
+    );
+  }
+};
 
 // Socket Server
 const io = new Server(server, {

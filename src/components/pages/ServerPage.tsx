@@ -67,6 +67,8 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       bitrate: channelBitrate,
       chatMode: channelChatMode,
     } = currentChannel;
+    const avatarSrc = new URL(API_URL + serverAvatar, window.location.origin)
+      .href;
 
     // Handlers
     const handleSendMessage = (message: Message): void => {
@@ -208,7 +210,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               <div className={styles['avatarBox']}>
                 <div
                   className={styles['avatarPicture']}
-                  style={{ backgroundImage: `url(${API_URL + serverAvatar})` }}
+                  style={{
+                    backgroundImage: `url(${avatarSrc}?t=${Date.now()})`,
+                  }}
                 />
               </div>
               <div className={styles['baseInfoBox']}>

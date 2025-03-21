@@ -30,6 +30,8 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
     ownerId: serverOwnerId,
   } = server;
   const isOwner = serverOwnerId === userId;
+  const avatarSrc = new URL(API_URL + serverAvatar, window.location.origin)
+    .href;
 
   // Handlers
   const handleServerSelect = () => {
@@ -44,7 +46,7 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
     >
       <div
         className={homePage['myGroupsRoomAvatarPicture']}
-        style={{ backgroundImage: `url(${API_URL + serverAvatar})` }}
+        style={{ backgroundImage: `url(${avatarSrc}?t=${Date.now()})` }}
       ></div>
       <div className={homePage['myGroupsRoomInfo']}>
         <div className={homePage['myGroupsRoomName']}>{serverName}</div>

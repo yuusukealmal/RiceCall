@@ -317,7 +317,12 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                             backgroundImage: `url(${
                               serverAvatar.startsWith('data:image/')
                                 ? serverAvatar
-                                : API_URL + serverAvatar
+                                : `${
+                                    new URL(
+                                      API_URL + serverAvatar,
+                                      window.location.origin,
+                                    ).href
+                                  }?t=${Date.now()}`
                             })`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',

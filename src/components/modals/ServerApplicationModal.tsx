@@ -40,6 +40,8 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
       useState<Server['displayId']>('');
     const [applicationDescription, setApplicationDescription] =
       useState<MemberApplication['description']>('');
+    const avatarSrc = new URL(API_URL + serverAvatar, window.location.origin)
+      .href;
 
     // Variables
     const { userId, serverId } = initialData;
@@ -114,7 +116,9 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
                   <div className={applyMember['avatarWrapper']}>
                     <div
                       className={applyMember['avatarPicture']}
-                      style={{ backgroundImage: `url(${API_URL + serverAvatar})` }}
+                      style={{
+                        backgroundImage: `url(${avatarSrc}?t=${Date.now()})`,
+                      }}
                     />
                   </div>
                   <div className={applyMember['serverInfoWrapper']}>
