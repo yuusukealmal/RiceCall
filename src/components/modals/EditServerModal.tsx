@@ -20,7 +20,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import { API_URL, apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -148,13 +148,26 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       ipcService.window.close();
     };
 
-    const handleUpdateServer = () => {
+    const handleUpdateServer = async () => {
       if (!socket) return;
+
+      // if server avatar updated, upload the new avatar
+      if (serverAvatar.startsWith('data:image/')) {
+        const formData = new FormData();
+        formData.append('_serverId', serverId);
+        formData.append('_avatar', serverAvatar);
+
+        await fetch(`${API_URL}/upload/updateAvatar`, {
+          method: 'POST',
+          body: formData,
+        });
+      }
+
       socket.send.updateServer({
         server: {
           id: serverId,
           name: serverName,
-          avatar: serverAvatar,
+          // avatar: serverAvatar,
           announcement: serverAnnouncement,
           description: serverDescription,
           type: serverType,
@@ -301,7 +314,11 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                         <div
                           className={EditServer['avatarPicture']}
                           style={{
-                            backgroundImage: `url(${serverAvatar})`,
+                            backgroundImage: `url(${
+                              serverAvatar.startsWith('data:image/')
+                                ? serverAvatar
+                                : API_URL + serverAvatar
+                            })`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                           }}
@@ -310,7 +327,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           type="file"
                           id="avatar-upload"
                           className="hidden"
-                          accept="image/jpeg,image/png,image/gif,image/webp"
+                          accept="image/*"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (!file) {
@@ -322,9 +339,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                               return;
                             }
                             const reader = new FileReader();
-                            reader.onloadend = () => {
+                            reader.onloadend = () =>
                               setServerAvatar(reader.result as string);
-                            };
                             reader.readAsDataURL(file);
                           }}
                         />

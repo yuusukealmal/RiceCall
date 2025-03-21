@@ -14,7 +14,7 @@ import { useSocket } from '@/providers/SocketProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import { API_URL, apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -114,7 +114,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
                   <div className={applyMember['avatarWrapper']}>
                     <div
                       className={applyMember['avatarPicture']}
-                      style={{ backgroundImage: `url(${serverAvatar})` }}
+                      style={{ backgroundImage: `url(${API_URL + serverAvatar})` }}
                     />
                   </div>
                   <div className={applyMember['serverInfoWrapper']}>

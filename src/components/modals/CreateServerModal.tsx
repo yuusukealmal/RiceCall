@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import defaultAvatar from '../../../public/logo_server_def.png';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
@@ -13,7 +14,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import { apiService, API_URL } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -32,7 +33,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // Constant
-    const MAX_GROUPS = 3;
+    const MAX_GROUPS = 999;
     const SERVER_TYPES: { value: Server['type']; name: string }[] = [
       {
         value: 'game',
@@ -67,8 +68,33 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       ipcService.window.close();
     };
 
-    const handleCreateServer = (server: Partial<Server>) => {
+    const handleCreateServer = async (server: Partial<Server>) => {
       if (!socket) return;
+
+      if (serverAvatar) {
+        const formData = new FormData();
+        formData.append('_type', 'server');
+        formData.append('_userId', userId);
+        formData.append('_avatar', serverAvatar);
+
+        try {
+          const response = await fetch(`${API_URL}/upload/avatar`, {
+            method: 'POST',
+            body: formData,
+          });
+          const result = await response.json();
+          if (response.ok) {
+            server.avatar = result.fileName;
+          } else {
+            handleOpenErrorDialog('Server avatar upload failed');
+            return;
+          }
+        } catch (error) {
+          handleOpenErrorDialog('Server avatar upload failed');
+          return;
+        }
+      }
+
       socket.send.createServer({ server: server, userId: userId });
     };
 
@@ -98,6 +124,19 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       };
       refresh();
     }, [userId]);
+
+    useEffect(() => {
+      fetch(defaultAvatar.src)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setServerAvatar(reader.result as string);
+          };
+          reader.readAsDataURL(blob);
+        })
+        .catch((err) => console.error('預設圖片讀取失敗:', err));
+    }, []);
 
     switch (section) {
       // Server Type Selection Section
@@ -231,8 +270,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       //   setErrors((prev) => ({
                       //     ...prev,
                       //     name: validateName(serverName),
-                      //   }))
-                      // }
+                      //   }))}
                       placeholder={lang.tr.groupNamePlaceholder}
                     />
                     {/* {errors.name && <p className="text-red-500">{errors.name}</p>} */}
@@ -247,8 +285,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       //   setErrors((prev) => ({
                       //     ...prev,
                       //     description: validateDescription(serverDescription),
-                      //   }))
-                      // }
+                      //   }))}
                       placeholder={lang.tr.groupSloganPlaceholder}
                     />
                     {/* {errors.description && (
@@ -267,10 +304,10 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                   !serverName.trim() || !canCreate ? popup['disabled'] : ''
                 }`}
                 disabled={!serverName.trim() || !canCreate}
-                onClick={() => {
-                  handleCreateServer({
+                onClick={async () => {
+                  await handleCreateServer({
                     name: serverName,
-                    avatar: serverAvatar,
+                    // avatar: serverAvatar,
                     description: serverDescription,
                     type: serverType,
                     ownerId: userId,

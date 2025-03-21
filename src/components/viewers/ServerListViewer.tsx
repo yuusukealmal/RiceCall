@@ -8,6 +8,7 @@ import { Server, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
+import { API_URL } from '@/services/api.service';
 
 interface ServerCardProps {
   user: User;
@@ -43,7 +44,7 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
     >
       <div
         className={homePage['myGroupsRoomAvatarPicture']}
-        style={{ backgroundImage: `url(${serverAvatar})` }}
+        style={{ backgroundImage: `url(${API_URL + serverAvatar})` }}
       ></div>
       <div className={homePage['myGroupsRoomInfo']}>
         <div className={homePage['myGroupsRoomName']}>{serverName}</div>

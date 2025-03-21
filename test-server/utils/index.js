@@ -7,6 +7,7 @@ const func = require('./func');
 const xp = require('./xp');
 const map = require('./map');
 const jwt = require('./jwt');
+const clean = require('./clean');
 
 module.exports = {
   standardizedError,
@@ -17,4 +18,5 @@ module.exports = {
   xp,
   map,
   jwt,
+  clean,
 };

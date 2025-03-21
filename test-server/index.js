@@ -4,6 +4,10 @@ const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
+const fs = require('fs').promises;
+const path = require('path');
+const formidable = require('formidable');
+
 // Utils
 const utils = require('./utils');
 const StandardizedError = utils.standardizedError;
@@ -12,8 +16,19 @@ const Func = utils.func;
 const Set = utils.set;
 const Get = utils.get;
 const JWT = utils.jwt;
+const Clean = utils.clean;
 
-const { PORT, CONTENT_TYPE_JSON } = require('./constant');
+// Constants
+const {
+  PORT,
+  CONTENT_TYPE_JSON,
+  MIME_TYPES,
+  UPLOADS_PATH,
+  SERVER_AVATAR_PATH,
+  UPLOADS_DIR,
+  SERVER_AVATAR_DIR,
+  USER_AVATAR_DIR,
+} = require('./constant');
 
 // Send Error/Success Response
 const sendError = (res, statusCode, message) => {
@@ -36,6 +51,47 @@ const server = http.createServer((req, res) => {
     res.writeHead(200);
     res.end();
     return;
+  }
+
+  if (req.method === 'GET' && req.url.startsWith('/uploads/')) {
+    try {
+      // Get the file path relative to uploads directory
+      const relativePath = req.url.replace('/uploads/', '');
+      const filePath = path.join(UPLOADS_DIR, relativePath);
+
+      // Validate file path to prevent directory traversal
+      if (!filePath.startsWith(UPLOADS_DIR)) {
+        sendError(res, 403, '無權限存取此檔案');
+        return;
+      }
+
+      // Get file extension and MIME type
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+      // Read and serve the file
+      fs.readFile(filePath)
+        .then((data) => {
+          res.writeHead(200, {
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+            'Access-Control-Allow-Origin': '*', // 允許跨域存取
+          });
+          res.end(data);
+        })
+        .catch((error) => {
+          if (error.code === 'ENOENT') {
+            sendError(res, 404, '找不到檔案');
+          } else {
+            sendError(res, 500, '讀取檔案失敗');
+          }
+        });
+      return;
+    } catch (error) {
+      console.log(error);
+      sendError(res, 500, '伺服器錯誤');
+      return;
+    }
   }
 
   if (req.method == 'POST' && req.url == '/login') {
@@ -475,6 +531,113 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method == 'POST' && req.url == '/upload/updateAvatar') {
+    const form = new formidable.IncomingForm();
+    form.parse(req, async (err, fields) => {
+      try {
+        if (err) throw new Error('Error parsing form data');
+
+        const { _serverId, _avatar, _userId } = fields;
+        if (!_avatar || (!_serverId && !_userId))
+          throw new Error('Invalid form data');
+
+        const file = _avatar[0];
+        const serverId = _serverId ? _serverId[0] : null;
+        const userId = _userId ? _userId[0] : null;
+        if (!file || (!serverId && !userId))
+          throw new Error('Invalid form data');
+
+        const matches = file.match(/^data:image\/(.*?);base64,/);
+        if (!matches) throw new Error('Invalid file data');
+        const ext = matches[1];
+        if (!MIME_TYPES[`.${ext}`]) throw new Error('Invalid file type');
+
+        const base64Data = file.replace(/^data:image\/\w+;base64,/, '');
+        const dataBuffer = Buffer.from(base64Data, 'base64');
+        if (dataBuffer.size > 5 * 1024 * 1024)
+          throw new Error('File size too large');
+
+        const fileName = `${serverId || userId}.${ext}`;
+        const filePath = path.join(
+          serverId ? SERVER_AVATAR_DIR : USER_AVATAR_DIR,
+          fileName,
+        );
+
+        try {
+          await fs.access(filePath);
+          await fs.unlink(filePath);
+        } catch (error) {
+          if (error.code !== 'ENOENT') throw error;
+        }
+
+        await fs.writeFile(filePath, dataBuffer);
+        sendSuccess(res, { message: 'success' });
+      } catch (error) {
+        throw new StandardizedError(
+          error.message,
+          'ValidationError',
+          'UPLOADAVATAR',
+          'INVALID_FILE_TYPE',
+          400,
+        );
+      }
+    });
+    return;
+  }
+
+  if (req.method == 'POST' && req.url == '/upload/avatar') {
+    const form = new formidable.IncomingForm();
+    form.parse(req, async (err, fields) => {
+      try {
+        if (err) throw new Error('Error parsing form data');
+
+        const { _type, _userId, _avatar } = fields;
+        if (!_type || !_userId || !_avatar)
+          throw new Error('Invalid form data');
+
+        const type = _type[0];
+        const userId = _userId[0];
+        const file = _avatar[0];
+        if (!type || !userId || !file) throw new Error('Invalid form data');
+
+        const matches = file.match(/^data:image\/(.*?);base64,/);
+        if (!matches) throw new Error('Invalid file data');
+        const ext = matches[1];
+        if (!MIME_TYPES[`.${ext}`]) throw new Error('Invalid file type');
+
+        const base64Data = file.replace(/^data:image\/\w+;base64,/, '');
+        const dataBuffer = Buffer.from(base64Data, 'base64');
+        if (dataBuffer.size > 5 * 1024 * 1024)
+          throw new Error('File size too large');
+
+        const fileName = `preupload-${userId}.${ext}`;
+        const filePath = path.join(
+          type === 'server' ? SERVER_AVATAR_DIR : USER_AVATAR_DIR,
+          fileName,
+        );
+
+        try {
+          await fs.access(filePath);
+          await fs.unlink(filePath);
+        } catch (error) {
+          if (error.code !== 'ENOENT') throw error;
+        }
+
+        await fs.writeFile(filePath, dataBuffer);
+        sendSuccess(res, { message: 'success', fileName });
+      } catch (error) {
+        throw new StandardizedError(
+          error.message,
+          'ValidationError',
+          'UPLOADAVATAR',
+          'INVALID_FILE_TYPE',
+          400,
+        );
+      }
+    });
+    return;
+  }
+
   sendSuccess(res, { message: 'Hello World!' });
   return;
 });
@@ -532,4 +695,5 @@ process.on('unhandledRejection', (error) => {
 // Start Server
 server.listen(PORT, () => {
   new Logger('Server').success(`Server is running on port ${PORT}`);
+  Clean.setupCleanupInterval();
 });

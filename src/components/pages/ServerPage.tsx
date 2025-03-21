@@ -21,7 +21,7 @@ import { useWebRTC } from '@/providers/WebRTCProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import { API_URL, apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -208,7 +208,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               <div className={styles['avatarBox']}>
                 <div
                   className={styles['avatarPicture']}
-                  style={{ backgroundImage: `url(${serverAvatar})` }}
+                  style={{ backgroundImage: `url(${API_URL + serverAvatar})` }}
                 />
               </div>
               <div className={styles['baseInfoBox']}>
