@@ -1157,14 +1157,13 @@ export type User = {
   id: string;
   name: string;
   avatar: string;
-  // avatarUrl: string;
   signature: string;
-  status: 'online' | 'dnd' | 'idle' | 'gn';
-  gender: 'Male' | 'Female';
   level: number;
   xp: number;
   requiredXp: number;
   progress: number;
+  status: 'online' | 'dnd' | 'idle' | 'gn';
+  gender: 'Male' | 'Female';
   currentChannelId: string;
   currentServerId: string;
   lastActiveAt: number;
@@ -1198,9 +1197,9 @@ export type FriendGroup = {
 };
 
 export type FriendApplication = User & {
+  description: string;
   senderId: string;
   receiverId: string;
-  description: string;
   createdAt: number;
 };
 
@@ -1208,15 +1207,14 @@ export type Server = {
   id: string;
   name: string;
   avatar: string;
-  // avatarUrl: string;
   announcement: string;
   description: string;
-  type: 'game' | 'entertainment' | 'other';
   displayId: string;
   slogan: string;
   level: number;
   wealth: number;
   allowDirectMessage: boolean;
+  type: 'game' | 'entertainment' | 'other';
   visibility: 'public' | 'private' | 'invisible';
   lobbyId: string;
   ownerId: string;
@@ -1239,10 +1237,11 @@ export type MemberApplication = User & {
 export type BaseChannel = {
   id: string;
   name: string;
+  order: number;
   isRoot: boolean;
   type: 'category' | 'channel';
-  order: number;
   serverId: string;
+  createdAt: number;
 };
 
 export type Category = BaseChannel & {
@@ -1251,15 +1250,14 @@ export type Category = BaseChannel & {
 
 export type Channel = BaseChannel & {
   type: 'channel';
+  bitrate: number;
+  userLimit: number;
   isLobby: boolean;
+  slowmode: boolean;
   voiceMode: 'free' | 'queue' | 'forbidden';
   chatMode: 'free' | 'forbidden';
-  bitrate: number;
-  slowmode: boolean;
-  userLimit: number;
   visibility: 'public' | 'private' | 'readonly';
   categoryId: string | null;
-  createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
   messages?: ChannelMessage[];
 };
@@ -1308,10 +1306,10 @@ export type UserFriend = Friend & User;
 export type Message = {
   id: string;
   content: string;
+  type: 'general' | 'dm' | 'info';
   senderId: string;
   recieverId: string;
   channelId: string;
-  type: 'general' | 'dm' | 'info';
   timestamp: number;
 };
 
