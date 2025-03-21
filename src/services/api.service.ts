@@ -101,7 +101,7 @@ export const apiService = {
       return result;
     } catch (error: Error | any) {
       if (!(error instanceof StandardizedError)) {
-        throw new StandardizedError(
+        error = new StandardizedError(
           'ServerError',
           `獲取資料時發生預期外的錯誤: ${error.message}`,
           'API_GET',
@@ -110,6 +110,7 @@ export const apiService = {
         );
       }
       new errorHandler(error).show();
+      return null;
     }
   },
 
@@ -136,7 +137,7 @@ export const apiService = {
       return result;
     } catch (error: Error | any) {
       if (!(error instanceof StandardizedError)) {
-        throw new StandardizedError(
+        error = new StandardizedError(
           'ServerError',
           `提交資料時發生預期外的錯誤: ${error.message}`,
           'API_POST',
@@ -145,6 +146,7 @@ export const apiService = {
         );
       }
       new errorHandler(error).show();
+      return null;
     }
   },
 
@@ -164,7 +166,7 @@ export const apiService = {
       return result;
     } catch (error: Error | any) {
       if (!(error instanceof StandardizedError)) {
-        throw new StandardizedError(
+        error = new StandardizedError(
           'ServerError',
           `更新資料時發生預期外的錯誤: ${error.message}`,
           'API_PATCH',
@@ -173,6 +175,7 @@ export const apiService = {
         );
       }
       new errorHandler(error).show();
+      return null;
     }
   },
   axiosInstance,
