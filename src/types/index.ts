@@ -1451,7 +1451,7 @@ export enum PopupType {
   CREATE_CHANNEL = 'createChannel',
   EDIT_CHANNEL = 'editChannel',
   DELETE_CHANNEL = 'deleteChannel',
-  EDIT_MEMBER_CARD = 'editMemberCard',
+  EDIT_MEMBER = 'editMember',
   EDIT_USER = 'editUser',
   APPLY_MEMBER = 'applyMember',
   APPLY_FRIEND = 'applyFriend',

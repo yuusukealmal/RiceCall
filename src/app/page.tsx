@@ -26,7 +26,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // Utils
 import { errorHandler, StandardizedError } from '@/utils/errorHandler';
-import { createDefault } from '@/utils/default';
+import { createDefault } from '@/utils/createDefault';
 
 // Providers
 import WebRTCProvider from '@/providers/WebRTCProvider';

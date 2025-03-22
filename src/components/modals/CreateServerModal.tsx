@@ -17,7 +17,7 @@ import apiService from '@/services/api.service';
 import refreshService from '@/services/refresh.service';
 
 // Utils
-import { createDefault } from '@/utils/default';
+import { createDefault } from '@/utils/createDefault';
 
 interface CreateServerModalProps {
   userId: string;

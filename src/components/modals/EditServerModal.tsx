@@ -31,8 +31,8 @@ import apiService from '@/services/api.service';
 import refreshService from '@/services/refresh.service';
 
 // Utils
-import { createDefault } from '@/utils/default';
-import { createSorter } from '@/utils/sort';
+import { createDefault } from '@/utils/createDefault';
+import { createSorter } from '@/utils/createSorter';
 
 interface ServerSettingModalProps {
   serverId: string;
@@ -253,8 +253,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
 
     const handleOpenEditMember = (memberId: Member['id']) => {
       if (!socket) return;
-      ipcService.popup.open(PopupType.EDIT_MEMBER_CARD);
-      ipcService.initialData.onRequest(PopupType.EDIT_MEMBER_CARD, {
+      ipcService.popup.open(PopupType.EDIT_MEMBER);
+      ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
         memberId: memberId,
       });
     };

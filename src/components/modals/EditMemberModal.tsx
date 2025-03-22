@@ -16,7 +16,7 @@ import refreshService from '@/services/refresh.service';
 import ipcService from '@/services/ipc.service';
 
 // Utils
-import { createDefault } from '@/utils/default';
+import { createDefault } from '@/utils/createDefault';
 
 interface EditMemberModalProps {
   userId: string;

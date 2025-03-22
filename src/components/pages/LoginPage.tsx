@@ -9,9 +9,6 @@ import { validateAccount, validatePassword } from '@/utils/validators';
 // Services
 import authService from '@/services/auth.service';
 
-// Components
-import InputField from '@/components/InputField';
-
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
 
@@ -98,14 +95,14 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
           )}
           <div className={styles['inputBox']}>
             <label className={styles['label']}>{lang.tr.account}</label>
-            <InputField
+            <input
               type="text"
               name="account"
               value={formData.account}
               onChange={handleInputChange}
               onBlur={handleBlur}
               placeholder={lang.tr.pleaseInputAccount}
-              showFunctionButton={'account'}
+              className={styles['input']}
               style={{
                 borderColor: errors.account ? '#f87171' : '#d1d5db',
               }}
@@ -113,14 +110,14 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
           </div>
           <div className={styles['inputBox']}>
             <label className={styles['label']}>{lang.tr.password}</label>
-            <InputField
+            <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleInputChange}
               onBlur={handleBlur}
               placeholder={lang.tr.pleaseInputPassword}
-              showFunctionButton={'password'}
+              className={styles['input']}
               style={{
                 borderColor: errors.password ? '#f87171' : '#d1d5db',
               }}

@@ -10,13 +10,13 @@ import header from '@/styles/common/header.module.css';
 import { PopupType } from '@/types';
 
 // Components
-import CreateServerModal from '@/components/modals/CreateServerModal';
-import EditServerModal from '@/components/modals/EditServerModal';
-import AddChannelModal from '@/components/modals/AddChannelModal';
-import EditChannelModal from '@/components/modals/EditChannelModal';
-import UserSettingModal from '@/components/modals/UserSettingModal';
-import EditMemberModal from '@/components/modals/EditMemberModal';
-import ServerApplication from '@/components/modals/ServerApplicationModal';
+import CreateServer from '@/components/modals/CreateServerModal';
+import CreateChannel from '@/components/modals/AddChannelModal';
+import EditServer from '@/components/modals/EditServerModal';
+import EditChannel from '@/components/modals/EditChannelModal';
+import EditUser from '@/components/modals/UserSettingModal';
+import EditMember from '@/components/modals/EditMemberModal';
+import ApplyMember from '@/components/modals/ApplyMember';
 import ApplyFriend from '@/components/modals/ApplyFriend';
 import Dialog from '@/components/modals/Dialog';
 
@@ -101,25 +101,25 @@ const Modal = React.memo(() => {
       if (!initialData) return;
 
       switch (type) {
-        case PopupType.EDIT_MEMBER_CARD:
+        case PopupType.EDIT_MEMBER:
           setHeader(
             <Header title={lang.tr.editMemberCard} buttons={['close']} />,
           );
-          setContent(<EditMemberModal {...initialData} />);
+          setContent(<EditMember {...initialData} />);
           break;
         case PopupType.EDIT_USER:
           setHeader(<Header title={lang.tr.editUser} buttons={['close']} />);
-          setContent(<UserSettingModal {...initialData} />);
+          setContent(<EditUser {...initialData} />);
           break;
         case PopupType.CREATE_SERVER:
           setHeader(
             <Header title={lang.tr.createServer} buttons={['close']} />,
           );
-          setContent(<CreateServerModal {...initialData} />);
+          setContent(<CreateServer {...initialData} />);
           break;
         case PopupType.EDIT_SERVER:
           setHeader(<Header title={lang.tr.editServer} buttons={['close']} />);
-          setContent(<EditServerModal {...initialData} />);
+          setContent(<EditServer {...initialData} />);
           break;
         case PopupType.DELETE_SERVER:
           // This doesn't exist lol
@@ -128,18 +128,18 @@ const Modal = React.memo(() => {
           setHeader(
             <Header title={lang.tr.createChannel} buttons={['close']} />,
           );
-          setContent(<AddChannelModal {...initialData} />);
+          setContent(<CreateChannel {...initialData} />);
           break;
         case PopupType.EDIT_CHANNEL:
           setHeader(<Header title={lang.tr.editChannel} buttons={['close']} />);
-          setContent(<EditChannelModal {...initialData} />);
+          setContent(<EditChannel {...initialData} />);
           break;
         case PopupType.DELETE_CHANNEL:
           // This doesn't exist lol
           break;
         case PopupType.APPLY_MEMBER:
           setHeader(<Header title={lang.tr.applyMember} buttons={['close']} />);
-          setContent(<ServerApplication {...initialData} />);
+          setContent(<ApplyMember {...initialData} />);
           break;
         case PopupType.APPLY_FRIEND:
           setHeader(<Header title={lang.tr.applyFriend} buttons={['close']} />);

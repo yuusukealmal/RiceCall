@@ -15,16 +15,16 @@ import { useSocket } from '@/providers/SocketProvider';
 import ipcService from '@/services/ipc.service';
 
 // Utils
-import { createDefault } from '@/utils/default';
+import { createDefault } from '@/utils/createDefault';
 import refreshService from '@/services/refresh.service';
 
-interface ServerApplicationModalProps {
+interface ApplyMemberPopupProps {
   serverId: string;
   userId: string;
 }
 
-const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
-  React.memo((initialData: ServerApplicationModalProps) => {
+const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
+  (initialData: ApplyMemberPopupProps) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -223,8 +223,9 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
           </div>
         );
     }
-  });
+  },
+);
 
-ServerApplicationModal.displayName = 'ServerApplicationModal';
+ApplyMemberPopup.displayName = 'ApplyMemberPopup';
 
-export default ServerApplicationModal;
+export default ApplyMemberPopup;

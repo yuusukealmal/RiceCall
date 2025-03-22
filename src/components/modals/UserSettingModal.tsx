@@ -16,7 +16,7 @@ import UserSetting from '@/styles/popups/userSetting.module.css';
 import grade from '@/styles/common/grade.module.css';
 
 // Utils
-import { createDefault } from '@/utils/default';
+import { createDefault } from '@/utils/createDefault';
 import refreshService from '@/services/refresh.service';
 
 interface UserSettingModalProps {
