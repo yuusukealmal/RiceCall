@@ -212,7 +212,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     useEffect(() => {
       if (!webRTC.updateBitrate || !channelBitrate) return;
       webRTC.updateBitrate(channelBitrate);
-    }, [webRTC.updateBitrate, channelBitrate]);
+    }, [webRTC, webRTC.updateBitrate, channelBitrate]);
 
     return (
       <div className={styles['serverWrapper']}>
