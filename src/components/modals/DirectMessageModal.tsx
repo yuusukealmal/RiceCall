@@ -59,11 +59,9 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
 
     const handleFriendUpdate = (data: User | null) => {
       if (!data) data = createDefault.user();
-      if (data.id === friendId) {
-        setFriendAvatar(data.avatar);
-        setFriendName(data.name);
-        setFriendLevel(data.level);
-      }
+      setFriendAvatar(data.avatar);
+      setFriendName(data.name);
+      setFriendLevel(data.level);
     };
 
     const handleClose = () => {

@@ -20,16 +20,13 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import ipcService from '@/services/ipc.service';
 import refreshService from '@/services/refresh.service';
 
-// Utils
-import { createDefault } from '@/utils/createDefault';
-
 interface FriendPageProps {
   user: User;
-  setUser: React.Dispatch<React.SetStateAction<User>>;
+  handleUserUpdate: (data: Partial<User> | null) => void;
 }
 
 const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
-  ({ user, setUser }) => {
+  ({ user, handleUserUpdate }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -61,11 +58,6 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     const handleChangeSignature = (signature: User['signature']) => {
       if (!socket) return;
       socket.send.updateUser({ user: { signature } });
-    };
-
-    const handleUserUpdate = (data: Partial<User> | null) => {
-      if (!data) data = createDefault.user();
-      setUser((prev) => ({ ...prev, ...data }));
     };
 
     const handleStartResizing = useCallback((e: React.MouseEvent) => {
@@ -117,15 +109,14 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     }, [lang, userName]);
 
     useEffect(() => {
-      if (!userId) return;
-      if (refreshed.current) return;
+      if (!userId || refreshed.current) return;
       const refresh = async () => {
         refreshed.current = true;
         const user = await refreshService.user({ userId: userId });
         handleUserUpdate(user);
       };
       refresh();
-    }, [userId]);
+    }, [userId, handleUserUpdate]);
 
     return (
       <div className={friendPage['friendWrapper']}>

@@ -66,13 +66,13 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
 
     const handleUserUpdate = (data: User | null) => {
       if (!data) data = createDefault.user();
-      if (data.id === userId) {
-        setUserFriendGroups(data.friendGroups || []);
-      }
-      if (data.id === targetId) {
-        setTargetName(data.name);
-        setTargetAvatar(data.avatar);
-      }
+      setUserFriendGroups(data.friendGroups || []);
+    };
+
+    const handleTargetUpdate = (data: User | null) => {
+      if (!data) data = createDefault.user();
+      setTargetName(data.name);
+      setTargetAvatar(data.avatar);
     };
 
     const handleFriendApplicationUpdate = (data: FriendApplication | null) => {
@@ -80,10 +80,10 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
       setApplicationDescription(data.description);
     };
 
-    const handleOpenSuccessDialog = () => {
+    const handleOpenSuccessDialog = (message: string) => {
       ipcService.popup.open(PopupType.DIALOG_SUCCESS);
       ipcService.initialData.onRequest(PopupType.DIALOG_SUCCESS, {
-        title: lang.tr.friendApply,
+        title: message,
         submitTo: PopupType.DIALOG_SUCCESS,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
@@ -103,10 +103,10 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
         const user = await refreshService.user({ userId: userId });
         handleUserUpdate(user);
         const target = await refreshService.user({ userId: targetId });
-        handleUserUpdate(target);
+        handleTargetUpdate(target);
         const friendApplication = await refreshService.friendApplication({
-          userId: userId,
-          targetId: targetId,
+          senderId: userId,
+          receiverId: targetId,
         });
         handleFriendApplicationUpdate(friendApplication);
       };
@@ -172,7 +172,7 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
                 userId,
                 targetId,
               );
-              handleOpenSuccessDialog();
+              handleOpenSuccessDialog(lang.tr.friendApply);
             }}
           >
             {lang.tr.sendRequest}

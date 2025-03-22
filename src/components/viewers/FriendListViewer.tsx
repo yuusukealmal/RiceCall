@@ -104,14 +104,14 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
   const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
 
   // Handlers
-  const handleOpenDirectMessagePopup = (
+  const handleOpenDirectMessage = (
     userId: User['id'],
     targetId: User['id'],
   ) => {
     ipcService.popup.open(PopupType.DIRECT_MESSAGE);
     ipcService.initialData.onRequest(PopupType.DIRECT_MESSAGE, {
-      userId: userId,
-      targetId: targetId,
+      userId,
+      targetId,
     });
   };
 
@@ -133,7 +133,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
           ]);
         }}
         onDoubleClick={() => {
-          handleOpenDirectMessagePopup(friendUserId1, friendUserId2);
+          handleOpenDirectMessage(friendUserId1, friendUserId2);
         }}
       >
         <div
@@ -167,8 +167,11 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
     const lang = useLanguage();
 
     // Variables
-    const { friends: userFriends = [], friendGroups: userFriendGroups = [] } =
-      user;
+    const {
+      id: userId,
+      friends: userFriends = [],
+      friendGroups: userFriendGroups = [],
+    } = user;
     const filteredFriends = userFriends.filter((fd) =>
       fd.name.includes(searchQuery),
     );
@@ -178,10 +181,14 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
     const [selectedTabId, setSelectedTabId] = useState<number>(0);
 
     // Handlers
-    const handleOpenApplyFriendPopup = (userId: User['id']) => {
+    const handleOpenApplyFriend = (
+      userId: User['id'],
+      targetId: User['id'],
+    ) => {
       ipcService.popup.open(PopupType.APPLY_FRIEND);
       ipcService.initialData.onRequest(PopupType.APPLY_FRIEND, {
-        userId: userId,
+        userId,
+        targetId,
       });
     };
 
@@ -244,7 +251,7 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
               <div
                 className={styles['button']}
                 datatype="addFriend"
-                onClick={() => handleOpenApplyFriendPopup('FIXME')}
+                onClick={() => handleOpenApplyFriend(userId, userId)}
               >
                 {lang.tr.addFriend}
               </div>

@@ -78,10 +78,10 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
       setApplicationDescription(data.description);
     };
 
-    const handleOpenSuccessDialog = () => {
+    const handleOpenSuccessDialog = (message: string) => {
       ipcService.popup.open(PopupType.DIALOG_SUCCESS);
       ipcService.initialData.onRequest(PopupType.DIALOG_SUCCESS, {
-        title: lang.tr.serverApply,
+        title: message,
         submitTo: PopupType.DIALOG_SUCCESS,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
@@ -165,7 +165,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
                     userId,
                     serverId,
                   );
-                  handleOpenSuccessDialog();
+                  handleOpenSuccessDialog(lang.tr.serverApply);
                 }}
               >
                 {lang.tr.submit}

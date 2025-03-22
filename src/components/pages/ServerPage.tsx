@@ -36,11 +36,11 @@ import { createDefault } from '@/utils/createDefault';
 interface ServerPageProps {
   user: User;
   server: Server;
-  setServer: React.Dispatch<React.SetStateAction<Server>>;
+  handleServerUpdate: (data: Partial<Server> | null) => void;
 }
 
 const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
-  ({ user, server, setServer }) => {
+  ({ user, server, handleServerUpdate }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -93,11 +93,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       socket.send.updateChannel({ channel, channelId, serverId });
     };
 
-    const handleServerUpdate = (data: Partial<Server> | null): void => {
-      if (!data) data = createDefault.server();
-      setServer((prev) => ({ ...prev, ...data }));
-    };
-
     const handleChannelUpdate = (data: Partial<Channel> | null): void => {
       if (!data) data = createDefault.channel();
       setCurrentChannel((prev) => ({ ...prev, ...data }));
@@ -114,8 +109,8 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     ) => {
       ipcService.popup.open(PopupType.EDIT_SERVER);
       ipcService.initialData.onRequest(PopupType.EDIT_SERVER, {
-        serverId: serverId,
-        userId: userId,
+        serverId,
+        userId,
       });
     };
 
@@ -125,8 +120,8 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     ) => {
       ipcService.popup.open(PopupType.APPLY_MEMBER);
       ipcService.initialData.onRequest(PopupType.APPLY_MEMBER, {
-        userId: userId,
-        serverId: serverId,
+        userId,
+        serverId,
       });
     };
 
@@ -178,8 +173,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!userId || !serverId || !setServer) return;
-      if (refreshed.current) return;
+      if (!userId || !serverId || refreshed.current) return;
       const refresh = async () => {
         refreshed.current = true;
         const server = await refreshService.server({ serverId: serverId });
@@ -195,7 +189,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
         handleMemberUpdate(member);
       };
       refresh();
-    }, [userId, serverId, setServer]);
+    }, [userId, serverId, userCurrentChannelId, handleServerUpdate]);
 
     useEffect(() => {
       ipcService.discord.updatePresence({

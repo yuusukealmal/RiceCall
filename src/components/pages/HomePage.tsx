@@ -18,16 +18,13 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import ipcService from '@/services/ipc.service';
 import refreshService from '@/services/refresh.service';
 
-// Utils
-import { createDefault } from '@/utils/createDefault';
-
 interface HomePageProps {
   user: User;
-  setUser: React.Dispatch<React.SetStateAction<User>>;
+  handleUserUpdate: (data: Partial<User> | null) => void;
 }
 
 const HomePageComponent: React.FC<HomePageProps> = React.memo(
-  ({ user, setUser }) => {
+  ({ user, handleUserUpdate }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -53,20 +50,13 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
       socket.send.searchServer({ query });
     };
 
-    const handleUserUpdate = (data: Partial<User> | null) => {
-      if (!data) data = createDefault.user();
-      setUser((prev) => ({ ...prev, ...data }));
-    };
-
     const handleServerSearch = (servers: Server[]) => {
       setSearchResults(servers);
     };
 
     const handleOpenCreateServer = (userId: User['id']) => {
       ipcService.popup.open(PopupType.CREATE_SERVER);
-      ipcService.initialData.onRequest(PopupType.CREATE_SERVER, {
-        userId: userId,
-      });
+      ipcService.initialData.onRequest(PopupType.CREATE_SERVER, { userId });
     };
 
     // Effects
@@ -89,15 +79,14 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!userId) return;
-      if (refreshed.current) return;
+      if (!userId || refreshed.current) return;
       const refresh = async () => {
         refreshed.current = true;
         const user = await refreshService.user({ userId: userId });
         handleUserUpdate(user);
       };
       refresh();
-    }, [userId]);
+    }, [userId, handleUserUpdate]);
 
     useEffect(() => {
       if (!lang) return;
