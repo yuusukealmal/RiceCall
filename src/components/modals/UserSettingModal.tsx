@@ -63,7 +63,7 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     // Handlers
     const handleUpdateUser = (user: Partial<User>) => {
       if (!socket) return;
-      socket.send.updateUser({ user: user });
+      socket.send.updateUser({ user });
     };
 
     const handleUserUpdate = (data: User | null) => {

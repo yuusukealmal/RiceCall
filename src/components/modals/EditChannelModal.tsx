@@ -5,7 +5,7 @@ import Popup from '@/styles/common/popup.module.css';
 import editChannel from '@/styles/popups/editChannel.module.css';
 
 // Types
-import { Channel } from '@/types';
+import { Channel, Server } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -19,7 +19,7 @@ import refreshService from '@/services/refresh.service';
 import { createDefault } from '@/utils/createDefault';
 
 interface EditChannelModalProps {
-  userId: string;
+  serverId: string;
   channelId: string;
 }
 
@@ -44,13 +44,16 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     >(createDefault.channel().visibility);
 
     // Variables
-    const { userId, channelId } = initialData;
+    const { channelId, serverId } = initialData;
 
     // Handlers
-
-    const handleUpdateChannel = (channel: Partial<Channel>) => {
+    const handleUpdateChannel = (
+      channel: Partial<Channel>,
+      channelId: Channel['id'],
+      serverId: Server['id'],
+    ) => {
       if (!socket) return;
-      socket.send.updateChannel({ channel: channel, userId: userId });
+      socket.send.updateChannel({ channel, channelId, serverId });
     };
 
     const handleChannelUpdate = (data: Channel | null) => {
@@ -119,11 +122,15 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
           <button
             className={Popup['button']}
             onClick={() => {
-              handleUpdateChannel({
-                id: channelId,
-                name: channelName,
-                visibility: channelVisibility,
-              });
+              handleUpdateChannel(
+                {
+                  id: channelId,
+                  name: channelName,
+                  visibility: channelVisibility,
+                },
+                channelId,
+                serverId,
+              );
               handleClose();
             }}
           >

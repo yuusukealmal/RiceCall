@@ -18,6 +18,7 @@ import {
   ServerMember,
   Member,
   Permission,
+  User,
 } from '@/types';
 
 // Providers
@@ -155,24 +156,43 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       return [...array].sort(createSorter(field, newDirection));
     };
 
-    const handleUpdateServer = (server: Partial<Server>) => {
+    const handleUpdateServer = (
+      server: Partial<Server>,
+      serverId: Server['id'],
+    ) => {
       if (!socket) return;
-      socket.send.updateServer({ server: server, userId: userId });
+      socket.send.updateServer({ server, serverId });
     };
 
     const handleUpdateApplication = (
-      application: Partial<MemberApplication>,
+      memberApplication: Partial<MemberApplication>,
+      userId: User['id'],
+      serverId: Server['id'],
     ) => {
       if (!socket) return;
       socket.send.updateMemberApplication({
-        memberApplication: application,
-        userId: userId,
+        memberApplication,
+        userId,
+        serverId,
       });
     };
 
-    const handleUpdateMember = (member: Partial<Member>) => {
+    const handleUpdateMember = (
+      member: Partial<Member>,
+      userId: User['id'],
+      serverId: Server['id'],
+    ) => {
       if (!socket) return;
-      socket.send.updateMember({ member: member, userId: userId });
+      socket.send.updateMember({ member, userId, serverId });
+    };
+
+    const handleCreateMember = (
+      member: Partial<Member>,
+      userId: User['id'],
+      serverId: Server['id'],
+    ) => {
+      if (!socket) return;
+      socket.send.createMember({ member, userId, serverId });
     };
 
     const handleServerUpdate = (data: Server | null) => {
@@ -215,39 +235,47 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
 
     const handleUserMove = () => {};
 
-    const handleKickServer = (memberId: Member['id'], name: string) => {
+    const handleKickServer = (member: ServerMember) => {
       if (!socket) return;
       ipcService.popup.open(PopupType.DIALOG_WARNING);
       ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
         iconType: 'warning',
-        title: `確定要踢出 ${name} 嗎？使用者可以再次加入。`,
+        title: `確定要踢出 ${member.name} 嗎？使用者可以再次加入。`,
         submitTo: PopupType.DIALOG_WARNING,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () => {
-        handleUpdateMember({
-          id: memberId,
-          permissionLevel: Permission.Guest,
-          createdAt: 0,
-          nickname: '',
-        });
+        handleUpdateMember(
+          {
+            id: member.id,
+            permissionLevel: Permission.Guest,
+            createdAt: 0,
+            nickname: '',
+          },
+          member.userId,
+          member.serverId,
+        );
       });
     };
 
-    const handleBlockUser = (memberId: Member['id'], name: string) => {
+    const handleBlockUser = (member: ServerMember) => {
       if (!socket) return;
       ipcService.popup.open(PopupType.DIALOG_WARNING);
       ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
         iconType: 'warning',
-        title: `確定要封鎖 ${name} 嗎？使用者將無法再次加入。`,
+        title: `確定要封鎖 ${member.name} 嗎？使用者將無法再次加入。`,
         submitTo: PopupType.DIALOG_WARNING,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () => {
-        handleUpdateMember({
-          id: memberId,
-          permissionLevel: Permission.Guest,
-          nickname: '',
-          isBlocked: true,
-        });
+        handleUpdateMember(
+          {
+            id: member.id,
+            permissionLevel: Permission.Guest,
+            nickname: '',
+            isBlocked: true,
+          },
+          member.userId,
+          member.serverId,
+        );
       });
     };
 
@@ -577,19 +605,11 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       // },
                                       {
                                         label: lang.tr.kickOut,
-                                        onClick: () =>
-                                          handleKickServer(
-                                            memberId,
-                                            memberNickname || memberName,
-                                          ),
+                                        onClick: () => handleKickServer(member),
                                       },
                                       {
                                         label: lang.tr.block,
-                                        onClick: () =>
-                                          handleBlockUser(
-                                            memberId,
-                                            memberNickname || memberName,
-                                          ),
+                                        onClick: () => handleBlockUser(member),
                                       },
                                       {
                                         label: lang.tr.memberManagement,
@@ -762,24 +782,26 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       {
                                         label: '接受申請',
                                         onClick: () => {
-                                          handleUpdateApplication({
-                                            id: applicationId,
-                                            applicationStatus: 'accepted',
-                                          });
-                                          // User handleCreateMember instead
-                                          // handleUpdateMember({
-                                          //   id: applicationId,
-                                          //   permissionLevel: 1,
-                                          // });
+                                          handleUpdateApplication(
+                                            { applicationStatus: 'accepted' },
+                                            applicationUserId,
+                                            applicationServerId,
+                                          );
+                                          handleCreateMember(
+                                            { permissionLevel: 1 },
+                                            applicationUserId,
+                                            applicationServerId,
+                                          );
                                         },
                                       },
                                       {
                                         label: '拒絕申請',
                                         onClick: () => {
-                                          handleUpdateApplication({
-                                            id: applicationId,
-                                            applicationStatus: 'rejected',
-                                          });
+                                          handleUpdateApplication(
+                                            { applicationStatus: 'rejected' },
+                                            applicationUserId,
+                                            applicationServerId,
+                                          );
                                         },
                                       },
                                     ],
@@ -889,21 +911,23 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
           <button
             className={Popup['button']}
             onClick={() => {
-              handleUpdateServer({
-                id: serverId,
-                name: serverName,
-                avatar: serverAvatar,
-                avatarUrl: serverAvatarUrl,
-                announcement: serverAnnouncement,
-                description: serverDescription,
-                type: serverType,
-                displayId: serverDisplayId,
-                slogan: serverSlogan,
-                level: serverLevel,
-                wealth: serverWealth,
-                createdAt: serverCreatedAt,
-                visibility: serverVisibility,
-              });
+              handleUpdateServer(
+                {
+                  name: serverName,
+                  avatar: serverAvatar,
+                  avatarUrl: serverAvatarUrl,
+                  announcement: serverAnnouncement,
+                  description: serverDescription,
+                  type: serverType,
+                  displayId: serverDisplayId,
+                  slogan: serverSlogan,
+                  level: serverLevel,
+                  wealth: serverWealth,
+                  createdAt: serverCreatedAt,
+                  visibility: serverVisibility,
+                },
+                serverId,
+              );
               handleClose();
             }}
           >

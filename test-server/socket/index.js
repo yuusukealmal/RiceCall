@@ -137,12 +137,24 @@ module.exports = (io) => {
       friendGroupHandler.deleteFriendGroup(io, socket, data),
     );
     // Member
+    socket.on('createMember', async (data) =>
+      memberHandler.createMember(io, socket, data),
+    );
     socket.on('updateMember', async (data) =>
       memberHandler.updateMember(io, socket, data),
     );
+    socket.on('deleteMember', async (data) =>
+      memberHandler.deleteMember(io, socket, data),
+    );
     // Friend
+    socket.on('createFriend', async (data) =>
+      friendHandler.createFriend(io, socket, data),
+    );
     socket.on('updateFriend', async (data) =>
       friendHandler.updateFriend(io, socket, data),
+    );
+    socket.on('deleteFriend', async (data) =>
+      friendHandler.deleteFriend(io, socket, data),
     );
     // Member Application
     socket.on('createMemberApplication', async (data) =>

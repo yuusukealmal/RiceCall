@@ -91,13 +91,16 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
         submitTo: PopupType.DIALOG_WARNING,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () =>
-        handleDeleteChannel(),
+        handleDeleteChannel(categoryId, serverId),
       );
     };
 
-    const handleDeleteChannel = () => {
+    const handleDeleteChannel = (
+      channelId: Channel['id'],
+      serverId: Server['id'],
+    ) => {
       if (!socket) return;
-      socket.send.deleteChannel({ channelId: categoryId, userId: userId });
+      socket.send.deleteChannel({ channelId, serverId });
     };
 
     return (
@@ -227,21 +230,24 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
         submitTo: PopupType.DIALOG_WARNING,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () =>
-        handleDeleteChannel(),
+        handleDeleteChannel(channelId, serverId),
       );
     };
 
-    const handleDeleteChannel = () => {
+    const handleDeleteChannel = (
+      channelId: Channel['id'],
+      serverId: Server['id'],
+    ) => {
       if (!socket) return;
-      socket.send.deleteChannel({ channelId: channelId, userId: userId });
+      socket.send.deleteChannel({ channelId, serverId });
     };
 
     const handleJoinChannel = (
-      channelId: Channel['id'],
       userId: User['id'],
+      channelId: Channel['id'],
     ) => {
       if (!socket) return;
-      socket.send.connectChannel({ channelId: channelId, userId: userId });
+      socket.send.connectChannel({ userId, channelId });
     };
 
     return (
@@ -258,7 +264,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
           }
           onDoubleClick={() => {
             if (userInChannel || channelVisibility === 'readonly') return;
-            handleJoinChannel(channelId, userId);
+            handleJoinChannel(userId, channelId);
           }}
           onContextMenu={(e) => {
             contextMenu.showContextMenu(e.pageX, e.pageY, [

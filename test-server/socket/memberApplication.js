@@ -15,18 +15,20 @@ const memberApplicationHandler = {
   createMemberApplication: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
 
     try {
       // data = {
       //   userId: string,
+      //   serverId: string,
       //   memberApplication: {
       //     ...
       //   },
       // }
 
       // Get data
-      const { memberApplication: _newApplication, userId } = data;
-      if (!_newApplication) {
+      const { memberApplication: _newApplication, userId, serverId } = data;
+      if (!_newApplication || !userId || !serverId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -36,30 +38,30 @@ const memberApplicationHandler = {
         );
       }
       const user = await Func.validate.user(users[userId]);
+      const server = await Func.validate.server(servers[serverId]);
       const memberApplication = await Func.validate.memberApplication(
         _newApplication,
       );
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
       // Create member application
-      const applicationId = `ma_${memberApplication.userId}-${memberApplication.serverId}`;
-      Set.memberApplications(applicationId, {
+      const applicationId = `ma_${user.id}-${server.id}`;
+      const application = await Set.memberApplications(applicationId, {
         ...memberApplication,
         createdAt: Date.now(),
       });
 
       // Emit updated data to all users in the server
-      io.to(`server_${memberApplication.serverId}`).emit('serverUpdate', {
-        memberApplications: await Get.serverApplications(
-          memberApplication.serverId,
-        ),
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        memberApplications: await Get.serverApplications(server.id),
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) created member application(${applicationId}) in server(${memberApplication.serverId})`,
+        `Member application(${application.id}) of User(${user.id}) and server(${server.id}) created by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
@@ -85,19 +87,21 @@ const memberApplicationHandler = {
   updateMemberApplication: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
     const memberApplications = (await db.get('memberApplications')) || {};
 
     try {
       // data = {
       //   userId: string,
+      //   serverId: string,
       //   memberApplication: {
       //     ...
       //   },
       // }
 
       // Validate data
-      const { memberApplication: _editedApplication, userId } = data;
-      if (!_editedApplication) {
+      const { memberApplication: _editedApplication, userId, serverId } = data;
+      if (!_editedApplication || !userId || !serverId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -107,27 +111,29 @@ const memberApplicationHandler = {
         );
       }
       const user = await Func.validate.user(users[userId]);
+      const server = await Func.validate.server(servers[serverId]);
+      const application = await Func.validate.memberApplication(
+        memberApplications[`ma_${user.id}-${server.id}`],
+      );
       const editedApplication = await Func.validate.memberApplication(
         _editedApplication,
       );
-      const application = await Func.validate.memberApplication(
-        memberApplications[editedApplication.id],
-      );
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
       // Update member application
       await Set.memberApplications(application.id, editedApplication);
 
       // Emit updated data to all users in the server
-      io.to(`server_${application.serverId}`).emit('serverUpdate', {
-        memberApplications: await Get.serverApplications(application.serverId),
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        memberApplications: await Get.serverApplications(server.id),
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) updated member application(${application.id}) in server(${application.serverId})`,
+        `Member application(${application.id}) of User(${user.id}) and server(${server.id}) updated by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
@@ -158,12 +164,13 @@ const memberApplicationHandler = {
     try {
       // data = {
       //   userId: string,
+      //   serverId: string,
       //   memberApplicationId: string,
       // }
 
       // Validate data
-      const { memberApplicationId: applicationId, userId } = data;
-      if (!applicationId) {
+      const { memberApplicationId: applicationId, userId, serverId } = data;
+      if (!applicationId || !userId || !serverId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -173,24 +180,26 @@ const memberApplicationHandler = {
         );
       }
       const user = await Func.validate.user(users[userId]);
+      const server = await Func.validate.server(servers[serverId]);
       const application = await Func.validate.memberApplication(
         memberApplications[applicationId],
       );
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
       // Remove member application
       await db.delete(`memberApplications.${applicationId}`);
 
       // Emit updated data to all users in the server
-      io.to(`server_${application.serverId}`).emit('serverUpdate', {
-        memberApplications: await Get.serverApplications(application.serverId),
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        memberApplications: await Get.serverApplications(server.id),
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) deleted member application(${application.id}) in server(${application.serverId})`,
+        `Member application(${application.id}) of User(${user.id}) and server(${server.id}) deleted by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)

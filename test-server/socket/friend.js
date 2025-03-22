@@ -13,20 +13,21 @@ const {
 const friendHandler = {
   updateFriend: async (io, socket, data) => {
     // Get database
-    // const users = (await db.get('users')) || {};
+    const users = (await db.get('users')) || {};
     const friends = (await db.get('friends')) || {};
 
     try {
       // data = {
       //   userId: string
+      //   targetId: string
       //   friend: {
       //     ...
       //   }
       // }
 
       // Validate data
-      const { friend: _editedFriend, userId } = data;
-      if (!_editedFriend || !userId) {
+      const { friend: _editedFriend, userId, targetId } = data;
+      if (!_editedFriend || !userId || !targetId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -36,11 +37,15 @@ const friendHandler = {
         );
       }
       const user = await Func.validate.user(users[userId]);
+      const target = await Func.validate.user(users[targetId]);
+      const friend = await Func.validate.friend(
+        friends[`fd-${user.id}_${target.id}`],
+      );
       const editedFriend = await Func.validate.friend(_editedFriend);
-      const friend = await Func.validate.friend(friends[editedFriend.id]);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
       // Update friend
@@ -50,7 +55,7 @@ const friendHandler = {
       io.to(socket.id).emit('friendUpdate', editedFriend);
 
       new Logger('Friend').success(
-        `User(${user.id}) updated friend(${friend.id})`,
+        `Friend(${friend.id}) of User(${user.id}) and User(${target.id}) updated by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {

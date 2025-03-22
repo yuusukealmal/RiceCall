@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { Member } from '@/types';
+import { Member, Server, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -45,12 +45,13 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
       ipcService.window.close();
     };
 
-    const handleUpdateMember = (member: Partial<Member>) => {
+    const handleUpdateMember = (
+      member: Partial<Member>,
+      userId: User['id'],
+      serverId: Server['id'],
+    ) => {
       if (!socket) return;
-      socket.send.updateMember({
-        member: member,
-        userId: userId,
-      });
+      socket.send.updateMember({ member, userId, serverId });
     };
 
     const handleMemberUpdate = (data: Member | null) => {
@@ -95,9 +96,11 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
           <button
             className={`${popup['button']}`}
             onClick={() => {
-              handleUpdateMember({
-                nickname: memberNickname,
-              });
+              handleUpdateMember(
+                { nickname: memberNickname },
+                userId,
+                serverId,
+              );
               handleClose();
             }}
           >

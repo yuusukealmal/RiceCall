@@ -186,12 +186,9 @@ const userHandler = {
       const user = await Func.validate.user(users[editedUser.id]);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
-
-      if (editedUser.avatar) {
-        editedUser.avatar = await Func.generateImageData(editedUser.avatar);
-      }
 
       // Update user data
       await Set.user(user.id, editedUser);
@@ -199,7 +196,9 @@ const userHandler = {
       // Emit data (only to the user)
       io.to(socket.id).emit('userUpdate', editedUser);
 
-      new Logger('WebSocket').success(`User(${user.id}) updated`);
+      new Logger('WebSocket').success(
+        `User(${user.id}) updated by User(${operator.id})`,
+      );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(

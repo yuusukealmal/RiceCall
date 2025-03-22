@@ -20,14 +20,15 @@ const messageHandler = {
 
     try {
       // data = {
+      //   channelId: string,
       //   message: {
       //     ...
       //   }
       // };
 
       // Validate data
-      const { message: _message } = data;
-      if (!_message) {
+      const { message: _newMessage, channelId } = data;
+      if (!_newMessage || !channelId) {
         throw new StandardizedError(
           '無效的資料',
           'SENDMESSAGE',
@@ -36,18 +37,20 @@ const messageHandler = {
           401,
         );
       }
-      const message = await Func.validate.message(_message);
-      const user = await Func.validate.user(users[message.senderId]);
-      const channel = await Func.validate.channel(channels[message.channelId]);
+      const channel = await Func.validate.channel(channels[channelId]);
+      const newMessage = await Func.validate.message(_newMessage);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
       // Create new message
       const messageId = uuidv4();
       await Set.message(messageId, {
-        ...message,
+        ...newMessage,
+        senderId: operator.id,
+        channelId: channel.id,
         timestamp: Date.now().valueOf(),
       });
 
@@ -60,7 +63,7 @@ const messageHandler = {
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) sent ${message.content} to channel(${channel.id})`,
+        `User(${operator.id}) sent ${newMessage.content} to channel(${channel.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -89,14 +92,15 @@ const messageHandler = {
 
     try {
       // data = {
+      //   friendId: string,
       //   message: {
       //     ...
       //   }
       // };
 
       // Validate data
-      const { directMessage: _directMessage } = data;
-      if (!_directMessage) {
+      const { directMessage: _newDirectMessage, friendId } = data;
+      if (!_newDirectMessage || !friendId) {
         throw new StandardizedError(
           '無效的資料',
           'SENDDIRECTMESSAGE',
@@ -105,20 +109,20 @@ const messageHandler = {
           401,
         );
       }
-      const directMessage = await Func.validate.directMessage(_directMessage);
-      const user = await Func.validate.user(users[directMessage.senderId]);
-      const friend = await Func.validate.friend(
-        friends[directMessage.channelId],
-      );
+      const friend = await Func.validate.friend(friends[friendId]);
+      const newDirectMessage = await Func.validate.message(_newDirectMessage);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
       // Create new message
       const directMessageId = uuidv4();
-      await Set.message(directMessageId, {
-        ...directMessage,
+      await Set.directMessage(directMessageId, {
+        ...newDirectMessage,
+        senderId: operator.id,
+        friendId: friend.id,
         timestamp: Date.now().valueOf(),
       });
 
@@ -128,7 +132,7 @@ const messageHandler = {
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) sent ${directMessage.content} to direct message(${friend.id})`,
+        `User(${operator.id}) sent ${newDirectMessage.content} to User(${friend.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {

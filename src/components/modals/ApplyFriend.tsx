@@ -52,12 +52,15 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
 
     // Handlers
     const handleCreateFriendApplication = (
-      application: Partial<FriendApplication>,
+      friendApplication: Partial<FriendApplication>,
+      userId: User['id'],
+      targetId: User['id'],
     ) => {
       if (!socket) return;
       socket.send.createFriendApplication({
-        friendApplication: application,
-        userId: userId,
+        friendApplication,
+        userId,
+        targetId,
       });
     };
 
@@ -164,11 +167,11 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
             }`}
             disabled={!applicationDescription.trim()}
             onClick={() => {
-              handleCreateFriendApplication({
-                senderId: userId,
-                receiverId: targetId,
-                description: applicationDescription,
-              });
+              handleCreateFriendApplication(
+                { description: applicationDescription },
+                userId,
+                targetId,
+              );
               handleOpenSuccessDialog();
             }}
           >

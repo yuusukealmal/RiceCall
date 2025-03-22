@@ -76,9 +76,21 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     } = currentChannel;
 
     // Handlers
-    const handleSendMessage = (message: Message): void => {
+    const handleSendMessage = (
+      message: Partial<Message>,
+      channelId: Channel['id'],
+    ): void => {
       if (!socket) return;
-      socket.send.message({ message });
+      socket.send.message({ message, channelId });
+    };
+
+    const handleUpdateChannel = (
+      channel: Partial<Channel>,
+      channelId: Channel['id'],
+      serverId: Server['id'],
+    ) => {
+      if (!socket) return;
+      socket.send.updateChannel({ channel, channelId, serverId });
     };
 
     const handleServerUpdate = (data: Partial<Server> | null): void => {
@@ -136,18 +148,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       },
       [isResizing],
     );
-
-    const handleChangeChatMode = (mode: Channel['chatMode']) => {
-      if (!socket || mode === channelChatMode) return;
-      socket.send.updateChannel({
-        channel: {
-          id: currentChannelId,
-          serverId: serverId,
-          chatMode: mode,
-        },
-        userId: userId,
-      });
-    };
 
     // Effects
     useEffect(() => {
@@ -295,15 +295,16 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
             <div className={styles['inputArea']}>
               <MessageInputBox
                 onSendMessage={(msg) => {
-                  handleSendMessage({
-                    id: '',
-                    type: 'general',
-                    content: msg,
-                    senderId: userId,
-                    recieverId: serverId,
-                    channelId: currentChannelId,
-                    timestamp: 0,
-                  });
+                  handleSendMessage(
+                    {
+                      id: '',
+                      type: 'general',
+                      content: msg,
+                      recieverId: serverId,
+                      timestamp: 0,
+                    },
+                    currentChannelId,
+                  );
                 }}
                 locked={
                   channelChatMode === 'forbidden' && member.permissionLevel < 3
@@ -329,16 +330,20 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         <div
                           className={styles['dropdownItem']}
                           onClick={() => {
-                            handleChangeChatMode('free');
-                            handleSendMessage({
-                              id: '',
-                              type: 'info',
-                              content: lang.tr.changeToFreeSpeech,
-                              senderId: userId,
-                              recieverId: serverId,
-                              channelId: currentChannelId,
-                              timestamp: 0,
-                            });
+                            handleUpdateChannel(
+                              { chatMode: 'free' },
+                              currentChannelId,
+                              serverId,
+                            );
+                            handleSendMessage(
+                              {
+                                id: '',
+                                type: 'info',
+                                content: lang.tr.changeToFreeSpeech,
+                                timestamp: 0,
+                              },
+                              currentChannelId,
+                            );
                             setIsDropdownOpen(false);
                           }}
                         >
@@ -349,16 +354,20 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         <div
                           className={styles['dropdownItem']}
                           onClick={() => {
-                            handleChangeChatMode('forbidden');
-                            handleSendMessage({
-                              id: '',
-                              type: 'info',
-                              content: lang.tr.changeToForbiddenSpeech,
-                              senderId: userId,
-                              recieverId: serverId,
-                              channelId: currentChannelId,
-                              timestamp: 0,
-                            });
+                            handleUpdateChannel(
+                              { chatMode: 'forbidden' },
+                              currentChannelId,
+                              serverId,
+                            );
+                            handleSendMessage(
+                              {
+                                id: '',
+                                type: 'info',
+                                content: lang.tr.changeToForbiddenSpeech,
+                                timestamp: 0,
+                              },
+                              currentChannelId,
+                            );
                             setIsDropdownOpen(false);
                           }}
                         >

@@ -78,7 +78,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     // Handlers
     const handleCreateServer = (server: Partial<Server>) => {
       if (!socket) return;
-      socket.send.createServer({ server: server, userId: userId });
+      socket.send.createServer({ server });
     };
 
     const handleUserUpdate = (data: User | null) => {

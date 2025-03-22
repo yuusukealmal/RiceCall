@@ -31,15 +31,15 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
   const isOwner = serverOwnerId === userId;
 
   // Handlers
-  const handleServerSelect = () => {
+  const handleServerSelect = (userId: User['id'], serverId: Server['id']) => {
     if (!socket || user.currentServerId === serverId) return;
-    socket.send.connectServer({ serverId: serverId, userId: userId });
+    socket.send.connectServer({ userId, serverId });
   };
 
   return (
     <div
       className={homePage['myGroupsRoomItemBox']}
-      onClick={() => handleServerSelect()}
+      onClick={() => handleServerSelect(userId, serverId)}
     >
       <div
         className={homePage['myGroupsRoomAvatarPicture']}

@@ -73,14 +73,14 @@ const Header: React.FC<HeaderProps> = React.memo(
     ];
 
     // Handlers
-    const handleLeaveServer = () => {
+    const handleLeaveServer = (userId: User['id'], serverId: Server['id']) => {
       if (!socket) return;
-      socket.send.disconnectServer({ serverId: serverId, userId: userId });
+      socket.send.disconnectServer({ userId, serverId });
     };
 
     const handleUpdateStatus = (status: User['status']) => {
       if (!socket) return;
-      socket.send.updateUser({ user: { id: userId, status } });
+      socket.send.updateUser({ user: { status } });
     };
 
     const handleLogout = () => {
@@ -184,7 +184,7 @@ const Header: React.FC<HeaderProps> = React.memo(
                 <div className={header['tabBg']}></div>
                 {TabClose && (
                   <CircleX
-                    onClick={() => handleLeaveServer()}
+                    onClick={() => handleLeaveServer(userId, serverId)}
                     size={16}
                     className={header['tabClose']}
                   />

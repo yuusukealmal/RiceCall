@@ -34,9 +34,13 @@ const SocketClientEvent = {
   UPDATE_FRIEND_GROUP: 'updateFriendGroup',
   DELETE_FRIEND_GROUP: 'deleteFriendGroup',
   // Member
+  CREATE_MEMBER: 'createMember',
   UPDATE_MEMBER: 'updateMember',
+  DELETE_MEMBER: 'deleteMember',
   // Friend
+  CREATE_FRIEND: 'createFriend',
   UPDATE_FRIEND: 'updateFriend',
+  DELETE_FRIEND: 'deleteFriend',
   // Member Application
   CREATE_MEMBER_APPLICATION: 'createMemberApplication',
   UPDATE_MEMBER_APPLICATION: 'updateMemberApplication',

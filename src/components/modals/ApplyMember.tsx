@@ -5,7 +5,7 @@ import Popup from '@/styles/common/popup.module.css';
 import applyMember from '@/styles/popups/serverApplication.module.css';
 
 // Types
-import { PopupType, Server, MemberApplication } from '@/types';
+import { PopupType, Server, MemberApplication, User } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -53,12 +53,15 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
     const [section, setSection] = useState<number>(0);
 
     const handleCreatMemberApplication = (
-      application: Partial<MemberApplication>,
+      memberApplication: Partial<MemberApplication>,
+      userId: User['id'],
+      serverId: Server['id'],
     ) => {
       if (!socket) return;
       socket.send.createMemberApplication({
-        memberApplication: application,
-        userId: userId,
+        memberApplication,
+        userId,
+        serverId,
       });
     };
 
@@ -157,11 +160,11 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
                 type="submit"
                 className={Popup['button']}
                 onClick={() => {
-                  handleCreatMemberApplication({
-                    userId: userId,
-                    serverId: serverId,
-                    description: applicationDescription,
-                  });
+                  handleCreatMemberApplication(
+                    { description: applicationDescription },
+                    userId,
+                    serverId,
+                  );
                   handleOpenSuccessDialog();
                 }}
               >

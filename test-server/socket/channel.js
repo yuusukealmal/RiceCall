@@ -20,12 +20,11 @@ const channelHandler = {
     // Get database
     const users = (await db.get('users')) || {};
     const channels = (await db.get('channels')) || {};
-    const servers = (await db.get('servers')) || {};
 
     try {
       // data = {
       //   userId: string
-      //   channelId:
+      //   channelId: string
       // }
 
       // Validate data
@@ -41,19 +40,19 @@ const channelHandler = {
       }
       const user = await Func.validate.user(users[userId]);
       const channel = await Func.validate.channel(channels[channelId]);
-      const server = await Func.validate.server(servers[channel.serverId]);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
       if (!channel.isLobby) {
-        if (server.visibility === 'readonly') {
+        if (channel.visibility === 'readonly') {
           throw new StandardizedError(
             '該頻道為唯獨頻道',
             'ValidationError',
             'CONNECTCHANNEL',
-            'SERVER_READONLY',
+            'CHANNEL_IS_READONLY',
             403,
           );
         }
@@ -93,7 +92,7 @@ const channelHandler = {
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) connected to channel(${channel.id})`,
+        `User(${user.id}) connected to channel(${channel.id}) by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
@@ -143,7 +142,8 @@ const channelHandler = {
       const channel = await Func.validate.channel(channels[channelId]);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
 
       // Update user
       const update = {
@@ -171,7 +171,7 @@ const channelHandler = {
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) disconnected from channel(${channel.id})`,
+        `User(${user.id}) disconnected from channel(${channel.id}) by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
@@ -202,15 +202,15 @@ const channelHandler = {
 
     try {
       // data = {
-      //   userId: string
+      //   serverId: string
       //   channel: {
       //     ...
       //   },
       // }
 
       // Validate data
-      const { channel: _newChannel, userId } = data;
-      if (!_newChannel || !userId) {
+      const { channel: _newChannel, serverId } = data;
+      if (!_newChannel || !serverId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -219,14 +219,15 @@ const channelHandler = {
           401,
         );
       }
-      const user = await Func.validate.user(users[userId]);
+      const server = await Func.validate.server(servers[serverId]);
       const newChannel = await Func.validate.channel(_newChannel);
-      const server = await Func.validate.server(servers[newChannel.serverId]);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
 
-      const member = await Get.member(user.id, server.id);
+      // FIX: Check operator permission instead
+      const member = await Get.member(operator.id, server.id);
       const permission = member.permissionLevel;
       if (!permission || permission < 4) {
         throw new StandardizedError(
@@ -240,7 +241,7 @@ const channelHandler = {
 
       // Create new channel
       const channelId = uuidv4();
-      await Set.channel(channelId, {
+      const channel = await Set.channel(channelId, {
         ...newChannel,
         serverId: server.id,
         order: await Get.serverChannels(server.id).length,
@@ -253,7 +254,7 @@ const channelHandler = {
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) created channel(${channelId}) in server(${server.id})`,
+        `Channel(${channel.id}) created in server(${server.id}) by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
@@ -284,15 +285,16 @@ const channelHandler = {
 
     try {
       // data = {
-      //   userId: string
+      //   serverId: string
+      //   channelId: string
       //   channel: {
       //     ...
       //   },
       // };
 
       // Validate
-      const { userId, channel: _editedChannel } = data;
-      if (!userId || !_editedChannel) {
+      const { channel: _editedChannel, channelId, serverId } = data;
+      if (!_editedChannel || !channelId || !serverId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -301,17 +303,15 @@ const channelHandler = {
           401,
         );
       }
-      const server = await Func.validate.server(
-        servers[_editedChannel.serverId],
-      );
-      const user = await Func.validate.user(users[userId]);
+      const server = await Func.validate.server(servers[serverId]);
+      const channel = await Func.validate.channel(channels[channelId]);
       const editedChannel = await Func.validate.channel(_editedChannel);
-      const channel = await Func.validate.channel(channels[editedChannel.id]);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
 
-      const member = await Get.member(user.id, server.id);
+      const member = await Get.member(operator.id, server.id);
       const permission = member.permissionLevel;
       if (!permission || permission < 3) {
         throw new StandardizedError(
@@ -335,7 +335,7 @@ const channelHandler = {
       });
 
       new Logger('WebSocket').success(
-        `User(${user.id}) updated channel(${channel.id})`,
+        `Channel(${channel.id}) updated in server(${server.id}) by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
@@ -366,13 +366,13 @@ const channelHandler = {
 
     try {
       // data = {
-      //   userId: string
+      //   serverId: string
       //   channelId: string
       // }
 
       // Validate data
-      const { channelId, userId } = data;
-      if (!channelId || !userId) {
+      const { channelId, serverId } = data;
+      if (!channelId || !serverId) {
         throw new StandardizedError(
           '無效的資料',
           'DELETECHANNEL',
@@ -381,14 +381,14 @@ const channelHandler = {
           401,
         );
       }
-      const user = await Func.validate.user(users[userId]);
       const channel = await Func.validate.channel(channels[channelId]);
-      const server = await Func.validate.server(servers[channel.serverId]);
+      const server = await Func.validate.server(servers[serverId]);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
 
-      const member = await Get.member(user.id, server.id);
+      const member = await Get.member(operator.id, server.id);
       const permission = member.permissionLevel;
       if (!permission || permission < 4) {
         throw new StandardizedError(
@@ -404,12 +404,12 @@ const channelHandler = {
       await Set.channel(channelId, { serverId: null });
 
       // Emit updated data (to all users in the server)
-      io.to(`server_${channel.serverId}`).emit('serverUpdate', {
-        channels: await Get.serverChannels(channel.serverId),
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        channels: await Get.serverChannels(server.id),
       });
 
       new Logger('WebSocket').info(
-        `User(${user.id}) deleted channel(${channel.id})`,
+        `Channel(${channel.id}) deleted in server(${server.id}) by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)

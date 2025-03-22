@@ -49,9 +49,12 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
     const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
 
     // Handlers
-    const handleSendMessage = (directMessage: DirectMessage) => {
+    const handleSendMessage = (
+      directMessage: Partial<DirectMessage>,
+      friendId: User['id'],
+    ) => {
       if (!socket) return;
-      socket.send.directMessage({ directMessage });
+      socket.send.directMessage({ directMessage, friendId });
     };
 
     const handleFriendUpdate = (data: User | null) => {

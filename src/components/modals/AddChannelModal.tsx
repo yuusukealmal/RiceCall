@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { Channel } from '@/types';
+import { Channel, Server } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -42,13 +42,16 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     );
 
     // Variables
-    const { userId, categoryId, serverId } = initialData;
+    const { categoryId, serverId } = initialData;
     const isRoot = !categoryId;
 
     // Handlers
-    const handleCreateChannel = (channel: Partial<Channel>) => {
+    const handleCreateChannel = (
+      channel: Partial<Channel>,
+      serverId: Server['id'],
+    ) => {
       if (!socket) return;
-      socket.send.createChannel({ channel: channel, userId: userId });
+      socket.send.createChannel({ channel, serverId });
     };
 
     const handleChannelUpdate = (data: Channel | null) => {
@@ -105,12 +108,14 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
             }`}
             disabled={!channelName.trim()}
             onClick={() => {
-              handleCreateChannel({
-                name: channelName,
-                isRoot: isRoot,
-                categoryId: categoryId,
-                serverId: serverId,
-              });
+              handleCreateChannel(
+                {
+                  name: channelName,
+                  isRoot: isRoot,
+                  categoryId: categoryId,
+                },
+                serverId,
+              );
               handleClose();
             }}
           >
