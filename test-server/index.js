@@ -780,5 +780,5 @@ process.on('unhandledRejection', (error) => {
 // Start Server
 server.listen(PORT, () => {
   new Logger('Server').success(`Server is running on port ${PORT}`);
-  Clean.setupCleanupInterval();
+  Clean.setup();
 });
