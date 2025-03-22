@@ -61,6 +61,7 @@ const userHandler = {
       );
     }
   },
+
   connectUser: async (io, socket) => {
     const users = (await db.get('users')) || {};
 
@@ -70,8 +71,6 @@ const userHandler = {
       const user = await Func.validate.user(users[userId]);
 
       // Check if user is already connected
-      for (const [_socketId, _userId] of Map.socketToUser) {
-        if (_userId === userId) {
       io.sockets.sockets.forEach((_socket) => {
         if (_socket.userId === socket.userId && _socket.id !== socket.id) {
           _socket.disconnect();
