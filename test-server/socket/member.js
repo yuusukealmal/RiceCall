@@ -37,7 +37,12 @@ const memberHandler = {
 
       // Create member
       const memberId = `mb_${user.id}-${server.id}`;
-      const member = await Set.member(memberId, newMember);
+      const member = await Set.member(memberId, {
+        ...newMember,
+        userId: user.id,
+        serverId: server.id,
+        createdAt: Date.now(),
+      });
 
       // Emit updated data to all users in the server
       io.to(`server_${server.id}`).emit('serverUpdate', {
