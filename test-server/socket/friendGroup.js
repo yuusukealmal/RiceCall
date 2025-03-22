@@ -16,10 +16,12 @@ const friendGroupHandler = {
     // Get database
     const friendGroups = (await db.get('friendGroups')) || {};
   },
+
   updateFriendGroup: async (io, socket, data) => {
     // Get database
     const friendGroups = (await db.get('friendGroups')) || {};
   },
+
   deleteFriendGroup: async (io, socket, data) => {
     // Get database
     const friendGroups = (await db.get('friendGroups')) || {};

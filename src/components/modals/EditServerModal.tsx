@@ -17,6 +17,7 @@ import {
   PopupType,
   ServerMember,
   Member,
+  Permission,
 } from '@/types';
 
 // Providers
@@ -155,6 +156,21 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       socket.send.updateServer({ server: server, userId: userId });
     };
 
+    const handleUpdateApplication = (
+      application: Partial<MemberApplication>,
+    ) => {
+      if (!socket) return;
+      socket.send.updateMemberApplication({
+        application: application,
+        userId: userId,
+      });
+    };
+
+    const handleUpdateMember = (member: Partial<Member>) => {
+      if (!socket) return;
+      socket.send.updateMember({ member: member, userId: userId });
+    };
+
     const handleServerUpdate = (data: Server | null) => {
       if (!data) data = createDefault.server();
       setServerName(data.name);
@@ -189,31 +205,46 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       setServerApplications(sortedApplications);
     };
 
-    const handleOpenErrorDialog = (message: string) => {
-      ipcService.popup.open(PopupType.DIALOG_ERROR);
-      ipcService.initialData.onRequest(PopupType.DIALOG_ERROR, {
-        title: message,
-        submitTo: PopupType.DIALOG_ERROR,
-      });
-    };
-
     const handleClose = () => {
       ipcService.window.close();
     };
 
-    const handleUpdateApplication = (
-      application: Partial<MemberApplication>,
-    ) => {
+    const handleUserMove = () => {};
+
+    const handleKickServer = (memberId: Member['id'], name: string) => {
       if (!socket) return;
-      socket.send.updateMemberApplication({
-        application: application,
-        userId: userId,
+      ipcService.popup.open(PopupType.DIALOG_WARNING);
+      ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
+        iconType: 'warning',
+        title: `確定要踢出 ${name} 嗎？使用者可以再次加入。`,
+        submitTo: PopupType.DIALOG_WARNING,
+      });
+      ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () => {
+        handleUpdateMember({
+          id: memberId,
+          permissionLevel: Permission.Guest,
+          createdAt: 0,
+          nickname: '',
+        });
       });
     };
 
-    const handleUpdateMember = (member: Partial<Member>) => {
+    const handleBlockUser = (memberId: Member['id'], name: string) => {
       if (!socket) return;
-      socket.send.updateMember({ member: member, userId: userId });
+      ipcService.popup.open(PopupType.DIALOG_WARNING);
+      ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
+        iconType: 'warning',
+        title: `確定要封鎖 ${name} 嗎？使用者將無法再次加入。`,
+        submitTo: PopupType.DIALOG_WARNING,
+      });
+      ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () => {
+        handleUpdateMember({
+          id: memberId,
+          permissionLevel: Permission.Guest,
+          nickname: '',
+          isBlocked: true,
+        });
+      });
     };
 
     const handleOpenEditMember = (memberId: Member['id']) => {
@@ -224,57 +255,11 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       });
     };
 
-    const handleUserMove = () => {};
-
-    const handleKickServer = (target: Member) => {
-      if (!target || !socket) return;
-
-      ipcService.popup.open(PopupType.DIALOG_WARNING);
-      ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
-        iconType: 'warning',
-        title: `確定要踢出 ${target.nickname} 嗎？使用者可以再次加入。`,
-        submitTo: PopupType.DIALOG_WARNING,
-      });
-      ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () => {
-        socket.send.updateMember({
-          member: {
-            ...target,
-            permissionLevel: 0,
-            createdAt: 0,
-            nickname: '',
-          },
-          userId: userId,
-          action: 'disconnect',
-        });
-        setServerMembers((prev) =>
-          prev.filter((member) => member?.id !== target?.id),
-        );
-      });
-    };
-
-    const handleBlockUser = (target: Member) => {
-      if (!target || !socket) return;
-      ipcService.popup.open(PopupType.DIALOG_WARNING);
-      ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
-        iconType: 'warning',
-        title: `確定要封鎖 ${target.nickname} 嗎？使用者將無法再次加入。`,
-        submitTo: PopupType.DIALOG_WARNING,
-      });
-      ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () => {
-        socket.send.updateMember({
-          member: {
-            ...target,
-            permissionLevel: 0,
-            createdAt: 0,
-            nickname: '',
-            isBlocked: true,
-          },
-          userId: userId,
-          action: 'disconnect',
-        });
-        setServerMembers((prev) =>
-          prev.filter((member) => member?.id !== target?.id),
-        );
+    const handleOpenErrorDialog = (message: string) => {
+      ipcService.popup.open(PopupType.DIALOG_ERROR);
+      ipcService.initialData.onRequest(PopupType.DIALOG_ERROR, {
+        title: message,
+        submitTo: PopupType.DIALOG_ERROR,
       });
     };
 
@@ -535,13 +520,13 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           {serverMembers.map((member) => {
                             const {
                               id: memberId,
-                              userId: memberUserId,
-                              serverId: memberServerId,
-                              nickname: memberNickname,
                               name: memberName,
+                              nickname: memberNickname,
                               gender: memberGender,
                               permissionLevel: memberPermissionLevel,
                               contribution: memberContribution,
+                              userId: memberUserId,
+                              serverId: memberServerId,
                               createdAt: memberJoinDate,
                             } = member;
                             return (
@@ -571,9 +556,8 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       // },
                                       {
                                         label: '修改群名片',
-                                        onClick: () => {
-                                          handleOpenEditMember(memberId);
-                                        },
+                                        onClick: () =>
+                                          handleOpenEditMember(memberId),
                                       },
                                       {
                                         label: lang.tr.moveToMyChannel,
@@ -589,11 +573,19 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       // },
                                       {
                                         label: lang.tr.kickOut,
-                                        onClick: () => handleKickServer(member),
+                                        onClick: () =>
+                                          handleKickServer(
+                                            memberId,
+                                            memberNickname || memberName,
+                                          ),
                                       },
                                       {
                                         label: lang.tr.block,
-                                        onClick: () => handleBlockUser(member),
+                                        onClick: () =>
+                                          handleBlockUser(
+                                            memberId,
+                                            memberNickname || memberName,
+                                          ),
                                       },
                                       {
                                         label: lang.tr.memberManagement,
@@ -749,10 +741,10 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                           {serverApplications.map((application) => {
                             const {
                               id: applicationId,
-                              userId: applicationUserId,
-                              serverId: applicationServerId,
                               name: applicationName,
                               description: applicationDescription,
+                              userId: applicationUserId,
+                              serverId: applicationServerId,
                             } = application;
                             return (
                               <tr
@@ -767,12 +759,13 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                         onClick: () => {
                                           handleUpdateApplication({
                                             id: applicationId,
-                                            // status: 'accepted',
+                                            applicationStatus: 'accepted',
                                           });
-                                          handleUpdateMember({
-                                            id: applicationId,
-                                            permissionLevel: 1,
-                                          });
+                                          // User handleCreateMember instead
+                                          // handleUpdateMember({
+                                          //   id: applicationId,
+                                          //   permissionLevel: 1,
+                                          // });
                                         },
                                       },
                                       {
@@ -780,7 +773,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                         onClick: () => {
                                           handleUpdateApplication({
                                             id: applicationId,
-                                            // status: 'rejected',
+                                            applicationStatus: 'rejected',
                                           });
                                         },
                                       },

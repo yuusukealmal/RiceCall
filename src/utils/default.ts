@@ -115,6 +115,7 @@ export const createDefault = {
     overrides: Partial<FriendApplication> = {},
   ): FriendApplication => ({
     description: '',
+    applicationStatus: 'pending',
     senderId: '',
     receiverId: '',
     ...createDefault.user(),
@@ -125,6 +126,7 @@ export const createDefault = {
     overrides: Partial<MemberApplication> = {},
   ): MemberApplication => ({
     description: '',
+    applicationStatus: 'pending',
     userId: '',
     serverId: '',
     ...createDefault.user(),

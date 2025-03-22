@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { Channel, Member, SocketServerEvent, User } from '@/types';
+import { Member } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -13,44 +12,65 @@ import popup from '@/styles/common/popup.module.css';
 import addChannel from '@/styles/popups/addChannel.module.css';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import refreshService from '@/services/refresh.service';
+import ipcService from '@/services/ipc.service';
+
 // Utils
 import { createDefault } from '@/utils/default';
 
-interface EditMemberCardModalProps {
-  member: Member & User;
+interface EditMemberModalProps {
+  userId: string;
+  serverId: string;
 }
 
-const EditMemberCardModal: React.FC<EditMemberCardModalProps> = React.memo(
-  (initialData: EditMemberCardModalProps) => {
+const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
+  (initialData: EditMemberModalProps) => {
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
 
+    // Refs
+    const refreshRef = useRef(false);
+
     // Variables
-    const { member } = initialData;
+    const { userId, serverId } = initialData;
 
     // States
-    const [nickname, setNickname] = useState(member.nickname);
+    const [memberNickname, setMemberNickname] = useState(
+      createDefault.member().nickname,
+    );
 
     // Handlers
     const handleClose = () => {
       ipcService.window.close();
     };
 
-    const handleChangeMemberCard = (member: Member, nickname: string) => {
-      if (!socket || member.nickname === nickname) return;
-
+    const handleUpdateMember = (member: Partial<Member>) => {
+      if (!socket) return;
       socket.send.updateMember({
-        member: {
-          ...(member as Member),
-          nickname,
-        },
-        userId: member.userId,
-        action: 'nickname',
+        member: member,
+        userId: userId,
       });
     };
+
+    const handleMemberUpdate = (data: Member | null) => {
+      if (!data) data = createDefault.member();
+      setMemberNickname(data.nickname);
+    };
+
+    // Effects
+    useEffect(() => {
+      if (!userId || !serverId || refreshRef.current) return;
+      const refresh = async () => {
+        refreshRef.current = true;
+        const member = await refreshService.member({
+          userId: userId,
+          serverId: serverId,
+        });
+        handleMemberUpdate(member);
+      };
+      refresh();
+    }, [userId, serverId]);
 
     return (
       <div className={popup['popupContainer']}>
@@ -60,12 +80,11 @@ const EditMemberCardModal: React.FC<EditMemberCardModalProps> = React.memo(
               <div className={popup['inputBox']}>
                 <div className={popup['label']}>{lang.tr.nickname}</div>
                 <input
-                  placeholder={member.name}
                   className={popup['input']}
                   type="text"
-                  value={nickname || ''}
+                  value={memberNickname || ''}
                   onChange={(e) => {
-                    setNickname(e.target.value);
+                    setMemberNickname(e.target.value);
                   }}
                 />
               </div>
@@ -76,8 +95,9 @@ const EditMemberCardModal: React.FC<EditMemberCardModalProps> = React.memo(
           <button
             className={`${popup['button']}`}
             onClick={() => {
-              const updatedNickname = nickname || member.name;
-              handleChangeMemberCard(member, updatedNickname);
+              handleUpdateMember({
+                nickname: memberNickname,
+              });
               handleClose();
             }}
           >
@@ -92,6 +112,6 @@ const EditMemberCardModal: React.FC<EditMemberCardModalProps> = React.memo(
   },
 );
 
-EditMemberCardModal.displayName = 'EditMemberCardModal';
+EditMemberModal.displayName = 'EditMemberModal';
 
-export default EditMemberCardModal;
+export default EditMemberModal;

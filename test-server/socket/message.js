@@ -24,7 +24,6 @@ const messageHandler = {
       //     ...
       //   }
       // };
-      // console.log(data);
 
       // Validate data
       const { message: _message } = data;
@@ -43,6 +42,7 @@ const messageHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       // Create new message
       const messageId = uuidv4();
@@ -81,6 +81,7 @@ const messageHandler = {
       );
     }
   },
+
   sendDirectMessage: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -92,7 +93,6 @@ const messageHandler = {
       //     ...
       //   }
       // };
-      // console.log(data);
 
       // Validate data
       const { directMessage: _directMessage } = data;
@@ -113,6 +113,7 @@ const messageHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       // Create new message
       const directMessageId = uuidv4();

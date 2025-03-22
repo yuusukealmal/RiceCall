@@ -18,7 +18,6 @@ const rtcHandler = {
       //     ...
       //   }
       // };
-      // console.log(data);
 
       // Validate data
       const { to, offer } = data;
@@ -34,6 +33,7 @@ const rtcHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       socket.to(to).emit('RTCOffer', {
         from: socket.id,
@@ -62,6 +62,7 @@ const rtcHandler = {
       );
     }
   },
+
   answer: async (io, socket, data) => {
     // Get database
 
@@ -72,7 +73,6 @@ const rtcHandler = {
       //     ...
       //   }
       // };
-      // console.log(data);
 
       // Validate data
       const { to, answer } = data;
@@ -88,6 +88,7 @@ const rtcHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       socket.to(to).emit('RTCAnswer', {
         from: socket.id,
@@ -116,6 +117,7 @@ const rtcHandler = {
       );
     }
   },
+
   candidate: async (io, socket, data) => {
     // Get database
 
@@ -126,7 +128,6 @@ const rtcHandler = {
       //     ...
       //   }
       // };
-      // console.log(data);
 
       // Validate data
       const { to, candidate } = data;
@@ -142,6 +143,7 @@ const rtcHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       socket.to(to).emit('RTCIceCandidate', {
         from: socket.id,
@@ -170,6 +172,7 @@ const rtcHandler = {
       );
     }
   },
+
   join: async (io, socket, data) => {
     // Get database
 
@@ -177,7 +180,6 @@ const rtcHandler = {
       // data = {
       //   channelId:
       // };
-      // console.log(data);
 
       // Validate data
       const { channelId } = data;
@@ -193,6 +195,7 @@ const rtcHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       socket.join(`channel_${channelId}`);
 
@@ -221,6 +224,7 @@ const rtcHandler = {
       );
     }
   },
+
   leave: async (io, socket, data) => {
     // Get database
 
@@ -228,7 +232,6 @@ const rtcHandler = {
       // data = {
       //   channelId:
       // };
-      // console.log(data);
 
       // Validate data
       const { channelId } = data;
@@ -244,6 +247,7 @@ const rtcHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       socket.leave(`channel_${channelId}`);
 

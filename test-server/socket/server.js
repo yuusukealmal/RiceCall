@@ -53,6 +53,7 @@ const serverHandler = {
       );
     }
   },
+
   connectServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -64,7 +65,6 @@ const serverHandler = {
       //   userId:
       //   serverId:
       // }
-      // console.log(data);
 
       // Validate data
       const { userId, serverId } = data;
@@ -82,6 +82,7 @@ const serverHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       // Create new membership if there isn't one
       const member = members[`mb_${user.id}-${server.id}`];
@@ -168,6 +169,7 @@ const serverHandler = {
       );
     }
   },
+
   disconnectServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -178,7 +180,6 @@ const serverHandler = {
       //   userId:
       //   serverId:
       // }
-      // console.log(data);
 
       // Validate data
       const { userId, serverId } = data;
@@ -197,6 +198,7 @@ const serverHandler = {
 
       // Validate data
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       // Leave prev channel
       if (user.currentChannelId) {
@@ -243,6 +245,7 @@ const serverHandler = {
       );
     }
   },
+
   createServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -255,7 +258,6 @@ const serverHandler = {
       //     ...
       //   }
       // }
-      // console.log(data);
 
       // Validate data
       const { server: _newServer, userId } = data;
@@ -286,6 +288,7 @@ const serverHandler = {
 
       // Validate data
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       // Create Ids
       const serverId = uuidv4();
@@ -357,6 +360,7 @@ const serverHandler = {
       );
     }
   },
+
   updateServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -369,7 +373,6 @@ const serverHandler = {
       //     ...
       //   }
       // }
-      // console.log(data);
 
       // Validate data
       const { server: _editedServer, userId } = data;
@@ -388,6 +391,7 @@ const serverHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       const member = await Get.member(user.id, server.id);
       const permission = member.permissionLevel;

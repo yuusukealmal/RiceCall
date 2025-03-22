@@ -27,7 +27,6 @@ const channelHandler = {
       //   userId: string
       //   channelId:
       // }
-      // console.log(data);
 
       // Validate data
       const { userId, channelId } = data;
@@ -46,6 +45,7 @@ const channelHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       if (!channel.isLobby) {
         if (server.visibility === 'readonly') {
@@ -54,21 +54,6 @@ const channelHandler = {
             'ValidationError',
             'CONNECTCHANNEL',
             'SERVER_READONLY',
-            403,
-          );
-        }
-
-        const member = await Get.member(user.id, server.id);
-        if (
-          (server.visibility === 'private' ||
-            channel.visibility === 'private') &&
-          (!member || member.permissionLevel < 2)
-        ) {
-          throw new StandardizedError(
-            '您需要成為該群組的會員才能加入該頻道',
-            'ValidationError',
-            'CONNECTCHANNEL',
-            'SERVER_PRIVATE',
             403,
           );
         }
@@ -131,6 +116,7 @@ const channelHandler = {
       );
     }
   },
+
   disconnectChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -141,7 +127,6 @@ const channelHandler = {
       //   userId: string
       //   channelId: string
       // }
-      // console.log(data);
 
       // Validate data
       const { userId, channelId } = data;
@@ -209,6 +194,7 @@ const channelHandler = {
       );
     }
   },
+
   createChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -221,7 +207,6 @@ const channelHandler = {
       //     ...
       //   },
       // }
-      // console.log(data);
 
       // Validate data
       const { channel: _newChannel, userId } = data;
@@ -290,6 +275,7 @@ const channelHandler = {
       );
     }
   },
+
   updateChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -303,7 +289,6 @@ const channelHandler = {
       //     ...
       //   },
       // };
-      // console.log(data);
 
       // Validate
       const { userId, channel: _editedChannel } = data;
@@ -372,6 +357,7 @@ const channelHandler = {
       );
     }
   },
+
   deleteChannel: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -383,7 +369,6 @@ const channelHandler = {
       //   userId: string
       //   channelId: string
       // }
-      // console.log(data);
 
       // Validate data
       const { channelId, userId } = data;

@@ -38,7 +38,6 @@ const userHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
-
       // TODO: implement search results
 
       // Emit data (only to the user)
@@ -73,10 +72,11 @@ const userHandler = {
       // Check if user is already connected
       for (const [_socketId, _userId] of Map.socketToUser) {
         if (_userId === userId) {
-          // FIXME: cant not disconnect exist socket connection
-          io.to(_socketId).emit('userDisconnect', null);
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === socket.userId && _socket.id !== socket.id) {
+          _socket.disconnect();
         }
-      }
+      });
 
       // Emit data (only to the user)
       io.to(socket.id).emit('userUpdate', await Get.user(user.id));
@@ -104,6 +104,7 @@ const userHandler = {
       );
     }
   },
+
   disconnectUser: async (io, socket) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -160,6 +161,7 @@ const userHandler = {
       );
     }
   },
+
   updateUser: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
@@ -186,6 +188,7 @@ const userHandler = {
 
       // Validate operation
       await Func.validate.socket(socket);
+      // TODO: Add validation for operator
 
       if (editedUser.avatar) {
         editedUser.avatar = await Func.generateImageData(editedUser.avatar);

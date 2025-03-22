@@ -16,10 +16,12 @@ const friendApplicationHandler = {
     // Get database
     const friendApplications = (await db.get('friendApplications')) || {};
   },
+
   updateFriendApplication: async (io, socket, data) => {
     // Get database
     const friendApplications = (await db.get('friendApplications')) || {};
   },
+
   deleteFriendApplication: async (io, socket, data) => {
     // Get database
     const friendApplications = (await db.get('friendApplications')) || {};

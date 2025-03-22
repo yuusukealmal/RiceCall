@@ -564,6 +564,43 @@ const func = {
       return member;
     },
 
+    memberApplication: (memberApplication) => {
+      if (!memberApplication) {
+        throw new StandardizedError(
+          '成員申請不存在',
+          'ValidationError',
+          'MEMBER_APPLICATION',
+          'MEMBER_APPLICATION_NOT_FOUND',
+          401,
+        );
+      }
+      if (
+        memberApplication.status &&
+        !['pending', 'approved', 'rejected'].includes(memberApplication.status)
+      ) {
+        throw new StandardizedError(
+          '無效的申請狀態',
+          'ValidationError',
+          'MEMBER_APPLICATION',
+          'STATUS_INVALID',
+          400,
+        );
+      }
+      if (
+        memberApplication.description &&
+        memberApplication.description.length > 200
+      ) {
+        throw new StandardizedError(
+          '申請理由不能超過200個字符',
+          'ValidationError',
+          'MEMBER_APPLICATION',
+          'REASON_TOO_LONG',
+          400,
+        );
+      }
+      return memberApplication;
+    },
+
     friend: (friend) => {
       if (!friend) {
         throw new StandardizedError(
@@ -575,6 +612,43 @@ const func = {
         );
       }
       return friend;
+    },
+
+    friendApplication: (friendApplication) => {
+      if (!friendApplication) {
+        throw new StandardizedError(
+          '好友申請不存在',
+          'ValidationError',
+          'FRIEND_APPLICATION',
+          'FRIEND_APPLICATION_NOT_FOUND',
+          401,
+        );
+      }
+      if (
+        friendApplication.status &&
+        !['pending', 'approved', 'rejected'].includes(friendApplication.status)
+      ) {
+        throw new StandardizedError(
+          '無效的申請狀態',
+          'ValidationError',
+          'FRIEND_APPLICATION',
+          'STATUS_INVALID',
+          400,
+        );
+      }
+      if (
+        friendApplication.description &&
+        friendApplication.description.length > 200
+      ) {
+        throw new StandardizedError(
+          '申請理由不能超過200個字符',
+          'ValidationError',
+          'FRIEND_APPLICATION',
+          'REASON_TOO_LONG',
+          400,
+        );
+      }
+      return friendApplication;
     },
 
     message: (message) => {

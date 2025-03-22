@@ -6,7 +6,6 @@ const utils = require('../utils');
 const {
   standardizedError: StandardizedError,
   logger: Logger,
-  get: Get,
   set: Set,
   func: Func,
 } = utils;
@@ -24,6 +23,8 @@ const friendHandler = {
       //     ...
       //   }
       // }
+
+      // Validate data
       const { friend: _editedFriend, userId } = data;
       if (!_editedFriend || !userId) {
         throw new StandardizedError(
@@ -34,23 +35,13 @@ const friendHandler = {
           401,
         );
       }
-      // const user = await Func.validate.user(users[userId]);
+      const user = await Func.validate.user(users[userId]);
       const editedFriend = await Func.validate.friend(_editedFriend);
       const friend = await Func.validate.friend(friends[editedFriend.id]);
 
       // Validate operation
       await Func.validate.socket(socket);
-
-      // const userFriend = friends[`fd_${userId}_${friend.id}`];
-      // if (!userFriend) {
-      //   throw new StandardizedError(
-      //     `你不是此使用者的好友`,
-      //     'ValidationError',
-      //     'UPDATEFRIEND',
-      //     'OPERATOR_NOT_FRIEND',
-      //     403,
-      //   );
-      // }
+      // TODO: Add validation for operator
 
       // Update friend
       await Set.friend(friend.id, editedFriend);
@@ -58,7 +49,9 @@ const friendHandler = {
       // Emit data (only to the user)
       io.to(socket.id).emit('friendUpdate', editedFriend);
 
-      new Logger('Friend').success(`Friend(${friend.id}) updated`);
+      new Logger('Friend').success(
+        `User(${user.id}) updated friend(${friend.id})`,
+      );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(

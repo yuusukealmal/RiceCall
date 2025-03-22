@@ -59,6 +59,7 @@ module.exports = (io) => {
       const sessionId = uuidv4();
 
       socket.jwt = jwt;
+      socket.userId = userId;
       socket.sessionId = sessionId;
 
       // Save maps

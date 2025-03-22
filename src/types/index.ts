@@ -1211,6 +1211,7 @@ export type FriendGroup = {
 
 export type FriendApplication = User & {
   description: string;
+  applicationStatus: 'pending' | 'accepted' | 'rejected';
   senderId: string;
   receiverId: string;
   createdAt: number;
@@ -1243,6 +1244,7 @@ export type Server = {
 
 export type MemberApplication = User & {
   description: string;
+  applicationStatus: 'pending' | 'accepted' | 'rejected';
   userId: string;
   serverId: string;
   createdAt: number;
