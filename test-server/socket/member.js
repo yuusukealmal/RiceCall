@@ -33,7 +33,8 @@ const memberHandler = {
       const newMember = await Func.validate.member(_newMember);
 
       // Validate operation
-      await Func.validate.socket(socket);
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
 
       // Create member
       const memberId = `mb_${user.id}-${server.id}`;
