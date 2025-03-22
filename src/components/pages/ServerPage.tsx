@@ -12,7 +12,15 @@ import ChannelViewer from '@/components/viewers/ChannelViewer';
 import MessageInputBox from '@/components/MessageInputBox';
 
 // Types
-import { PopupType, User, Server, Message, Channel, Member } from '@/types';
+import {
+  PopupType,
+  User,
+  Server,
+  Message,
+  Channel,
+  Member,
+  SocketServerEvent,
+} from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -74,6 +82,11 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const handleSendMessage = (message: Message): void => {
       if (!socket) return;
       socket.send.message({ message });
+    };
+
+    const handleChannelUpdate = (data: Partial<Channel>): void => {
+      if (!data) data = createDefault.channel();
+      setCurrentChannel((prev) => ({ ...prev, ...data }));
     };
 
     const handleOpenServerSettings = (
@@ -151,6 +164,24 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
         window.removeEventListener('mouseup', handleStopResizing);
       };
     }, [handleResize, handleStopResizing]);
+
+    useEffect(() => {
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
 
     useEffect(() => {
       if (!userId || !serverId || !setServer) return;
