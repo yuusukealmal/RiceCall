@@ -68,7 +68,6 @@ const server = http.createServer((req, res) => {
         //   "password": "123456",
         //   "account": "test",
         // }
-        // console.log(data);
 
         // Get database
         const accountPasswords = (await db.get(`accountPasswords`)) || {};
@@ -172,7 +171,6 @@ const server = http.createServer((req, res) => {
         //   "password": "123456",
         //   "username": "test",
         // }
-        // console.log(data);
 
         // Get database
         const accountPasswords = (await db.get(`accountPasswords`)) || {};
@@ -391,8 +389,8 @@ const server = http.createServer((req, res) => {
       req.on('end', async () => {
         try {
           const data = JSON.parse(body);
-          const { senderId, receiverId } = data;
-          if (!senderId || !receiverId) {
+          const { userId, serverId } = data;
+          if (!userId || !serverId) {
             throw new StandardizedError(
               '無效的資料',
               'ValidationError',
@@ -402,7 +400,7 @@ const server = http.createServer((req, res) => {
           }
           sendSuccess(res, {
             message: 'success',
-            data: await Get.memberApplication(senderId, receiverId),
+            data: await Get.memberApplication(userId, serverId),
           });
         } catch (error) {
           if (!(error instanceof StandardizedError)) {

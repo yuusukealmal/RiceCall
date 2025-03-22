@@ -56,7 +56,10 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
       application: Partial<MemberApplication>,
     ) => {
       if (!socket) return;
-      socket.send.createMemberApplication({ memberApplication: application });
+      socket.send.createMemberApplication({
+        memberApplication: application,
+        userId: userId,
+      });
     };
 
     const handleServerUpdate = (data: Server | null) => {
@@ -67,7 +70,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
     };
 
     const handleMemberApplicationUpdate = (data: MemberApplication | null) => {
-      if (!data) setSection(0);
+      setSection(data ? 1 : 0);
       if (!data) data = createDefault.memberApplication();
       setApplicationDescription(data.description);
     };

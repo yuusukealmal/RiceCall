@@ -74,6 +74,10 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
         name: lang.tr.description,
         field: 'description',
       },
+      {
+        name: lang.tr.creationTime,
+        field: 'createdAt',
+      },
     ];
     const BLOCK_MEMBER_FIELDS = [
       {
@@ -161,7 +165,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     ) => {
       if (!socket) return;
       socket.send.updateMemberApplication({
-        application: application,
+        memberApplication: application,
         userId: userId,
       });
     };
@@ -743,6 +747,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                               id: applicationId,
                               name: applicationName,
                               description: applicationDescription,
+                              createdAt: applicationCreatedDate,
                               userId: applicationUserId,
                               serverId: applicationServerId,
                             } = application;
@@ -783,6 +788,11 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                               >
                                 <td>{applicationName}</td>
                                 <td>{applicationDescription}</td>
+                                <td>
+                                  {new Date(
+                                    applicationCreatedDate,
+                                  ).toLocaleString()}
+                                </td>
                               </tr>
                             );
                           })}

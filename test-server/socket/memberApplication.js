@@ -37,7 +37,6 @@ const memberApplicationHandler = {
       }
       const user = await Func.validate.user(users[userId]);
       const memberApplication = await Func.validate.memberApplication(
-        // TODO:
         _newApplication,
       );
 
@@ -109,7 +108,6 @@ const memberApplicationHandler = {
       }
       const user = await Func.validate.user(users[userId]);
       const editedApplication = await Func.validate.memberApplication(
-        // TODO:
         _editedApplication,
       );
       const application = await Func.validate.memberApplication(
@@ -121,9 +119,7 @@ const memberApplicationHandler = {
       // TODO: Add validation for operator
 
       // Update member application
-      await Set.memberApplications(application.id, {
-        ...editedApplication,
-      });
+      await Set.memberApplications(application.id, editedApplication);
 
       // Emit updated data to all users in the server
       io.to(`server_${application.serverId}`).emit('serverUpdate', {

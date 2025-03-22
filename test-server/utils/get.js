@@ -108,7 +108,10 @@ const get = {
     const applications = (await db.get('friendApplications')) || {};
     const users = (await db.get('users')) || {};
     return Object.values(applications)
-      .filter((app) => app.recieverId === userId)
+      .filter(
+        (app) =>
+          app.recieverId === userId && app.applicationStatus === 'pending',
+      )
       .map((app) => {
         // Concat user data with friend application data
         const user = users[app.senderId];
@@ -199,7 +202,10 @@ const get = {
     const applications = (await db.get('memberApplications')) || {};
     const users = (await db.get('users')) || {};
     return Object.values(applications)
-      .filter((app) => app.serverId === serverId)
+      .filter(
+        (app) =>
+          app.serverId === serverId && app.applicationStatus === 'pending',
+      )
       .map((app) => {
         // Concat user data with application data
         const user = users[app.userId];

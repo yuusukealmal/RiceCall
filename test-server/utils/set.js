@@ -8,7 +8,7 @@ const set = {
     users[id] = {
       name: '',
       avatar: '',
-      avatarUrl: '',
+      avatarUrl: 'https://localhost:3000/images/userAvatars/',
       signature: '',
       status: 'online',
       gender: 'Male',
@@ -64,7 +64,7 @@ const set = {
     servers[id] = {
       name: '',
       avatar: '',
-      avatarUrl: '',
+      avatarUrl: 'https://localhost:3000/images/serverAvatars/',
       announcement: '',
       description: '',
       slogan: '',
@@ -129,6 +129,7 @@ const set = {
     const applications = await db.get('friendApplications');
     applications[id] = {
       description: '',
+      applicationStatus: 'pending',
       senderId: '',
       receiverId: '',
       createdAt: 0,
@@ -162,6 +163,7 @@ const set = {
     const applications = await db.get('memberApplications');
     applications[id] = {
       description: '',
+      applicationStatus: 'pending',
       userId: '',
       serverId: '',
       createdAt: 0,

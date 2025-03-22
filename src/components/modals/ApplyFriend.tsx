@@ -55,7 +55,10 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
       application: Partial<FriendApplication>,
     ) => {
       if (!socket) return;
-      socket.send.createFriendApplication({ friendApplication: application });
+      socket.send.createFriendApplication({
+        friendApplication: application,
+        userId: userId,
+      });
     };
 
     const handleUserUpdate = (data: User | null) => {
