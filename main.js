@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const serve = require('electron-serve');
 const net = require('net');
 const DiscordRPC = require('discord-rpc');
@@ -222,6 +222,11 @@ async function createMainWindow() {
     mainWindow.webContents.send(
       mainWindow.isMaximized() ? 'window-maximized' : 'window-unmaximized',
     );
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   mainWindow.webContents.on('close', () => {
