@@ -61,9 +61,9 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
     // Handlers
-    const handleUpdateUser = (user: Partial<User>) => {
+    const handleUpdateUser = (user: Partial<User>, userId: User['id']) => {
       if (!socket) return;
-      socket.send.updateUser({ user });
+      socket.send.updateUser({ user, userId });
     };
 
     const handleUserUpdate = (data: User | null) => {
@@ -141,12 +141,14 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
               <div
                 className={`${UserSetting['profile-form-button']} ${UserSetting.blue}`}
                 onClick={() => {
-                  handleUpdateUser({
-                    id: userId,
-                    name: userName,
-                    gender: userGender,
-                    signature: userSignature,
-                  });
+                  handleUpdateUser(
+                    {
+                      name: userName,
+                      gender: userGender,
+                      signature: userSignature,
+                    },
+                    userId,
+                  );
                   handleClose();
                 }}
               >

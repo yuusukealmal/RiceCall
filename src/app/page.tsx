@@ -78,9 +78,9 @@ const Header: React.FC<HeaderProps> = React.memo(
       socket.send.disconnectServer({ userId, serverId });
     };
 
-    const handleUpdateStatus = (status: User['status']) => {
+    const handleUpdateStatus = (status: User['status'], userId: User['id']) => {
       if (!socket) return;
-      socket.send.updateUser({ user: { status } });
+      socket.send.updateUser({ user: { status }, userId });
     };
 
     const handleLogout = () => {
@@ -155,7 +155,7 @@ const Header: React.FC<HeaderProps> = React.memo(
                   className={header['option']}
                   datatype={option.status}
                   onClick={() => {
-                    handleUpdateStatus(option.status as User['status']);
+                    handleUpdateStatus(option.status as User['status'], userId);
                     setShowStatusDropdown(false);
                   }}
                 />

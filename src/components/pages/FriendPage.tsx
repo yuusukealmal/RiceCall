@@ -55,9 +55,12 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     const userGrade = Math.min(56, Math.ceil(userLevel / 5)); // 56 is max level
 
     // Handlers
-    const handleChangeSignature = (signature: User['signature']) => {
+    const handleChangeSignature = (
+      signature: User['signature'],
+      userId: User['id'],
+    ) => {
       if (!socket) return;
-      socket.send.updateUser({ user: { signature } });
+      socket.send.updateUser({ user: { signature }, userId });
     };
 
     const handleStartResizing = useCallback((e: React.MouseEvent) => {
@@ -162,7 +165,7 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
               onBlur={() => {
                 if (input == userSignature) return;
                 if (input.length > MAXLENGTH) return;
-                handleChangeSignature(input);
+                handleChangeSignature(input, userId);
               }}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}

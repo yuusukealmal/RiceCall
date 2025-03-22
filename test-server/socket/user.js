@@ -173,8 +173,8 @@ const userHandler = {
       // }
 
       // Validate data
-      const { user: editedUser } = data;
-      if (!editedUser) {
+      const { user: _editedUser, userId } = data;
+      if (!_editedUser || !userId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -183,7 +183,8 @@ const userHandler = {
           401,
         );
       }
-      const user = await Func.validate.user(users[editedUser.id]);
+      const user = await Func.validate.user(users[userId]);
+      const editedUser = await Func.validate.user(_editedUser);
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
