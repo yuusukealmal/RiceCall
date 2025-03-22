@@ -3,12 +3,14 @@ const { QuickDB } = require('quick.db');
 const db = new QuickDB();
 // Utils
 const utils = require('../utils');
-const StandardizedError = utils.standardizedError;
-const Logger = utils.logger;
-const Map = utils.map;
-const Get = utils.get;
-const Set = utils.set;
-const Func = utils.func;
+const {
+  standardizedError: StandardizedError,
+  logger: Logger,
+  map: Map,
+  get: Get,
+  set: Set,
+  func: Func,
+} = utils;
 // Handlers
 const serverHandler = require('./server');
 const channelHandler = require('./channel');

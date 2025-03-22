@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Utils
 const utils = require('../utils');
-const StandardizedError = utils.standardizedError;
-const Logger = utils.logger;
-const Func = utils.func;
+const {
+  standardizedError: StandardizedError,
+  logger: Logger,
+  func: Func,
+} = utils;
 
 const rtcHandler = {
   offer: async (io, socket, data) => {

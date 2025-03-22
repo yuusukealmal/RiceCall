@@ -11,7 +11,13 @@ import permission from '@/styles/common/permission.module.css';
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 
 // Types
-import { MemberApplication, Server, PopupType, ServerMember } from '@/types';
+import {
+  MemberApplication,
+  Server,
+  PopupType,
+  ServerMember,
+  Member,
+} from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -41,35 +47,35 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     // Constants
     const MEMBER_FIELDS = [
       {
-        name: `名字`,
+        name: lang.tr.name,
         field: 'name',
       },
       {
-        name: `權限`,
+        name: lang.tr.permission,
         field: 'permissionLevel',
       },
       {
-        name: `貢獻`,
+        name: lang.tr.contribution,
         field: 'contribution',
       },
       {
-        name: `加入時間`,
+        name: lang.tr.joinDate,
         field: 'createdAt',
       },
     ];
     const APPLICATION_FIELDS = [
       {
-        name: `名字`,
+        name: lang.tr.name,
         field: 'name',
       },
       {
-        name: `描述`,
+        name: lang.tr.description,
         field: 'description',
       },
     ];
     const BLOCK_MEMBER_FIELDS = [
       {
-        name: `名字`,
+        name: lang.tr.name,
         field: 'name',
       },
     ];
@@ -192,13 +198,85 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       });
     };
 
-    const handleApplicationAction = (action: 'accept' | 'reject') => {};
+    const handleApplicationAction = (
+      applicationId: string,
+      action: 'accept' | 'reject',
+    ) => {
+      if (!socket) return;
+
+      const newApplications = serverApplications.filter(
+        (application) => application.id !== applicationId,
+      );
+      setServerApplications(newApplications);
+
+      socket.send.updateMemberApplication({
+        applicationId: applicationId,
+        action: action,
+        userId: userId,
+      });
+    };
+
+    const handleEditNickname = (target: Member) => {
+      if (!target || !socket) return;
+      ipcService.popup.open(PopupType.EDIT_MEMBER_CARD);
+      ipcService.initialData.onRequest(PopupType.EDIT_MEMBER_CARD, {
+        member: target,
+      });
+    };
 
     const handleUserMove = () => {};
 
-    const handleKickServer = () => {};
+    const handleKickServer = (target: Member) => {
+      if (!target || !socket) return;
 
-    const handleBlockUser = () => {};
+      ipcService.popup.open(PopupType.DIALOG_WARNING);
+      ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
+        iconType: 'warning',
+        title: `確定要踢出 ${target.nickname} 嗎？使用者可以再次加入。`,
+        submitTo: PopupType.DIALOG_WARNING,
+      });
+      ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () => {
+        socket.send.updateMember({
+          member: {
+            ...target,
+            permissionLevel: 0,
+            createdAt: 0,
+            nickname: '',
+          },
+          userId: userId,
+          action: 'disconnect',
+        });
+        setServerMembers((prev) =>
+          prev.filter((member) => member?.id !== target?.id),
+        );
+      });
+    };
+
+    const handleBlockUser = (target: Member) => {
+      if (!target || !socket) return;
+      ipcService.popup.open(PopupType.DIALOG_WARNING);
+      ipcService.initialData.onRequest(PopupType.DIALOG_WARNING, {
+        iconType: 'warning',
+        title: `確定要封鎖 ${target.nickname} 嗎？使用者將無法再次加入。`,
+        submitTo: PopupType.DIALOG_WARNING,
+      });
+      ipcService.popup.onSubmit(PopupType.DIALOG_WARNING, () => {
+        socket.send.updateMember({
+          member: {
+            ...target,
+            permissionLevel: 0,
+            createdAt: 0,
+            nickname: '',
+            isBlocked: true,
+          },
+          userId: userId,
+          action: 'disconnect',
+        });
+        setServerMembers((prev) =>
+          prev.filter((member) => member?.id !== target?.id),
+        );
+      });
+    };
 
     const handleServerUpdate = (data: Server | null) => {
       if (!data) data = createDefault.server();
@@ -475,7 +553,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                             ))}
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody className={EditServer['tableContainer']}>
                           {serverMembers.map((member) => {
                             const {
                               id: memberId,
@@ -509,42 +587,44 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                         label: '新增好友',
                                         onClick: () => {},
                                       },
-                                      {
-                                        label: '拒聽此人語音',
-                                        onClick: () => {},
-                                      },
+                                      // {
+                                      //   label: '拒聽此人語音',
+                                      //   onClick: () => {},
+                                      // },
                                       {
                                         label: '修改群名片',
-                                        onClick: () => {},
+                                        onClick: () => {
+                                          handleEditNickname(member);
+                                        },
                                       },
                                       {
                                         label: lang.tr.moveToMyChannel,
                                         onClick: () => handleUserMove(),
                                       },
-                                      {
-                                        label: '禁止此人語音',
-                                        onClick: () => {},
-                                      },
-                                      {
-                                        label: '禁止文字',
-                                        onClick: () => {},
-                                      },
+                                      // {
+                                      //   label: '禁止此人語音',
+                                      //   onClick: () => {},
+                                      // },
+                                      // {
+                                      //   label: '禁止文字',
+                                      //   onClick: () => {},
+                                      // },
                                       {
                                         label: lang.tr.kickOut,
-                                        onClick: () => handleKickServer(),
+                                        onClick: () => handleKickServer(member),
                                       },
                                       {
                                         label: lang.tr.block,
-                                        onClick: () => handleBlockUser(),
+                                        onClick: () => handleBlockUser(member),
                                       },
                                       {
                                         label: lang.tr.memberManagement,
                                         onClick: () => {},
                                       },
-                                      {
-                                        label: lang.tr.inviteToBeMember,
-                                        onClick: () => {},
-                                      },
+                                      // {
+                                      //   label: lang.tr.inviteToBeMember,
+                                      //   onClick: () => {},
+                                      // },
                                     ],
                                   );
                                 }}
@@ -687,7 +767,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                             ))}
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody className={EditServer['tableContainer']}>
                           {serverApplications.map((application) => {
                             const {
                               id: applicationId,
@@ -703,7 +783,26 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                   contextMenu.showContextMenu(
                                     e.pageX,
                                     e.pageY,
-                                    [],
+                                    [
+                                      {
+                                        label: '接受申請',
+                                        onClick: () => {
+                                          handleApplicationAction(
+                                            applicationId,
+                                            'accept',
+                                          );
+                                        },
+                                      },
+                                      {
+                                        label: '拒絕申請',
+                                        onClick: () => {
+                                          handleApplicationAction(
+                                            applicationId,
+                                            'reject',
+                                          );
+                                        },
+                                      },
+                                    ],
                                   );
                                 }}
                               >
@@ -760,7 +859,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                             ))}
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody className={EditServer['tableContainer']}>
                           {serverBlockMembers.map((blockMember) => {
                             const {
                               id: blockMemberId,

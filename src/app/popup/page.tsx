@@ -15,6 +15,7 @@ import EditServerModal from '@/components/modals/EditServerModal';
 import AddChannelModal from '@/components/modals/AddChannelModal';
 import EditChannelModal from '@/components/modals/EditChannelModal';
 import UserSettingModal from '@/components/modals/UserSettingModal';
+import EditMemberCardModal from '@/components/modals/EditMemberCardModal';
 import ServerApplication from '@/components/modals/ServerApplicationModal';
 import ApplyFriend from '@/components/modals/ApplyFriend';
 import Dialog from '@/components/modals/Dialog';
@@ -100,6 +101,12 @@ const Modal = React.memo(() => {
       if (!initialData) return;
 
       switch (type) {
+        case PopupType.EDIT_MEMBER_CARD:
+          setHeader(
+            <Header title={lang.tr.editMemberCard} buttons={['close']} />,
+          );
+          setContent(<EditMemberCardModal {...initialData} />);
+          break;
         case PopupType.EDIT_USER:
           setHeader(<Header title={lang.tr.editUser} buttons={['close']} />);
           setContent(<UserSettingModal {...initialData} />);

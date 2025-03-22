@@ -10,13 +10,15 @@ const formidable = require('formidable');
 
 // Utils
 const utils = require('./utils');
-const StandardizedError = utils.standardizedError;
-const Logger = utils.logger;
-const Func = utils.func;
-const Set = utils.set;
-const Get = utils.get;
-const JWT = utils.jwt;
-const Clean = utils.clean;
+const {
+  standardizedError: StandardizedError,
+  logger: Logger,
+  get: Get,
+  set: Set,
+  func: Func,
+  jwt: JWT,
+  clean: Clean,
+} = utils;
 
 // Constants
 const {

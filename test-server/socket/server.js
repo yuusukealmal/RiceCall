@@ -4,11 +4,13 @@ const { QuickDB } = require('quick.db');
 const db = new QuickDB();
 // Utils
 const utils = require('../utils');
-const StandardizedError = utils.standardizedError;
-const Logger = utils.logger;
-const Get = utils.get;
-const Set = utils.set;
-const Func = utils.func;
+const {
+  standardizedError: StandardizedError,
+  logger: Logger,
+  get: Get,
+  set: Set,
+  func: Func,
+} = utils;
 // Handlers
 const channelHandler = require('./channel');
 
@@ -191,6 +193,7 @@ const serverHandler = {
       }
       const user = await Func.validate.user(users[userId]);
       const server = await Func.validate.server(servers[serverId]);
+      console.log(user, server);
 
       // Validate data
       await Func.validate.socket(socket);
@@ -243,6 +246,7 @@ const serverHandler = {
   createServer: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
 
     try {
       // data = {
@@ -266,6 +270,19 @@ const serverHandler = {
       }
       const user = await Func.validate.user(users[userId]);
       const newServer = await Func.validate.server(_newServer);
+
+      const userOwnedServers = Object.values(servers).filter(
+        (server) => server.ownerId === user.id,
+      );
+      if (userOwnedServers.length >= 3) {
+        throw new StandardizedError(
+          '您已經創建了最大數量的群組',
+          'ValidationError',
+          'CREATESERVER',
+          'SERVER_LIMIT',
+          403,
+        );
+      }
 
       // Validate data
       await Func.validate.socket(socket);
@@ -296,6 +313,7 @@ const serverHandler = {
 
       // Create member
       await Set.member(`mb_${user.id}-${serverId}`, {
+        nickname: user.name,
         permissionLevel: 6,
         userId: user.id,
         serverId: serverId,

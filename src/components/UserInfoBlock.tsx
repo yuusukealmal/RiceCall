@@ -30,7 +30,6 @@ const MemberInfoBlock: React.FC<MemberInfoBlockProps> = React.memo(
     const lang = useLanguage();
 
     const {
-      name: memberName,
       avatar: memberAvatar,
       gender: memberGender,
       level: memberLevel,
@@ -42,6 +41,7 @@ const MemberInfoBlock: React.FC<MemberInfoBlockProps> = React.memo(
       contribution: memberContributions,
     } = member;
     const memberGrade = Math.min(56, Math.ceil(memberLevel / 5));
+    const memberName = member.nickname || member.name;
 
     return (
       <div

@@ -46,6 +46,7 @@ export interface Translation {
   inputAnnouncement: string;
   edit: string;
   preview: string;
+  permission: string;
   markdownSupport: string;
   members: string;
   memberInfo: string;
@@ -81,6 +82,7 @@ export interface Translation {
   signaturePlaceholder: string;
   friendActive: string;
   editUser: string;
+  editMemberCard: string;
   createServer: string;
   editServer: string;
   deleteServer: string;
@@ -236,6 +238,7 @@ export const translations: Record<LanguageKey, Translation> = {
     inputAnnouncement: '輸入公告內容',
     edit: '編輯',
     preview: '預覽',
+    permission: '權限',
     markdownSupport:
       '支援 Markdown 語法：**粗體**, *斜體*, # 標題, - 列表, ```程式碼```, [連結](https://)',
     members: '會員',
@@ -273,6 +276,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: '點擊更改簽名',
     friendActive: '好友動態',
     editUser: '編輯使用者',
+    editMemberCard: '修改群名片',
     createServer: '創建語音群',
     editServer: '編輯語音群',
     deleteServer: '刪除語音群',
@@ -425,6 +429,7 @@ export const translations: Record<LanguageKey, Translation> = {
     inputAnnouncement: '输入公告内容',
     edit: '编辑',
     preview: '预览',
+    permission: '权限',
     markdownSupport:
       '支持 Markdown 语法：**粗体**, *斜体*, # 标题, - 列表, ```代码```, [链接](https://)',
     members: '会员',
@@ -462,6 +467,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: '点击更改签名',
     friendActive: '好友动态',
     editUser: '编辑用户',
+    editMemberCard: '修改群名片',
     createServer: '创建语音群',
     editServer: '编辑语音群',
     deleteServer: '删除语音群',
@@ -614,6 +620,7 @@ export const translations: Record<LanguageKey, Translation> = {
     inputAnnouncement: 'Input Announcement Content',
     edit: 'Edit',
     preview: 'Preview',
+    permission: 'Permission',
     markdownSupport:
       'Supports Markdown syntax: **bold**, *italic*, # heading, - list, ```code```, [link](https://)',
     members: 'Members',
@@ -652,6 +659,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: 'Click to change signature',
     friendActive: 'Friend Active',
     editUser: 'Edit User',
+    editMemberCard: 'Edit Member Card',
     createServer: 'Create Voice Group',
     editServer: 'Edit Voice Group',
     deleteServer: 'Delete Voice Group',
@@ -805,6 +813,7 @@ export const translations: Record<LanguageKey, Translation> = {
     inputAnnouncement: 'アナウンス内容を入力',
     edit: '編集',
     preview: 'プレビュー',
+    permission: '許可',
     markdownSupport:
       'Markdown構文をサポート：**太字**, *斜体*, # 見出し, - リスト, ```コード```, [リンク](https://)',
     members: 'メンバー',
@@ -842,6 +851,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: 'クリックして署名を変更',
     friendActive: '友達のアクティブ',
     editUser: 'ユーザーを編集',
+    editMemberCard: 'メンバーカードを編集',
     createServer: 'ボイスグループを作成',
     editServer: 'ボイスグループを編集',
     deleteServer: 'ボイスグループを削除',
@@ -994,6 +1004,7 @@ export const translations: Record<LanguageKey, Translation> = {
     inputAnnouncement: 'Введите содержание объявления',
     edit: 'Редактировать',
     preview: 'Предварительный просмотр',
+    permission: 'Разрешение',
     markdownSupport:
       'Поддерживает синтаксис Markdown: **жирный**, *курсив*, # заголовок, - список, ```код```, [ссылка](https://)',
     members: 'Члены',
@@ -1032,6 +1043,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: 'Нажмите, чтобы изменить подпись',
     friendActive: 'Активность друзей',
     editUser: 'Редактировать пользователя',
+    editMemberCard: 'Изменить карточку участника',
     createServer: 'Создать голосовую группу',
     editServer: 'Редактировать голосовую группу',
     deleteServer: 'Удалить голосовую группу',
@@ -1436,6 +1448,7 @@ export enum PopupType {
   CREATE_CHANNEL = 'createChannel',
   EDIT_CHANNEL = 'editChannel',
   DELETE_CHANNEL = 'deleteChannel',
+  EDIT_MEMBER_CARD = 'editMemberCard',
   EDIT_USER = 'editUser',
   APPLY_MEMBER = 'applyMember',
   APPLY_FRIEND = 'applyFriend',

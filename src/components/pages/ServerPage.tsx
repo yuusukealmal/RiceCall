@@ -129,7 +129,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     );
 
     const handleChangeChatMode = (mode: Channel['chatMode']) => {
-      if (!socket) return;
+      if (!socket || mode === channelChatMode) return;
       socket.send.updateChannel({
         channel: {
           id: currentChannelId,
