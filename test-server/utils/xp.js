@@ -119,9 +119,11 @@ const xpSystem = {
     try {
       const user = await Get.user(userId);
       if (!user) {
-        throw new Error(`User not found: ${userId}`);
+        new Logger('XPSystem').warn(
+          `User(${userId}) not found, cannot obtain XP`,
+        );
+        return;
       }
-      const server = await Get.server(user.currentServerId);
 
       // Process XP and level
       user.xp += XP_SYSTEM.XP_PER_HOUR;
@@ -144,10 +146,13 @@ const xpSystem = {
       await Set.user(user.id, userUpdate);
 
       // Update member contribution if in a server
-      if (server) {
-        const member = await Get.member(server.id, user.id);
+      if (user.currentServerId) {
+        const member = await Get.member(user.id, user.currentServerId);
         if (!member) {
-          throw new Error(`User(${user.id}) not found in server(${server.id})`);
+          new Logger('XPSystem').warn(
+            `User(${user.id}) not found in server(${user.currentServerId}), cannot update contribution`,
+          );
+          return;
         }
 
         // Process member contribution
