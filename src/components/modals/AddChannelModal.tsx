@@ -34,8 +34,12 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
-    const [parentName, setParentName] = useState<Channel['name']>('');
-    const [channelName, setChannelName] = useState<Channel['name']>('');
+    const [parentName, setParentName] = useState<Channel['name']>(
+      createDefault.channel().name,
+    );
+    const [channelName, setChannelName] = useState<Channel['name']>(
+      createDefault.channel().name,
+    );
 
     // Variables
     const { userId, categoryId, serverId } = initialData;

@@ -94,7 +94,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
   const {
     id: friendId,
     name: friendName,
-    avatar: friendAvatar,
+    avatarUrl: friendAvatarUrl,
     signature: friendSignature,
     level: friendLevel,
     user1Id: friendUserId1,
@@ -138,7 +138,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
       >
         <div
           className={styles['avatarPicture']}
-          style={{ backgroundImage: `url(${friendAvatar})` }}
+          style={{ backgroundImage: `url(${friendAvatarUrl})` }}
         />
         <div className={styles['baseInfoBox']}>
           <div className={styles['container']}>

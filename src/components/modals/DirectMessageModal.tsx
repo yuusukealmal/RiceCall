@@ -34,9 +34,15 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
-    const [friendAvatar, setFriendAvatar] = useState<User['avatar']>('');
-    const [friendName, setFriendName] = useState<User['name']>('');
-    const [friendLevel, setFriendLevel] = useState<User['level']>(0);
+    const [friendAvatar, setFriendAvatar] = useState<User['avatar']>(
+      createDefault.user().avatar,
+    );
+    const [friendName, setFriendName] = useState<User['name']>(
+      createDefault.user().name,
+    );
+    const [friendLevel, setFriendLevel] = useState<User['level']>(
+      createDefault.user().level,
+    );
 
     // Variables
     const { friendId, userId } = initialData;

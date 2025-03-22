@@ -29,7 +29,7 @@ import { useWebRTC } from '@/providers/WebRTCProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { API_URL, apiService } from '@/services/api.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -64,7 +64,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const {
       id: serverId,
       name: serverName,
-      avatar: serverAvatar,
+      avatarUrl: serverAvatarUrl,
       displayId: serverDisplayId,
       announcement: serverAnnouncement,
       members: serverMembers = [],
@@ -75,8 +75,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       bitrate: channelBitrate,
       chatMode: channelChatMode,
     } = currentChannel;
-    const avatarSrc = new URL(API_URL + serverAvatar, window.location.origin)
-      .href;
 
     // Handlers
     const handleSendMessage = (message: Message): void => {
@@ -241,9 +239,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               <div className={styles['avatarBox']}>
                 <div
                   className={styles['avatarPicture']}
-                  style={{
-                    backgroundImage: `url(${avatarSrc}?t=${Date.now()})`,
-                  }}
+                  style={{ backgroundImage: `url(${serverAvatarUrl})` }}
                 />
               </div>
               <div className={styles['baseInfoBox']}>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
 const fs = require('fs').promises;
@@ -37,22 +38,20 @@ const cleanupUnusedAvatars = async () => {
     const servers = (await db.get('servers')) || {};
     const avatarMap = {};
 
-    for (const serverId in servers) {
-      if (servers.hasOwnProperty(serverId)) {
-        const server = servers[serverId];
-
-        if (server.avatar) {
-          const avatarFile = path.basename(server.avatar);
-          avatarMap[avatarFile] = true;
-        }
+    Object.values(servers).forEach(async (server) => {
+      if (server.avatar) {
+        const filePrefix = `upload-`;
+        const fileName = server.avatar;
+        avatarMap[`${filePrefix}${fileName}`.split('.').shift()] = true;
       }
-    }
-
-    const unusedFiles = files.filter((file) => {
-      if (!Object.keys(MIME_TYPES).some((ext) => file.endsWith(ext)))
-        return false;
-      return !avatarMap[file];
     });
+
+    const unusedFiles = files.filter(
+      (file) =>
+        Object.keys(MIME_TYPES).some((ext) => file.endsWith(ext)) &&
+        !file.startsWith('__') &&
+        !avatarMap[file.split('.').shift()],
+    );
 
     for (const file of unusedFiles) {
       try {
@@ -60,13 +59,13 @@ const cleanupUnusedAvatars = async () => {
         new Logger('Cleanup').success(`Deleted unused avatar: ${file}`);
       } catch (error) {
         new Logger('Cleanup').error(
-          `Error deleting file ${file}: ${error.message}`,
+          `Error deleting unused avatar ${file}: ${error.message}`,
         );
       }
     }
 
     if (unusedFiles.length === 0) {
-      new Logger('Cleanup').info('No unused avatars to delete');
+      new Logger('Cleanup').info('No unused avatars deleted');
     } else {
       new Logger('Cleanup').info(
         `Deleted ${unusedFiles.length} unused avatars`,

@@ -1157,6 +1157,7 @@ export type User = {
   id: string;
   name: string;
   avatar: string;
+  avatarUrl: string;
   signature: string;
   level: number;
   xp: number;
@@ -1207,6 +1208,7 @@ export type Server = {
   id: string;
   name: string;
   avatar: string;
+  avatarUrl: string;
   announcement: string;
   description: string;
   displayId: string;

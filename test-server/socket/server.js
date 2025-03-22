@@ -2,8 +2,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
-const fs = require('fs');
-const path = require('path');
 // Utils
 const utils = require('../utils');
 const StandardizedError = utils.standardizedError;
@@ -13,8 +11,6 @@ const Set = utils.set;
 const Func = utils.func;
 // Handlers
 const channelHandler = require('./channel');
-// Constants
-const { SERVER_AVATAR_DIR, SERVER_AVATAR_PATH } = require('../constant');
 
 const serverHandler = {
   searchServer: async (io, socket, data) => {
@@ -278,26 +274,11 @@ const serverHandler = {
       const serverId = uuidv4();
       const channelId = uuidv4();
 
-      if (newServer.avatar) {
-        const fileName = newServer.avatar;
-        const oldAvatarPath = path.join(SERVER_AVATAR_DIR, fileName);
-        const avatarExists = fs.existsSync(oldAvatarPath);
-        if (avatarExists) {
-          const avatarExt = path.extname(newServer.avatar);
-          const avatarName = `${serverId}${avatarExt}`;
-          const newAvatarPath = path.join(SERVER_AVATAR_DIR, avatarName);
-
-          fs.renameSync(oldAvatarPath, newAvatarPath);
-          newServer.avatar = `/${SERVER_AVATAR_PATH}/${avatarName}`;
-          console.log(newServer.avatar);
-        }
-      }
-
       // Create server
       await Set.server(serverId, {
+        ...newServer,
         name: newServer.name.trim(),
         description: newServer.description.trim(),
-        avatar: newServer.avatar,
         displayId: await Func.generateUniqueDisplayId(),
         lobbyId: channelId,
         ownerId: user.id,
@@ -400,10 +381,6 @@ const serverHandler = {
           'USER_PERMISSION',
           403,
         );
-      }
-
-      if (editedServer.avatar) {
-        editedServer.avatar = await Func.generateImageData(editedServer.avatar);
       }
 
       // Update server

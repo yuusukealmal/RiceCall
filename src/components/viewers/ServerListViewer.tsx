@@ -8,7 +8,6 @@ import { Server, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
-import { API_URL } from '@/services/api.service';
 
 interface ServerCardProps {
   user: User;
@@ -24,14 +23,12 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
   const {
     id: serverId,
     name: serverName,
-    avatar: serverAvatar,
+    avatarUrl: serverAvatarUrl,
     displayId: serverDisplayId,
     slogan: serverSlogan,
     ownerId: serverOwnerId,
   } = server;
   const isOwner = serverOwnerId === userId;
-  const avatarSrc = new URL(API_URL + serverAvatar, window.location.origin)
-    .href;
 
   // Handlers
   const handleServerSelect = () => {
@@ -46,7 +43,7 @@ const ServerCard: React.FC<ServerCardProps> = React.memo(({ user, server }) => {
     >
       <div
         className={homePage['myGroupsRoomAvatarPicture']}
-        style={{ backgroundImage: `url(${avatarSrc}?t=${Date.now()})` }}
+        style={{ backgroundImage: `url(${serverAvatarUrl})` }}
       ></div>
       <div className={homePage['myGroupsRoomInfo']}>
         <div className={homePage['myGroupsRoomName']}>{serverName}</div>

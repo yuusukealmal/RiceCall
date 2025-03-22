@@ -35,11 +35,18 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // State
-    const [userFriendGroups, setUserFriendGroups] = useState<FriendGroup[]>([]);
-    const [targetName, setTargetName] = useState<User['name']>('');
-    const [targetAvatar, setTargetAvatar] = useState<User['avatar']>('');
-    const [applicationDescription, setApplicationDescription] =
-      useState<FriendApplication['description']>('');
+    const [userFriendGroups, setUserFriendGroups] = useState<FriendGroup[]>(
+      createDefault.user().friendGroups || [],
+    );
+    const [targetName, setTargetName] = useState<User['name']>(
+      createDefault.user().name,
+    );
+    const [targetAvatar, setTargetAvatar] = useState<User['avatar']>(
+      createDefault.user().avatar,
+    );
+    const [applicationDescription, setApplicationDescription] = useState<
+      FriendApplication['description']
+    >(createDefault.friendApplication().description);
 
     // Variables
     const { userId, targetId } = initialData;

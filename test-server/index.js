@@ -25,6 +25,7 @@ const {
   MIME_TYPES,
   UPLOADS_PATH,
   SERVER_AVATAR_PATH,
+  USER_AVATAR_PATH,
   UPLOADS_DIR,
   SERVER_AVATAR_DIR,
   USER_AVATAR_DIR,
@@ -51,50 +52,6 @@ const server = http.createServer((req, res) => {
     res.writeHead(200);
     res.end();
     return;
-  }
-
-  if (req.method === 'GET' && req.url.startsWith('/uploads/')) {
-    try {
-      // Get the file path relative to uploads directory
-      const relativePath = req.url.replace('/uploads/', '').split('?')[0];
-      const filePath = path.join(UPLOADS_DIR, relativePath);
-
-      // Validate file path to prevent directory traversal
-      if (!filePath.startsWith(UPLOADS_DIR)) {
-        sendError(res, 403, '無權限存取此檔案');
-        return;
-      }
-
-      // Get file extension and MIME type
-      const ext = path.extname(filePath).toLowerCase();
-      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-
-      // Read and serve the file
-      fs.readFile(filePath)
-        .then((data) => {
-          res.writeHead(200, {
-            'Content-Type': contentType,
-            'Cache-Control':
-              'no-store, no-cache, must-revalidate, proxy-revalidate',
-            'Expires': '0',
-            'Pragma': 'no-cache',
-          });
-
-          res.end(data);
-        })
-        .catch((error) => {
-          if (error.code === 'ENOENT') {
-            sendError(res, 404, '找不到檔案');
-          } else {
-            sendError(res, 500, '讀取檔案失敗');
-          }
-        });
-      return;
-    } catch (error) {
-      console.log(error);
-      sendError(res, 500, '伺服器錯誤');
-      return;
-    }
   }
 
   if (req.method == 'POST' && req.url == '/login') {
@@ -309,6 +266,7 @@ const server = http.createServer((req, res) => {
       });
       return;
     }
+
     if (req.url == '/refresh/server') {
       let body = '';
       req.on('data', (chunk) => {
@@ -346,6 +304,7 @@ const server = http.createServer((req, res) => {
       });
       return;
     }
+
     if (req.url == '/refresh/channel') {
       let body = '';
       req.on('data', (chunk) => {
@@ -383,6 +342,7 @@ const server = http.createServer((req, res) => {
       });
       return;
     }
+
     if (req.url == '/refresh/member') {
       let body = '';
       req.on('data', (chunk) => {
@@ -420,6 +380,7 @@ const server = http.createServer((req, res) => {
       });
       return;
     }
+
     if (req.url == '/refresh/memberApplication') {
       let body = '';
       req.on('data', (chunk) => {
@@ -457,6 +418,7 @@ const server = http.createServer((req, res) => {
       });
       return;
     }
+
     if (req.url == '/refresh/friend') {
       let body = '';
       req.on('data', (chunk) => {
@@ -494,6 +456,7 @@ const server = http.createServer((req, res) => {
       });
       return;
     }
+
     if (req.url == '/refresh/friendApplication') {
       let body = '';
       req.on('data', (chunk) => {
@@ -534,130 +497,226 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method == 'POST' && req.url == '/upload/updateAvatar') {
-    const form = new formidable.IncomingForm();
-    form.parse(req, async (err, fields) => {
-      try {
-        if (err) throw new Error('Error parsing form data');
+  if (req.method === 'GET' && req.url.startsWith('/images/')) {
+    try {
+      // Get the file path relative to uploads directory
+      const filePath = req.url
+        .replace('/images/', '/')
+        .split('?')[0]
+        .split('/');
+      const fileName = filePath.pop() || '__default.png';
+      const filePrefix = fileName.startsWith('__') ? '' : `upload-`;
+      const relativePath = path.join(...filePath);
+      const fullFilePath = path.join(
+        UPLOADS_DIR,
+        relativePath,
+        `${filePrefix}${fileName}`,
+      );
 
-        const { _serverId, _avatar, _userId } = fields;
-        if (!_avatar || (!_serverId && !_userId))
-          throw new Error('Invalid form data');
+      // console.log('req.url: ', req.url);
+      // console.log('filePath: ', filePath);
+      // console.log('fileName: ', fileName);
+      // console.log('relativePath: ', relativePath);
+      // console.log('fullFilePath: ', fullFilePath);
 
-        const file = _avatar[0];
-        const serverId = _serverId ? _serverId[0] : null;
-        const userId = _userId ? _userId[0] : null;
-        if (!file || (!serverId && !userId))
-          throw new Error('Invalid form data');
-
-        const matches = file.match(/^data:image\/(.*?);base64,/);
-        if (!matches) throw new Error('Invalid file data');
-        const ext = matches[1];
-        if (!MIME_TYPES[`.${ext}`]) throw new Error('Invalid file type');
-
-        const base64Data = file.replace(/^data:image\/\w+;base64,/, '');
-        const dataBuffer = Buffer.from(base64Data, 'base64');
-        if (dataBuffer.size > 5 * 1024 * 1024)
-          throw new Error('File size too large');
-
-        const baseFileName = serverId || userId;
-        const dirPath = serverId ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
-
-        try {
-          const files = await fs.readdir(dirPath);
-          const matchingFiles = files.filter((file) =>
-            file.startsWith(`${serverId || userId}`),
-          );
-          await Promise.all(
-            matchingFiles.map((file) => fs.unlink(path.join(dirPath, file))),
-          );
-        } catch (error) {
-          if (error.code !== 'ENOENT') throw error;
-        }
-
-        const fileName = `${baseFileName}.${ext}`;
-        const filePath = path.join(dirPath, fileName);
-        await fs.writeFile(filePath, dataBuffer);
-
-        if (serverId) {
-          const servers = (await db.get('servers')) || {};
-          const server = Func.validate.server(servers[serverId]);
-          await Set.server(server.id, {
-            avatar: `/${SERVER_AVATAR_PATH}/${fileName}`,
-          });
-        } else {
-          const users = (await db.get('users')) || {};
-          const user = Func.validate.user(users[userId]);
-          await Set.user(user.id, {
-            avatar: `/${USER_AVATAR_DIR}/${fileName}`,
-          });
-        }
-
-        sendSuccess(res, { message: 'success' });
-      } catch (error) {
+      // Validate file path to prevent directory traversal
+      if (!fullFilePath.startsWith(UPLOADS_DIR)) {
         throw new StandardizedError(
-          error.message,
-          'ValidationError',
-          'UPLOADAVATAR',
-          'INVALID_FILE_TYPE',
-          400,
+          '無權限存取此檔案',
+          'ServerError',
+          'GETFILE',
+          'FILE_ACCESS_DENIED',
+          403,
         );
       }
-    });
+
+      // Read and serve the file
+      fs.readFile(fullFilePath)
+        .then((data) => {
+          res.writeHead(200, {
+            'Content-Type':
+              MIME_TYPES[path.extname(fileName).toLowerCase()] ||
+              'application/octet-stream',
+            'Cache-Control':
+              'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Expires': '0',
+            'Pragma': 'no-cache',
+          });
+
+          res.end(data);
+        })
+        .catch((error) => {
+          if (error.code === 'ENOENT') {
+            throw new StandardizedError(
+              '找不到檔案',
+              'ServerError',
+              'GETFILE',
+              'FILE_NOT_FOUND',
+              404,
+            );
+          } else {
+            throw new StandardizedError(
+              `讀取檔案失敗: ${error.message}`,
+              'ServerError',
+              'GETFILE',
+              'READ_FILE_FAILED',
+              500,
+            );
+          }
+        });
+    } catch (error) {
+      if (!(error instanceof StandardizedError)) {
+        error = new StandardizedError(
+          `讀取檔案時發生預期外的錯誤: ${error.message}`,
+          'ServerError',
+          'GETFILE',
+          'EXCEPTION_ERROR',
+          500,
+        );
+      }
+      sendError(res, error.status_code, error.error_message);
+      new Logger('Server').error(`Get file error: ${error.error_message}`);
+    }
     return;
   }
 
-  if (req.method == 'POST' && req.url == '/upload/avatar') {
+  if (req.method == 'POST' && req.url == '/upload') {
     const form = new formidable.IncomingForm();
     form.parse(req, async (err, fields) => {
       try {
         if (err) throw new Error('Error parsing form data');
 
-        const { _type, _userId, _avatar } = fields;
-        if (!_type || !_userId || !_avatar)
-          throw new Error('Invalid form data');
-
-        const type = _type[0];
-        const userId = _userId[0];
-        const file = _avatar[0];
-        if (!type || !userId || !file) throw new Error('Invalid form data');
-
+        const { _type, _fileName, _file } = fields;
+        if (!_type || !_fileName || !_file) {
+          throw new StandardizedError(
+            '無效的資料',
+            'ValidationError',
+            'UPLOADAVATAR',
+            'DATA_INVALID',
+            400,
+          );
+        }
+        const { type, fileName, file } = {
+          type: _type[0],
+          fileName: _fileName[0],
+          file: _file[0],
+        };
+        if (!type || !fileName || !file) {
+          throw new StandardizedError(
+            '無效的資料',
+            'ValidationError',
+            'UPLOADAVATAR',
+            'DATA_INVALID',
+            400,
+          );
+        }
         const matches = file.match(/^data:image\/(.*?);base64,/);
-        if (!matches) throw new Error('Invalid file data');
+        if (!matches) {
+          throw new StandardizedError(
+            '無效的檔案',
+            'ValidationError',
+            'UPLOADAVATAR',
+            'INVALID_FILE_TYPE',
+            400,
+          );
+        }
         const ext = matches[1];
-        if (!MIME_TYPES[`.${ext}`]) throw new Error('Invalid file type');
-
+        if (!MIME_TYPES[`.${ext}`]) {
+          throw new StandardizedError(
+            '無效的檔案類型',
+            'ValidationError',
+            'UPLOADAVATAR',
+            'INVALID_FILE_TYPE',
+            400,
+          );
+        }
         const base64Data = file.replace(/^data:image\/\w+;base64,/, '');
         const dataBuffer = Buffer.from(base64Data, 'base64');
-        if (dataBuffer.size > 5 * 1024 * 1024)
-          throw new Error('File size too large');
-
-        const baseFileName = `preupload-${userId}`;
-        const dirPath = type === 'server' ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
-
-        try {
-          const files = await fs.readdir(dirPath);
-          const matchingFiles = files.filter((file) =>
-            file.startsWith(baseFileName),
+        if (dataBuffer.size > 5 * 1024 * 1024) {
+          throw new StandardizedError(
+            '檔案過大',
+            'ValidationError',
+            'UPLOADAVATAR',
+            'FILE_TOO_LARGE',
+            400,
           );
-          await Promise.all(
-            matchingFiles.map((file) => fs.unlink(path.join(dirPath, file))),
-          );
-        } catch (error) {
-          if (error.code !== 'ENOENT') throw error;
         }
 
-        const fileName = `${baseFileName}.${ext}`;
-        const filePath = path.join(dirPath, fileName);
+        const Path = () => {
+          switch (type) {
+            case 'server':
+              return SERVER_AVATAR_PATH;
+            case 'user':
+              return USER_AVATAR_PATH;
+            default:
+              return UPLOADS_PATH;
+          }
+        };
+
+        const Dir = () => {
+          switch (type) {
+            case 'server':
+              return SERVER_AVATAR_DIR;
+            case 'user':
+              return USER_AVATAR_DIR;
+            default:
+              return UPLOADS_DIR;
+          }
+        };
+
+        const filePrefix = 'upload-';
+        const fullFileName = `${fileName}.${ext}`;
+        const filePath = path.join(Dir(), `${filePrefix}${fullFileName}`);
+
+        try {
+          const files = await fs.readdir(Dir());
+          const matchingFiles = files.filter(
+            (file) =>
+              file.startsWith(`${filePrefix}${fileName}`) &&
+              !file.startsWith('__'),
+          );
+          await Promise.all(
+            matchingFiles.map((file) => fs.unlink(path.join(Dir(), file))),
+          );
+        } catch (error) {
+          if (error.code !== 'ENOENT') {
+            throw new StandardizedError(
+              '刪除檔案時發生預期外的錯誤',
+              'ServerError',
+              'UPLOADAVATAR',
+              'DELETE_FILE_FAILED',
+              500,
+            );
+          }
+        }
+
+        // Return Avatar Example:
+        // "test.jpg"
+
+        // Return Avatar URL Example:
+        // 'http://localhost:4500/images/serverAvatars/test.jpg'
+
         await fs.writeFile(filePath, dataBuffer);
-        sendSuccess(res, { message: 'success', fileName });
+        sendSuccess(res, {
+          message: 'success',
+          data: {
+            avatar: fileName,
+            avatarUrl: `http://localhost:4500/images/${Path()}/${fullFileName}`,
+          },
+        });
       } catch (error) {
-        throw new StandardizedError(
-          error.message,
-          'ValidationError',
-          'UPLOADAVATAR',
-          'INVALID_FILE_TYPE',
-          400,
+        if (!(error instanceof StandardizedError)) {
+          error = new StandardizedError(
+            `上傳頭像時發生預期外的錯誤: ${error.message}`,
+            'ServerError',
+            'UPLOADAVATAR',
+            'EXCEPTION_ERROR',
+            500,
+          );
+        }
+        sendError(res, error.status_code, error.error_message);
+        new Logger('Server').error(
+          `Upload avatar error: ${error.error_message}`,
         );
       }
     });
@@ -667,78 +726,6 @@ const server = http.createServer((req, res) => {
   sendSuccess(res, { message: 'Hello World!' });
   return;
 });
-
-const handleAvatarUpload = async (req, res, urlType) => {
-  try {
-    if (req.method !== 'POST')
-      return sendSuccess(res, { message: 'Hello World!' });
-
-    const form = new formidable.IncomingForm();
-    form.parse(req, async (err, fields) => {
-      if (err) throw new Error('Error parsing form data');
-
-      const isUpdate = urlType === 'updateAvatar';
-      const _avatar = fields._avatar?.[0];
-      if (!_avatar) throw new Error('Invalid form data');
-
-      const matches = _avatar.match(/^data:image\/(.*?);base64,/);
-      if (!matches) throw new Error('Invalid file data');
-      const ext = matches[1];
-      if (!MIME_TYPES[`.${ext}`]) throw new Error('Invalid file type');
-
-      const base64Data = _avatar.replace(/^data:image\/\w+;base64,/, '');
-      const dataBuffer = Buffer.from(base64Data, 'base64');
-      if (dataBuffer.length > 5 * 1024 * 1024)
-        throw new Error('File size too large');
-
-      let baseFileName, dirPath;
-      if (isUpdate) {
-        const serverId = fields._serverId?.[0] || null;
-        const userId = fields._userId?.[0] || null;
-        if (!serverId && !userId) throw new Error('Invalid form data');
-
-        baseFileName = serverId || userId;
-        dirPath = serverId ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
-      } else {
-        const type = fields._type?.[0];
-        const userId = fields._userId?.[0];
-        if (!type || !userId) throw new Error('Invalid form data');
-
-        baseFileName = `preupload-${userId}`;
-        dirPath = type === 'server' ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
-      }
-
-      try {
-        const files = await fs.readdir(dirPath);
-        const matchingFiles = files.filter((file) =>
-          file.startsWith(baseFileName),
-        );
-        await Promise.all(
-          matchingFiles.map((file) => fs.unlink(path.join(dirPath, file))),
-        );
-      } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
-      }
-
-      const fileName = `${baseFileName}.${ext}`;
-      const filePath = path.join(dirPath, fileName);
-      await fs.writeFile(filePath, dataBuffer);
-
-      sendSuccess(
-        res,
-        isUpdate ? { message: 'success' } : { message: 'success', fileName },
-      );
-    });
-  } catch (error) {
-    throw new StandardizedError(
-      error.message,
-      'ValidationError',
-      'UPLOADAVATAR',
-      'INVALID_FILE_TYPE',
-      400,
-    );
-  }
-};
 
 // Socket Server
 const io = new Server(server, {

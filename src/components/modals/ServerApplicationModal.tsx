@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
@@ -14,7 +13,7 @@ import { useSocket } from '@/providers/SocketProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { API_URL, apiService } from '@/services/api.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -34,14 +33,18 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
     const refreshRef = useRef(false);
 
     // State
-    const [serverName, setServerName] = useState<Server['name']>('');
-    const [serverAvatar, setServerAvatar] = useState<Server['avatar']>('');
-    const [serverDisplayId, setServerDisplayId] =
-      useState<Server['displayId']>('');
-    const [applicationDescription, setApplicationDescription] =
-      useState<MemberApplication['description']>('');
-    const avatarSrc = new URL(API_URL + serverAvatar, window.location.origin)
-      .href;
+    const [serverName, setServerName] = useState<Server['name']>(
+      createDefault.server().name,
+    );
+    const [serverAvatarUrl, setServerAvatarUrl] = useState<Server['avatarUrl']>(
+      createDefault.server().avatarUrl,
+    );
+    const [serverDisplayId, setServerDisplayId] = useState<Server['displayId']>(
+      createDefault.server().displayId,
+    );
+    const [applicationDescription, setApplicationDescription] = useState<
+      MemberApplication['description']
+    >(createDefault.memberApplication().description);
 
     // Variables
     const { userId, serverId } = initialData;
@@ -75,7 +78,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
       if (!data) data = createDefault.server();
       setServerName(data.name);
       setServerDisplayId(data.displayId);
-      setServerAvatar(data.avatar);
+      setServerAvatarUrl(data.avatarUrl);
     };
 
     const handleMemberApplicationUpdate = (data: MemberApplication | null) => {
@@ -110,15 +113,13 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
       case 0:
         return (
           <div className={Popup['popupContainer']}>
-            <div className={`${Popup['popupBody']}`}>
+            <div className={Popup['popupBody']}>
               <div className={applyMember['body']}>
                 <div className={applyMember['headerBox']}>
                   <div className={applyMember['avatarWrapper']}>
                     <div
                       className={applyMember['avatarPicture']}
-                      style={{
-                        backgroundImage: `url(${avatarSrc}?t=${Date.now()})`,
-                      }}
+                      style={{ backgroundImage: `url(${serverAvatarUrl})` }}
                     />
                   </div>
                   <div className={applyMember['serverInfoWrapper']}>
@@ -189,7 +190,7 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
                   <div className={applyMember['avatarWrapper']}>
                     <div
                       className={applyMember['avatarPicture']}
-                      style={{ backgroundImage: `url(${serverAvatar})` }}
+                      style={{ backgroundImage: `url(${serverAvatarUrl})` }}
                     />
                   </div>
                   <div className={applyMember['serverInfoWrapper']}>

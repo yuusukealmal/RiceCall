@@ -33,11 +33,15 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
-    const [channelName, setChannelName] = useState<Channel['name']>('');
-    const [channelIsLobby, setChannelIsLobby] =
-      useState<Channel['isLobby']>(false);
-    const [channelVisibility, setChannelVisibility] =
-      useState<Channel['visibility']>('public');
+    const [channelName, setChannelName] = useState<Channel['name']>(
+      createDefault.channel().name,
+    );
+    const [channelIsLobby, setChannelIsLobby] = useState<Channel['isLobby']>(
+      createDefault.channel().isLobby,
+    );
+    const [channelVisibility, setChannelVisibility] = useState<
+      Channel['visibility']
+    >(createDefault.channel().visibility);
 
     // Variables
     const { userId, channelId } = initialData;

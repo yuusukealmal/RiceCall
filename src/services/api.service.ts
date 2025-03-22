@@ -117,12 +117,14 @@ export const apiService = {
   // POST request
   post: async (
     endpoint: string,
-    data: ApiRequestData,
+    data: ApiRequestData | FormData,
     options?: RequestOptions,
   ) => {
     try {
       const headers = new Headers({
-        'Content-Type': 'application/json',
+        ...(data instanceof FormData
+          ? {}
+          : { 'Content-Type': 'application/json' }),
         ...(options?.headers || {}),
       });
       // Fetch
@@ -130,14 +132,13 @@ export const apiService = {
         method: 'POST',
         headers: headers,
         credentials: options?.credentials || 'omit',
-        body: JSON.stringify(data),
+        body: data instanceof FormData ? data : JSON.stringify(data),
       });
       // Handle response
-      const result = await handleResponse(response);
-      return result;
+      return handleResponse(response);
     } catch (error: Error | any) {
       if (!(error instanceof StandardizedError)) {
-        error = new StandardizedError(
+        throw new StandardizedError(
           'ServerError',
           `提交資料時發生預期外的錯誤: ${error.message}`,
           'API_POST',
@@ -146,7 +147,6 @@ export const apiService = {
         );
       }
       new errorHandler(error).show();
-      return null;
     }
   },
 

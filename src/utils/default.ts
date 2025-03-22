@@ -26,7 +26,8 @@ export const createDefault = {
   user: (overrides: Partial<User> = {}): User => ({
     id: '',
     name: '',
-    avatar: '',
+    avatar: `${Date.now()}`,
+    avatarUrl: 'http://localhost:4500/images/userAvatars/',
     signature: '',
     status: 'online',
     gender: 'Male',
@@ -63,7 +64,8 @@ export const createDefault = {
   server: (overrides: Partial<Server> = {}): Server => ({
     id: '',
     name: '',
-    avatar: '',
+    avatar: `${Date.now()}`,
+    avatarUrl: 'http://localhost:4500/images/serverAvatars/',
     announcement: '',
     description: '',
     slogan: '',

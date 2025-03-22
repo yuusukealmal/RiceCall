@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import defaultAvatar from '../../../public/logo_server_def.png';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
@@ -14,7 +13,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { apiService, API_URL } from '@/services/api.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -50,12 +49,24 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     ];
 
     // States
-    const [userOwnedServers, setUserOwnedServers] = useState<Server[]>([]);
-    const [serverName, setServerName] = useState<Server['name']>('');
-    const [serverType, setServerType] = useState<Server['type']>('game');
-    const [serverAvatar, setServerAvatar] = useState<Server['avatar']>('');
-    const [serverDescription, setServerDescription] =
-      useState<Server['description']>('');
+    const [userOwnedServers, setUserOwnedServers] = useState<Server[]>(
+      createDefault.user().ownedServers || [],
+    );
+    const [serverName, setServerName] = useState<Server['name']>(
+      createDefault.server().name,
+    );
+    const [serverType, setServerType] = useState<Server['type']>(
+      createDefault.server().type,
+    );
+    const [serverAvatar, setServerAvatar] = useState<Server['avatar']>(
+      createDefault.server().avatar,
+    );
+    const [serverAvatarUrl, setServerAvatarUrl] = useState<Server['avatarUrl']>(
+      createDefault.server().avatarUrl,
+    );
+    const [serverDescription, setServerDescription] = useState<
+      Server['description']
+    >(createDefault.server().description);
     const [section, setSection] = useState<number>(0);
 
     // Variables
@@ -68,33 +79,8 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       ipcService.window.close();
     };
 
-    const handleCreateServer = async (server: Partial<Server>) => {
+    const handleCreateServer = (server: Partial<Server>) => {
       if (!socket) return;
-
-      if (serverAvatar) {
-        const formData = new FormData();
-        formData.append('_type', 'server');
-        formData.append('_userId', userId);
-        formData.append('_avatar', serverAvatar);
-
-        try {
-          const response = await fetch(`${API_URL}/upload/avatar`, {
-            method: 'POST',
-            body: formData,
-          });
-          const result = await response.json();
-          if (response.ok) {
-            server.avatar = result.fileName;
-          } else {
-            handleOpenErrorDialog('Server avatar upload failed');
-            return;
-          }
-        } catch (error) {
-          handleOpenErrorDialog('Server avatar upload failed');
-          return;
-        }
-      }
-
       socket.send.createServer({ server: server, userId: userId });
     };
 
@@ -124,19 +110,6 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       };
       refresh();
     }, [userId]);
-
-    useEffect(() => {
-      fetch(defaultAvatar.src)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setServerAvatar(reader.result as string);
-          };
-          reader.readAsDataURL(blob);
-        })
-        .catch((err) => console.error('預設圖片讀取失敗:', err));
-    }, []);
 
     switch (section) {
       // Server Type Selection Section
@@ -216,7 +189,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                 <div className={createServer['avatarWrapper']}>
                   <div
                     className={createServer['avatarPicture']}
-                    style={{ backgroundImage: `url(${serverAvatar})` }}
+                    style={{ backgroundImage: `url(${serverAvatarUrl})` }}
                   />
                   <input
                     type="file"
@@ -233,9 +206,19 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                         handleOpenErrorDialog(lang.tr.imageTooLarge);
                         return;
                       }
+
                       const reader = new FileReader();
-                      reader.onloadend = () =>
-                        setServerAvatar(reader.result as string);
+                      reader.onloadend = async () => {
+                        const formData = new FormData();
+                        formData.append('_type', 'server');
+                        formData.append('_fileName', serverAvatar);
+                        formData.append('_file', reader.result as string);
+                        const data = await apiService.post('/upload', formData);
+                        if (data) {
+                          setServerAvatar(data.avatar);
+                          setServerAvatarUrl(data.avatarUrl);
+                        }
+                      };
                       reader.readAsDataURL(file);
                     }}
                   />
@@ -304,10 +287,11 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                   !serverName.trim() || !canCreate ? popup['disabled'] : ''
                 }`}
                 disabled={!serverName.trim() || !canCreate}
-                onClick={async () => {
-                  await handleCreateServer({
+                onClick={() => {
+                  handleCreateServer({
                     name: serverName,
-                    // avatar: serverAvatar,
+                    avatar: serverAvatar,
+                    avatarUrl: serverAvatarUrl,
                     description: serverDescription,
                     type: serverType,
                     ownerId: userId,

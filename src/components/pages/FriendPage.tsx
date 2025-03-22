@@ -49,7 +49,7 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     const {
       id: userId,
       name: userName,
-      avatar: userAvatar,
+      avatarUrl: userAvatarUrl,
       signature: userSignature,
       level: userLevel,
       badges: userBadges = [],
@@ -129,7 +129,7 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
         <header className={friendPage['friendHeader']}>
           <div
             className={friendPage['avatarPicture']}
-            style={{ backgroundImage: `url(${userAvatar})` }}
+            style={{ backgroundImage: `url(${userAvatarUrl})` }}
           />
           <div className={friendPage['baseInfoBox']}>
             <div className={friendPage['container']}>

@@ -20,7 +20,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
 import { ipcService } from '@/services/ipc.service';
-import { API_URL, apiService } from '@/services/api.service';
+import { apiService } from '@/services/api.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -78,29 +78,51 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
-    const [serverName, setServerName] = useState<Server['name']>('');
-    const [serverAvatar, setServerAvatar] = useState<Server['avatar']>('');
-    const [serverAnnouncement, setServerAnnouncement] =
-      useState<Server['announcement']>('');
-    const [serverDescription, setServerDescription] =
-      useState<Server['description']>('');
-    const [serverType, setServerType] = useState<Server['type']>('other');
-    const [serverDisplayId, setServerDisplayId] =
-      useState<Server['displayId']>('');
-    const [serverSlogan, setServerSlogan] = useState<Server['slogan']>('');
-    const [serverLevel, setServerLevel] = useState<Server['level']>(0);
-    const [serverWealth, setServerWealth] = useState<Server['wealth']>(0);
-    const [serverCreatedAt, setServerCreatedAt] =
-      useState<Server['createdAt']>(0);
-    const [serverVisibility, setServerVisibility] =
-      useState<Server['visibility']>('public');
-    const [serverMembers, setServerMembers] = useState<ServerMember[]>([]);
+    const [serverName, setServerName] = useState<Server['name']>(
+      createDefault.server().name,
+    );
+    const [serverAvatar, setServerAvatar] = useState<Server['avatar']>(
+      createDefault.server().avatar,
+    );
+    const [serverAvatarUrl, setServerAvatarUrl] = useState<Server['avatarUrl']>(
+      createDefault.server().avatarUrl,
+    );
+    const [serverAnnouncement, setServerAnnouncement] = useState<
+      Server['announcement']
+    >(createDefault.server().announcement);
+    const [serverDescription, setServerDescription] = useState<
+      Server['description']
+    >(createDefault.server().description);
+    const [serverType, setServerType] = useState<Server['type']>(
+      createDefault.server().type,
+    );
+    const [serverDisplayId, setServerDisplayId] = useState<Server['displayId']>(
+      createDefault.server().displayId,
+    );
+    const [serverSlogan, setServerSlogan] = useState<Server['slogan']>(
+      createDefault.server().slogan,
+    );
+    const [serverLevel, setServerLevel] = useState<Server['level']>(
+      createDefault.server().level,
+    );
+    const [serverWealth, setServerWealth] = useState<Server['wealth']>(
+      createDefault.server().wealth,
+    );
+    const [serverCreatedAt, setServerCreatedAt] = useState<Server['createdAt']>(
+      createDefault.server().createdAt,
+    );
+    const [serverVisibility, setServerVisibility] = useState<
+      Server['visibility']
+    >(createDefault.server().visibility);
+    const [serverMembers, setServerMembers] = useState<ServerMember[]>(
+      createDefault.server().members || [],
+    );
     const [serverApplications, setServerApplications] = useState<
       MemberApplication[]
-    >([]);
+    >(createDefault.server().memberApplications || []);
     const [serverBlockMembers, setServerBlockMembers] = useState<
       ServerMember[]
-    >([]);
+    >(createDefault.server().members?.filter((mb) => mb.isBlocked) || []);
 
     const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
     const [sortState, setSortState] = useState<1 | -1>(-1);
@@ -150,24 +172,12 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
 
     const handleUpdateServer = async () => {
       if (!socket) return;
-
-      // if server avatar updated, upload the new avatar
-      if (serverAvatar.startsWith('data:image/')) {
-        const formData = new FormData();
-        formData.append('_serverId', serverId);
-        formData.append('_avatar', serverAvatar);
-
-        await fetch(`${API_URL}/upload/updateAvatar`, {
-          method: 'POST',
-          body: formData,
-        });
-      }
-
       socket.send.updateServer({
         server: {
           id: serverId,
           name: serverName,
-          // avatar: serverAvatar,
+          avatar: serverAvatar,
+          avatarUrl: serverAvatarUrl,
           announcement: serverAnnouncement,
           description: serverDescription,
           type: serverType,
@@ -194,6 +204,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       if (!data) data = createDefault.server();
       setServerName(data.name);
       setServerAvatar(data.avatar);
+      setServerAvatarUrl(data.avatarUrl);
       setServerAnnouncement(data.announcement);
       setServerDescription(data.description);
       setServerType(data.type);
@@ -314,18 +325,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                         <div
                           className={EditServer['avatarPicture']}
                           style={{
-                            backgroundImage: `url(${
-                              serverAvatar.startsWith('data:image/')
-                                ? serverAvatar
-                                : `${
-                                    new URL(
-                                      API_URL + serverAvatar,
-                                      window.location.origin,
-                                    ).href
-                                  }?t=${Date.now()}`
-                            })`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
+                            backgroundImage: `url(${serverAvatarUrl})`,
                           }}
                         />
                         <input
@@ -343,9 +343,22 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                               handleOpenErrorDialog(lang.tr.imageTooLarge);
                               return;
                             }
+
                             const reader = new FileReader();
-                            reader.onloadend = () =>
-                              setServerAvatar(reader.result as string);
+                            reader.onloadend = async () => {
+                              const formData = new FormData();
+                              formData.append('_type', 'server');
+                              formData.append('_fileName', serverAvatar);
+                              formData.append('_file', reader.result as string);
+                              const data = await apiService.post(
+                                '/upload',
+                                formData,
+                              );
+                              if (data) {
+                                setServerAvatar(data.avatar);
+                                setServerAvatarUrl(data.avatarUrl);
+                              }
+                            };
                             reader.readAsDataURL(file);
                           }}
                         />

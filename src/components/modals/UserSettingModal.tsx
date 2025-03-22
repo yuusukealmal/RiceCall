@@ -33,11 +33,21 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
-    const [userName, setUserName] = useState<User['name']>('');
-    const [userGender, setUserGender] = useState<User['gender']>('Male');
-    const [userSignature, setUserSignature] = useState<User['signature']>('');
-    const [userAvatar, setUserAvatar] = useState<User['avatar']>('');
-    const [userLevel, setUserLevel] = useState<User['level']>(0);
+    const [userName, setUserName] = useState<User['name']>(
+      createDefault.user().name,
+    );
+    const [userGender, setUserGender] = useState<User['gender']>(
+      createDefault.user().gender,
+    );
+    const [userSignature, setUserSignature] = useState<User['signature']>(
+      createDefault.user().signature,
+    );
+    const [userAvatarUrl, setUserAvatarUrl] = useState<User['avatarUrl']>(
+      createDefault.user().avatarUrl,
+    );
+    const [userLevel, setUserLevel] = useState<User['level']>(
+      createDefault.user().level,
+    );
 
     // Variables
     const { userId } = initialData;
@@ -72,6 +82,7 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
       setUserName(data.name);
       setUserGender(data.gender);
       setUserSignature(data.signature);
+      setUserAvatarUrl(data.avatarUrl);
     };
 
     // Effects
@@ -99,9 +110,7 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
             <div className={UserSetting['profile-header-avatar-border']}></div>
             <div
               className={UserSetting['profile-header-avatar']}
-              style={
-                userAvatar ? { backgroundImage: `url(${userAvatar})` } : {}
-              }
+              style={{ backgroundImage: `url(${userAvatarUrl})` }}
             />
             <div className={UserSetting['profile-header-user-info']}>
               <span className={UserSetting['profile-header-display-name']}>
@@ -126,7 +135,7 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                   0
                 </span>
                 <span className={UserSetting['profile-header-country']}>
-                  台灣
+                  {/* {createDefault.user().country} */}
                 </span>
               </div>
             </div>

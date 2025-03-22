@@ -8,6 +8,7 @@ const set = {
     users[id] = {
       name: '',
       avatar: '',
+      avatarUrl: '',
       signature: '',
       status: 'online',
       gender: 'Male',
@@ -63,6 +64,7 @@ const set = {
     servers[id] = {
       name: '',
       avatar: '',
+      avatarUrl: '',
       announcement: '',
       description: '',
       slogan: '',
