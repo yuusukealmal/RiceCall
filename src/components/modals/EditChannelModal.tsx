@@ -12,8 +12,8 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import { useSocket } from '@/providers/SocketProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
+import refreshService from '@/services/refresh.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -47,20 +47,10 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const { userId, channelId } = initialData;
 
     // Handlers
-    const handleClose = () => {
-      ipcService.window.close();
-    };
 
-    const handleUpdateChannel = () => {
+    const handleUpdateChannel = (channel: Partial<Channel>) => {
       if (!socket) return;
-      socket.send.updateChannel({
-        channel: {
-          id: channelId,
-          name: channelName,
-          visibility: channelVisibility,
-        },
-        userId: userId,
-      });
+      socket.send.updateChannel({ channel: channel, userId: userId });
     };
 
     const handleChannelUpdate = (data: Channel | null) => {
@@ -70,15 +60,16 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
       setChannelVisibility(data.visibility);
     };
 
+    const handleClose = () => {
+      ipcService.window.close();
+    };
+
     // Effects
     useEffect(() => {
-      if (!channelId) return;
-      if (refreshRef.current) return;
+      if (!channelId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const channel = await apiService.post('/refresh/channel', {
-          channelId: channelId,
-        });
+        const channel = await refreshService.channel({ channelId: channelId });
         handleChannelUpdate(channel);
       };
       refresh();
@@ -128,7 +119,11 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
           <button
             className={Popup['button']}
             onClick={() => {
-              handleUpdateChannel();
+              handleUpdateChannel({
+                id: channelId,
+                name: channelName,
+                visibility: channelVisibility,
+              });
               handleClose();
             }}
           >

@@ -17,12 +17,15 @@ import { useSocket } from '@/providers/SocketProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
+import refreshService from '@/services/refresh.service';
+
+// Utils
+import { createDefault } from '@/utils/default';
 
 interface FriendPageProps {
   user: User;
-  setUser: (user: User) => void;
+  setUser: React.Dispatch<React.SetStateAction<User>>;
 }
 
 const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
@@ -38,9 +41,7 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     const refreshed = useRef(false);
 
     // States
-    const [signatureInput, setSignatureInput] = useState<string>(
-      user.signature,
-    );
+    const [input, setInput] = useState<string>(user.signature);
     const [isComposing, setIsComposing] = useState<boolean>(false);
     const [sidebarWidth, setSidebarWidth] = useState<number>(256);
     const [isResizing, setIsResizing] = useState<boolean>(false);
@@ -60,6 +61,11 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     const handleChangeSignature = (signature: User['signature']) => {
       if (!socket) return;
       socket.send.updateUser({ user: { id: userId, signature } });
+    };
+
+    const handleUserUpdate = (data: Partial<User> | null) => {
+      if (!data) data = createDefault.user();
+      setUser((prev) => ({ ...prev, ...data }));
     };
 
     const handleStartResizing = useCallback((e: React.MouseEvent) => {
@@ -111,17 +117,15 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     }, [lang, userName]);
 
     useEffect(() => {
-      if (!userId || !setUser) return;
+      if (!userId) return;
       if (refreshed.current) return;
       const refresh = async () => {
         refreshed.current = true;
-        const user = await apiService.post('/refresh/user', {
-          userId: userId,
-        });
-        setUser(user);
+        const user = await refreshService.user({ userId: userId });
+        handleUserUpdate(user);
       };
       refresh();
-    }, [userId, setUser]);
+    }, [userId]);
 
     return (
       <div className={friendPage['friendWrapper']}>
@@ -151,12 +155,12 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
           <div className={friendPage['signatureBox']}>
             <textarea
               className={friendPage['signatureInput']}
-              value={signatureInput}
+              value={input}
               placeholder={lang.tr.signaturePlaceholder}
               data-placeholder="30018"
               onChange={(e) => {
-                if (signatureInput.length > MAXLENGTH) return;
-                setSignatureInput(e.target.value);
+                if (input.length > MAXLENGTH) return;
+                setInput(e.target.value);
               }}
               onKeyDown={(e) => {
                 if (e.shiftKey) return;
@@ -165,9 +169,9 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
                 e.currentTarget.blur();
               }}
               onBlur={() => {
-                if (signatureInput == userSignature) return;
-                if (signatureInput.length > MAXLENGTH) return;
-                handleChangeSignature(signatureInput);
+                if (input == userSignature) return;
+                if (input.length > MAXLENGTH) return;
+                handleChangeSignature(input);
               }}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}

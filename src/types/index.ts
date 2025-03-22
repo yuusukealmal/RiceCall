@@ -1301,6 +1301,7 @@ export type UserMember = Member & Server;
 export type ServerMember = Member & User;
 
 export type Friend = {
+  id: string;
   isBlocked: boolean;
   friendGroupId: string;
   user1Id: string;

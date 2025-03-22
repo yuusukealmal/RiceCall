@@ -26,7 +26,7 @@ import { useContextMenu } from '@/providers/ContextMenuProvider';
 import BadgeViewer from '@/components/viewers/BadgeViewer';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
+import ipcService from '@/services/ipc.service';
 
 interface CategoryTabProps {
   user: User;

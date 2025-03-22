@@ -19,9 +19,9 @@ if (typeof window !== 'undefined' && window.require) {
   }
 }
 
-export const isElectron = !!ipcRenderer;
+const isElectron = !!ipcRenderer;
 
-export const ipcService = {
+const ipcService = {
   // Socket event methods
   sendSocketEvent: (event: SocketClientEvent, data: any) => {
     if (isElectron) {
@@ -205,3 +205,5 @@ export const ipcService = {
     },
   },
 };
+
+export default ipcService;

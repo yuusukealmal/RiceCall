@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { Channel, SocketServerEvent, User } from '@/types';
+import { Channel } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -13,8 +12,9 @@ import popup from '@/styles/common/popup.module.css';
 import addChannel from '@/styles/popups/addChannel.module.css';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
+import refreshService from '@/services/refresh.service';
+
 // Utils
 import { createDefault } from '@/utils/default';
 
@@ -46,10 +46,6 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     const isRoot = !categoryId;
 
     // Handlers
-    const handleClose = () => {
-      ipcService.window.close();
-    };
-
     const handleCreateChannel = (channel: Partial<Channel>) => {
       if (!socket) return;
       socket.send.createChannel({ channel: channel, userId: userId });
@@ -60,15 +56,16 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
       setParentName(data.name);
     };
 
+    const handleClose = () => {
+      ipcService.window.close();
+    };
+
     // Effects
     useEffect(() => {
-      if (!categoryId) return;
-      if (refreshRef.current) return;
+      if (!categoryId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const channel = await apiService.post('/refresh/channel', {
-          channelId: categoryId,
-        });
+        const channel = await refreshService.channel({ channelId: categoryId });
         handleChannelUpdate(channel);
       };
       refresh();

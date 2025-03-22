@@ -12,11 +12,11 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import { useSocket } from '@/providers/SocketProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
+import refreshService from '@/services/refresh.service';
 
 interface ServerApplicationModalProps {
   serverId: string;
@@ -59,6 +59,19 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
       socket.send.createMemberApplication({ memberApplication: application });
     };
 
+    const handleServerUpdate = (data: Server | null) => {
+      if (!data) data = createDefault.server();
+      setServerName(data.name);
+      setServerDisplayId(data.displayId);
+      setServerAvatarUrl(data.avatarUrl);
+    };
+
+    const handleMemberApplicationUpdate = (data: MemberApplication | null) => {
+      if (!data) setSection(0);
+      if (!data) data = createDefault.memberApplication();
+      setApplicationDescription(data.description);
+    };
+
     const handleOpenSuccessDialog = () => {
       ipcService.popup.open(PopupType.DIALOG_SUCCESS);
       ipcService.initialData.onRequest(PopupType.DIALOG_SUCCESS, {
@@ -74,34 +87,16 @@ const ServerApplicationModal: React.FC<ServerApplicationModalProps> =
       ipcService.window.close();
     };
 
-    const handleServerUpdate = (data: Server | null) => {
-      if (!data) data = createDefault.server();
-      setServerName(data.name);
-      setServerDisplayId(data.displayId);
-      setServerAvatarUrl(data.avatarUrl);
-    };
-
-    const handleMemberApplicationUpdate = (data: MemberApplication | null) => {
-      if (!data) data = createDefault.memberApplication();
-      setApplicationDescription(data.description);
-    };
-
     // UseEffect
     useEffect(() => {
-      if (!serverId || !userId) return;
-      if (refreshRef.current) return;
+      if (!serverId || !userId || refreshRef.current) return;
       const refresh = async () => {
-        const server = await apiService.post('/refresh/server', {
+        const server = await refreshService.server({ serverId: serverId });
+        handleServerUpdate(server);
+        const memberApplication = await refreshService.memberApplication({
+          userId: userId,
           serverId: serverId,
         });
-        handleServerUpdate(server);
-        const memberApplication = await apiService.post(
-          '/refresh/memberApplication',
-          {
-            senderId: userId,
-            receiverId: serverId,
-          },
-        );
         handleMemberApplicationUpdate(memberApplication);
         refreshRef.current = true;
       };

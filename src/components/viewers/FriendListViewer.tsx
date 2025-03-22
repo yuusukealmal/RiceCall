@@ -16,7 +16,7 @@ import { useContextMenu } from '@/providers/ContextMenuProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
+import ipcService from '@/services/ipc.service';
 
 interface FriendGroupTabProps {
   friendGroup: FriendGroup;

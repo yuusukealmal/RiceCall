@@ -9,17 +9,17 @@ export const createSorter = <T extends object>(
     const valueA = a[field];
     const valueB = b[field];
 
-    // 處理數字排序
+    // Handle number sorting
     if (typeof valueA === 'number' && typeof valueB === 'number') {
       return direction * (valueA - valueB);
     }
 
-    // 處理字串排序
+    // Handle string sorting
     if (typeof valueA === 'string' && typeof valueB === 'string') {
       return direction * valueA.localeCompare(valueB);
     }
 
-    // 處理日期排序
+    // Handle date sorting
     if (valueA instanceof Date && valueB instanceof Date) {
       return direction * (valueA.getTime() - valueB.getTime());
     }
@@ -28,7 +28,7 @@ export const createSorter = <T extends object>(
   };
 };
 
-// 使用範例：
+// Example usage:
 // const users = [{ name: 'Alice', age: 25 }, { name: 'Bob', age: 30 }];
-// users.sort(createSorter('age', -1)); // 依年齡降序排序
-// users.sort(createSorter('name')); // 依名字升序排序
+// users.sort(createSorter('age', -1)); // Sort by age in descending order
+// users.sort(createSorter('name')); // Sort by name in ascending order

@@ -10,7 +10,7 @@ import LoginPage from '@/components/pages/LoginPage';
 import RegisterPage from '@/components/pages/RegisterPage';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
+import ipcService from '@/services/ipc.service';
 import authService from '@/services/auth.service';
 
 const Header: React.FC = React.memo(() => {

@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -28,8 +27,8 @@ import { useSocket } from '@/providers/SocketProvider';
 import { useWebRTC } from '@/providers/WebRTCProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
+import refreshService from '@/services/refresh.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -37,7 +36,7 @@ import { createDefault } from '@/utils/default';
 interface ServerPageProps {
   user: User;
   server: Server;
-  setServer: (server: Server) => void;
+  setServer: React.Dispatch<React.SetStateAction<Server>>;
 }
 
 const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
@@ -82,9 +81,19 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       socket.send.message({ message });
     };
 
-    const handleChannelUpdate = (data: Partial<Channel>): void => {
+    const handleServerUpdate = (data: Partial<Server> | null): void => {
+      if (!data) data = createDefault.server();
+      setServer((prev) => ({ ...prev, ...data }));
+    };
+
+    const handleChannelUpdate = (data: Partial<Channel> | null): void => {
       if (!data) data = createDefault.channel();
       setCurrentChannel((prev) => ({ ...prev, ...data }));
+    };
+
+    const handleMemberUpdate = (data: Partial<Member> | null): void => {
+      if (!data) data = createDefault.member();
+      setMember((prev) => ({ ...prev, ...data }));
     };
 
     const handleOpenServerSettings = (
@@ -138,19 +147,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
         },
         userId: userId,
       });
-
-      handleSendMessage({
-        id: '',
-        type: 'info',
-        content:
-          mode === 'free'
-            ? lang.tr.changeToFreeSpeech
-            : lang.tr.changeToForbiddenSpeech,
-        senderId: userId,
-        recieverId: serverId,
-        channelId: currentChannelId,
-        timestamp: 0,
-      });
     };
 
     // Effects
@@ -186,19 +182,17 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       if (refreshed.current) return;
       const refresh = async () => {
         refreshed.current = true;
-        const server = await apiService.post('/refresh/server', {
-          serverId: serverId,
-        });
-        setServer(server);
-        const channel = await apiService.post('/refresh/channel', {
+        const server = await refreshService.server({ serverId: serverId });
+        handleServerUpdate(server);
+        const channel = await refreshService.channel({
           channelId: userCurrentChannelId,
         });
-        setCurrentChannel(channel);
-        const member = await apiService.post('/refresh/member', {
+        handleChannelUpdate(channel);
+        const member = await refreshService.member({
           userId: userId,
           serverId: serverId,
         });
-        setMember(member);
+        handleMemberUpdate(member);
       };
       refresh();
     }, [userId, serverId, setServer]);
@@ -336,6 +330,15 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           className={styles['dropdownItem']}
                           onClick={() => {
                             handleChangeChatMode('free');
+                            handleSendMessage({
+                              id: '',
+                              type: 'info',
+                              content: lang.tr.changeToFreeSpeech,
+                              senderId: userId,
+                              recieverId: serverId,
+                              channelId: currentChannelId,
+                              timestamp: 0,
+                            });
                             setIsDropdownOpen(false);
                           }}
                         >
@@ -347,6 +350,15 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           className={styles['dropdownItem']}
                           onClick={() => {
                             handleChangeChatMode('forbidden');
+                            handleSendMessage({
+                              id: '',
+                              type: 'info',
+                              content: lang.tr.changeToForbiddenSpeech,
+                              senderId: userId,
+                              recieverId: serverId,
+                              channelId: currentChannelId,
+                              timestamp: 0,
+                            });
                             setIsDropdownOpen(false);
                           }}
                         >

@@ -21,7 +21,7 @@ import ApplyFriend from '@/components/modals/ApplyFriend';
 import Dialog from '@/components/modals/Dialog';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
+import ipcService from '@/services/ipc.service';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -32,7 +32,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = React.memo(({ title, buttons }) => {
-  // Fullscreen Control
+  // States
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Handlers

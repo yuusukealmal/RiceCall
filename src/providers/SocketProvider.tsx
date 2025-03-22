@@ -7,7 +7,7 @@ import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { SocketServerEvent, SocketClientEvent } from '@/types';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
+import ipcService from '@/services/ipc.service';
 
 type SocketContextType = {
   event?: {

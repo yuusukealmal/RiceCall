@@ -5,7 +5,7 @@ import popup from '@/styles/common/popup.module.css';
 import dialog from '@/styles/popups/dialog.module.css';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
+import ipcService from '@/services/ipc.service';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';

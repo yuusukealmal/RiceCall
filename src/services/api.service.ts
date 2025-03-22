@@ -2,20 +2,20 @@
 import axios from 'axios';
 import { authService } from './auth.service';
 import { errorHandler, StandardizedError } from '@/utils/errorHandler';
-export const API_URL = 'http://localhost:4500';
+const API_URL = 'http://localhost:4500';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
 });
 
-interface RequestOptions {
+type RequestOptions = {
   headers?: Record<string, string>;
   credentials?: RequestCredentials;
-}
+};
 
-interface ApiRequestData {
+type ApiRequestData = {
   [key: string]: any;
-}
+};
 
 const setAuthHeader = (config: any) => {
   const sessionId = localStorage.getItem('jwtToken');
@@ -89,10 +89,9 @@ const handleResponse = async (response: Response): Promise<any> => {
   return data.data;
 };
 
-// Base API service
-export const apiService = {
+const apiService = {
   // GET request
-  get: async (endpoint: string) => {
+  get: async (endpoint: string): Promise<any | null> => {
     try {
       // Fetch
       const response = await fetch(`${API_URL}${endpoint}`);
@@ -119,7 +118,7 @@ export const apiService = {
     endpoint: string,
     data: ApiRequestData | FormData,
     options?: RequestOptions,
-  ) => {
+  ): Promise<any | null> => {
     try {
       const headers = new Headers({
         ...(data instanceof FormData
@@ -151,7 +150,10 @@ export const apiService = {
   },
 
   // PATCH request
-  patch: async (endpoint: string, data: Record<string, any>) => {
+  patch: async (
+    endpoint: string,
+    data: Record<string, any>,
+  ): Promise<any | null> => {
     try {
       // Fetch
       const response = await fetch(`${API_URL}${endpoint}`, {
@@ -180,3 +182,5 @@ export const apiService = {
   },
   axiosInstance,
 };
+
+export default apiService;

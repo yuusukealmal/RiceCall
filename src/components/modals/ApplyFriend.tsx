@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -14,8 +13,8 @@ import { useSocket } from '@/providers/SocketProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
+import refreshService from '@/services/refresh.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -52,21 +51,6 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     const { userId, targetId } = initialData;
 
     // Handlers
-    const handleOpenSuccessDialog = () => {
-      ipcService.popup.open(PopupType.DIALOG_SUCCESS);
-      ipcService.initialData.onRequest(PopupType.DIALOG_SUCCESS, {
-        title: lang.tr.friendApply,
-        submitTo: PopupType.DIALOG_SUCCESS,
-      });
-      ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
-        handleClose();
-      });
-    };
-
-    const handleClose = () => {
-      ipcService.window.close();
-    };
-
     const handleCreateFriendApplication = (
       application: Partial<FriendApplication>,
     ) => {
@@ -90,27 +74,34 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
       setApplicationDescription(data.description);
     };
 
+    const handleOpenSuccessDialog = () => {
+      ipcService.popup.open(PopupType.DIALOG_SUCCESS);
+      ipcService.initialData.onRequest(PopupType.DIALOG_SUCCESS, {
+        title: lang.tr.friendApply,
+        submitTo: PopupType.DIALOG_SUCCESS,
+      });
+      ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
+        handleClose();
+      });
+    };
+
+    const handleClose = () => {
+      ipcService.window.close();
+    };
+
     // Effects
     useEffect(() => {
-      if (!userId || !targetId) return;
-      if (refreshRef.current) return;
+      if (!userId || !targetId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const user = await apiService.post('/refresh/user', {
-          userId: userId,
-        });
+        const user = await refreshService.user({ userId: userId });
         handleUserUpdate(user);
-        const target = await apiService.post('/refresh/user', {
-          userId: targetId,
-        });
+        const target = await refreshService.user({ userId: targetId });
         handleUserUpdate(target);
-        const friendApplication = await apiService.post(
-          '/refresh/friendApplication',
-          {
-            senderId: userId,
-            receiverId: targetId,
-          },
-        );
+        const friendApplication = await refreshService.friendApplication({
+          userId: userId,
+          targetId: targetId,
+        });
         handleFriendApplicationUpdate(friendApplication);
       };
       refresh();

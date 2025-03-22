@@ -1,4 +1,7 @@
-import { ipcService } from '@/services/ipc.service';
+// Services
+import ipcService from '@/services/ipc.service';
+
+// Types
 import { PopupType } from '@/types';
 
 export class StandardizedError extends Error {

@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -14,7 +13,8 @@ import MessageViewer from '@/components/viewers/MessageViewer';
 import MessageInputBox from '@/components/MessageInputBox';
 
 // Services
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
+import refreshService from '@/services/refresh.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -54,7 +54,7 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
       socket.send.directMessage({ directMessage });
     };
 
-    const handleUserUpdate = (data: User | null) => {
+    const handleFriendUpdate = (data: User | null) => {
       if (!data) data = createDefault.user();
       if (data.id === friendId) {
         setFriendAvatar(data.avatar);
@@ -63,16 +63,17 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
       }
     };
 
+    const handleClose = () => {
+      ipcService.window.close();
+    };
+
     // Effects
     useEffect(() => {
-      if (!userId) return;
-      if (refreshRef.current) return;
+      if (!userId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const friend = await apiService.post('/refresh/user', {
-          userId: friendId,
-        });
-        handleUserUpdate(friend);
+        const friend = await refreshService.user({ userId: friendId });
+        handleFriendUpdate(friend);
       };
       refresh();
     }, [userId]);

@@ -1,10 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // Services
-import { apiService } from '@/services/api.service';
-import { ipcService } from '@/services/ipc.service';
-
-// Utils
-import { base64encode } from '@/utils/base64encode';
+import apiService from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
 
 interface LoginFormData {
   account: string;
@@ -20,8 +16,10 @@ interface RegisterFormData {
   gender: 'Male' | 'Female';
 }
 
+const base64encode = (str: string): string => btoa(str);
+
 export const authService = {
-  login: async (formData: LoginFormData) => {
+  login: async (formData: LoginFormData): Promise<boolean> => {
     localStorage.setItem('autoLogin', formData.autoLogin ? 'true' : 'false');
     localStorage.setItem('account', formData.account || '');
     const loginData = {
@@ -35,7 +33,7 @@ export const authService = {
     return true;
   },
 
-  register: async (formData: RegisterFormData) => {
+  register: async (formData: RegisterFormData): Promise<boolean> => {
     const registerData = {
       ...formData,
       password: base64encode(formData.password),
@@ -52,15 +50,15 @@ export const authService = {
     return true;
   },
 
-  isAutoLoginEnabled: () => {
+  isAutoLoginEnabled: (): boolean => {
     return localStorage.getItem('autoLogin') === 'true';
   },
 
-  isRememberAccountEnabled: () => {
+  isRememberAccountEnabled: (): boolean => {
     return localStorage.getItem('account') !== null;
   },
 
-  autoLogin: async () => {
+  autoLogin: async (): Promise<boolean> => {
     const autoLogin = localStorage.getItem('autoLogin') === 'true';
     const token = localStorage.getItem('token');
     if (!autoLogin || !token) return false;

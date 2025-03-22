@@ -9,8 +9,7 @@ import { useSocket } from '@/providers/SocketProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
 
 // CSS
 import UserSetting from '@/styles/popups/userSetting.module.css';
@@ -18,6 +17,7 @@ import grade from '@/styles/common/grade.module.css';
 
 // Utils
 import { createDefault } from '@/utils/default';
+import refreshService from '@/services/refresh.service';
 
 interface UserSettingModalProps {
   userId: string;
@@ -61,20 +61,9 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
     // Handlers
-    const handleClose = () => {
-      ipcService.window.close();
-    };
-
-    const handleUpdateUser = () => {
+    const handleUpdateUser = (user: Partial<User>) => {
       if (!socket) return;
-      socket.send.updateUser({
-        user: {
-          id: userId,
-          name: userName,
-          gender: userGender,
-          signature: userSignature,
-        },
-      });
+      socket.send.updateUser({ user: user });
     };
 
     const handleUserUpdate = (data: User | null) => {
@@ -85,15 +74,16 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
       setUserAvatarUrl(data.avatarUrl);
     };
 
+    const handleClose = () => {
+      ipcService.window.close();
+    };
+
     // Effects
     useEffect(() => {
-      if (!userId) return;
-      if (refreshRef.current) return;
+      if (!userId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const user = await apiService.post('/refresh/user', {
-          userId: userId,
-        });
+        const user = await refreshService.user({ userId: userId });
         handleUserUpdate(user);
       };
       refresh();
@@ -151,7 +141,12 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
               <div
                 className={`${UserSetting['profile-form-button']} ${UserSetting.blue}`}
                 onClick={() => {
-                  handleUpdateUser();
+                  handleUpdateUser({
+                    id: userId,
+                    name: userName,
+                    gender: userGender,
+                    signature: userSignature,
+                  });
                   handleClose();
                 }}
               >

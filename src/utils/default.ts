@@ -1,4 +1,3 @@
-// import DefaultAvatar from '../../../public/logo_server_def.png';
 import {
   User,
   Channel,
@@ -12,15 +11,6 @@ import {
   Friend,
   UserFriend,
 } from '@/types';
-
-// const defaultAvatar: string = await fetch(DefaultAvatar.src)
-//   .then((res) => res.blob())
-//   .then((blob) => {
-//     const reader = new FileReader();
-//     reader.onloadend = () => reader.result as string;
-//     reader.readAsDataURL(blob);
-//   })
-//   .catch((err) => console.error('預設圖片讀取失敗:', err));
 
 export const createDefault = {
   user: (overrides: Partial<User> = {}): User => ({
@@ -82,6 +72,7 @@ export const createDefault = {
   }),
 
   friend: (overrides: Partial<Friend> = {}): Friend => ({
+    id: '',
     isBlocked: false,
     friendGroupId: '',
     user1Id: '',

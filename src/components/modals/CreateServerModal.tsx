@@ -12,8 +12,9 @@ import { useSocket } from '@/providers/SocketProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
+import apiService from '@/services/api.service';
+import refreshService from '@/services/refresh.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -75,13 +76,14 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
     const canCreate = remainingGroups > 0;
 
     // Handlers
-    const handleClose = () => {
-      ipcService.window.close();
-    };
-
     const handleCreateServer = (server: Partial<Server>) => {
       if (!socket) return;
       socket.send.createServer({ server: server, userId: userId });
+    };
+
+    const handleUserUpdate = (data: User | null) => {
+      if (!data) data = createDefault.user();
+      setUserOwnedServers(data.ownedServers || []);
     };
 
     const handleOpenErrorDialog = (message: string) => {
@@ -92,20 +94,16 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       });
     };
 
-    const handleUserUpdate = (data: User | null) => {
-      if (!data) data = createDefault.user();
-      setUserOwnedServers(data.ownedServers || []);
+    const handleClose = () => {
+      ipcService.window.close();
     };
 
     // Effects
     useEffect(() => {
-      if (!userId) return;
-      if (refreshRef.current) return;
+      if (!userId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const user = await apiService.post('/refresh/user', {
-          userId: userId,
-        });
+        const user = await refreshService.user({ userId: userId });
         handleUserUpdate(user);
       };
       refresh();

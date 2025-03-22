@@ -8,7 +8,7 @@ import Popup from '@/styles/common/popup.module.css';
 import permission from '@/styles/common/permission.module.css';
 
 // Components
-import MarkdownViewer from '@/components/viewers/MarkdownViewer';
+// import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 
 // Types
 import {
@@ -25,8 +25,9 @@ import { useContextMenu } from '@/providers/ContextMenuProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 // Services
-import { ipcService } from '@/services/ipc.service';
-import { apiService } from '@/services/api.service';
+import ipcService from '@/services/ipc.service';
+import apiService from '@/services/api.service';
+import refreshService from '@/services/refresh.service';
 
 // Utils
 import { createDefault } from '@/utils/default';
@@ -149,6 +150,30 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       return [...array].sort(createSorter(field, newDirection));
     };
 
+    const handleUpdateServer = (server: Partial<Server>) => {
+      if (!socket) return;
+      socket.send.updateServer({ server: server, userId: userId });
+    };
+
+    const handleServerUpdate = (data: Server | null) => {
+      if (!data) data = createDefault.server();
+      setServerName(data.name);
+      setServerAvatar(data.avatar);
+      setServerAvatarUrl(data.avatarUrl);
+      setServerAnnouncement(data.announcement);
+      setServerDescription(data.description);
+      setServerType(data.type);
+      setServerDisplayId(data.displayId);
+      setServerSlogan(data.slogan);
+      setServerLevel(data.level);
+      setServerWealth(data.wealth);
+      setServerCreatedAt(data.createdAt);
+      setServerVisibility(data.visibility);
+      setServerMembers(data.members || []);
+      setServerApplications(data.memberApplications || []);
+      setServerBlockMembers(data.members?.filter((mb) => mb.isBlocked) || []);
+    };
+
     const handleBlockMemberSort = (field: keyof ServerMember) => {
       const sortedMembers = handleSort(field, [...serverBlockMembers]);
       setServerBlockMembers(sortedMembers);
@@ -176,51 +201,26 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       ipcService.window.close();
     };
 
-    const handleUpdateServer = async () => {
-      if (!socket) return;
-      socket.send.updateServer({
-        server: {
-          id: serverId,
-          name: serverName,
-          avatar: serverAvatar,
-          avatarUrl: serverAvatarUrl,
-          announcement: serverAnnouncement,
-          description: serverDescription,
-          type: serverType,
-          displayId: serverDisplayId,
-          slogan: serverSlogan,
-          level: serverLevel,
-          wealth: serverWealth,
-          createdAt: serverCreatedAt,
-          visibility: serverVisibility,
-        },
-        userId: userId,
-      });
-    };
-
-    const handleApplicationAction = (
-      applicationId: string,
-      action: 'accept' | 'reject',
+    const handleUpdateApplication = (
+      application: Partial<MemberApplication>,
     ) => {
       if (!socket) return;
-
-      const newApplications = serverApplications.filter(
-        (application) => application.id !== applicationId,
-      );
-      setServerApplications(newApplications);
-
       socket.send.updateMemberApplication({
-        applicationId: applicationId,
-        action: action,
+        application: application,
         userId: userId,
       });
     };
 
-    const handleEditNickname = (target: Member) => {
-      if (!target || !socket) return;
+    const handleUpdateMember = (member: Partial<Member>) => {
+      if (!socket) return;
+      socket.send.updateMember({ member: member, userId: userId });
+    };
+
+    const handleOpenEditMember = (memberId: Member['id']) => {
+      if (!socket) return;
       ipcService.popup.open(PopupType.EDIT_MEMBER_CARD);
       ipcService.initialData.onRequest(PopupType.EDIT_MEMBER_CARD, {
-        member: target,
+        memberId: memberId,
       });
     };
 
@@ -278,34 +278,12 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       });
     };
 
-    const handleServerUpdate = (data: Server | null) => {
-      if (!data) data = createDefault.server();
-      setServerName(data.name);
-      setServerAvatar(data.avatar);
-      setServerAvatarUrl(data.avatarUrl);
-      setServerAnnouncement(data.announcement);
-      setServerDescription(data.description);
-      setServerType(data.type);
-      setServerDisplayId(data.displayId);
-      setServerSlogan(data.slogan);
-      setServerLevel(data.level);
-      setServerWealth(data.wealth);
-      setServerCreatedAt(data.createdAt);
-      setServerVisibility(data.visibility);
-      setServerMembers(data.members || []);
-      setServerApplications(data.memberApplications || []);
-      setServerBlockMembers(data.members?.filter((mb) => mb.isBlocked) || []);
-    };
-
     // Effects
     useEffect(() => {
-      if (!serverId) return;
-      if (refreshRef.current) return;
+      if (!serverId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const server = await apiService.post('/refresh/server', {
-          serverId: serverId,
-        });
+        const server = await refreshService.server({ serverId: serverId });
         handleServerUpdate(server);
       };
       refresh();
@@ -594,7 +572,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       {
                                         label: '修改群名片',
                                         onClick: () => {
-                                          handleEditNickname(member);
+                                          handleOpenEditMember(memberId);
                                         },
                                       },
                                       {
@@ -787,19 +765,23 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       {
                                         label: '接受申請',
                                         onClick: () => {
-                                          handleApplicationAction(
-                                            applicationId,
-                                            'accept',
-                                          );
+                                          handleUpdateApplication({
+                                            id: applicationId,
+                                            // status: 'accepted',
+                                          });
+                                          handleUpdateMember({
+                                            id: applicationId,
+                                            permissionLevel: 1,
+                                          });
                                         },
                                       },
                                       {
                                         label: '拒絕申請',
                                         onClick: () => {
-                                          handleApplicationAction(
-                                            applicationId,
-                                            'reject',
-                                          );
+                                          handleUpdateApplication({
+                                            id: applicationId,
+                                            // status: 'rejected',
+                                          });
                                         },
                                       },
                                     ],
@@ -904,7 +886,21 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
           <button
             className={Popup['button']}
             onClick={() => {
-              handleUpdateServer();
+              handleUpdateServer({
+                id: serverId,
+                name: serverName,
+                avatar: serverAvatar,
+                avatarUrl: serverAvatarUrl,
+                announcement: serverAnnouncement,
+                description: serverDescription,
+                type: serverType,
+                displayId: serverDisplayId,
+                slogan: serverSlogan,
+                level: serverLevel,
+                wealth: serverWealth,
+                createdAt: serverCreatedAt,
+                visibility: serverVisibility,
+              });
               handleClose();
             }}
           >

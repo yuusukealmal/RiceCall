@@ -7,7 +7,7 @@ import styles from '@/styles/loginPage.module.css';
 import { validateAccount, validatePassword } from '@/utils/validators';
 
 // Services
-import { authService } from '@/services/auth.service';
+import authService from '@/services/auth.service';
 
 // Components
 import InputField from '@/components/InputField';
