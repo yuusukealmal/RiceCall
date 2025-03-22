@@ -279,11 +279,15 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       });
     };
 
-    const handleOpenEditMember = (memberId: Member['id']) => {
+    const handleOpenEditMember = (
+      serverId: Server['id'],
+      userId: User['id'],
+    ) => {
       if (!socket) return;
       ipcService.popup.open(PopupType.EDIT_MEMBER);
       ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
-        memberId: memberId,
+        serverId,
+        userId,
       });
     };
 
@@ -589,7 +593,10 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       {
                                         label: '修改群名片',
                                         onClick: () =>
-                                          handleOpenEditMember(memberId),
+                                          handleOpenEditMember(
+                                            memberServerId,
+                                            memberUserId,
+                                          ),
                                       },
                                       {
                                         label: lang.tr.moveToMyChannel,
@@ -788,7 +795,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                             applicationServerId,
                                           );
                                           handleCreateMember(
-                                            { permissionLevel: 1 },
+                                            { permissionLevel: 2 },
                                             applicationUserId,
                                             applicationServerId,
                                           );

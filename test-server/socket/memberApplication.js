@@ -52,6 +52,8 @@ const memberApplicationHandler = {
       const applicationId = `ma_${user.id}-${server.id}`;
       const application = await Set.memberApplications(applicationId, {
         ...memberApplication,
+        userId: user.id,
+        serverId: server.id,
         createdAt: Date.now(),
       });
 

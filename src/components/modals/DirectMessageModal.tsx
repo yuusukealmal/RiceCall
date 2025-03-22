@@ -70,14 +70,14 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
 
     // Effects
     useEffect(() => {
-      if (!userId || refreshRef.current) return;
+      if (!userId || !friendId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
         const friend = await refreshService.user({ userId: friendId });
         handleFriendUpdate(friend);
       };
       refresh();
-    }, [userId]);
+    }, [userId, friendId]);
 
     return null;
     // <Modal title={friendName} onClose={onClose} width="600px" height="600px">
