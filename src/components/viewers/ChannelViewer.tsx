@@ -71,13 +71,13 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
 
     const handleOpenCreateChannel = (
       serverId: Server['id'],
-      parentId: Category['id'] | null,
+      categoryId: Category['id'],
       userId: User['id'],
     ) => {
       ipcService.popup.open(PopupType.CREATE_CHANNEL);
       ipcService.initialData.onRequest(PopupType.CREATE_CHANNEL, {
         serverId,
-        parentId,
+        categoryId,
         userId,
       });
     };
@@ -122,7 +122,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
               {
                 id: 'add',
                 label: lang.tr.add,
-                show: canEdit && !categoryIsRoot,
+                show: canEdit,
                 onClick: () =>
                   handleOpenCreateChannel(serverId, categoryId, userId),
               },
@@ -189,6 +189,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
       (mb) => mb.currentChannelId === channelId,
     );
     const userInChannel = user.currentChannelId === channelId;
+    const member = serverMembers.find((mb) => mb.userId === userId);
 
     // Expanded Control
     const [expanded, setExpanded] = useState<boolean>(true);
@@ -207,13 +208,13 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 
     const handleOpenCreateChannel = (
       serverId: Server['id'],
-      parentId: Category['id'] | null,
+      categoryId: Channel['id'],
       userId: User['id'],
     ) => {
       ipcService.popup.open(PopupType.CREATE_CHANNEL);
       ipcService.initialData.onRequest(PopupType.CREATE_CHANNEL, {
         serverId,
-        parentId,
+        categoryId,
         userId,
       });
     };
@@ -259,7 +260,13 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             setExpanded(channelVisibility != 'readonly' ? !expanded : false)
           }
           onDoubleClick={() => {
-            if (userInChannel || channelVisibility === 'readonly') return;
+            if (
+              userInChannel ||
+              channelVisibility === 'readonly' ||
+              (channelVisibility === 'private' &&
+                (!member || member.permissionLevel < 2))
+            )
+              return;
             handleJoinChannel(userId, channelId);
           }}
           onContextMenu={(e) => {
@@ -273,7 +280,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
               {
                 id: 'add',
                 label: lang.tr.add,
-                show: canEdit && !channelIsLobby && !channelIsRoot,
+                show: canEdit && !channelIsLobby && !channel.categoryId,
                 onClick: () =>
                   handleOpenCreateChannel(serverId, channelId, userId),
               },
@@ -287,9 +294,11 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
           }}
         >
           <div className={styles['channelTabLable']}>{channelName}</div>
-          <div className={styles['channelTabCount']}>
-            {`(${channelMembers.length})`}
-          </div>
+          {channelVisibility !== 'readonly' && (
+            <div className={styles['channelTabCount']}>
+              {`(${channelMembers.length})`}
+            </div>
+          )}
           {userInChannel && !expanded && (
             <div className={styles['myLocationIcon']} />
           )}
@@ -437,16 +446,22 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
     currentChannel;
   const canEdit = memberPermission >= 5;
 
+  // Categorize all channels
+  const rootChannels = serverChannels.filter((c) => c.isRoot);
+  const lobbyChannel = rootChannels
+    .filter((c): c is Channel => c.type === 'channel')
+    .find((c) => c.isLobby);
+  const categories = rootChannels.filter((c) => c.type === 'category');
+  const rootNormalChannels = rootChannels
+    .filter((c): c is Channel => c.type === 'channel')
+    .filter((c) => !c.isLobby);
+
   // Handlers
-  const handleOpenCreateChannel = (
-    serverId: Server['id'],
-    parentId: Category['id'] | null,
-    userId: User['id'],
-  ) => {
+  const handleCreateRootChannel = () => {
     ipcService.popup.open(PopupType.CREATE_CHANNEL);
     ipcService.initialData.onRequest(PopupType.CREATE_CHANNEL, {
       serverId,
-      parentId,
+      categoryId: null,
       userId,
     });
   };
@@ -480,9 +495,11 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
           </div>
         </>
       )}
-      {/* Saperator */}
+
+      {/* Separator */}
       <div className={styles['saperator-2']} />
-      {/* All Channels */}
+
+      {/* Channel List Title */}
       <div
         className={styles['sectionTitle']}
         onContextMenu={(e) => {
@@ -491,17 +508,29 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
               id: 'addChannel',
               label: lang.tr.add,
               show: canEdit,
-              onClick: () => handleOpenCreateChannel(serverId, null, userId),
+              onClick: handleCreateRootChannel,
             },
           ]);
         }}
       >
         {lang.tr.allChannel}
       </div>
+
       {/* Channel List */}
       <div className={styles['channelList']}>
-        {serverChannels
-          .filter((c) => c.isRoot)
+        {/* Lobby Channel */}
+        {lobbyChannel && (
+          <ChannelTab
+            key={lobbyChannel.id}
+            user={user}
+            server={server}
+            channel={lobbyChannel}
+            canEdit={canEdit}
+          />
+        )}
+
+        {/* Categories and Root Channels */}
+        {[...categories, ...rootNormalChannels]
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
           .map((item) =>
             item.type === 'category' ? (
@@ -509,7 +538,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
                 key={item.id}
                 user={user}
                 server={server}
-                category={item}
+                category={item as Category}
                 canEdit={canEdit}
               />
             ) : (

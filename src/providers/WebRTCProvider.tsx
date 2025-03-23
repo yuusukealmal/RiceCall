@@ -39,8 +39,13 @@ interface RTCIceCandidateProps {
 interface WebRTCContextType {
   toggleMute?: () => void;
   updateBitrate?: (newBitrate: number) => void;
+  updateMicVolume?: (volume: number) => void;
+  updateSpeakerVolume?: (volume: number) => void;
+  updateAudioDevice?: (deviceId: string, type: 'input' | 'output') => void;
   isMute?: boolean;
   bitrate?: number;
+  micVolume?: number;
+  speakerVolume?: number;
 }
 
 const WebRTCContext = createContext<WebRTCContextType>({});
@@ -57,6 +62,12 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
   // States
   const [isMute, setIsMute] = useState<boolean>(false);
   const [bitrate, setBitrate] = useState<number>(128000);
+  const [micVolume, setMicVolume] = useState<number>(
+    Number(localStorage.getItem('micVolume')) || 100,
+  );
+  const [speakerVolume, setSpeakerVolume] = useState<number>(
+    Number(localStorage.getItem('speakerVolume')) || 100,
+  );
 
   // Refs
   const lastBitrateRef = useRef<number>(128000);
@@ -276,9 +287,120 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
     setBitrate(newBitrate);
   };
 
+  const updateMicVolume = (volume: number) => {
+    if (!localStream.current) return;
+
+    const audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(localStream.current);
+    const gainNode = audioContext.createGain();
+
+    source.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    gainNode.gain.value = volume / 100;
+
+    setMicVolume(volume);
+    localStorage.setItem('micVolume', volume.toString());
+
+    if (volume === 0) {
+      localStream.current.getAudioTracks().forEach((track) => {
+        track.enabled = false;
+      });
+    } else {
+      localStream.current.getAudioTracks().forEach((track) => {
+        track.enabled = !isMute;
+      });
+    }
+  };
+
+  const updateSpeakerVolume = (volume: number) => {
+    Object.values(peerAudioRefs.current).forEach((audio) => {
+      audio.volume = volume / 100;
+    });
+    setSpeakerVolume(volume);
+    localStorage.setItem('speakerVolume', volume.toString());
+  };
+
+  const updateAudioDevice = async (
+    deviceId: string,
+    type: 'input' | 'output',
+  ) => {
+    if (type === 'input') {
+      if (!deviceId) return;
+
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          audio: { deviceId: { exact: deviceId } },
+        });
+
+        // 停止舊的音訊軌道
+        if (localStream.current) {
+          localStream.current.getTracks().forEach((track) => track.stop());
+        }
+
+        // 更新本地串流
+        localStream.current = newStream;
+
+        // 為所有現有的對等連接更新音訊軌道
+        Object.values(peerConnections.current).forEach((peerConnection) => {
+          const senders = peerConnection.getSenders();
+          senders.forEach((sender) => {
+            if (sender.track?.kind === 'audio') {
+              sender.replaceTrack(newStream.getAudioTracks()[0]);
+            }
+          });
+        });
+
+        // 應用當前的靜音狀態
+        newStream.getAudioTracks().forEach((track) => {
+          track.enabled = !isMute;
+        });
+
+        // 應用當前的音量設置
+        updateMicVolume(micVolume);
+      } catch (err) {
+        console.error('更新音訊輸入裝置失敗:', err);
+      }
+    } else if (type === 'output') {
+      // 更新所有音訊元素的輸出裝置
+      Object.values(peerAudioRefs.current).forEach((audio) => {
+        // @ts-ignore: setSinkId exists on modern browsers
+        if (audio.setSinkId) {
+          // @ts-ignore
+          audio.setSinkId(deviceId).catch((err) => {
+            console.error('更新音訊輸出裝置失敗:', err);
+          });
+        }
+      });
+    }
+  };
+
+  // 當獲取到新的音訊流時應用音量設置
+  useEffect(() => {
+    if (localStream.current) {
+      updateMicVolume(micVolume);
+    }
+  }, [localStream.current]);
+
+  useEffect(() => {
+    Object.values(peerAudioRefs.current).forEach((audio) => {
+      audio.volume = speakerVolume / 100;
+    });
+  }, []);
+
   return (
     <WebRTCContext.Provider
-      value={{ toggleMute, updateBitrate, isMute, bitrate }}
+      value={{
+        toggleMute,
+        updateBitrate,
+        updateMicVolume,
+        updateSpeakerVolume,
+        updateAudioDevice,
+        isMute,
+        bitrate,
+        micVolume,
+        speakerVolume,
+      }}
     >
       {Object.keys(peerStreams).map((rtcConnection) => (
         <audio

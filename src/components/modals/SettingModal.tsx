@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react';
-import { version } from '../../../package.json';
+import packageJson from '../../../package.json';
+const version = packageJson.version;
 
 // CSS
 import setting from '@/styles/popups/editServer.module.css';
@@ -9,6 +10,7 @@ import popup from '@/styles/common/popup.module.css';
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { useWebRTC } from '@/providers/WebRTCProvider';
 
 // Services
 import ipcService from '@/services/ipc.service';
@@ -16,6 +18,7 @@ import ipcService from '@/services/ipc.service';
 const SettingModal: React.FC = React.memo(() => {
   // Hooks
   const lang = useLanguage();
+  const webRTC = useWebRTC();
 
   // States
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
@@ -80,12 +83,14 @@ const SettingModal: React.FC = React.memo(() => {
     const deviceId = e.target.value;
     setSelectedInput(deviceId);
     ipcService.audio.set(deviceId, 'input');
+    webRTC.updateAudioDevice?.(deviceId, 'input');
   };
 
   const handleOutputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const deviceId = e.target.value;
     setSelectedOutput(deviceId);
     ipcService.audio.set(deviceId, 'output');
+    webRTC.updateAudioDevice?.(deviceId, 'output');
   };
 
   return (
