@@ -1,13 +1,13 @@
 .contextMenu {
-  position: absolute;
+  position: fixed;
   background-color: #ffffff;
   border: 1px solid #ccc;
   border-radius: 3px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  padding: 3px;
+  /* padding: 3px; */
   height: fit-content;
-  display: none;
+  display: flex;
   flex-direction: column;
   flex-wrap: wrap;
   justify-content: space-around;
@@ -34,8 +34,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 24px;
-  position: relative;
+  padding: 3px 30px;
   min-width: max-content;
 }
 
@@ -102,12 +101,14 @@
   background: #eee;
 }
 
-.contextMenu .option.hasSubmenu {
+/* .contextMenu .option.hasSubmenu {
   position: relative;
+} */
+
+.contextMenu .option.hasSubmenu .contextMenu {
+  display: none;
 }
 
 .contextMenu .option.hasSubmenu:hover .contextMenu {
   display: flex;
-  top: 0;
-  left: 100;
 }
