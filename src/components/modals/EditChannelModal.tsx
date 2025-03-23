@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
-import Popup from '@/styles/common/popup.module.css';
-import editChannel from '@/styles/popups/editChannel.module.css';
+import popup from '@/styles/common/popup.module.css';
+import setting from '@/styles/popups/editServer.module.css';
 
 // Types
 import { Channel, Server } from '@/types';
@@ -79,15 +79,15 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     }, [channelId]);
 
     return (
-      <div className={Popup['popupContainer']}>
-        <div className={Popup['popupBody']}>
-          <div className={editChannel['body']}>
-            <div className={editChannel['inputGroup']}>
-              <div className={Popup['inputBox']}>
-                <div className={Popup['label']}>
+      <div className={popup['popupContainer']}>
+        <div className={popup['popupBody']}>
+          <div className={setting['body']}>
+            <div className={popup['inputGroup']}>
+              <div className={popup['inputBox']}>
+                <div className={popup['label']}>
                   {`${lang.tr.channel}${lang.tr.name}`}
                 </div>
-                <div className={Popup['input']}>
+                <div className={popup['input']}>
                   <input
                     type="text"
                     value={channelName}
@@ -95,13 +95,14 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   />
                 </div>
               </div>
+
               {!channelIsLobby && (
-                <div className={Popup['inputBox']}>
-                  <div className={Popup['label']}>
+                <div className={popup['inputBox']}>
+                  <div className={popup['label']}>
                     {lang.tr.channelPermission}
                   </div>
                   <select
-                    className={Popup['input']}
+                    className={popup['input']}
                     value={channelVisibility}
                     onChange={(e) =>
                       setChannelVisibility(
@@ -118,9 +119,9 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
             </div>
           </div>
         </div>
-        <div className={Popup['popupFooter']}>
+        <div className={popup['popupFooter']}>
           <button
-            className={Popup['button']}
+            className={popup['button']}
             onClick={() => {
               handleUpdateChannel(
                 {
@@ -136,7 +137,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
           >
             {lang.tr.confirm}
           </button>
-          <button className={Popup['button']} onClick={() => handleClose()}>
+          <button className={popup['button']} onClick={() => handleClose()}>
             {lang.tr.cancel}
           </button>
         </div>

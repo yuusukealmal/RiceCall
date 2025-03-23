@@ -9,7 +9,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
-import addChannel from '@/styles/popups/addChannel.module.css';
+import setting from '@/styles/popups/editServer.module.css';
 
 // Services
 import refreshService from '@/services/refresh.service';
@@ -76,8 +76,8 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
     return (
       <div className={popup['popupContainer']}>
         <div className={popup['popupBody']}>
-          <div className={addChannel['body']}>
-            <div className={addChannel['inputGroup']}>
+          <div className={setting['body']}>
+            <div className={popup['inputGroup']}>
               <div className={popup['inputBox']}>
                 <div className={popup['label']}>{lang.tr.nickname}</div>
                 <input

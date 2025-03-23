@@ -3,8 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 // CSS
-import EditServer from '@/styles/popups/editServer.module.css';
-import Popup from '@/styles/common/popup.module.css';
+import setting from '@/styles/popups/editServer.module.css';
+import popup from '@/styles/common/popup.module.css';
 import permission from '@/styles/common/permission.module.css';
 
 // Components
@@ -311,631 +311,591 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     }, [serverId]);
 
     return (
-      <div className={Popup['popupContainer']}>
-        <div className={Popup['popupBody']}>
-          <div style={{ display: 'flex', height: '100%', width: '100%' }}>
-            {/* Left Sidebar */}
-            <div className={EditServer['left']}>
-              <div className={EditServer['tabs']}>
-                {[
-                  lang.tr.viewGroupInfo,
-                  lang.tr.announcement,
-                  lang.tr.memberManagement,
-                  lang.tr.accessPermission,
-                  lang.tr.memberApplicationManagement,
-                  lang.tr.blacklistManagement,
-                ].map((title, index) => (
-                  <div
-                    className={`${EditServer['item']} ${
-                      activeTabIndex === index ? EditServer['active'] : ''
-                    }`}
-                    onClick={() => setActiveTabIndex(index)}
-                    key={index}
-                  >
-                    {title}
-                  </div>
-                ))}
-              </div>
+      <div className={popup['popupContainer']}>
+        <div className={popup['popupBody']}>
+          {/* Left Sidebar */}
+          <div className={setting['left']}>
+            <div className={setting['tabs']}>
+              {[
+                lang.tr.viewGroupInfo,
+                lang.tr.announcement,
+                lang.tr.memberManagement,
+                lang.tr.accessPermission,
+                lang.tr.memberApplicationManagement,
+                lang.tr.blacklistManagement,
+              ].map((title, index) => (
+                <div
+                  className={`${setting['item']} ${
+                    activeTabIndex === index ? setting['active'] : ''
+                  }`}
+                  onClick={() => setActiveTabIndex(index)}
+                  key={index}
+                >
+                  {title}
+                </div>
+              ))}
             </div>
-            {/* Right Content */}
-            <div className={EditServer['right']}>
-              <div className={EditServer['body']}>
-                {activeTabIndex === 0 ? (
-                  <>
-                    <div
-                      className={`${EditServer['inputGroup']} ${EditServer['row']}`}
-                    >
-                      <div
-                        className={`${EditServer['inputGroup']} ${EditServer['col']}`}
-                      >
-                        <div
-                          className={`${EditServer['inputGroup']} ${EditServer['row']}`}
-                        >
-                          <div
-                            className={`${Popup['inputBox']} ${Popup['col']}`}
-                          >
-                            <div className={Popup['label']}>{lang.tr.name}</div>
-                            <input
-                              type="text"
-                              value={serverName}
-                              onChange={(e) => {
-                                setServerName(e.target.value);
-                              }}
-                            />
-                          </div>
-                          <div
-                            className={`${Popup['inputBox']} ${Popup['col']}`}
-                          >
-                            <div className={Popup['label']}>{lang.tr.id}</div>
-                            <input
-                              type="text"
-                              value={serverDisplayId}
-                              disabled
-                            />
-                          </div>
-                        </div>
-                        <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                          <div className={Popup['label']}>{lang.tr.slogan}</div>
-                          <input
-                            type="text"
-                            value={serverSlogan}
-                            onChange={(e) => {
-                              setServerSlogan(e.target.value);
-                            }}
-                          />
-                        </div>
-                        <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                          <div className={Popup['label']}>{lang.tr.type}</div>
-                          <select
-                            value={serverType}
-                            onChange={(e) => {
-                              setServerType(e.target.value as Server['type']);
-                            }}
-                          >
-                            <option value="other">{lang.tr.other}</option>
-                            <option value="game">{lang.tr.game}</option>
-                            <option value="entertainment">
-                              {lang.tr.entertainment}
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className={EditServer['avatarWrapper']}>
-                        <div
-                          className={EditServer['avatarPicture']}
-                          style={{
-                            backgroundImage: `url(${serverAvatarUrl})`,
-                          }}
-                        />
+          </div>
+          {/* Right Content */}
+          <div className={setting['right']}>
+            {activeTabIndex === 0 ? (
+              <div className={popup['col']}>
+                <div className={popup['row']}>
+                  <div className={popup['col']}>
+                    <div className={popup['row']}>
+                      <div className={`${popup['inputBox']} ${popup['col']}`}>
+                        <div className={popup['label']}>{lang.tr.name}</div>
                         <input
-                          type="file"
-                          id="avatar-upload"
-                          className="hidden"
-                          accept="image/*"
+                          type="text"
+                          value={serverName}
                           onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) {
-                              handleOpenErrorDialog(lang.tr.canNotReadImage);
-                              return;
-                            }
-                            if (file.size > 5 * 1024 * 1024) {
-                              handleOpenErrorDialog(lang.tr.imageTooLarge);
-                              return;
-                            }
-
-                            const reader = new FileReader();
-                            reader.onloadend = async () => {
-                              const formData = new FormData();
-                              formData.append('_type', 'server');
-                              formData.append('_fileName', serverAvatar);
-                              formData.append('_file', reader.result as string);
-                              const data = await apiService.post(
-                                '/upload',
-                                formData,
-                              );
-                              if (data) {
-                                setServerAvatar(data.avatar);
-                                setServerAvatarUrl(data.avatarUrl);
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            setServerName(e.target.value);
                           }}
                         />
-                        <label
-                          htmlFor="avatar-upload"
-                          className={Popup['button']}
-                          style={{ marginTop: '10px' }}
-                        >
-                          {lang.tr.changeImage}
-                        </label>
+                      </div>
+                      <div className={`${popup['inputBox']} ${popup['col']}`}>
+                        <div className={popup['label']}>{lang.tr.id}</div>
+                        <input type="text" value={serverDisplayId} disabled />
                       </div>
                     </div>
-                    <div style={{ minHeight: '10px' }} />
-                    <div
-                      className={`${EditServer['inputGroup']} ${EditServer['col']}`}
-                    >
-                      <div
-                        className={`${EditServer['inputGroup']} ${EditServer['row']}`}
-                      >
-                        <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                          <div className={Popup['label']}>{lang.tr.level}</div>
-                          <input type="text" value={serverLevel} disabled />
-                        </div>
-                        <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                          <div className={Popup['label']}>
-                            {lang.tr.creationTime}
-                          </div>
-                          <input
-                            type="text"
-                            value={new Date(serverCreatedAt).toLocaleString()}
-                            disabled
-                          />
-                        </div>
-                        <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                          <div
-                            className={`${Popup['label']} ${EditServer['wealthCoinIcon']}`}
-                          >
-                            {lang.tr.wealth}
-                          </div>
-                          <input type="text" value={serverWealth} disabled />
-                        </div>
-                      </div>
-                      <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                        <div className={Popup['label']}>
-                          {lang.tr.description}
-                        </div>
-                        <textarea
-                          value={serverDescription}
-                          onChange={(e) => setServerDescription(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </>
-                ) : activeTabIndex === 1 ? (
-                  <>
-                    <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                      <div className={Popup['label']}>
-                        {lang.tr.inputAnnouncement}
-                      </div>
-                      <textarea
-                        style={{ minHeight: '200px' }}
-                        value={serverAnnouncement}
-                        onChange={(e) => setServerAnnouncement(e.target.value)}
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>{lang.tr.slogan}</div>
+                      <input
+                        type="text"
+                        value={serverSlogan}
+                        onChange={(e) => {
+                          setServerSlogan(e.target.value);
+                        }}
                       />
-                      <div className={Popup['label']}>
-                        {lang.tr.markdownSupport}
-                      </div>
                     </div>
-                    {/* <div
-                      className={Popup['button']}
-                      onClick={() => setIsPreviewMode(!isPreviewMode)}
-                    >
-                      {isPreviewMode ? lang.tr.edit : lang.tr.preview}
-                    </div> */}
-                  </>
-                ) : activeTabIndex === 2 ? (
-                  <>
-                    <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                      <div className={Popup['label']}>
-                        {lang.tr.members}: {serverMembers.length}
-                      </div>
-                      {/* <div className={EditServer['search']}>
-                        <input
-                          type="text"
-                          placeholder={lang.tr.searchPlaceholder}
-                          value={searchText}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setSearchText(e.target.value)
-                          }
-                        />
-                      </div> */}
-                      <table style={{ minHeight: '280px' }}>
-                        <thead>
-                          <tr>
-                            {MEMBER_FIELDS.map((field) => (
-                              <th
-                                key={field.field}
-                                onClick={() =>
-                                  handleMemberSort(
-                                    field.field as keyof ServerMember,
-                                  )
-                                }
-                              >
-                                {field.name}
-                                <span className="absolute right-0">
-                                  {sortField === field.field &&
-                                    (sortState === 1 ? (
-                                      <ChevronUp size={16} />
-                                    ) : (
-                                      <ChevronDown size={16} />
-                                    ))}
-                                </span>
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className={EditServer['tableContainer']}>
-                          {serverMembers.map((member) => {
-                            const {
-                              id: memberId,
-                              name: memberName,
-                              nickname: memberNickname,
-                              gender: memberGender,
-                              permissionLevel: memberPermissionLevel,
-                              contribution: memberContribution,
-                              userId: memberUserId,
-                              serverId: memberServerId,
-                              createdAt: memberJoinDate,
-                            } = member;
-                            return (
-                              <tr
-                                key={memberId}
-                                onContextMenu={(e) => {
-                                  const isCurrentUser = memberUserId === userId;
-                                  contextMenu.showContextMenu(
-                                    e.pageX,
-                                    e.pageY,
-                                    [
-                                      {
-                                        id: 'send-message',
-                                        label: '傳送即時訊息',
-                                        onClick: () => {},
-                                        show: !isCurrentUser,
-                                      },
-                                      {
-                                        id: 'view-profile',
-                                        label: '檢視個人檔案',
-                                        onClick: () => {},
-                                        show: !isCurrentUser,
-                                      },
-                                      {
-                                        id: 'add-friend',
-                                        label: '新增好友',
-                                        onClick: () => {},
-                                        show: !isCurrentUser,
-                                      },
-                                      // {
-                                      //   label: '拒聽此人語音',
-                                      //   onClick: () => {},
-                                      // },
-                                      {
-                                        id: 'edit-nickname',
-                                        label: '修改群名片',
-                                        onClick: () =>
-                                          handleOpenEditMember(
-                                            memberServerId,
-                                            memberUserId,
-                                          ),
-                                      },
-                                      {
-                                        id: 'move-to-my-channel',
-                                        label: lang.tr.moveToMyChannel,
-                                        onClick: () => handleUserMove(),
-                                        show: !isCurrentUser,
-                                      },
-                                      // {
-                                      //   label: '禁止此人語音',
-                                      //   onClick: () => {},
-                                      // },
-                                      // {
-                                      //   label: '禁止文字',
-                                      //   onClick: () => {},
-                                      // },
-                                      {
-                                        id: 'kick',
-                                        label: lang.tr.kickOut,
-                                        onClick: () => handleKickServer(member),
-                                        show: !isCurrentUser,
-                                      },
-                                      {
-                                        id: 'block',
-                                        label: lang.tr.block,
-                                        onClick: () => handleBlockUser(member),
-                                        show: !isCurrentUser,
-                                      },
-                                      {
-                                        id: '',
-                                        label: lang.tr.memberManagement,
-                                        onClick: () => {},
-                                        show: !isCurrentUser,
-                                      },
-                                      // {
-                                      //   label: lang.tr.inviteToBeMember,
-                                      //   onClick: () => {},
-                                      // },
-                                    ],
-                                  );
-                                }}
-                              >
-                                <td>
-                                  <div
-                                    className={`${permission[memberGender]} ${
-                                      permission[`lv-${memberPermissionLevel}`]
-                                    }`}
-                                  />
-                                  {memberNickname || memberName}
-                                </td>
-                                <td>
-                                  {lang.getPermissionText(
-                                    memberPermissionLevel,
-                                  )}
-                                </td>
-                                <td>{memberContribution}</td>
-                                <td>
-                                  {new Date(memberJoinDate).toLocaleString()}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>{lang.tr.type}</div>
+                      <select
+                        value={serverType}
+                        onChange={(e) => {
+                          setServerType(e.target.value as Server['type']);
+                        }}
+                      >
+                        <option value="other">{lang.tr.other}</option>
+                        <option value="game">{lang.tr.game}</option>
+                        <option value="entertainment">
+                          {lang.tr.entertainment}
+                        </option>
+                      </select>
                     </div>
-                    <div className={EditServer['hintText']}>
-                      {lang.tr.rightClickToProcess}
-                    </div>
-                  </>
-                ) : activeTabIndex === 3 ? (
-                  <>
+                  </div>
+                  <div className={setting['avatarWrapper']}>
                     <div
-                      className={`${EditServer['inputGroup']} ${EditServer['col']}`}
+                      className={setting['avatarPicture']}
+                      style={{
+                        backgroundImage: `url(${serverAvatarUrl})`,
+                      }}
+                    />
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) {
+                          handleOpenErrorDialog(lang.tr.canNotReadImage);
+                          return;
+                        }
+                        if (file.size > 5 * 1024 * 1024) {
+                          handleOpenErrorDialog(lang.tr.imageTooLarge);
+                          return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onloadend = async () => {
+                          const formData = new FormData();
+                          formData.append('_type', 'server');
+                          formData.append('_fileName', serverAvatar);
+                          formData.append('_file', reader.result as string);
+                          const data = await apiService.post(
+                            '/upload',
+                            formData,
+                          );
+                          if (data) {
+                            setServerAvatar(data.avatar);
+                            setServerAvatarUrl(data.avatarUrl);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <label
+                      htmlFor="avatar-upload"
+                      className={popup['button']}
+                      style={{ marginTop: '10px' }}
                     >
-                      <div className={Popup['label']}>
-                        {lang.tr.accessPermission}
-                      </div>
-                      <div className={`${Popup['inputBox']} ${Popup['row']}`}>
-                        <input
-                          type="radio"
-                          id="public"
-                          name="permission"
-                          value="public"
-                          className="mr-3"
-                          checked={serverVisibility === 'public'}
-                          onChange={(e) => {
-                            if (e.target.checked) setServerVisibility('public');
-                          }}
-                        />
-                        <div className={Popup['label']}>
-                          {lang.tr.publicGroup}
-                        </div>
-                      </div>
-                      <div className={`${Popup['inputBox']} ${Popup['row']}`}>
-                        <input
-                          type="radio"
-                          id="members"
-                          name="permission"
-                          value="members"
-                          className="mr-3"
-                          checked={serverVisibility === 'private'}
-                          onChange={(e) => {
-                            if (e.target.checked)
-                              setServerVisibility('private');
-                          }}
-                        />
-                        <div>
-                          <div className={Popup['label']}>
-                            {lang.tr.semiPublicGroup}
-                          </div>
-                          <div className={EditServer['hintText']}>
-                            {lang.tr.semiPublicGroupDescription}
-                          </div>
-                        </div>
-                      </div>
-                      <div className={`${Popup['inputBox']} ${Popup['row']}`}>
-                        <input
-                          type="radio"
-                          id="private"
-                          name="permission"
-                          value="private"
-                          className="mr-3"
-                          checked={serverVisibility === 'invisible'}
-                          onChange={(e) => {
-                            if (e.target.checked)
-                              setServerVisibility('invisible');
-                          }}
-                        />
-                        <div>
-                          <div className={Popup['label']}>
-                            {lang.tr.privateGroup}
-                          </div>
-                          <div className={EditServer['hintText']}>
-                            {lang.tr.privateGroupDescription}
-                          </div>
-                        </div>
-                      </div>
+                      {lang.tr.changeImage}
+                    </label>
+                  </div>
+                </div>
+                <div className={popup['col']}>
+                  <div className={popup['row']}>
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>{lang.tr.level}</div>
+                      <input type="text" value={serverLevel} disabled />
                     </div>
-                  </>
-                ) : activeTabIndex === 4 ? (
-                  <>
-                    <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                      <div className={Popup['label']}>
-                        {lang.tr.applicants}: {serverApplications.length}
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>
+                        {lang.tr.creationTime}
                       </div>
-                      {/* <div className={EditServer['search']}>
-                        <input
-                          type="text"
-                          placeholder={lang.tr.searchPlaceholder}
-                          value={searchText}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setSearchText(e.target.value)
-                          }
-                        />
-                      </div> */}
-                      <table style={{ minHeight: '280px' }}>
-                        <thead>
-                          <tr>
-                            {APPLICATION_FIELDS.map((field) => (
-                              <th
-                                key={field.field}
-                                onClick={() =>
-                                  handleApplicationSort(
-                                    field.field as keyof MemberApplication,
-                                  )
-                                }
-                              >
-                                {field.name}
-                                <span className="absolute right-0">
-                                  {sortField === field.field &&
-                                    (sortState === 1 ? (
-                                      <ChevronUp size={16} />
-                                    ) : (
-                                      <ChevronDown size={16} />
-                                    ))}
-                                </span>
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className={EditServer['tableContainer']}>
-                          {serverApplications.map((application) => {
-                            const {
-                              id: applicationId,
-                              name: applicationName,
-                              description: applicationDescription,
-                              createdAt: applicationCreatedDate,
-                              userId: applicationUserId,
-                              serverId: applicationServerId,
-                            } = application;
-                            return (
-                              <tr
-                                key={applicationId}
-                                onContextMenu={(e) => {
-                                  contextMenu.showContextMenu(
-                                    e.pageX,
-                                    e.pageY,
-                                    [
-                                      {
-                                        id: 'accept',
-                                        label: '接受申請',
-                                        onClick: () => {
-                                          handleUpdateApplication(
-                                            { applicationStatus: 'accepted' },
-                                            applicationUserId,
-                                            applicationServerId,
-                                          );
-                                          handleCreateMember(
-                                            { permissionLevel: 2 },
-                                            applicationUserId,
-                                            applicationServerId,
-                                          );
-                                        },
-                                      },
-                                      {
-                                        id: 'deny',
-                                        label: '拒絕申請',
-                                        onClick: () => {
-                                          handleUpdateApplication(
-                                            { applicationStatus: 'rejected' },
-                                            applicationUserId,
-                                            applicationServerId,
-                                          );
-                                        },
-                                      },
-                                    ],
-                                  );
-                                }}
-                              >
-                                <td>{applicationName}</td>
-                                <td>{applicationDescription}</td>
-                                <td>
-                                  {new Date(
-                                    applicationCreatedDate,
-                                  ).toLocaleString()}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                      <input
+                        type="text"
+                        value={new Date(serverCreatedAt).toLocaleString()}
+                        disabled
+                      />
                     </div>
-                    <div className={EditServer['hintText']}>
-                      {lang.tr.rightClickToProcess}
-                    </div>
-                  </>
-                ) : activeTabIndex === 5 ? (
-                  <>
-                    <div className={`${Popup['inputBox']} ${Popup['col']}`}>
-                      <div className={Popup['label']}>
-                        {lang.tr.blacklist}: {serverBlockMembers.length}
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div
+                        className={`${popup['label']} ${setting['wealthCoinIcon']}`}
+                      >
+                        {lang.tr.wealth}
                       </div>
-                      {/* <div className={EditServer['search']}>
-                        <input
-                          type="text"
-                          placeholder={lang.tr.searchPlaceholder}
-                          value={searchText}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setSearchText(e.target.value)
-                          }
-                        />
-                      </div> */}
-                      <table style={{ minHeight: '280px' }}>
-                        <thead>
-                          <tr>
-                            {BLOCK_MEMBER_FIELDS.map((field) => (
-                              <th
-                                key={field.field}
-                                onClick={() =>
-                                  handleBlockMemberSort(
-                                    field.field as keyof ServerMember,
-                                  )
-                                }
-                              >
-                                {field.name}
-                                <span className="absolute right-0">
-                                  {sortField === field.field &&
-                                    (sortState === 1 ? (
-                                      <ChevronUp size={16} />
-                                    ) : (
-                                      <ChevronDown size={16} />
-                                    ))}
-                                </span>
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className={EditServer['tableContainer']}>
-                          {serverBlockMembers.map((blockMember) => {
-                            const {
-                              id: blockMemberId,
-                              userId: blockMemberUserId,
-                              serverId: blockMemberServerId,
-                              nickname: blockMemberNickname,
-                              name: blockMemberName,
-                              contribution: blockMemberContribution,
-                            } = blockMember;
-                            return (
-                              <tr
-                                key={blockMemberId}
-                                onContextMenu={(e) => {
-                                  contextMenu.showContextMenu(
-                                    e.pageX,
-                                    e.pageY,
-                                    [],
-                                  );
-                                }}
-                              >
-                                <td>
-                                  {blockMemberNickname || blockMemberName}
-                                </td>
-                                <td>{blockMemberContribution}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                      <input type="text" value={serverWealth} disabled />
                     </div>
-                    <div className={EditServer['hintText']}>
-                      {lang.tr.rightClickToProcess}
-                    </div>
-                  </>
-                ) : null}
+                  </div>
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <div className={popup['label']}>{lang.tr.description}</div>
+                    <textarea
+                      value={serverDescription}
+                      onChange={(e) => setServerDescription(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : activeTabIndex === 1 ? (
+              <div className={popup['col']}>
+                <div className={popup['label']}>
+                  {lang.tr.inputAnnouncement}
+                </div>
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <textarea
+                    style={{ minHeight: '200px' }}
+                    value={serverAnnouncement}
+                    onChange={(e) => setServerAnnouncement(e.target.value)}
+                  />
+                  <div className={popup['label']}>
+                    {lang.tr.markdownSupport}
+                  </div>
+                </div>
+              </div>
+            ) : activeTabIndex === 2 ? (
+              <div className={popup['col']}>
+                <div className={popup['label']}>
+                  {lang.tr.members}: {serverMembers.length}
+                </div>
+                {/* <div className={EditServer['search']}>
+                        <input
+                          type="text"
+                          placeholder={lang.tr.searchPlaceholder}
+                          value={searchText}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setSearchText(e.target.value)
+                          }
+                        />
+                      </div> */}
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <table style={{ minHeight: '280px' }}>
+                    <thead>
+                      <tr>
+                        {MEMBER_FIELDS.map((field) => (
+                          <th
+                            key={field.field}
+                            onClick={() =>
+                              handleMemberSort(
+                                field.field as keyof ServerMember,
+                              )
+                            }
+                          >
+                            {field.name}
+                            <span className="absolute right-0">
+                              {sortField === field.field &&
+                                (sortState === 1 ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className={setting['tableContainer']}>
+                      {serverMembers.map((member) => {
+                        const {
+                          id: memberId,
+                          name: memberName,
+                          nickname: memberNickname,
+                          gender: memberGender,
+                          permissionLevel: memberPermissionLevel,
+                          contribution: memberContribution,
+                          userId: memberUserId,
+                          serverId: memberServerId,
+                          createdAt: memberJoinDate,
+                        } = member;
+                        return (
+                          <tr
+                            key={memberId}
+                            onContextMenu={(e) => {
+                              const isCurrentUser = memberUserId === userId;
+                              contextMenu.showContextMenu(e.pageX, e.pageY, [
+                                {
+                                  id: 'send-message',
+                                  label: '傳送即時訊息',
+                                  onClick: () => {},
+                                  show: !isCurrentUser,
+                                },
+                                {
+                                  id: 'view-profile',
+                                  label: '檢視個人檔案',
+                                  onClick: () => {},
+                                  show: !isCurrentUser,
+                                },
+                                {
+                                  id: 'add-friend',
+                                  label: '新增好友',
+                                  onClick: () => {},
+                                  show: !isCurrentUser,
+                                },
+                                // {
+                                //   label: '拒聽此人語音',
+                                //   onClick: () => {},
+                                // },
+                                {
+                                  id: 'edit-nickname',
+                                  label: '修改群名片',
+                                  onClick: () =>
+                                    handleOpenEditMember(
+                                      memberServerId,
+                                      memberUserId,
+                                    ),
+                                },
+                                {
+                                  id: 'separator',
+                                  label: '',
+                                  show: !isCurrentUser,
+                                },
+                                {
+                                  id: 'move-to-my-channel',
+                                  label: lang.tr.moveToMyChannel,
+                                  onClick: () => handleUserMove(),
+                                  show: !isCurrentUser,
+                                },
+                                {
+                                  id: 'separator',
+                                  label: '',
+                                  show: !isCurrentUser,
+                                },
+                                // {
+                                //   label: '禁止此人語音',
+                                //   onClick: () => {},
+                                // },
+                                // {
+                                //   label: '禁止文字',
+                                //   onClick: () => {},
+                                // },
+                                {
+                                  id: 'kick',
+                                  label: lang.tr.kickOut,
+                                  onClick: () => handleKickServer(member),
+                                  show: !isCurrentUser,
+                                },
+                                {
+                                  id: 'block',
+                                  label: lang.tr.block,
+                                  onClick: () => handleBlockUser(member),
+                                  show: !isCurrentUser,
+                                },
+                                {
+                                  id: 'separator',
+                                  label: '',
+                                  show: !isCurrentUser,
+                                },
+                                {
+                                  id: '',
+                                  label: lang.tr.memberManagement,
+                                  onClick: () => {},
+                                  show: !isCurrentUser,
+                                },
+                                // {
+                                //   label: lang.tr.inviteToBeMember,
+                                //   onClick: () => {},
+                                // },
+                              ]);
+                            }}
+                          >
+                            <td>
+                              <div
+                                className={`${permission[memberGender]} ${
+                                  permission[`lv-${memberPermissionLevel}`]
+                                }`}
+                              />
+                              {memberNickname || memberName}
+                            </td>
+                            <td>
+                              {lang.getPermissionText(memberPermissionLevel)}
+                            </td>
+                            <td>{memberContribution}</td>
+                            <td>{new Date(memberJoinDate).toLocaleString()}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <div className={popup['hint']}>
+                    {lang.tr.rightClickToProcess}
+                  </div>
+                </div>
+              </div>
+            ) : activeTabIndex === 3 ? (
+              <div className={popup['col']}>
+                <div className={popup['label']}>{lang.tr.accessPermission}</div>
+                <div className={popup['inputGroup']}>
+                  <div className={`${popup['inputBox']} ${popup['row']}`}>
+                    <input
+                      type="radio"
+                      id="public"
+                      name="permission"
+                      value="public"
+                      className="mr-3"
+                      checked={serverVisibility === 'public'}
+                      onChange={(e) => {
+                        if (e.target.checked) setServerVisibility('public');
+                      }}
+                    />
+                    <div className={popup['label']}>{lang.tr.publicGroup}</div>
+                  </div>
+
+                  <div className={`${popup['inputBox']} ${popup['row']}`}>
+                    <input
+                      type="radio"
+                      id="members"
+                      name="permission"
+                      value="members"
+                      className="mr-3"
+                      checked={serverVisibility === 'private'}
+                      onChange={(e) => {
+                        if (e.target.checked) setServerVisibility('private');
+                      }}
+                    />
+                    <div>
+                      <div className={popup['label']}>
+                        {lang.tr.semiPublicGroup}
+                      </div>
+                      <div className={setting['hintText']}>
+                        {lang.tr.semiPublicGroupDescription}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`${popup['inputBox']} ${popup['row']}`}>
+                    <input
+                      type="radio"
+                      id="private"
+                      name="permission"
+                      value="private"
+                      className="mr-3"
+                      checked={serverVisibility === 'invisible'}
+                      onChange={(e) => {
+                        if (e.target.checked) setServerVisibility('invisible');
+                      }}
+                    />
+                    <div>
+                      <div className={popup['label']}>
+                        {lang.tr.privateGroup}
+                      </div>
+                      <div className={setting['hintText']}>
+                        {lang.tr.privateGroupDescription}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : activeTabIndex === 4 ? (
+              <div className={popup['col']}>
+                <div className={popup['label']}>
+                  {lang.tr.applicants}: {serverApplications.length}
+                </div>
+                {/* <div className={EditServer['search']}>
+                        <input
+                          type="text"
+                          placeholder={lang.tr.searchPlaceholder}
+                          value={searchText}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setSearchText(e.target.value)
+                          }
+                        />
+                      </div> */}
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <table style={{ minHeight: '280px' }}>
+                    <thead>
+                      <tr>
+                        {APPLICATION_FIELDS.map((field) => (
+                          <th
+                            key={field.field}
+                            onClick={() =>
+                              handleApplicationSort(
+                                field.field as keyof MemberApplication,
+                              )
+                            }
+                          >
+                            {field.name}
+                            <span className="absolute right-0">
+                              {sortField === field.field &&
+                                (sortState === 1 ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className={setting['tableContainer']}>
+                      {serverApplications.map((application) => {
+                        const {
+                          id: applicationId,
+                          name: applicationName,
+                          description: applicationDescription,
+                          createdAt: applicationCreatedDate,
+                          userId: applicationUserId,
+                          serverId: applicationServerId,
+                        } = application;
+                        return (
+                          <tr
+                            key={applicationId}
+                            onContextMenu={(e) => {
+                              contextMenu.showContextMenu(e.pageX, e.pageY, [
+                                {
+                                  id: 'accept',
+                                  label: '接受申請',
+                                  onClick: () => {
+                                    handleUpdateApplication(
+                                      { applicationStatus: 'accepted' },
+                                      applicationUserId,
+                                      applicationServerId,
+                                    );
+                                    handleCreateMember(
+                                      { permissionLevel: 2 },
+                                      applicationUserId,
+                                      applicationServerId,
+                                    );
+                                  },
+                                },
+                                {
+                                  id: 'deny',
+                                  label: '拒絕申請',
+                                  onClick: () => {
+                                    handleUpdateApplication(
+                                      { applicationStatus: 'rejected' },
+                                      applicationUserId,
+                                      applicationServerId,
+                                    );
+                                  },
+                                },
+                              ]);
+                            }}
+                          >
+                            <td>{applicationName}</td>
+                            <td>{applicationDescription}</td>
+                            <td>
+                              {new Date(
+                                applicationCreatedDate,
+                              ).toLocaleString()}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <div className={popup['hint']}>
+                    {lang.tr.rightClickToProcess}
+                  </div>
+                </div>
+              </div>
+            ) : activeTabIndex === 5 ? (
+              <div className={popup['col']}>
+                <div className={popup['label']}>
+                  {lang.tr.blacklist}: {serverBlockMembers.length}
+                </div>
+                {/* <div className={EditServer['search']}>
+                        <input
+                          type="text"
+                          placeholder={lang.tr.searchPlaceholder}
+                          value={searchText}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setSearchText(e.target.value)
+                          }
+                        />
+                      </div> */}
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <table style={{ minHeight: '280px' }}>
+                    <thead>
+                      <tr>
+                        {BLOCK_MEMBER_FIELDS.map((field) => (
+                          <th
+                            key={field.field}
+                            onClick={() =>
+                              handleBlockMemberSort(
+                                field.field as keyof ServerMember,
+                              )
+                            }
+                          >
+                            {field.name}
+                            <span className="absolute right-0">
+                              {sortField === field.field &&
+                                (sortState === 1 ? (
+                                  <ChevronUp size={16} />
+                                ) : (
+                                  <ChevronDown size={16} />
+                                ))}
+                            </span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className={setting['tableContainer']}>
+                      {serverBlockMembers.map((blockMember) => {
+                        const {
+                          id: blockMemberId,
+                          userId: blockMemberUserId,
+                          serverId: blockMemberServerId,
+                          nickname: blockMemberNickname,
+                          name: blockMemberName,
+                          contribution: blockMemberContribution,
+                        } = blockMember;
+                        return (
+                          <tr
+                            key={blockMemberId}
+                            onContextMenu={(e) => {
+                              contextMenu.showContextMenu(e.pageX, e.pageY, []);
+                            }}
+                          >
+                            <td>{blockMemberNickname || blockMemberName}</td>
+                            <td>{blockMemberContribution}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <div className={popup['hint']}>
+                    {lang.tr.rightClickToProcess}
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
-        <div className={Popup['popupFooter']}>
+        <div className={popup['popupFooter']}>
           <button
-            className={Popup['button']}
+            className={popup['button']}
             onClick={() => {
               handleUpdateServer(
                 {
@@ -961,7 +921,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
           </button>
           <button
             type="button"
-            className={Popup['button']}
+            className={popup['button']}
             onClick={() => handleClose()}
           >
             {lang.tr.cancel}

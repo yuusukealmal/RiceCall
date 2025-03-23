@@ -2,7 +2,7 @@ import React from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
-import dialog from '@/styles/popups/dialog.module.css';
+import setting from '@/styles/popups/editServer.module.css';
 
 // Services
 import ipcService from '@/services/ipc.service';
@@ -45,17 +45,15 @@ const Dialog: React.FC<DialogProps> = (initialData: DialogProps) => {
   return (
     <div className={popup['popupContainer']}>
       <div className={popup['popupBody']}>
-        <div className={dialog['body']}>
-          <div className={dialog['inputGroup']}>
+        <div className={setting['body']}>
+          <div className={popup['inputGroup']}>
             <div className={popup['inputBox']}>
               <div
-                className={`${dialog['dialogIcon']} ${
+                className={`${popup['dialogIcon']} ${
                   popup[DIALOG_ICON[iconType]]
                 }`}
-              ></div>
-              <div className={popup['textBorder']}>
-                <div className={popup['title']}>{title}</div>
-              </div>
+              />
+              <div className={popup['label']}>{title}</div>
             </div>
           </div>
         </div>

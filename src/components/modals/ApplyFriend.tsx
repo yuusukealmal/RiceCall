@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
+import setting from '@/styles/popups/editServer.module.css';
 import applyFriend from '@/styles/popups/applyFriend.module.css';
 
 // Types
@@ -115,51 +116,57 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
 
     return (
       <div className={popup['popupContainer']}>
-        <div className={`${popup['popupBody']}`}>
-          <div className={applyFriend['body']}>
-            <div className={popup['label']}>{lang.tr.friendLabel}</div>
-            <div className={applyFriend['headerBox']}>
-              <div className={applyFriend['avatarWrapper']}>
-                <div className={applyFriend['avatarPicture']} />
-              </div>
-              <div className={applyFriend['userInfoWrapper']}>
-                <div className={applyFriend['userAccount']}>{targetName}</div>
-                <div className={applyFriend['userName']}>{targetId}</div>
-              </div>
-            </div>
-            <div className={applyFriend['split']} />
-            <div className={applyFriend['contentBox']}>
-              <div className={popup['label']}>{lang.tr.friendSelectGroup}</div>
-              <div className={popup['inputBox']}>
-                <select
-                  className={popup['select']}
-                  onChange={(e) => {
-                    // FIXME
-                  }}
-                >
-                  {userFriendGroups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
-                </select>
-                <div className={applyFriend['linkText']}>
-                  {lang.tr.friendAddGroup}
+        <div className={popup['popupBody']}>
+          <div className={setting['body']}>
+            <div className={popup['col']}>
+              <div className={popup['label']}>{lang.tr.friendLabel}</div>
+              <div className={popup['row']}>
+                <div className={applyFriend['avatarWrapper']}>
+                  <div className={applyFriend['avatarPicture']} />
+                </div>
+                <div className={applyFriend['userInfoWrapper']}>
+                  <div className={applyFriend['userAccount']}>{targetName}</div>
+                  <div className={applyFriend['userName']}>{targetId}</div>
                 </div>
               </div>
-              <div className={popup['label']}>{lang.tr.friendNote}</div>
-              <div className={popup['inputBox']}>
-                <textarea
-                  rows={2}
-                  onChange={(e) => setApplicationDescription(e.target.value)}
-                />
-              </div>
-              <div className={applyFriend['noteText']}>
-                {lang.tr.max120content}
+              <div className={applyFriend['split']} />
+              <div className={popup['inputGroup']}>
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <div className={popup['label']}>
+                    {lang.tr.friendSelectGroup}
+                  </div>
+                  <div className={popup['row']}>
+                    <select
+                      className={popup['select']}
+                      onChange={(e) => {
+                        // FIXME
+                      }}
+                    >
+                      {userFriendGroups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className={popup['link']}>
+                      {lang.tr.friendAddGroup}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <div className={popup['label']}>{lang.tr.friendNote}</div>
+                  <textarea
+                    rows={2}
+                    onChange={(e) => setApplicationDescription(e.target.value)}
+                  />
+                  <div className={popup['hint']}>{lang.tr.max120content}</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
         <div className={popup['popupFooter']}>
           <button
             className={`${popup['button']} ${

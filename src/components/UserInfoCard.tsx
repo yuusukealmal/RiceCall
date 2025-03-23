@@ -40,7 +40,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
       nickname: memberNickname,
     } = member;
     const memberGrade = Math.min(56, Math.ceil(memberLevel / 5));
-    const memberVip = 1;
+    const memberVip = 0;
 
     return (
       <div

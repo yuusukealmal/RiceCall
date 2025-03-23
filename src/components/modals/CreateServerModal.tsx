@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
+import setting from '@/styles/popups/editServer.module.css';
 import createServer from '@/styles/popups/createServer.module.css';
 
 // Types
@@ -114,18 +115,15 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       case 0:
         return (
           <div className={popup['popupContainer']}>
-            <div className={popup['popupBody']}>
-              <div className={createServer['tab']}>
-                <div
-                  className={`${createServer['item']} ${createServer['active']}`}
-                >
-                  {lang.tr.selectGroupType}
-                </div>
-                <div className={`${createServer['item']}`}>
-                  {lang.tr.fillInfo}
-                </div>
+            <div className={popup['popupTab']}>
+              <div className={`${popup['item']} ${popup['active']}`}>
+                {lang.tr.selectGroupType}
               </div>
-              <div className={createServer['body']}>
+              <div className={`${popup['item']}`}>{lang.tr.fillInfo}</div>
+            </div>
+
+            <div className={popup['popupBody']}>
+              <div className={setting['body']}>
                 <div className={`${createServer['message']}`}>
                   {`${lang.tr.remainingGroup1}${remainingGroups}${lang.tr.remainingGroup2}`}
                 </div>
@@ -172,18 +170,17 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
       case 1:
         return (
           <div className={popup['popupContainer']}>
-            <div className={popup['popupBody']}>
-              <div className={createServer['tab']}>
-                <div className={`${createServer['item']}`}>
-                  {lang.tr.selectGroupType}
-                </div>
-                <div
-                  className={`${createServer['item']} ${createServer['active']}`}
-                >
-                  {lang.tr.fillInfo}
-                </div>
+            <div className={popup['popupTab']}>
+              <div className={`${popup['item']}`}>
+                {lang.tr.selectGroupType}
               </div>
-              <div className={createServer['body']}>
+              <div className={`${popup['item']}  ${popup['active']}`}>
+                {lang.tr.fillInfo}
+              </div>
+            </div>
+
+            <div className={popup['popupBody']}>
+              <div className={setting['body']}>
                 <div className={createServer['avatarWrapper']}>
                   <div
                     className={createServer['avatarPicture']}
@@ -228,7 +225,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                     {lang.tr.uploadAvatar}
                   </label>
                 </div>
-                <div className={createServer['inputGroup']}>
+                <div className={popup['inputGroup']}>
                   <div className={popup['inputBox']}>
                     <div className={popup['label']}>{lang.tr.groupType}</div>
                     <input
@@ -238,6 +235,7 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       value={lang.tr[serverType as keyof typeof lang.tr]}
                     />
                   </div>
+
                   <div className={popup['inputBox']}>
                     <div className={`${popup['label']} ${popup['required']}`}>
                       {lang.tr.groupName}
@@ -247,35 +245,23 @@ const CreateServerModal: React.FC<CreateServerModalProps> = React.memo(
                       type="text"
                       value={serverName}
                       onChange={(e) => setServerName(e.target.value)}
-                      // onBlur={() =>
-                      //   setErrors((prev) => ({
-                      //     ...prev,
-                      //     name: validateName(serverName),
-                      //   }))}
                       placeholder={lang.tr.groupNamePlaceholder}
                     />
-                    {/* {errors.name && <p className="text-red-500">{errors.name}</p>} */}
                   </div>
+
                   <div className={popup['inputBox']}>
                     <div className={popup['label']}>{lang.tr.groupSlogan}</div>
                     <textarea
                       className={popup['input']}
                       value={serverDescription}
                       onChange={(e) => setServerDescription(e.target.value)}
-                      // onBlur={() =>
-                      //   setErrors((prev) => ({
-                      //     ...prev,
-                      //     description: validateDescription(serverDescription),
-                      //   }))}
                       placeholder={lang.tr.groupSloganPlaceholder}
                     />
-                    {/* {errors.description && (
-                  <p className="text-red-500">{errors.description}</p>
-                )} */}
                   </div>
                 </div>
               </div>
             </div>
+
             <div className={popup['popupFooter']}>
               <button className={popup['button']} onClick={() => setSection(0)}>
                 {lang.tr.previous}

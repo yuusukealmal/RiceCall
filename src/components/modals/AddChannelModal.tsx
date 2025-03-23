@@ -9,7 +9,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
-import addChannel from '@/styles/popups/addChannel.module.css';
+import setting from '@/styles/popups/editServer.module.css';
 
 // Services
 import ipcService from '@/services/ipc.service';
@@ -77,8 +77,8 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
     return (
       <div className={popup['popupContainer']}>
         <div className={popup['popupBody']}>
-          <div className={addChannel['body']}>
-            <div className={addChannel['inputGroup']}>
+          <div className={setting['body']}>
+            <div className={popup['inputGroup']}>
               <div className={popup['inputBox']}>
                 <div className={popup['label']}>{lang.tr.parentChannel}</div>
                 <input
@@ -101,6 +101,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
             </div>
           </div>
         </div>
+
         <div className={popup['popupFooter']}>
           <button
             className={`${popup['button']} ${
