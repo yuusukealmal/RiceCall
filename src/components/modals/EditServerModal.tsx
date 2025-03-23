@@ -577,16 +577,19 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                     e.pageY,
                                     [
                                       {
+                                        id: 'send-message',
                                         label: '傳送即時訊息',
                                         onClick: () => {},
                                         show: !isCurrentUser,
                                       },
                                       {
+                                        id: 'view-profile',
                                         label: '檢視個人檔案',
                                         onClick: () => {},
                                         show: !isCurrentUser,
                                       },
                                       {
+                                        id: 'add-friend',
                                         label: '新增好友',
                                         onClick: () => {},
                                         show: !isCurrentUser,
@@ -596,6 +599,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       //   onClick: () => {},
                                       // },
                                       {
+                                        id: 'edit-nickname',
                                         label: '修改群名片',
                                         onClick: () =>
                                           handleOpenEditMember(
@@ -604,6 +608,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                           ),
                                       },
                                       {
+                                        id: 'move-to-my-channel',
                                         label: lang.tr.moveToMyChannel,
                                         onClick: () => handleUserMove(),
                                         show: !isCurrentUser,
@@ -617,16 +622,19 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       //   onClick: () => {},
                                       // },
                                       {
+                                        id: 'kick',
                                         label: lang.tr.kickOut,
                                         onClick: () => handleKickServer(member),
                                         show: !isCurrentUser,
                                       },
                                       {
+                                        id: 'block',
                                         label: lang.tr.block,
                                         onClick: () => handleBlockUser(member),
                                         show: !isCurrentUser,
                                       },
                                       {
+                                        id: '',
                                         label: lang.tr.memberManagement,
                                         onClick: () => {},
                                         show: !isCurrentUser,
@@ -796,6 +804,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                     e.pageY,
                                     [
                                       {
+                                        id: 'accept',
                                         label: '接受申請',
                                         onClick: () => {
                                           handleUpdateApplication(
@@ -811,6 +820,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                         },
                                       },
                                       {
+                                        id: 'deny',
                                         label: '拒絕申請',
                                         onClick: () => {
                                           handleUpdateApplication(
