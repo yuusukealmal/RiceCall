@@ -17,49 +17,85 @@
   display: none;
 }
 
+.contextMenu .separator {
+  min-height: 6px;
+  min-width: 100%;
+  display: block;
+  margin: 3px 0;
+  background-image: url(../../public/channel/chn_tree_split.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
 .contextMenu .option {
   font-size: 13px;
   color: #333;
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 8px;
+  justify-content: center;
+  padding: 3px 24px;
   position: relative;
   min-width: max-content;
 }
 
 .contextMenu .option:not([data-type=''])::before {
+  position: absolute;
+}
+
+.contextMenu .option[data-type='setting']:before {
+  left: 3px;
   content: '';
   width: 16px;
   height: 16px;
-  margin-right: 10px;
+  background-image: url(../../public/set.png);
   background-size: auto;
   background-repeat: no-repeat;
   background-position: center center;
 }
 
-.contextMenu .option[data-type='setting']:before {
-  background-image: url(../../public/set.png);
-}
-
 .contextMenu .option[data-type='message']:before {
+  left: 3px;
+  content: '';
+  width: 16px;
+  height: 16px;
   background-image: url(../../public/message.png);
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 .contextMenu .option[data-type='skin']:before {
+  left: 3px;
+  content: '';
+  width: 16px;
+  height: 16px;
   background-image: url(../../public/skin.png);
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 .contextMenu .option[data-type='exit']:before {
+  left: 3px;
+  content: '';
+  width: 16px;
+  height: 16px;
   background-image: url(../../public/exit.png);
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 .contextMenu .option[data-type='submenu']:before {
+  right: 3px;
+  content: '';
+  width: 16px;
+  height: 16px;
   background-image: url(../../public/ctrl/icon_submenu.png);
-  min-width: 16px;
-  min-height: 10px;
-  transform: rotate(180deg);
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 .contextMenu .option:hover {
@@ -73,5 +109,5 @@
 .contextMenu .option.hasSubmenu:hover .contextMenu {
   display: flex;
   top: 0;
-  left: -4rem;
+  left: 100;
 }

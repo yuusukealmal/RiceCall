@@ -22,23 +22,28 @@ const ContextMenu = ({ x, y, items, onClose }: ContextMenuProps) => {
       <div className={contextMenu['contextMenu']} style={styles}>
         {items
           .filter((item) => item?.show ?? true)
-          .map((item, index) => (
-            <div
-              key={item.id || index}
-              className={`${contextMenu['option']} ${
-                item.hasSubmenu ? contextMenu['hasSubmenu'] : ''
-              } ${item.className}`}
-              style={item.style}
-              data-type={item.icon || ''}
-              onClick={() => {
-                item.onClick?.();
-                onClose();
-              }}
-            >
-              {item.label}
-              {item.hasSubmenu && createContextMenu(item.submenuItems || [])}
-            </div>
-          ))}
+          .map((item, index) => {
+            if (item.id === 'separator') {
+              return <div className={contextMenu['separator']} key={index} />;
+            }
+            return (
+              <div
+                key={item.id || index}
+                className={`${contextMenu['option']} ${
+                  item.hasSubmenu ? contextMenu['hasSubmenu'] : ''
+                } ${item.className}`}
+                style={item.style}
+                data-type={item.icon || ''}
+                onClick={() => {
+                  item.onClick?.();
+                  onClose();
+                }}
+              >
+                {item.label}
+                {item.hasSubmenu && createContextMenu(item.submenuItems || [])}
+              </div>
+            );
+          })}
       </div>
     );
   };
