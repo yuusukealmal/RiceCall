@@ -1367,13 +1367,16 @@ export type Message = {
 };
 
 export type ContextMenuItem = {
-  id?: string;
+  id: string;
   label: string;
   show?: boolean;
   disabled?: boolean;
-  onClick: () => void;
-  icon?: React.ReactNode;
+  hasSubmenu?: boolean;
+  submenuItems?: ContextMenuItem[];
+  icon?: string;
   className?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
 };
 
 export type Emoji = {

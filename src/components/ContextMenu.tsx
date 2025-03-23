@@ -1,5 +1,8 @@
 import React from 'react';
 
+// CSS
+import contextMenu from '@/styles/contextMenu.module.css';
+
 // Types
 import { ContextMenuItem } from '@/types';
 
@@ -11,32 +14,69 @@ interface ContextMenuProps {
 }
 
 const ContextMenu = ({ x, y, items, onClose }: ContextMenuProps) => {
-  return (
-    <div
-      className="fixed bg-white shadow-lg rounded border z-50"
-      style={{ top: y, left: x }}
-    >
-      {items.map(
-        (item, index) =>
-          item.show !== false && (
-            <button
+  const createContextMenu = (
+    items: ContextMenuItem[],
+    styles?: React.CSSProperties,
+  ) => {
+    return (
+      <div className={contextMenu['contextMenu']} style={styles}>
+        {items
+          .filter((item) => item?.show ?? true)
+          .map((item, index) => (
+            <div
               key={item.id || index}
+              className={`${contextMenu['option']} ${
+                item.hasSubmenu ? contextMenu['hasSubmenu'] : ''
+              } ${item.className}`}
+              style={item.style}
+              data-type={item.icon || ''}
               onClick={() => {
-                item.onClick();
+                item.onClick?.();
                 onClose();
               }}
-              disabled={item.disabled ?? false}
-              className={`flex w-full px-4 py-2 text-left hover:bg-gray-100 ${
-                item.disabled ? 'bg-gray-100 cursor-not-allowed' : ''
-              }`}
             >
-              {item.icon}
               {item.label}
-            </button>
-          ),
-      )}
-    </div>
-  );
+              {item.hasSubmenu && createContextMenu(item.submenuItems || [])}
+            </div>
+          ))}
+      </div>
+    );
+  };
+
+  return createContextMenu(items, { top: y, left: x, display: 'flex' });
+  // <div className={contextMenu['contextMenu']} style={{ top: y, left: x }}>
+  //   {items
+  //     .filter((item) => item?.show ?? true)
+  //     .map((item, index) => (
+  //       <div
+  //         key={item.id || index}
+  //         data-icon={item.icon}
+  //         onClick={() => {
+  //           item.onClick?.();
+  //           onClose();
+  //         }}
+  //         // disabled={item.disabled}
+  //         className={`${contextMenu['option']} ${
+  //           item.hasSubmenu ? contextMenu['hasSubmenu'] : ''
+  //         } ${item.className}`}
+  //         style={item.style}
+  //       >
+  //         {item.label}
+  //         {item.hasSubmenu && (
+  //           <div
+  //             className={`${contextMenu['contextMenu']} ${contextMenu['hidden']}`}
+  //           >
+  //             <ContextMenu
+  //               x={x}
+  //               y={y}
+  //               items={item.submenuItems || []}
+  //               onClose={onClose}
+  //             />
+  //           </div>
+  //         )}
+  //       </div>
+  //     ))}
+  // </div>
 };
 
 ContextMenu.displayName = 'ContextMenu';

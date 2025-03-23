@@ -1,0 +1,77 @@
+.contextMenu {
+  position: absolute;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  padding: 3px;
+  height: fit-content;
+  display: none;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.contextMenu.hidden {
+  display: none;
+}
+
+.contextMenu .option {
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px;
+  position: relative;
+  min-width: max-content;
+}
+
+.contextMenu .option:not([data-type=''])::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.contextMenu .option[data-type='setting']:before {
+  background-image: url(../../public/set.png);
+}
+
+.contextMenu .option[data-type='message']:before {
+  background-image: url(../../public/message.png);
+}
+
+.contextMenu .option[data-type='skin']:before {
+  background-image: url(../../public/skin.png);
+}
+
+.contextMenu .option[data-type='exit']:before {
+  background-image: url(../../public/exit.png);
+}
+
+.contextMenu .option[data-type='submenu']:before {
+  background-image: url(../../public/ctrl/icon_submenu.png);
+  min-width: 16px;
+  min-height: 10px;
+  transform: rotate(180deg);
+}
+
+.contextMenu .option:hover {
+  background: #eee;
+}
+
+.contextMenu .option.hasSubmenu {
+  position: relative;
+}
+
+.contextMenu .option.hasSubmenu:hover .contextMenu {
+  display: flex;
+  top: 0;
+  left: -4rem;
+}

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Trash } from 'lucide-react';
 
 // CSS
 import styles from '@/styles/friendPage.module.css';
@@ -48,7 +47,6 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
                 id: 'delete',
-                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.delete,
                 onClick: () => {
                   // Open Delete Group Modal
@@ -124,7 +122,6 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
           contextMenu.showContextMenu(e.pageX, e.pageY, [
             {
               id: 'delete',
-              icon: <Trash size={14} className="w-5 h-5 mr-2" />,
               label: lang.tr.deleteFriend,
               onClick: () => {
                 // Open Delete Friend Modal

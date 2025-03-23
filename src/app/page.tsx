@@ -32,6 +32,7 @@ import { createDefault } from '@/utils/createDefault';
 import WebRTCProvider from '@/providers/WebRTCProvider';
 import { useSocket } from '@/providers/SocketProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { useContextMenu } from '@/providers/ContextMenuProvider';
 
 // Services
 import ipcService from '@/services/ipc.service';
@@ -49,10 +50,10 @@ const Header: React.FC<HeaderProps> = React.memo(
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
+    const contextMenu = useContextMenu();
 
     // States
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
     // Variables
@@ -116,11 +117,6 @@ const Header: React.FC<HeaderProps> = React.memo(
     const handleOpenSystemSetting = () => {
       ipcService.popup.open(PopupType.SYSTEM_SETTING);
       ipcService.initialData.onRequest(PopupType.SYSTEM_SETTING, {});
-    };
-
-    // TEMP: for testing
-    const handleCreateError = (error: StandardizedError) => {
-      new errorHandler(error).show();
     };
 
     return (
@@ -202,109 +198,81 @@ const Header: React.FC<HeaderProps> = React.memo(
           <div className={header['spliter']} />
           <div
             className={header['menu']}
-            onClick={() => setShowMenu(!showMenu)}
-          >
-            <div
-              className={`${header['menuDropDown']} ${
-                showMenu ? '' : header['hidden']
-              }`}
-            >
-              <div
-                className={`${header['option']} ${header['hasImage']}`}
-                data-type="system-setting"
-                data-key="30066"
-                onClick={() => handleOpenSystemSetting()}
-              >
-                {lang.tr.systemSettings}
-              </div>
-              <div
-                className={`${header['option']} ${header['hasImage']}`}
-                data-type="message-history"
-                data-key="30136"
-                onClick={() =>
-                  handleCreateError(
-                    new StandardizedError(
-                      '此頁面尚未完工',
-                      'NotImplementedError',
-                      'Page',
-                      'PAGE_NOT_IMPLEMENTED',
-                      404,
-                    ),
-                  )
-                }
-              >
-                {lang.tr.messageHistory}
-              </div>
-              <div
-                className={`${header['option']} ${header['hasImage']}`}
-                data-type="change-theme"
-                data-key="60028"
-              >
-                {lang.tr.changeTheme}
-              </div>
-              <div
-                className={header['option']}
-                data-type="feed-back"
-                data-key="30039"
-              >
-                {lang.tr.feedback}
-              </div>
-              <div
-                className={`${header['option']} ${header['hasImage']} ${header['hasSubmenu']}`}
-                data-type="language-select"
-              >
-                <span data-key="30374">{lang.tr.languageSelect}</span>
-                <div
-                  className={`${header['menuDropDown']} ${header['hidden']}`}
-                >
-                  <div
-                    className={header['option']}
-                    data-lang="tw"
-                    onClick={() => handleLanguageChange('tw')}
-                  >
-                    繁體中文
-                  </div>
-                  <div
-                    className={header['option']}
-                    data-lang="cn"
-                    onClick={() => handleLanguageChange('cn')}
-                  >
-                    简体中文
-                  </div>
-                  <div
-                    className={header['option']}
-                    data-lang="en"
-                    onClick={() => handleLanguageChange('en')}
-                  >
-                    English
-                  </div>
-                  <div
-                    className={header['option']}
-                    data-lang="jp"
-                    onClick={() => handleLanguageChange('jp')}
-                  >
-                    日本語
-                  </div>
-                </div>
-              </div>
-              <div
-                className={header['option']}
-                data-type="logout"
-                data-key="30060"
-                onClick={() => handleLogout()}
-              >
-                {lang.tr.logout}
-              </div>
-              <div
-                className={`${header['option']} ${header['hasImage']}`}
-                data-type="exit"
-                data-key="30061"
-                onClick={() => handleClose()}
-              >
-                {lang.tr.exit}
-              </div>
-            </div>
-          </div>
+            onClick={(e) =>
+              contextMenu.showContextMenu(e.clientX, e.clientY, [
+                {
+                  id: 'system-setting',
+                  label: lang.tr.systemSettings,
+                  icon: 'setting',
+                  onClick: () => handleOpenSystemSetting(),
+                },
+                {
+                  id: 'message-history',
+                  label: lang.tr.messageHistory,
+                  icon: 'message',
+                  onClick: () => {
+                    // TODO: Implement
+                  },
+                },
+                {
+                  id: 'change-theme',
+                  label: lang.tr.changeTheme,
+                  icon: 'skin',
+                  onClick: () => {
+                    // TODO: Implement
+                  },
+                },
+                {
+                  id: 'feedback',
+                  label: lang.tr.feedback,
+                  icon: 'feedback',
+                  onClick: () => {
+                    // TODO: Implement
+                  },
+                },
+                {
+                  id: 'language-select',
+                  label: lang.tr.languageSelect,
+                  icon: 'submenu',
+                  hasSubmenu: true,
+                  submenuItems: [
+                    {
+                      id: 'language-select-tw',
+                      label: '繁體中文',
+                      onClick: () => handleLanguageChange('tw'),
+                    },
+                    {
+                      id: 'language-select-cn',
+                      label: '簡體中文',
+                      onClick: () => handleLanguageChange('cn'),
+                    },
+                    {
+                      id: 'language-select-en',
+                      label: 'English',
+                      onClick: () => handleLanguageChange('en'),
+                    },
+                    {
+                      id: 'language-select-jp',
+                      label: '日本語',
+                      onClick: () => handleLanguageChange('jp'),
+                    },
+                  ],
+                },
+                {
+                  id: 'logout',
+                  label: lang.tr.logout,
+                  icon: 'logout',
+                  onClick: () => handleLogout(),
+                },
+                {
+                  id: 'exit',
+                  label: lang.tr.exit,
+                  icon: 'exit',
+                  onClick: () => handleClose(),
+                },
+              ])
+            }
+          />
           <div
             className={header['minimize']}
             onClick={() => handleMinimize()}

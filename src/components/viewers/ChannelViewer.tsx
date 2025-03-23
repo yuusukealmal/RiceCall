@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Edit, Plus, Trash } from 'lucide-react';
 
 // CSS
 import styles from '@/styles/serverPage.module.css';
@@ -116,14 +115,12 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
                 id: 'edit',
-                icon: <Edit size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.edit,
                 show: canEdit,
                 onClick: () => handleOpenEditChannel(categoryId, serverId),
               },
               {
                 id: 'add',
-                icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.add,
                 show: canEdit && !categoryIsRoot,
                 onClick: () =>
@@ -131,7 +128,6 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
               },
               {
                 id: 'delete',
-                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.delete,
                 show: canEdit,
                 onClick: () => handleOpenWarning(lang.tr.warningDeleteChannel),
@@ -270,14 +266,12 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
                 id: 'edit',
-                icon: <Edit size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.edit,
                 show: canEdit,
                 onClick: () => handleOpenEditChannel(channelId, serverId),
               },
               {
                 id: 'add',
-                icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.add,
                 show: canEdit && !channelIsLobby && !channelIsRoot,
                 onClick: () =>
@@ -285,7 +279,6 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
               },
               {
                 id: 'delete',
-                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.delete,
                 show: canEdit && !channelIsLobby,
                 onClick: () => handleOpenWarning(lang.tr.warningDeleteChannel),
@@ -374,7 +367,6 @@ const UserTab: React.FC<UserTabProps> = React.memo(
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
                 id: 'kick',
-                icon: <Trash size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.kick,
                 show: canEdit && !isCurrentUser,
                 onClick: () => {
@@ -383,7 +375,6 @@ const UserTab: React.FC<UserTabProps> = React.memo(
               },
               {
                 id: 'addFriend',
-                icon: <Plus size={14} className="w-5 h-5 mr-2" />,
                 label: lang.tr.addFriend,
                 show: canEdit && !isCurrentUser,
                 onClick: () =>
@@ -498,7 +489,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
           contextMenu.showContextMenu(e.pageX, e.pageY, [
             {
               id: 'addChannel',
-              icon: <Plus size={14} className="w-5 h-5 mr-2" />,
               label: lang.tr.add,
               show: canEdit,
               onClick: () => handleOpenCreateChannel(serverId, null, userId),
