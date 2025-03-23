@@ -6,7 +6,7 @@ import { ContextMenuItem, ServerMember } from '@/types';
 
 // Components
 import ContextMenu from '@/components/ContextMenu';
-import UserInfoBlock from '@/components/UserInfoBlock';
+import UserInfoCard from '@/components/UserInfoCard';
 
 interface ContextMenuContextType {
   showContextMenu: (x: number, y: number, items: ContextMenuItem[]) => void;
@@ -64,7 +64,7 @@ const ContextMenuProvider = ({ children }: ContextMenuProviderProps) => {
   };
 
   const showUserInfoBlock = (x: number, y: number, member: ServerMember) => {
-    setContent(<UserInfoBlock x={x} y={y} member={member} />);
+    setContent(<UserInfoCard x={x} y={y} member={member} />);
     setIsVisible(true);
   };
 
