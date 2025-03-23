@@ -248,6 +248,16 @@ const channelHandler = {
         createdAt: Date.now().valueOf(),
       });
 
+      if (newChannel.categoryId) {
+        const parentChannel = await Get.channel(newChannel.categoryId);
+        if (parentChannel) {
+          await Set.channel(parentChannel.id, {
+            isRoot: true,
+            type: 'category',
+          });
+        }
+      }
+
       // Emit updated data (to all users in the server)
       io.to(`server_${server.id}`).emit('serverUpdate', {
         channels: await Get.serverChannels(server.id),
@@ -402,6 +412,24 @@ const channelHandler = {
 
       // Update channel
       await Set.channel(channelId, { serverId: null });
+
+      // If the deleted channel has a parent channel, update the parent channel status
+      if (channel.categoryId) {
+        const serverChannels = await Get.serverChannels(server.id);
+        const parentChannel = await Get.channel(channel.categoryId);
+        const parentChannelHasChildren = serverChannels.some(
+          (c) => c.categoryId === parentChannel.id && c.id !== channel.id,
+        );
+
+        if (!parentChannelHasChildren) {
+          await Set.channel(parentChannel.id, {
+            isRoot: true,
+            type: 'channel',
+            categoryId: null,
+            order: parentChannel.order,
+          });
+        }
+      }
 
       // Emit updated data (to all users in the server)
       io.to(`server_${server.id}`).emit('serverUpdate', {

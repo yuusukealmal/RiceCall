@@ -57,6 +57,12 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     );
     const [member, setMember] = useState<Member>(createDefault.member());
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [showMicVolume, setShowMicVolume] = useState(false);
+    const [showSpeakerVolume, setShowSpeakerVolume] = useState(false);
+    const [micVolume, setMicVolume] = useState(webRTC.micVolume || 100);
+    const [speakerVolume, setSpeakerVolume] = useState(
+      webRTC.speakerVolume || 100,
+    );
 
     // Variables
     const { id: userId, currentChannelId: userCurrentChannelId } = user;
@@ -143,6 +149,44 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       },
       [isResizing],
     );
+
+    const handleMicVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseInt(e.target.value);
+      setMicVolume(value);
+      webRTC.updateMicVolume?.(value);
+    };
+
+    const handleSpeakerVolumeChange = (
+      e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+      const value = parseInt(e.target.value);
+      setSpeakerVolume(value);
+      webRTC.updateSpeakerVolume?.(value);
+    };
+
+    const handleClickOutside = useCallback((e: MouseEvent) => {
+      const micContainer = document.querySelector(
+        `.${styles['micVolumeContainer']}`,
+      );
+      const speakerContainer = document.querySelector(
+        `.${styles['speakerVolumeContainer']}`,
+      );
+
+      if (
+        !micContainer?.contains(e.target as Node) &&
+        !speakerContainer?.contains(e.target as Node)
+      ) {
+        setShowMicVolume(false);
+        setShowSpeakerVolume(false);
+      }
+    }, []);
+
+    useEffect(() => {
+      document.addEventListener('click', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }, [handleClickOutside]);
 
     // Effects
     useEffect(() => {
@@ -387,13 +431,56 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               <div className={styles['buttons']}>
                 <div className={styles['bkgModeButton']}>{lang.tr.mixing}</div>
                 <div className={styles['saperator']} />
-                <div
-                  className={`${styles['micModeButton']} ${
-                    webRTC.isMute ? '' : styles['active']
-                  }`}
-                  onClick={() => webRTC.toggleMute?.()}
-                />
-                <div className={styles['speakerButton']} />
+                <div className={styles['micVolumeContainer']}>
+                  <div
+                    className={`${styles['micModeButton']} ${
+                      webRTC.isMute || micVolume === 0
+                        ? styles['muted']
+                        : styles['active']
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMicVolume(!showMicVolume);
+                      setShowSpeakerVolume(false);
+                    }}
+                  />
+                  {showMicVolume && (
+                    <div className={styles['volumeSlider']}>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={micVolume}
+                        onChange={handleMicVolumeChange}
+                        className={styles['slider']}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className={styles['speakerVolumeContainer']}>
+                  <div
+                    className={`${styles['speakerButton']} ${
+                      speakerVolume === 0 ? styles['muted'] : ''
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowSpeakerVolume(!showSpeakerVolume);
+                      setShowMicVolume(false);
+                    }}
+                  />
+                  {showSpeakerVolume && (
+                    <div className={styles['volumeSlider']}>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={speakerVolume}
+                        onChange={handleSpeakerVolumeChange}
+                        className={styles['slider']}
+                      />
+                    </div>
+                  )}
+                </div>
                 <div className={styles['recordModeButton']} />
               </div>
             </div>
