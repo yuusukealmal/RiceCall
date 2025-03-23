@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { authService } from './auth.service';
 import { errorHandler, StandardizedError } from '@/utils/errorHandler';
-const API_URL = 'http://localhost:4500';
+const API_URL = process.env.NEXT_PUBLIC_SERVER_URL;
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -64,29 +64,31 @@ axiosInstance.interceptors.response.use(
 );
 
 const handleResponse = async (response: Response): Promise<any> => {
-  const data = await response.json();
-
-  if (!response.ok) {
-    // Handle specific error codes
-    if (response.status === 409) {
+  try {
+    const data = await response.json();
+    if (!response.ok) {
       throw new StandardizedError(
-        'ServerError',
-        `資源已存在: ${data.error}`,
-        'API_GET',
-        'DATA_EXIST',
-        409,
+        'ValidationError',
+        data.error,
+        'RESPONSE',
+        'VALIDATION_ERROR',
+        response.status,
       );
     }
-    throw new StandardizedError(
-      'ServerError',
-      `請求失敗: ${data.error}`,
-      'API_GET',
-      'FETCH',
-      500,
-    );
+    return data.data;
+  } catch (error: Error | any) {
+    if (!(error instanceof StandardizedError)) {
+      error = new StandardizedError(
+        'ServerError',
+        `請求失敗: ${error.message}`,
+        'RESPONSE',
+        'EXCEPTION_ERROR',
+        500,
+      );
+    }
+    new errorHandler(error).show();
+    return null;
   }
-
-  return data.data;
 };
 
 const apiService = {
@@ -103,7 +105,7 @@ const apiService = {
         error = new StandardizedError(
           'ServerError',
           `獲取資料時發生預期外的錯誤: ${error.message}`,
-          'API_GET',
+          'GET',
           'EXCEPTION_ERROR',
           500,
         );
@@ -126,7 +128,7 @@ const apiService = {
           : { 'Content-Type': 'application/json' }),
         ...(options?.headers || {}),
       });
-      // Fetch
+
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: headers,
@@ -134,18 +136,20 @@ const apiService = {
         body: data instanceof FormData ? data : JSON.stringify(data),
       });
       // Handle response
-      return handleResponse(response);
+      const result = await handleResponse(response);
+      return result;
     } catch (error: Error | any) {
       if (!(error instanceof StandardizedError)) {
-        throw new StandardizedError(
+        error = new StandardizedError(
           'ServerError',
           `提交資料時發生預期外的錯誤: ${error.message}`,
-          'API_POST',
+          'POST',
           'EXCEPTION_ERROR',
           500,
         );
       }
       new errorHandler(error).show();
+      return null;
     }
   },
 
@@ -171,7 +175,7 @@ const apiService = {
         error = new StandardizedError(
           'ServerError',
           `更新資料時發生預期外的錯誤: ${error.message}`,
-          'API_PATCH',
+          'PATCH',
           'EXCEPTION_ERROR',
           500,
         );

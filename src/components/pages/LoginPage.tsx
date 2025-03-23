@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import styles from '@/styles/loginPage.module.css';
 
 // Utils
-import { validateAccount, validatePassword } from '@/utils/validators';
+import { createValidators } from '@/utils/validators';
 
 // Services
 import authService from '@/services/auth.service';
@@ -32,6 +32,7 @@ interface LoginPageProps {
 const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
   // Hooks
   const lang = useLanguage();
+  const validators = React.useMemo(() => createValidators(lang), [lang]);
 
   // States
   const [formData, setFormData] = useState<FormDatas>({
@@ -57,28 +58,20 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
     if (name === 'account') {
       setErrors((prev) => ({
         ...prev,
-        account: validateAccount(value),
+        account: validators.validateAccount(value),
       }));
     } else if (name === 'password') {
       setErrors((prev) => ({
         ...prev,
-        password: validatePassword(value),
+        password: validators.validatePassword(value),
       }));
     }
   };
 
-  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setIsLoading(true);
-    try {
-      if (await authService.login(formData)) setSection('login');
-    } catch (error) {
-      setErrors({
-        general: error instanceof Error ? error.message : lang.tr.unknownError,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    if (await authService.login(formData)) setSection('login');
+    setIsLoading(false);
   };
 
   return (

@@ -127,10 +127,11 @@ const ipcService = {
         ipcRenderer.removeListener('window-unmaximized', callback);
       }
     },
-    // FIXME: THIS SHOULD BE REMOVED
-    openDevtool: () => {
+    openExternal: (url: string) => {
       if (isElectron) {
-        ipcRenderer.send('openDevtool');
+        ipcRenderer.send('open-external', url);
+      } else {
+        window.open(url, '_blank');
       }
     },
   },
@@ -156,6 +157,7 @@ const ipcService = {
         [PopupType.DIALOG_WARNING]: { height: 200, width: 400 },
         [PopupType.DIALOG_ERROR]: { height: 200, width: 400 },
         [PopupType.DIALOG_INFO]: { height: 200, width: 400 },
+        [PopupType.SYSTEM_SETTING]: { height: 450, width: 600 },
       };
 
       if (isElectron) {
@@ -201,6 +203,49 @@ const ipcService = {
     updatePresence: (presence: DiscordPresence) => {
       if (isElectron) {
         ipcRenderer.send('update-discord-presence', presence);
+      }
+    },
+  },
+
+  autoLaunch: {
+    set: (enable: boolean) => {
+      if (isElectron) {
+        ipcRenderer.send('set-auto-launch', enable);
+      }
+    },
+    get: (callback: (enabled: boolean) => void) => {
+      if (isElectron) {
+        ipcRenderer.send('get-auto-launch');
+        ipcRenderer.once('auto-launch-status', (_: any, enabled: boolean) => {
+          callback(enabled);
+        });
+      }
+    },
+  },
+
+  audio: {
+    set: (deviceId: string, type: 'input' | 'output') => {
+      if (isElectron) {
+        ipcRenderer.send('set-audio-device', { deviceId, type });
+      }
+    },
+    get: (
+      callback: (devices: {
+        input: string | null;
+        output: string | null;
+      }) => void,
+    ) => {
+      if (isElectron) {
+        ipcRenderer.send('get-audio-device');
+        ipcRenderer.once(
+          'audio-device-status',
+          (
+            _: any,
+            devices: { input: string | null; output: string | null },
+          ) => {
+            callback(devices);
+          },
+        );
       }
     },
   },

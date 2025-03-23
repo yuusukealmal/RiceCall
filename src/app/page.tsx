@@ -101,10 +101,6 @@ const Header: React.FC<HeaderProps> = React.memo(
       ipcService.window.close();
     };
 
-    const handleOpenDevtool = () => {
-      ipcService.window.openDevtool();
-    };
-
     const handleLanguageChange = (language: LanguageKey) => {
       lang.set(language);
       localStorage.setItem('language', language);
@@ -115,6 +111,11 @@ const Header: React.FC<HeaderProps> = React.memo(
       ipcService.initialData.onRequest(PopupType.EDIT_USER, {
         user: user,
       });
+    };
+
+    const handleOpenSystemSetting = () => {
+      ipcService.popup.open(PopupType.SYSTEM_SETTING);
+      ipcService.initialData.onRequest(PopupType.SYSTEM_SETTING, {});
     };
 
     // TEMP: for testing
@@ -212,7 +213,7 @@ const Header: React.FC<HeaderProps> = React.memo(
                 className={`${header['option']} ${header['hasImage']}`}
                 data-type="system-setting"
                 data-key="30066"
-                onClick={() => handleOpenDevtool()}
+                onClick={() => handleOpenSystemSetting()}
               >
                 {lang.tr.systemSettings}
               </div>
@@ -283,13 +284,6 @@ const Header: React.FC<HeaderProps> = React.memo(
                     onClick={() => handleLanguageChange('jp')}
                   >
                     日本語
-                  </div>
-                  <div
-                    className={header['option']}
-                    data-lang="ru"
-                    onClick={() => handleLanguageChange('ru')}
-                  >
-                    русский язык
                   </div>
                 </div>
               </div>
