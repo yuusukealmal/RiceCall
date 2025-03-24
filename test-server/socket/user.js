@@ -166,12 +166,6 @@ const userHandler = {
     const users = (await db.get('users')) || {};
 
     try {
-      // data = {
-      //   user: {
-      //     ...
-      //   }
-      // }
-
       // Validate data
       const { user: _editedUser, userId } = data;
       if (!_editedUser || !userId) {
@@ -189,7 +183,23 @@ const userHandler = {
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
       const operator = await Func.validate.user(users[operatorId]);
-      // TODO: Add validation for operator
+
+      // Handle favorite servers
+      if (editedUser.favoriteServerId) {
+        const userServer = await Get.server(editedUser.favoriteServerId);
+        if (userServer) {
+          const userServerId = `us_${userId}_${editedUser.favoriteServerId}`;
+          const userFavoriteServers = await Get.userFavServers(userId);
+          await Set.userServer(userServerId, {
+            favorite: !userFavoriteServers.some(
+              (server) => server.id === editedUser.favoriteServerId,
+            ),
+            userId: userId,
+            serverId: editedUser.favoriteServerId,
+            timestamp: Date.now(),
+          });
+        }
+      }
 
       // Update user data
       await Set.user(user.id, editedUser);

@@ -70,8 +70,40 @@
 .bottom {
   flex: 1;
   display: flex;
+  padding: 5px 0;
+}
+
+.bottomContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.nicknameRow {
+  display: flex;
   align-items: center;
-  justify-content: flex-start;
+}
+
+.nicknameRow::before {
+  content: '';
+  display: block;
+  background: url(../../public/channel/groupcard.png) no-repeat center center;
+  min-width: 16px;
+  min-height: 16px;
+  object-fit: cover;
+  background-position: 0 0;
+  background-size: contain;
+  margin-right: 5px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+}
+
+.permissionWrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .footer {

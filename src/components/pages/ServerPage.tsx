@@ -7,7 +7,9 @@ import styles from '@/styles/serverPage.module.css';
 // Components
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 import MessageViewer from '@/components/viewers/MessageViewer';
-import ChannelViewer from '@/components/viewers/ChannelViewer';
+import ChannelViewer, {
+  ChannelViewerRef,
+} from '@/components/viewers/ChannelViewer';
 import MessageInputBox from '@/components/MessageInputBox';
 
 // Types
@@ -19,6 +21,7 @@ import {
   Channel,
   Member,
   SocketServerEvent,
+  ContextMenuItem,
 } from '@/types';
 
 // Providers
@@ -49,10 +52,14 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const contextMenu = useContextMenu();
     // Refs
     const refreshed = useRef(false);
+    const channelViewerRef = useRef<ChannelViewerRef>(null);
 
     // States
     const [sidebarWidth, setSidebarWidth] = useState<number>(256);
     const [isResizing, setIsResizing] = useState<boolean>(false);
+    const [isFavorite, setIsFavorite] = useState<boolean>(
+      user.favServers?.some((server) => server.id === server.id) || false,
+    );
     const [currentChannel, setCurrentChannel] = useState<Channel>(
       createDefault.channel(),
     );
@@ -65,7 +72,11 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     );
 
     // Variables
-    const { id: userId, currentChannelId: userCurrentChannelId } = user;
+    const {
+      id: userId,
+      currentChannelId: userCurrentChannelId,
+      favServers: userFavServers,
+    } = user;
     const {
       id: serverId,
       name: serverName,
@@ -81,6 +92,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       chatMode: channelChatMode,
       voiceMode: channelVoiceMode,
     } = currentChannel;
+    const { permissionLevel: memberPermissionLevel } = member;
 
     // Handlers
     const handleSendMessage = (
@@ -182,6 +194,30 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       }
     }, []);
 
+    const handleOpenEditMember = (
+      serverId: Server['id'],
+      userId: User['id'],
+    ) => {
+      ipcService.popup.open(PopupType.EDIT_MEMBER);
+      ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
+        serverId,
+        userId,
+      });
+    };
+
+    const handleAddFavoriteServer = (serverId: Server['id']) => {
+      if (!socket) return;
+      socket.send.updateUser({
+        userId,
+        user: {
+          ...user,
+          favoriteServerId: serverId,
+        },
+      });
+      setIsFavorite(!isFavorite);
+    };
+
+    // Effects
     useEffect(() => {
       document.addEventListener('click', handleClickOutside);
       return () => {
@@ -189,7 +225,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       };
     }, [handleClickOutside]);
 
-    // Effects
     useEffect(() => {
       window.addEventListener('mousemove', handleResize);
       window.addEventListener('mouseup', handleStopResizing);
@@ -218,7 +253,8 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!userId || !serverId || refreshed.current) return;
+      if (!userId || !serverId || !userCurrentChannelId || refreshed.current)
+        return;
       const refresh = async () => {
         refreshed.current = true;
         const server = await refreshService.server({ serverId: serverId });
@@ -292,14 +328,72 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 <div
                   className={styles['invitation']}
                   onClick={() => {
-                    handleOpenApplyMember(userId, serverId);
+                    // Handle invite friends
                   }}
                 />
                 <div className={styles['saperator']} />
                 <div
                   className={styles['setting']}
-                  onClick={() => {
-                    handleOpenServerSettings(userId, serverId);
+                  onClick={(e) => {
+                    contextMenu.showContextMenu(
+                      e.clientX,
+                      e.clientY,
+                      [
+                        {
+                          id: 'setting',
+                          label: '設定群組',
+                          show: memberPermissionLevel > 4,
+                          onClick: () =>
+                            handleOpenServerSettings(userId, serverId),
+                        },
+                        {
+                          id: 'invitation',
+                          label: '申請會員',
+                          show: memberPermissionLevel < 2,
+                          onClick: () =>
+                            handleOpenApplyMember(userId, serverId),
+                        },
+                        {
+                          id: 'memberChat',
+                          label: '會員群聊',
+                          show: memberPermissionLevel > 2,
+                          onClick: () => {},
+                        },
+                        {
+                          id: 'admin',
+                          label: '查看管理員',
+                          onClick: () => {},
+                        },
+                        {
+                          id: 'separator',
+                          label: '',
+                        },
+                        {
+                          id: 'editNickname',
+                          label: '編輯群名片',
+                          onClick: () => handleOpenEditMember(serverId, userId),
+                        },
+                        {
+                          id: 'locateMe',
+                          label: '定位我自己',
+                          onClick: () => channelViewerRef.current?.locateUser(),
+                        },
+                        {
+                          id: 'separator',
+                          label: '',
+                        },
+                        {
+                          id: 'report',
+                          label: '舉報',
+                          onClick: () => {},
+                        },
+                        {
+                          id: 'favorite',
+                          label: isFavorite ? '取消收藏' : '加入收藏',
+                          onClick: () => handleAddFavoriteServer(serverId),
+                        },
+                      ].filter(Boolean) as ContextMenuItem[],
+                    );
                   }}
                 />
               </div>
@@ -309,6 +403,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               server={server}
               member={member}
               currentChannel={currentChannel}
+              ref={channelViewerRef}
             />
           </div>
           {/* Resize Handle */}

@@ -58,9 +58,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             />
             {/* Right Info */}
             <div className={userInfoCard['userInfoWrapper']}>
-              <div className={userInfoCard['name']}>
-                {memberNickname || memberName}
-              </div>
+              <div className={userInfoCard['name']}>{memberName}</div>
               <div className={`${userInfoCard['iconBox']}`}>
                 <div
                   className={`${grade['grade']} ${grade[`lv-${memberGrade}`]}`}
@@ -74,7 +72,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
               {/* VIP Info Text */}
               {memberVip > 0 && (
                 <div className={userInfoCard['vipText']}>
-                  (會員{memberVip}倍升級加速中)
+                  (會員{Math.min(2, 1 + memberVip * 0.2)}倍升級加速中)
                 </div>
               )}
               {/* Xp Section */}
@@ -111,21 +109,38 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
 
           {/* Bottom Section */}
           <div className={userInfoCard['bottom']}>
-            <div
-              className={`${permission[memberGender]} ${
-                permission[`lv-${memberPermission}`]
-              }`}
-            ></div>
-            <div className={userInfoCard['permissionText']}>
-              {lang.getPermissionText(memberPermission)}
-            </div>
-            <div className={userInfoCard['saperator']} />
-            <div className={userInfoCard['contributionBox']}>
-              <div className={userInfoCard['contributionText']}>
-                {lang.tr.contribution}:
+            {/* Member Info Section */}
+            <div className={userInfoCard['bottomContent']}>
+              {/* First Row - Nickname */}
+              <div className={userInfoCard['nicknameRow']}>
+                <div className={userInfoCard['nickname']}>{memberNickname}</div>
               </div>
-              <div className={userInfoCard['contributionValue']}>
-                {memberContributions}
+
+              {/* Second Row - Permission & Contribution */}
+              <div className={userInfoCard['infoRow']}>
+                {/* Permission */}
+                <div className={userInfoCard['permissionWrapper']}>
+                  <div
+                    className={`${permission[memberGender]} ${
+                      permission[`lv-${memberPermission}`]
+                    }`}
+                  ></div>
+                  <div className={userInfoCard['permissionText']}>
+                    {lang.getPermissionText(memberPermission)}
+                  </div>
+                </div>
+
+                <div className={userInfoCard['saperator']} />
+
+                {/* Contribution */}
+                <div className={userInfoCard['contributionBox']}>
+                  <div className={userInfoCard['contributionText']}>
+                    {lang.tr.contribution}:
+                  </div>
+                  <div className={userInfoCard['contributionValue']}>
+                    {memberContributions}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
