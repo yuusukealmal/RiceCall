@@ -249,6 +249,10 @@
   background-position: 0 0;
 }
 
+.channelList .channelTab.member::before {
+  background-position: 0 -14px;
+}
+
 .channelList .channelTab.private::before {
   background-position: -28px 0;
 }
@@ -265,15 +269,11 @@
   background-position: 0 0;
 }
 
-.channelList .channelTab.public:hover::before {
-  background-position: 0 -14px;
-}
-
 .channelList .channelTab.public.expanded::before {
   background-position: -14px 0;
 }
 
-.channelList .channelTab.public.expanded:hover::before {
+.channelList .channelTab.member.expanded::before {
   background-position: -14px -14px;
 }
 

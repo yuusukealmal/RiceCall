@@ -349,7 +349,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 <div
                   className={styles['voiceModeDropdown']}
                   onClick={(e) => {
-                    if (member && member.permissionLevel < 2) return;
+                    if (member && member.permissionLevel < 3) return;
                     contextMenu.showContextMenu(e.clientX, e.clientY, [
                       {
                         id: 'freeSpeech',

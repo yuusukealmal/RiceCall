@@ -111,6 +111,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     }
                   >
                     <option value="public">{lang.tr.channelPublic}</option>
+                    <option value="member">{lang.tr.channelMember}</option>
                     <option value="private">{lang.tr.channelPrivate}</option>
                     <option value="readonly">{lang.tr.channelReadonly}</option>
                   </select>
