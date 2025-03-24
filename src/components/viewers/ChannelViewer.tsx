@@ -45,11 +45,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
     const { channels: serverChannels = [] } = server;
     const { id: userId } = user;
     const { id: serverId } = server;
-    const {
-      id: categoryId,
-      name: categoryName,
-      isRoot: categoryIsRoot,
-    } = category;
+    const { id: categoryId, name: categoryName } = category;
     const categoryChannels = serverChannels
       .filter((ch) => ch.type === 'channel')
       .filter((ch) => ch.categoryId === categoryId);
@@ -350,7 +346,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
       badges: channelMemberBadges = [],
     } = channelMember;
     const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max level
-    const isCurrentUser = userId === channelMemberId;
+    const isCurrentUser = userId === channelMemberUserId;
 
     // Handlers
     const handleOpenApplyFriend = (
@@ -446,16 +442,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
     currentChannel;
   const canEdit = memberPermission >= 5;
 
-  // Categorize all channels
-  const rootChannels = serverChannels.filter((c) => c.isRoot);
-  const lobbyChannel = rootChannels
-    .filter((c): c is Channel => c.type === 'channel')
-    .find((c) => c.isLobby);
-  const categories = rootChannels.filter((c) => c.type === 'category');
-  const rootNormalChannels = rootChannels
-    .filter((c): c is Channel => c.type === 'channel')
-    .filter((c) => !c.isLobby);
-
   // Handlers
   const handleCreateRootChannel = () => {
     ipcService.popup.open(PopupType.CREATE_CHANNEL);
@@ -518,19 +504,9 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
 
       {/* Channel List */}
       <div className={styles['channelList']}>
-        {/* Lobby Channel */}
-        {lobbyChannel && (
-          <ChannelTab
-            key={lobbyChannel.id}
-            user={user}
-            server={server}
-            channel={lobbyChannel}
-            canEdit={canEdit}
-          />
-        )}
-
         {/* Categories and Root Channels */}
-        {[...categories, ...rootNormalChannels]
+        {serverChannels
+          .filter((c) => c.isRoot)
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
           .map((item) =>
             item.type === 'category' ? (
