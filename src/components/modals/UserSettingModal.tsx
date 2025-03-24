@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 
 // Types
@@ -12,9 +11,10 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import ipcService from '@/services/ipc.service';
 
 // CSS
-import UserSetting from '@/styles/popups/userSetting.module.css';
 import grade from '@/styles/common/grade.module.css';
-
+import popup from '@/styles/common/popup.module.css';
+import setting from '@/styles/popups/editServer.module.css';
+import vip from '@/styles/common/vip.module.css';
 // Utils
 import { createDefault } from '@/utils/createDefault';
 import refreshService from '@/services/refresh.service';
@@ -42,6 +42,9 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     const [userSignature, setUserSignature] = useState<User['signature']>(
       createDefault.user().signature,
     );
+    const [userAvatar, setUserAvatar] = useState<User['avatar']>(
+      createDefault.user().avatar,
+    );
     const [userAvatarUrl, setUserAvatarUrl] = useState<User['avatarUrl']>(
       createDefault.user().avatarUrl,
     );
@@ -52,6 +55,7 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     // Variables
     const { userId } = initialData;
     const userGrade = Math.min(56, Math.ceil(userLevel / 5)); // 56 is max level
+    const userVip = 1; // REMOVE: only for testing
     const currentYear = new Date().getFullYear();
     const years = Array.from(
       { length: currentYear - 1900 + 1 },
@@ -71,7 +75,9 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
       setUserName(data.name);
       setUserGender(data.gender);
       setUserSignature(data.signature);
+      setUserAvatar(data.avatar);
       setUserAvatarUrl(data.avatarUrl);
+      setUserLevel(data.level);
     };
 
     const handleClose = () => {
@@ -90,105 +96,69 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     }, [userId]);
 
     return (
-      <>
-        <div className={UserSetting['header']}>
-          <div className={UserSetting['header-bg']}></div>
-        </div>
-
-        <div className={UserSetting['dialog-message-wrapper']}>
-          <div className={UserSetting['profile-header-avatar-box']}>
-            <div className={UserSetting['profile-header-avatar-border']}></div>
+      <div className={`${popup['popupContainer']} ${popup['userProfile']}`}>
+        <div className={`${popup['popupBody']} ${popup['col']}`}>
+          <div className={popup['header']}>
             <div
-              className={UserSetting['profile-header-avatar']}
+              className={popup['avatar']}
               style={{ backgroundImage: `url(${userAvatarUrl})` }}
             />
-            <div className={UserSetting['profile-header-user-info']}>
-              <span className={UserSetting['profile-header-display-name']}>
-                {userName}
-              </span>
-              <div className={UserSetting['profile-header-icons']}>
-                <div
-                  className={`${UserSetting['userGrade']} ${
-                    grade[`lv-${userGrade}`]
-                  }`}
-                />{' '}
-                <span
-                  className={UserSetting['profile-header-base-info-weath']}
-                ></span>
-              </div>
-              <span className={UserSetting['profile-header-username']}>
-                @{userName}
-              </span>
-              <div className={UserSetting['profile-header-other-info']}>
-                <span className={UserSetting['profile-header-gender']}></span>
-                <span className={UserSetting['profile-header-year-old']}>
-                  0
-                </span>
-                <span className={UserSetting['profile-header-country']}>
-                  {/* {createDefault.user().country} */}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className={UserSetting['profile-tab']}>
             <div
-              className={`${UserSetting['profile-me']} ${UserSetting.active}`}
-            ></div>
-            <div className={UserSetting['profile-groups']}></div>
-          </div>
-          <div className={UserSetting['profile-form-wrapper']}>
-            <div className={UserSetting['profile-form-buttons']}>
+              className={popup['row']}
+              style={{ alignItems: 'center', gap: '2px' }}
+            >
+              <div className={popup['h3']}>{userName}</div>
               <div
-                className={`${UserSetting['profile-form-button']} ${UserSetting.blue}`}
-                onClick={() => {
-                  handleUpdateUser(
-                    {
-                      name: userName,
-                      gender: userGender,
-                      signature: userSignature,
-                    },
-                    userId,
-                  );
-                  handleClose();
-                }}
-              >
-                {lang.tr.confirm}
-              </div>
+                className={`${vip['vipIcon']} ${vip[`vip-small-${userVip}`]}`}
+              />
               <div
-                className={UserSetting['profile-form-button']}
-                onClick={() => handleClose()}
-              >
-                {lang.tr.cancel}
-              </div>
+                className={`${grade['grade']} ${grade[`lv-${userGrade}`]}`}
+              />
+            </div>
+            <div className={popup['p1']}>@ROSE_REBACCA</div>
+            <div className={popup['p1']}>男 . 29 . Taiwan(台灣)</div>
+            <div className={popup['p1']}>
+              沒事別找我，有事也別找我，找&quot;管理員&quot;
             </div>
 
-            <div className={UserSetting['profile-form-input-wrapper']}>
-              <div className={UserSetting['profile-form-row']}>
-                <div className={UserSetting['profile-form-group']}>
-                  <label
-                    className={UserSetting.label}
-                    htmlFor="profile-form-nickname"
-                  >
-                    {lang.tr.nickname}
-                  </label>
-                  <input
-                    className={UserSetting.input}
-                    type="text"
-                    id="profile-form-nickname"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                  />
-                </div>
-                <div className={UserSetting['profile-form-group']}>
-                  <label
-                    className={UserSetting.label}
-                    htmlFor="profile-form-gender"
-                  >
-                    {lang.tr.gender}
-                  </label>
-                  <div className={UserSetting['select-wrapper']}>
+            <div className={popup['tab']}>
+              <div
+                className={`${popup['item']} ${popup['about']} ${popup['selected']}`}
+              >
+                {'關於'}
+              </div>
+              <div className={`${popup['item']} ${popup['groups']}`}>
+                {'語音群'}
+              </div>
+            </div>
+          </div>
+          <div className={setting['body']}>
+            <div className={popup['col']}>
+              <div className={popup['col']}>
+                <div className={popup['row']}>
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <label
+                      className={popup['label']}
+                      htmlFor="profile-form-nickname"
+                    >
+                      {lang.tr.nickname}
+                    </label>
+                    <input
+                      type="text"
+                      id="profile-form-nickname"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <label
+                      className={popup['label']}
+                      htmlFor="profile-form-gender"
+                    >
+                      {lang.tr.gender}
+                    </label>
                     <select
-                      className={UserSetting.select}
                       id="profile-form-gender"
                       value={userGender}
                       onChange={(e) =>
@@ -200,19 +170,17 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                     </select>
                   </div>
                 </div>
-              </div>
 
-              <div className={UserSetting['profile-form-row']}>
-                <div className={UserSetting['profile-form-group']}>
-                  <label
-                    className={UserSetting.label}
-                    htmlFor="profile-form-country"
-                  >
-                    {lang.tr.country}
-                  </label>
-                  <div className={UserSetting['select-wrapper']}>
+                <div className={popup['row']}>
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <label
+                      className={popup['label']}
+                      htmlFor="profile-form-country"
+                    >
+                      {lang.tr.country}
+                    </label>
                     <select
-                      className={UserSetting.select}
+                      className={popup['input']}
                       id="profile-form-country"
                       // value={userCountry}
                       // onChange={(e) => setUserCountry(e.target.value)}
@@ -220,18 +188,15 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                       <option value="台灣">台灣</option>
                     </select>
                   </div>
-                </div>
-                <div className={UserSetting['profile-form-group']}>
-                  <label
-                    className={UserSetting.label}
-                    htmlFor="profile-form-birthdate"
-                  >
-                    {lang.tr.birthdate}
-                  </label>
-                  <div className={UserSetting['profile-form-birthdate-group']}>
-                    <div className={UserSetting['select-wrapper']}>
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <label
+                      className={popup['label']}
+                      htmlFor="profile-form-birthdate"
+                    >
+                      {lang.tr.birthdate}
+                    </label>
+                    <div className={popup['row']}>
                       <select
-                        className={UserSetting.select}
                         id="birthYear"
                         // value={userBirthYear}
                         // onChange={(e) => setUserBirthYear(e.target.value)}
@@ -242,10 +207,8 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                           </option>
                         ))}
                       </select>
-                    </div>
-                    <div className={UserSetting['select-wrapper']}>
                       <select
-                        className={UserSetting.select}
+                        className={popup['input']}
                         id="birthMonth"
                         // value={userBirthMonth}
                         // onChange={(e) => setUserBirthMonth(e.target.value)}
@@ -256,10 +219,8 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                           </option>
                         ))}
                       </select>
-                    </div>
-                    <div className={UserSetting['select-wrapper']}>
                       <select
-                        className={UserSetting.select}
+                        className={popup['input']}
                         id="birthDay"
                         // value={userBirthDay}
                         // onChange={(e) => setUserBirthDay(e.target.value)}
@@ -273,42 +234,64 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className={UserSetting['profile-form-group']}>
-                <label
-                  className={UserSetting.label}
-                  htmlFor="profile-form-signature"
-                >
-                  {lang.tr.signature}
-                </label>
-                <input
-                  className={UserSetting.input}
-                  type="text"
-                  id="profile-form-signature"
-                  value={userSignature}
-                  onChange={(e) => setUserSignature(e.target.value)}
-                />
-              </div>
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <label
+                    className={popup['label']}
+                    htmlFor="profile-form-signature"
+                  >
+                    {lang.tr.signature}
+                  </label>
+                  <input
+                    type="text"
+                    id="profile-form-signature"
+                    value={userSignature}
+                    onChange={(e) => setUserSignature(e.target.value)}
+                  />
+                </div>
 
-              <div className={UserSetting['profile-form-group']}>
-                <label
-                  className={UserSetting.label}
-                  htmlFor="profile-form-about"
-                >
-                  {lang.tr.about}
-                </label>
-                <textarea
-                  className={UserSetting.textarea}
-                  id="profile-form-about"
-                  // value={userAbout}
-                  // onChange={(e) => setUserAbout(e.target.value)}
-                />
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <label
+                    className={popup['label']}
+                    htmlFor="profile-form-about"
+                  >
+                    {lang.tr.about}
+                  </label>
+                  <textarea
+                    id="profile-form-about"
+                    // value={userAbout}
+                    // onChange={(e) => setUserAbout(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </>
+
+        <div className={popup['popupFooter']}>
+          <div className={popup['button']} onClick={() => handleClose()}>
+            {lang.tr.cancel}
+          </div>
+          <div
+            className={popup['button']}
+            onClick={() => {
+              handleUpdateUser(
+                {
+                  name: userName,
+                  gender: userGender,
+                  signature: userSignature,
+                  avatar: userAvatar,
+                  avatarUrl: userAvatarUrl,
+                },
+                userId,
+              );
+              handleClose();
+            }}
+          >
+            {lang.tr.confirm}
+          </div>
+        </div>
+      </div>
     );
   },
 );
