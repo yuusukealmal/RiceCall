@@ -333,7 +333,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                       id: '',
                       type: 'general',
                       content: msg,
-                      recieverId: serverId,
+                      receiverId: serverId,
                       timestamp: 0,
                     },
                     currentChannelId,

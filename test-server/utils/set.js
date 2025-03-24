@@ -180,7 +180,7 @@ const set = {
       content: '',
       type: 'general',
       senderId: '',
-      recieverId: '',
+      receiverId: '',
       channelId: '',
       timestamp: 0,
       ...messages[id],

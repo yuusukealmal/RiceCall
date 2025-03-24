@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   DiscordPresence,
+  PopupSize,
   PopupType,
   SocketClientEvent,
   SocketServerEvent,
@@ -64,12 +65,13 @@ const ipcService = {
         console.warn('IPC not available - not in Electron environment');
       }
     },
-    onRequest: (host: string, data: any) => {
+    onRequest: (host: string, data: any, callback?: () => void) => {
       if (isElectron) {
         ipcRenderer.on('request-initial-data', (_: any, to: string) => {
           if (to != host) return;
           ipcRenderer.send('response-initial-data', host, data);
           ipcRenderer.removeAllListeners('request-initial-data');
+          if (callback) callback();
         });
       } else {
         console.warn('IPC not available - not in Electron environment');
@@ -79,6 +81,11 @@ const ipcService = {
 
   // Window control methods
   window: {
+    resize: (width: number, height: number) => {
+      if (isElectron) {
+        ipcRenderer.send('resize', width, height);
+      }
+    },
     minimize: () => {
       if (isElectron) {
         ipcRenderer.send('window-control', 'minimize');
@@ -138,28 +145,6 @@ const ipcService = {
 
   popup: {
     open: (type: PopupType) => {
-      const PopupSize = {
-        // [PopupType.CREATE_FRIEND_GROUP]: { height: 600, width: 450 },
-        [PopupType.EDIT_MEMBER]: { height: 220, width: 320 },
-        [PopupType.EDIT_USER]: { height: 650, width: 500 },
-        [PopupType.CREATE_SERVER]: { height: 430, width: 520 },
-        [PopupType.EDIT_SERVER]: { height: 450, width: 600 },
-        [PopupType.DELETE_SERVER]: { height: 300, width: 200 },
-        [PopupType.CREATE_CHANNEL]: { height: 220, width: 320 },
-        [PopupType.EDIT_CHANNEL]: { height: 220, width: 320 },
-        [PopupType.DELETE_CHANNEL]: { height: 300, width: 200 },
-        [PopupType.APPLY_FRIEND]: { height: 420, width: 540 },
-        [PopupType.APPLY_MEMBER]: { height: 420, width: 540 },
-        [PopupType.DIRECT_MESSAGE]: { height: 200, width: 300 },
-        [PopupType.DIALOG_ALERT]: { height: 200, width: 400 },
-        [PopupType.DIALOG_ALERT2]: { height: 200, width: 400 },
-        [PopupType.DIALOG_SUCCESS]: { height: 200, width: 400 },
-        [PopupType.DIALOG_WARNING]: { height: 200, width: 400 },
-        [PopupType.DIALOG_ERROR]: { height: 200, width: 400 },
-        [PopupType.DIALOG_INFO]: { height: 200, width: 400 },
-        [PopupType.SYSTEM_SETTING]: { height: 450, width: 600 },
-      };
-
       if (isElectron) {
         ipcRenderer.send(
           'open-popup',

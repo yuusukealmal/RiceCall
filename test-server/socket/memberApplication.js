@@ -81,7 +81,7 @@ const memberApplicationHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('WebSocket').error(
-        'Error creating member application: ' + error.error_message,
+        `Error creating member application: ${error.error_message}`,
       );
     }
   },
@@ -153,7 +153,7 @@ const memberApplicationHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('WebSocket').error(
-        'Error updating member application: ' + error.error_message,
+        `Error updating member application: ${error.error_message}`,
       );
     }
   },
@@ -219,7 +219,7 @@ const memberApplicationHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('WebSocket').error(
-        'Error deleting member application: ' + error.error_message,
+        `Error deleting member application: ${error.error_message}`,
       );
     }
   },
