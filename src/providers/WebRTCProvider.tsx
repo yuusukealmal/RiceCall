@@ -63,12 +63,8 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
   // States
   const [isMute, setIsMute] = useState<boolean>(false);
   const [bitrate, setBitrate] = useState<number>(128000);
-  const [micVolume, setMicVolume] = useState<number>(
-    Number(localStorage.getItem('micVolume')) || 100,
-  );
-  const [speakerVolume, setSpeakerVolume] = useState<number>(
-    Number(localStorage.getItem('speakerVolume')) || 100,
-  );
+  const [micVolume, setMicVolume] = useState<number>(100);
+  const [speakerVolume, setSpeakerVolume] = useState<number>(100);
 
   // Refs
   const lastBitrateRef = useRef<number>(128000);
@@ -303,7 +299,6 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
 
     // Update mic volume
     setMicVolume(volume);
-    localStorage.setItem('micVolume', volume.toString());
   };
 
   const updateSpeakerVolume = (volume: number) => {
@@ -314,7 +309,6 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
 
     // Update speaker volume
     setSpeakerVolume(volume);
-    localStorage.setItem('speakerVolume', volume.toString());
   };
 
   const updateInputDevice = async (deviceId: string) => {
