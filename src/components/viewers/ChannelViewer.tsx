@@ -67,9 +67,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
       () => {
         const initialState: Record<string, boolean> = {};
         serverChannels.forEach((item) => {
-          initialState[item.id] =
-            item.type === 'channel' &&
-            ('isLobby' in item ? item.isLobby : false);
+          initialState[item.id] = true;
         });
         return initialState;
       },
@@ -588,9 +586,7 @@ const ChannelViewer = forwardRef<ChannelViewerRef, ChannelViewerProps>(
       () => {
         const initialState: Record<string, boolean> = {};
         serverChannels.forEach((item) => {
-          initialState[item.id] =
-            item.type === 'channel' &&
-            ('isLobby' in item ? item.isLobby : false);
+          initialState[item.id] = true; // Set all items to expanded by default
         });
         return initialState;
       },
