@@ -271,3 +271,48 @@
     width: 650px;
   }
 }
+
+.viewMoreBtn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 96px;
+  padding: 5px;
+  margin: 8px auto 16px;
+  background: transparent;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  color: #000;
+  cursor: pointer;
+  position: relative;
+  padding-left: 20px;
+}
+
+.more::before {
+  content: '';
+  display: inline-block;
+  background: url(../../public/btn_fold_person.png) no-repeat center center;
+  background-size: auto;
+  min-width: 14px;
+  min-height: 14px;
+  background-position: 0 0;
+  position: absolute;
+  left: 10px;
+  transform: rotate(180deg);
+}
+
+.less::before {
+  content: '';
+  display: inline-block;
+  background: url(../../public/btn_fold_person.png) no-repeat center center;
+  background-size: auto;
+  min-width: 14px;
+  min-height: 14px;
+  background-position: 0 0;
+  position: absolute;
+  left: 10px;
+}
+
+.viewMoreBtn:hover {
+  background: #f5f5f5;
+}

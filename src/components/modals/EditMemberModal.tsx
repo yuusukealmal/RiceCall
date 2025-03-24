@@ -39,6 +39,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
     const [memberNickname, setMemberNickname] = useState(
       createDefault.member().nickname,
     );
+    const [userNickname, setUserNickname] = useState(createDefault.user().name);
 
     // Handlers
     const handleClose = () => {
@@ -54,9 +55,19 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
       socket.send.updateMember({ member, userId, serverId });
     };
 
+    const handleUpdateUser = (user: Partial<User>, userId: User['id']) => {
+      if (!socket) return;
+      socket.send.updateUser({ user, userId });
+    };
+
     const handleMemberUpdate = (data: Member | null) => {
       if (!data) data = createDefault.member();
       setMemberNickname(data.nickname);
+    };
+
+    const handleUserUpdate = (data: User | null) => {
+      if (!data) data = createDefault.user();
+      setUserNickname(data.name);
     };
 
     // Effects
@@ -68,7 +79,11 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
           userId: userId,
           serverId: serverId,
         });
+        const user = await refreshService.user({
+          userId: userId,
+        });
         handleMemberUpdate(member);
+        handleUserUpdate(user);
       };
       refresh();
     }, [userId, serverId]);
@@ -79,7 +94,13 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
           <div className={setting['body']}>
             <div className={popup['inputGroup']}>
               <div className={popup['inputBox']}>
-                <div className={popup['label']}>{lang.tr.nickname}</div>
+                <label>{lang.tr.nickname}</label>
+                <label className={popup['value']}>{userNickname}</label>
+              </div>
+              <div className={`${popup['inputBox']} ${popup['col']}`}>
+                <div className={popup['label']}>
+                  {lang.tr.pleaseEnterTheMemberNickname}
+                </div>
                 <input
                   className={popup['input']}
                   type="text"

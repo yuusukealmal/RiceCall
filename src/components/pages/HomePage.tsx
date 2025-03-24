@@ -8,7 +8,13 @@ import homePage from '@/styles/homePage.module.css';
 import ServerListViewer from '@/components/viewers/ServerListViewer';
 
 // Type
-import { PopupType, Server, SocketServerEvent, User } from '@/types';
+import {
+  PopupType,
+  Server,
+  SocketServerEvent,
+  User,
+  ServerListSectionProps,
+} from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/SocketProvider';
@@ -22,6 +28,35 @@ interface HomePageProps {
   user: User;
   handleUserUpdate: (data: Partial<User> | null) => void;
 }
+
+const ServerListSection: React.FC<ServerListSectionProps> = ({
+  title,
+  servers,
+  user,
+}) => {
+  const [showAll, setShowAll] = useState(false);
+  const lang = useLanguage();
+
+  const displayedServers = showAll ? servers : servers.slice(0, 6);
+  const hasMore = servers.length > 6;
+
+  return (
+    <div className={homePage['myGroupsItem']}>
+      <div className={homePage['myGroupsTitle']}>{title}</div>
+      <ServerListViewer user={user} servers={displayedServers} />
+      {hasMore && (
+        <button
+          className={`${homePage['viewMoreBtn']} ${
+            homePage[showAll ? 'more' : 'less']
+          }`}
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? '檢視較少' : '檢視更多'}
+        </button>
+      )}
+    </div>
+  );
+};
 
 const HomePageComponent: React.FC<HomePageProps> = React.memo(
   ({ user, handleUserUpdate }) => {
@@ -118,7 +153,6 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
               <input
                 type="search"
                 placeholder={lang.tr.searchPlaceholder}
-                data-placeholder="60021"
                 className={homePage['searchInput']}
                 onKeyDown={(e) => {
                   if (e.key != 'Enter') return;
@@ -132,16 +166,14 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
           <div className={homePage['mid']}>
             <button
               className={`${homePage['navegateItem']} ${homePage['active']}`}
-              data-key="60060"
             >
-              <div></div>
               {lang.tr.home}
             </button>
-            <button className={homePage['navegateItem']} data-key="40007">
+            <button className={homePage['navegateItem']}>
               <div></div>
               {lang.tr.game}
             </button>
-            <button className={homePage['navegateItem']} data-key="30375">
+            <button className={homePage['navegateItem']}>
               <div></div>
               {lang.tr.live}
             </button>
@@ -149,13 +181,12 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
           <div className={homePage['right']}>
             <button
               className={homePage['navegateItem']}
-              data-key="30014"
               onClick={() => handleOpenCreateServer(userId)}
             >
               <div></div>
               {lang.tr.createGroup}
             </button>
-            <button className={homePage['navegateItem']} data-key="60004">
+            <button className={homePage['navegateItem']}>
               <div></div>
               {lang.tr.personalExclusive}
             </button>
@@ -166,31 +197,27 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
           <div className={homePage['myGroupsContain']}>
             <div className={homePage['myGroupsView']}>
               {searchResults.length > 0 && (
-                <div className={homePage['myGroupsItem']}>
-                  <div className={homePage['myGroupsTitle']} data-key="60005">
-                    {lang.tr.searchResult}
-                  </div>
-                  <ServerListViewer user={user} servers={searchResults} />
-                </div>
+                <ServerListSection
+                  title={lang.tr.searchResult}
+                  servers={searchResults}
+                  user={user}
+                />
               )}
-              <div className={homePage['myGroupsItem']}>
-                <div className={homePage['myGroupsTitle']} data-key="60005">
-                  {lang.tr.recentVisits}
-                </div>
-                <ServerListViewer user={user} servers={userRecentServers} />
-              </div>
-              <div className={homePage['myGroupsItem']}>
-                <div className={homePage['myGroupsTitle']} data-key="30283">
-                  {lang.tr.myGroups}
-                </div>
-                <ServerListViewer user={user} servers={userOwnedServers} />
-              </div>
-              <div className={homePage['myGroupsItem']}>
-                <div className={homePage['myGroupsTitle']} data-key="60005">
-                  {lang.tr.favoriteGroups}
-                </div>
-                <ServerListViewer user={user} servers={userFavServers} />
-              </div>
+              <ServerListSection
+                title={lang.tr.recentVisits}
+                servers={userRecentServers}
+                user={user}
+              />
+              <ServerListSection
+                title={lang.tr.myGroups}
+                servers={userOwnedServers}
+                user={user}
+              />
+              <ServerListSection
+                title={lang.tr.favoriteGroups}
+                servers={userFavServers}
+                user={user}
+              />
             </div>
           </div>
         </main>

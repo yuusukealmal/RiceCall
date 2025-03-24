@@ -22,6 +22,7 @@ export interface Translation {
   logout: string;
   exit: string;
   searchPlaceholder: string;
+  searchMemberPlaceholder: string;
   searchResult: string;
   recentVisits: string;
   myGroups: string;
@@ -149,6 +150,7 @@ export interface Translation {
   pleaseInputPasswordAgain: string;
   repeatInputPassword: string;
   pleaseInputNickname: string;
+  pleaseEnterTheMemberNickname: string;
   nicknameHint: string;
   register: string;
   freeSpeech: string;
@@ -259,6 +261,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: '登出',
     exit: '退出',
     searchPlaceholder: '輸入群ID或群名稱',
+    searchMemberPlaceholder: '輸入關鍵字或ID搜尋',
     searchResult: '搜尋結果',
     recentVisits: '最近訪問',
     myGroups: '我的語音群',
@@ -321,7 +324,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: '點擊更改簽名',
     friendActive: '好友動態',
     editUser: '編輯使用者',
-    editMemberCard: '修改群名片',
+    editMemberCard: '會員群名片',
     createServer: '創建語音群',
     editServer: '編輯語音群',
     deleteServer: '刪除語音群',
@@ -389,6 +392,7 @@ export const translations: Record<LanguageKey, Translation> = {
     pleaseInputPasswordAgain: '請再次輸入密碼',
     repeatInputPassword: '重複輸入密碼',
     pleaseInputNickname: '請輸入暱稱',
+    pleaseEnterTheMemberNickname: '請輸入該會員的群名片:',
     nicknameHint: '2-10位，支持中英文',
     register: '註冊',
     freeSpeech: '自由發言',
@@ -496,6 +500,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: '登出',
     exit: '退出',
     searchPlaceholder: '输入群ID或群名称',
+    searchMemberPlaceholder: '输入关键字或ID搜索',
     searchResult: '搜索结果',
     recentVisits: '最近访问',
     myGroups: '我的语音群',
@@ -558,7 +563,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: '点击更改签名',
     friendActive: '好友动态',
     editUser: '编辑用户',
-    editMemberCard: '修改群名片',
+    editMemberCard: '会员群名片',
     createServer: '创建语音群',
     editServer: '编辑语音群',
     deleteServer: '删除语音群',
@@ -626,6 +631,7 @@ export const translations: Record<LanguageKey, Translation> = {
     pleaseInputPasswordAgain: '请再次输入密码',
     repeatInputPassword: '重复输入密码',
     pleaseInputNickname: '请输入昵称',
+    pleaseEnterTheMemberNickname: '请输入该会员的群名片:',
     nicknameHint: '2-10位，支持中英文',
     register: '注册',
     freeSpeech: '自由发言',
@@ -733,6 +739,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: 'Logout',
     exit: 'Exit',
     searchPlaceholder: 'Enter group ID or name',
+    searchMemberPlaceholder: 'Enter keyword or ID search',
     searchResult: 'Search Result',
     recentVisits: 'Recent Visits',
     myGroups: 'My Voice Groups',
@@ -796,7 +803,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: 'Click to change signature',
     friendActive: 'Friend Active',
     editUser: 'Edit User',
-    editMemberCard: 'Edit Member Card',
+    editMemberCard: 'Member Card',
     createServer: 'Create Voice Group',
     editServer: 'Edit Voice Group',
     deleteServer: 'Delete Voice Group',
@@ -865,6 +872,7 @@ export const translations: Record<LanguageKey, Translation> = {
     pleaseInputPasswordAgain: 'Please enter password again',
     repeatInputPassword: 'Repeat password',
     pleaseInputNickname: 'Please enter nickname',
+    pleaseEnterTheMemberNickname: 'Please enter the member nickname:',
     nicknameHint: '2-10 characters, supports Chinese and English',
     register: 'Register',
     freeSpeech: 'Free speech',
@@ -976,6 +984,7 @@ export const translations: Record<LanguageKey, Translation> = {
     logout: 'ログアウト',
     exit: '終了',
     searchPlaceholder: 'グループIDまたは名前を入力',
+    searchMemberPlaceholder: 'キーワードまたはIDを検索',
     searchResult: '検索結果',
     recentVisits: '最近の訪問',
     myGroups: '私のボイスグループ',
@@ -1038,7 +1047,7 @@ export const translations: Record<LanguageKey, Translation> = {
     signaturePlaceholder: 'クリックして署名を変更',
     friendActive: '友達のアクティブ',
     editUser: 'ユーザーを編集',
-    editMemberCard: 'メンバーカードを編集',
+    editMemberCard: 'メンバーカード',
     createServer: 'ボイスグループを作成',
     editServer: 'ボイスグループを編集',
     deleteServer: 'ボイスグループを削除',
@@ -1106,6 +1115,7 @@ export const translations: Record<LanguageKey, Translation> = {
     pleaseInputPasswordAgain: 'もう一度パスワードを入力してください',
     repeatInputPassword: 'パスワードを繰り返し入力',
     pleaseInputNickname: 'ニックネームを入力してください',
+    pleaseEnterTheMemberNickname: 'メンバーのニックネームを入力してください',
     nicknameHint: '2〜10文字、中国語と英語をサポート',
     register: '登録',
     freeSpeech: '自由な発言',
@@ -1382,6 +1392,12 @@ export type ContextMenuItem = {
   className?: string;
   style?: React.CSSProperties;
   onClick?: () => void;
+};
+
+export type ServerListSectionProps = {
+  title: string;
+  servers: Server[];
+  user: User;
 };
 
 export type Emoji = {

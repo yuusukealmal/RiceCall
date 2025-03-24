@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 // CSS
@@ -91,6 +91,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
+    const [searchText, setSearchText] = useState('');
     const [serverName, setServerName] = useState<Server['name']>(
       createDefault.server().name,
     );
@@ -140,6 +141,10 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
     const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
     const [sortState, setSortState] = useState<1 | -1>(-1);
     const [sortField, setSortField] = useState<string>('');
+
+    const [memberSearchText, setMemberSearchText] = useState('');
+    const [applicationSearchText, setApplicationSearchText] = useState('');
+    const [blockMemberSearchText, setBlockMemberSearchText] = useState('');
 
     // Variables
     const { serverId, userId } = initialData;
@@ -283,7 +288,6 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       serverId: Server['id'],
       userId: User['id'],
     ) => {
-      if (!socket) return;
       ipcService.popup.open(PopupType.EDIT_MEMBER);
       ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
         serverId,
@@ -298,6 +302,30 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
         submitTo: PopupType.DIALOG_ERROR,
       });
     };
+
+    const filteredMembers = serverMembers.filter((member) => {
+      const searchLower = memberSearchText.toLowerCase();
+      return (
+        member.nickname?.toLowerCase().includes(searchLower) ||
+        member.name.toLowerCase().includes(searchLower)
+      );
+    });
+
+    const filteredApplications = serverApplications.filter((application) => {
+      const searchLower = applicationSearchText.toLowerCase();
+      return (
+        application.name.toLowerCase().includes(searchLower) ||
+        application.description.toLowerCase().includes(searchLower)
+      );
+    });
+
+    const filteredBlockMembers = serverBlockMembers.filter((member) => {
+      const searchLower = blockMemberSearchText.toLowerCase();
+      return (
+        member.nickname?.toLowerCase().includes(searchLower) ||
+        member.name.toLowerCase().includes(searchLower)
+      );
+    });
 
     // Effects
     useEffect(() => {
@@ -486,19 +514,21 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
               </div>
             ) : activeTabIndex === 2 ? (
               <div className={popup['col']}>
-                <div className={popup['label']}>
-                  {lang.tr.members}: {serverMembers.length}
+                <div className={`${popup['inputBox']} ${popup['row']}`}>
+                  <div className={popup['label']}>
+                    {lang.tr.members}: {serverMembers.length}
+                  </div>
+                  <input
+                    style={{ width: '50%', marginLeft: 'auto' }}
+                    className={popup['input']}
+                    type="search"
+                    placeholder={lang.tr.searchMemberPlaceholder}
+                    value={memberSearchText}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setMemberSearchText(e.target.value)
+                    }
+                  />
                 </div>
-                {/* <div className={EditServer['search']}>
-                        <input
-                          type="text"
-                          placeholder={lang.tr.searchPlaceholder}
-                          value={searchText}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setSearchText(e.target.value)
-                          }
-                        />
-                      </div> */}
                 <div className={`${popup['inputBox']} ${popup['col']}`}>
                   <table style={{ minHeight: '280px' }}>
                     <thead>
@@ -526,7 +556,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                       </tr>
                     </thead>
                     <tbody className={setting['tableContainer']}>
-                      {serverMembers.map((member) => {
+                      {filteredMembers.map((member) => {
                         const {
                           id: memberId,
                           name: memberName,
@@ -617,25 +647,30 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                   show: !isCurrentUser,
                                 },
                                 {
-                                  id: '',
+                                  id: 'member-management',
                                   label: lang.tr.memberManagement,
                                   onClick: () => {},
                                   show: !isCurrentUser,
                                 },
-                                // {
-                                //   label: lang.tr.inviteToBeMember,
-                                //   onClick: () => {},
-                                // },
                               ]);
                             }}
                           >
                             <td>
-                              <div
-                                className={`${permission[memberGender]} ${
-                                  permission[`lv-${memberPermissionLevel}`]
-                                }`}
-                              />
-                              {memberNickname || memberName}
+                              <div className={setting['memberInfo']}>
+                                <div className={setting['mainInfo']}>
+                                  <div
+                                    className={`${permission[memberGender]} ${
+                                      permission[`lv-${memberPermissionLevel}`]
+                                    }`}
+                                  />
+                                  {memberNickname || memberName}
+                                </div>
+                                {memberNickname && (
+                                  <div className={setting['subName']}>
+                                    {memberName}
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td>
                               {lang.getPermissionText(memberPermissionLevel)}
@@ -718,19 +753,21 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
               </div>
             ) : activeTabIndex === 4 ? (
               <div className={popup['col']}>
-                <div className={popup['label']}>
-                  {lang.tr.applicants}: {serverApplications.length}
+                <div className={`${popup['inputBox']} ${popup['row']}`}>
+                  <div className={popup['label']}>
+                    {lang.tr.applicants}: {serverApplications.length}
+                  </div>
+                  <input
+                    style={{ width: '50%', marginLeft: 'auto' }}
+                    className={popup['input']}
+                    type="search"
+                    placeholder={lang.tr.searchMemberPlaceholder}
+                    value={applicationSearchText}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setApplicationSearchText(e.target.value)
+                    }
+                  />
                 </div>
-                {/* <div className={EditServer['search']}>
-                        <input
-                          type="text"
-                          placeholder={lang.tr.searchPlaceholder}
-                          value={searchText}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setSearchText(e.target.value)
-                          }
-                        />
-                      </div> */}
                 <div className={`${popup['inputBox']} ${popup['col']}`}>
                   <table style={{ minHeight: '280px' }}>
                     <thead>
@@ -758,7 +795,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                       </tr>
                     </thead>
                     <tbody className={setting['tableContainer']}>
-                      {serverApplications.map((application) => {
+                      {filteredApplications.map((application) => {
                         const {
                           id: applicationId,
                           name: applicationName,
@@ -821,19 +858,21 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
               </div>
             ) : activeTabIndex === 5 ? (
               <div className={popup['col']}>
-                <div className={popup['label']}>
-                  {lang.tr.blacklist}: {serverBlockMembers.length}
+                <div className={`${popup['inputBox']} ${popup['row']}`}>
+                  <div className={popup['label']}>
+                    {lang.tr.blacklist}: {serverBlockMembers.length}
+                  </div>
+                  <input
+                    style={{ width: '50%', marginLeft: 'auto' }}
+                    className={popup['input']}
+                    type="search"
+                    placeholder={lang.tr.searchMemberPlaceholder}
+                    value={blockMemberSearchText}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setBlockMemberSearchText(e.target.value)
+                    }
+                  />
                 </div>
-                {/* <div className={EditServer['search']}>
-                        <input
-                          type="text"
-                          placeholder={lang.tr.searchPlaceholder}
-                          value={searchText}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setSearchText(e.target.value)
-                          }
-                        />
-                      </div> */}
                 <div className={`${popup['inputBox']} ${popup['col']}`}>
                   <table style={{ minHeight: '280px' }}>
                     <thead>
@@ -861,7 +900,7 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                       </tr>
                     </thead>
                     <tbody className={setting['tableContainer']}>
-                      {serverBlockMembers.map((blockMember) => {
+                      {filteredBlockMembers.map((blockMember) => {
                         const {
                           id: blockMemberId,
                           userId: blockMemberUserId,

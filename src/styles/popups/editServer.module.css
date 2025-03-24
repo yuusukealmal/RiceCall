@@ -55,6 +55,23 @@
   overflow-y: auto;
 }
 
+.memberInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.mainInfo {
+  display: flex;
+  align-items: center;
+}
+
+.subName {
+  color: #666;
+  font-size: 12px;
+  margin: 0 auto 0;
+}
+
+
 .inputGroup {
   display: flex;
   width: 100%;

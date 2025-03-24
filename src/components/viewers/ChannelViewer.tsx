@@ -315,7 +315,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
               .map((channelMember) => (
                 <UserTab
                   key={channelMember.id}
-                  user={user}
+                  member={member as Member}
                   channelMember={channelMember}
                   canEdit={canEdit}
                 />
@@ -330,19 +330,19 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
 ChannelTab.displayName = 'ChannelTab';
 
 interface UserTabProps {
-  user: User;
+  member: Member;
   channelMember: ServerMember;
   canEdit: boolean;
 }
 
 const UserTab: React.FC<UserTabProps> = React.memo(
-  ({ user, channelMember, canEdit }) => {
+  ({ member, channelMember, canEdit }) => {
     // Hooks
     const lang = useLanguage();
     const contextMenu = useContextMenu();
 
     // Variables
-    const { id: userId } = user;
+    const { userId } = member;
     const {
       id: channelMemberId,
       name: channelMemberName,
@@ -353,8 +353,10 @@ const UserTab: React.FC<UserTabProps> = React.memo(
       gender: channelMemberGender,
       badges: channelMemberBadges = [],
     } = channelMember;
-    const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max level
+    const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max leve
     const isCurrentUser = userId === channelMemberUserId;
+    const isTargetPermissionHigher =
+      channelMemberPermission > member.permissionLevel;
 
     // Handlers
     const handleOpenApplyFriend = (
@@ -365,6 +367,17 @@ const UserTab: React.FC<UserTabProps> = React.memo(
       ipcService.initialData.onRequest(PopupType.APPLY_FRIEND, {
         userId,
         targetId,
+      });
+    };
+
+    const handleOpenEditMember = (
+      serverId: Server['id'],
+      userId: User['id'],
+    ) => {
+      ipcService.popup.open(PopupType.EDIT_MEMBER);
+      ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
+        serverId,
+        userId,
       });
     };
 
@@ -379,19 +392,89 @@ const UserTab: React.FC<UserTabProps> = React.memo(
           onContextMenu={(e) => {
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
-                id: 'kick',
-                label: lang.tr.kick,
-                show: canEdit && !isCurrentUser,
-                onClick: () => {
-                  // handleKickUser(user.id);
-                },
+                id: 'send-message',
+                label: '傳送即時訊息',
+                onClick: () => {},
+                show: !isCurrentUser,
               },
               {
-                id: 'addFriend',
-                label: lang.tr.addFriend,
-                show: canEdit && !isCurrentUser,
+                id: 'view-profile',
+                label: '檢視個人檔案',
+                onClick: () => {},
+                show: !isCurrentUser,
+              },
+              {
+                id: 'add-friend',
+                label: '新增好友',
+                onClick: () => {},
+                show: !isCurrentUser,
+              },
+              {
+                id: 'refuse-voice',
+                label: '拒聽此人語音',
+                onClick: () => {},
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'edit-nickname',
+                label: '修改群名片',
                 onClick: () =>
-                  handleOpenApplyFriend(userId, channelMemberUserId),
+                  handleOpenEditMember(
+                    channelMember.serverId,
+                    channelMemberUserId,
+                  ),
+                show: isCurrentUser || !isTargetPermissionHigher,
+              },
+              {
+                id: 'separator',
+                label: '',
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'move-to-my-channel',
+                label: lang.tr.moveToMyChannel,
+                // onClick: () => handleUserMove(),
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'separator',
+                label: '',
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'mute-voice',
+                label: '禁止此人語音',
+                onClick: () => {},
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'mute-text',
+                label: '禁止文字',
+                onClick: () => {},
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'kick',
+                label: lang.tr.kickOut,
+                onClick: () => {},
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'block',
+                label: lang.tr.block,
+                onClick: () => {},
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'separator',
+                label: '',
+                show: !isCurrentUser && !isTargetPermissionHigher,
+              },
+              {
+                id: 'member-management',
+                label: lang.tr.memberManagement,
+                onClick: () => {},
+                show: !isCurrentUser && !isTargetPermissionHigher,
               },
             ]);
           }}
