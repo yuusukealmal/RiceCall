@@ -81,12 +81,7 @@ const AddChannelModal: React.FC<AddChannelModalProps> = React.memo(
             <div className={popup['inputGroup']}>
               <div className={popup['inputBox']}>
                 <div className={popup['label']}>{lang.tr.parentChannel}</div>
-                <input
-                  className={popup['input']}
-                  type="text"
-                  value={parentName}
-                  disabled
-                />
+                <label>{parentName || lang.tr.none}</label>
               </div>
               <div className={popup['inputBox']}>
                 <div className={popup['label']}>{lang.tr.channelName}</div>
