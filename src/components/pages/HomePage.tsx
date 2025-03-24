@@ -34,10 +34,9 @@ const ServerListSection: React.FC<ServerListSectionProps> = ({
   servers,
   user,
 }) => {
-  const [showAll, setShowAll] = useState(false);
-  const lang = useLanguage();
+  const [expanded, setExpanded] = useState(false);
 
-  const displayedServers = showAll ? servers : servers.slice(0, 6);
+  const displayedServers = expanded ? servers : servers.slice(0, 6);
   const hasMore = servers.length > 6;
 
   return (
@@ -46,12 +45,10 @@ const ServerListSection: React.FC<ServerListSectionProps> = ({
       <ServerListViewer user={user} servers={displayedServers} />
       {hasMore && (
         <button
-          className={`${homePage['viewMoreBtn']} ${
-            homePage[showAll ? 'more' : 'less']
-          }`}
-          onClick={() => setShowAll(!showAll)}
+          className={`${homePage['viewMoreBtn']} ${expanded ? 'more' : 'less'}`}
+          onClick={() => setExpanded(!expanded)}
         >
-          {showAll ? '檢視較少' : '檢視更多'}
+          {expanded ? '檢視較少' : '檢視更多'}
         </button>
       )}
     </div>
@@ -166,28 +163,26 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
           <div className={homePage['mid']}>
             <button
               className={`${homePage['navegateItem']} ${homePage['active']}`}
+              data-key="60060"
             >
               {lang.tr.home}
             </button>
-            <button className={homePage['navegateItem']}>
-              <div></div>
+            <button className={homePage['navegateItem']} data-key="30014">
               {lang.tr.game}
             </button>
-            <button className={homePage['navegateItem']}>
-              <div></div>
+            <button className={homePage['navegateItem']} data-key="30375">
               {lang.tr.live}
             </button>
           </div>
           <div className={homePage['right']}>
             <button
               className={homePage['navegateItem']}
+              data-key="30014"
               onClick={() => handleOpenCreateServer(userId)}
             >
-              <div></div>
               {lang.tr.createGroup}
             </button>
-            <button className={homePage['navegateItem']}>
-              <div></div>
+            <button className={homePage['navegateItem']} data-key="60004">
               {lang.tr.personalExclusive}
             </button>
           </div>

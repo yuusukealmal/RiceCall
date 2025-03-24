@@ -72,11 +72,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     );
 
     // Variables
-    const {
-      id: userId,
-      currentChannelId: userCurrentChannelId,
-      favServers: userFavServers,
-    } = user;
+    const { id: userId, currentChannelId: userCurrentChannelId } = user;
     const {
       id: serverId,
       name: serverName,
@@ -205,6 +201,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       });
     };
 
+    // FIXME: logic is wrong
     const handleAddFavoriteServer = (serverId: Server['id']) => {
       if (!socket) return;
       socket.send.updateUser({
@@ -435,120 +432,121 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                   );
                 }}
                 locked={
-                  channelChatMode === 'forbidden' && member.permissionLevel < 3
+                  channelChatMode === 'forbidden' && memberPermissionLevel < 3
                 }
               />
             </div>
             <div className={styles['buttonArea']}>
               <div className={styles['buttons']}>
-                <div
-                  className={styles['voiceModeDropdown']}
-                  onClick={(e) => {
-                    if (member && member.permissionLevel < 3) return;
-                    contextMenu.showContextMenu(e.clientX, e.clientY, [
-                      {
-                        id: 'freeSpeech',
-                        label: lang.tr.freeSpeech,
-                        onClick: () => {
-                          handleUpdateChannel(
-                            { voiceMode: 'free' },
-                            currentChannelId,
-                            serverId,
-                          );
-                          handleSendMessage(
-                            {
-                              type: 'info',
-                              content: lang.tr.changeToFreeSpeech,
-                              timestamp: 0,
-                            },
-                            currentChannelId,
-                          );
-                        },
-                      },
-                      {
-                        id: 'forbiddenSpeech',
-                        label: lang.tr.forbiddenSpeech,
-                        onClick: () => {
-                          handleUpdateChannel(
-                            { voiceMode: 'forbidden' },
-                            currentChannelId,
-                            serverId,
-                          );
-                          handleSendMessage(
-                            {
-                              type: 'info',
-                              content: lang.tr.changeToForbiddenSpeech,
-                              timestamp: 0,
-                            },
-                            currentChannelId,
-                          );
-                        },
-                      },
-                      {
-                        id: 'queue',
-                        label: '排麥',
-                        icon: 'submenu',
-                        hasSubmenu: true,
-                        onClick: () => {
-                          handleUpdateChannel(
-                            { voiceMode: 'queue' },
-                            currentChannelId,
-                            serverId,
-                          );
-                          handleSendMessage(
-                            {
-                              type: 'info',
-                              content:
-                                '頻道被設為排麥才能發言，請點擊"拿麥發言"等候發言',
-                              timestamp: 0,
-                            },
-                            currentChannelId,
-                          );
-                        },
-                        submenuItems: [
-                          {
-                            id: 'forbiddenQueue',
-                            label: '禁止排麥',
-                            disabled: channelVoiceMode === 'queue',
-                            onClick: () => {
-                              // handleUpdateChannel({ queueMode: 'forbidden' }, currentChannelId, serverId);
-                              handleSendMessage(
-                                {
-                                  type: 'info',
-                                  content: '排麥模式已變更為禁止',
-                                },
-                                currentChannelId,
-                              );
-                            },
+                {memberPermissionLevel >= 3 && (
+                  <div
+                    className={styles['voiceModeDropdown']}
+                    onClick={(e) =>
+                      contextMenu.showContextMenu(e.clientX, e.clientY, [
+                        {
+                          id: 'freeSpeech',
+                          label: lang.tr.freeSpeech,
+                          onClick: () => {
+                            handleUpdateChannel(
+                              { voiceMode: 'free' },
+                              currentChannelId,
+                              serverId,
+                            );
+                            handleSendMessage(
+                              {
+                                type: 'info',
+                                content: lang.tr.changeToFreeSpeech,
+                                timestamp: 0,
+                              },
+                              currentChannelId,
+                            );
                           },
-                          {
-                            id: 'controlQueue',
-                            label: '控麥',
-                            disabled: channelVoiceMode === 'queue',
-                            onClick: () => {
-                              // handleUpdateChannel({ queueMode: 'control' }, currentChannelId, serverId);
-                              handleSendMessage(
-                                {
-                                  type: 'info',
-                                  content: '排麥模式已變更為控麥',
-                                },
-                                currentChannelId,
-                              );
-                            },
+                        },
+                        {
+                          id: 'forbiddenSpeech',
+                          label: lang.tr.forbiddenSpeech,
+                          onClick: () => {
+                            handleUpdateChannel(
+                              { voiceMode: 'forbidden' },
+                              currentChannelId,
+                              serverId,
+                            );
+                            handleSendMessage(
+                              {
+                                type: 'info',
+                                content: lang.tr.changeToForbiddenSpeech,
+                                timestamp: 0,
+                              },
+                              currentChannelId,
+                            );
                           },
-                        ],
-                      },
-                    ]);
-                  }}
-                >
-                  {channelVoiceMode === 'queue'
-                    ? '排麥'
-                    : channelVoiceMode === 'free'
-                    ? lang.tr.freeSpeech
-                    : channelVoiceMode === 'forbidden'
-                    ? lang.tr.forbiddenSpeech
-                    : ''}
-                </div>
+                        },
+                        {
+                          id: 'queue',
+                          label: '排麥',
+                          icon: 'submenu',
+                          hasSubmenu: true,
+                          onClick: () => {
+                            handleUpdateChannel(
+                              { voiceMode: 'queue' },
+                              currentChannelId,
+                              serverId,
+                            );
+                            handleSendMessage(
+                              {
+                                type: 'info',
+                                content:
+                                  '頻道被設為排麥才能發言，請點擊"拿麥發言"等候發言',
+                                timestamp: 0,
+                              },
+                              currentChannelId,
+                            );
+                          },
+                          submenuItems: [
+                            {
+                              id: 'forbiddenQueue',
+                              label: '禁止排麥',
+                              disabled: channelVoiceMode === 'queue',
+                              onClick: () => {
+                                // handleUpdateChannel({ queueMode: 'forbidden' }, currentChannelId, serverId);
+                                handleSendMessage(
+                                  {
+                                    type: 'info',
+                                    content: '排麥模式已變更為禁止',
+                                  },
+                                  currentChannelId,
+                                );
+                              },
+                            },
+                            {
+                              id: 'controlQueue',
+                              label: '控麥',
+                              disabled: channelVoiceMode === 'queue',
+                              onClick: () => {
+                                // handleUpdateChannel({ queueMode: 'control' }, currentChannelId, serverId);
+                                handleSendMessage(
+                                  {
+                                    type: 'info',
+                                    content: '排麥模式已變更為控麥',
+                                  },
+                                  currentChannelId,
+                                );
+                              },
+                            },
+                          ],
+                        },
+                      ])
+                    }
+                  >
+                    {channelVoiceMode === 'queue'
+                      ? '排麥'
+                      : channelVoiceMode === 'free'
+                      ? lang.tr.freeSpeech
+                      : channelVoiceMode === 'forbidden'
+                      ? lang.tr.forbiddenSpeech
+                      : ''}
+                  </div>
+                )}
               </div>
 
               <div

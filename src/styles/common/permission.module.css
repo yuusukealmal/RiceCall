@@ -1,16 +1,22 @@
 .Male {
+  height: 15px;
+  width: 15px;
   min-height: 15px;
   min-width: 15px;
   background-image: url(../../../public/channel/UserIconsMale.png);
   background-repeat: no-repeat;
+  background-size: auto;
   background-position: 0 0;
 }
 
 .Female {
+  height: 15px;
+  width: 15px;
   min-height: 15px;
   min-width: 15px;
   background-image: url(../../../public/channel/UserIconsFemale.png);
   background-repeat: no-repeat;
+  background-size: auto;
   background-position: 0 0;
 }
 

@@ -39,7 +39,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
     const [memberNickname, setMemberNickname] = useState(
       createDefault.member().nickname,
     );
-    const [userNickname, setUserNickname] = useState(createDefault.user().name);
+    const [userName, setUserName] = useState(createDefault.user().name);
 
     // Handlers
     const handleClose = () => {
@@ -55,11 +55,6 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
       socket.send.updateMember({ member, userId, serverId });
     };
 
-    const handleUpdateUser = (user: Partial<User>, userId: User['id']) => {
-      if (!socket) return;
-      socket.send.updateUser({ user, userId });
-    };
-
     const handleMemberUpdate = (data: Member | null) => {
       if (!data) data = createDefault.member();
       setMemberNickname(data.nickname);
@@ -67,7 +62,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
 
     const handleUserUpdate = (data: User | null) => {
       if (!data) data = createDefault.user();
-      setUserNickname(data.name);
+      setUserName(data.name);
     };
 
     // Effects
@@ -95,7 +90,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
             <div className={popup['inputGroup']}>
               <div className={popup['inputBox']}>
                 <label>{lang.tr.nickname}</label>
-                <label className={popup['value']}>{userNickname}</label>
+                <label className={popup['value']}>{userName}</label>
               </div>
               <div className={`${popup['inputBox']} ${popup['col']}`}>
                 <div className={popup['label']}>

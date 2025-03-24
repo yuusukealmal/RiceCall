@@ -656,21 +656,21 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                             }}
                           >
                             <td>
-                              <div className={setting['memberInfo']}>
-                                <div className={setting['mainInfo']}>
-                                  <div
-                                    className={`${permission[memberGender]} ${
-                                      permission[`lv-${memberPermissionLevel}`]
-                                    }`}
-                                  />
+                              <div className={popup['row']}>
+                                <div
+                                  className={`${permission[memberGender]} ${
+                                    permission[`lv-${memberPermissionLevel}`]
+                                  }`}
+                                />
+                                <div className={popup['p1']}>
                                   {memberNickname || memberName}
                                 </div>
-                                {memberNickname && (
-                                  <div className={setting['subName']}>
-                                    {memberName}
-                                  </div>
-                                )}
                               </div>
+                              {memberNickname && (
+                                <div className={popup['hint']}>
+                                  {memberName}
+                                </div>
+                              )}
                             </td>
                             <td>
                               {lang.getPermissionText(memberPermissionLevel)}

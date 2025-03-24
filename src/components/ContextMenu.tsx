@@ -25,8 +25,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
 
   // Effect
   useEffect(() => {
-    console.log(menuRef.current);
-
     if (menuRef.current) {
       const menuWidth = menuRef.current.offsetWidth;
       const menuHeight = menuRef.current.offsetHeight;

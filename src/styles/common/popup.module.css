@@ -106,12 +106,14 @@
 .col {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 10px;
 }
 
 .row {
   display: flex;
   flex-direction: row;
+  align-items: center;
   gap: 10px;
 }
 
@@ -167,7 +169,7 @@
   flex: 1;
   position: relative;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   height: 3rem;
   align-items: center;
   justify-content: center;
