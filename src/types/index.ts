@@ -125,6 +125,7 @@ export interface Translation {
   category: string;
   channelPermission: string;
   channelPublic: string;
+  channelMember: string;
   channelPrivate: string;
   channelReadonly: string;
   serverApply: string;
@@ -364,6 +365,7 @@ export const translations: Record<LanguageKey, Translation> = {
     category: '類別',
     channelPermission: '頻道權限',
     channelPublic: '任何人可以訪問',
+    channelMember: '成為會員才可訪問 ',
     channelPrivate: '禁止遊客訪問',
     channelReadonly: '唯讀',
     serverApply: '申請已送出，請等待管理員審核',
@@ -600,6 +602,7 @@ export const translations: Record<LanguageKey, Translation> = {
     category: '类别',
     channelPermission: '频道权限',
     channelPublic: '任何人可以访问',
+    channelMember: '成为会员才可访问',
     channelPrivate: '禁止游客访问',
     channelReadonly: '只读',
     serverApply: '申请已送出，请等待管理员审核',
@@ -838,6 +841,7 @@ export const translations: Record<LanguageKey, Translation> = {
     category: 'Category',
     channelPermission: 'Channel permission',
     channelPublic: 'Anyone can access',
+    channelMember: 'Only members can access',
     channelPrivate: 'No guest access',
     channelReadonly: 'Read-only',
     serverApply: 'Application submitted, please wait for admin review',
@@ -1078,6 +1082,7 @@ export const translations: Record<LanguageKey, Translation> = {
     category: 'カテゴリー',
     channelPermission: 'チャンネルの権限',
     channelPublic: '誰でもアクセス可能',
+    channelMember: 'メンバーのみがアクセス可能',
     channelPrivate: '禁止遊客訪問',
     channelReadonly: '読み取り専用',
     serverApply: '申請が送信されました。管理者のレビューをお待ちください',
@@ -1292,6 +1297,7 @@ export type BaseChannel = {
   order: number;
   isRoot: boolean;
   type: 'category' | 'channel';
+  visibility: 'public' | 'member' | 'private' | 'readonly';
   serverId: string;
   createdAt: number;
 };
@@ -1308,7 +1314,6 @@ export type Channel = BaseChannel & {
   slowmode: boolean;
   voiceMode: 'free' | 'queue' | 'forbidden';
   chatMode: 'free' | 'forbidden';
-  visibility: 'public' | 'private' | 'readonly';
   categoryId: string | null;
   // THESE WERE NOT SAVE IN THE DATABASE
   messages?: ChannelMessage[];

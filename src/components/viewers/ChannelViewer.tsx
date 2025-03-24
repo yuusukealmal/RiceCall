@@ -45,7 +45,11 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
     const { channels: serverChannels = [] } = server;
     const { id: userId } = user;
     const { id: serverId } = server;
-    const { id: categoryId, name: categoryName } = category;
+    const {
+      id: categoryId,
+      name: categoryName,
+      visibility: categoryVisibility,
+    } = category;
     const categoryChannels = serverChannels
       .filter((ch) => ch.type === 'channel')
       .filter((ch) => ch.categoryId === categoryId);
@@ -105,7 +109,8 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
           className={`
             ${styles['channelTab']} 
             ${expanded ? styles['expanded'] : ''} 
-            ${styles['public']}`}
+            ${styles[categoryVisibility]}
+          `}
           onClick={() => setExpanded(!expanded)}
           onContextMenu={(e) => {
             contextMenu.showContextMenu(e.pageX, e.pageY, [
@@ -251,7 +256,8 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             ${styles['channelTab']} 
             ${expanded ? styles['expanded'] : ''} 
             ${channelIsLobby ? styles['lobby'] : styles[channelVisibility]}  
-            ${channelIsRoot ? '' : styles['subChannel']}`}
+            ${channelIsRoot ? '' : styles['subChannel']}
+            `}
           onClick={() =>
             setExpanded(channelVisibility != 'readonly' ? !expanded : false)
           }
@@ -260,6 +266,8 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
               userInChannel ||
               channelVisibility === 'readonly' ||
               (channelVisibility === 'private' &&
+                (!member || member.permissionLevel < 3)) ||
+              (channelVisibility === 'member' &&
                 (!member || member.permissionLevel < 2))
             )
               return;
