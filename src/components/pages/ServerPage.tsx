@@ -25,6 +25,7 @@ import {
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useSocket } from '@/providers/SocketProvider';
 import { useWebRTC } from '@/providers/WebRTCProvider';
+import { useContextMenu } from '@/providers/ContextMenuProvider';
 
 // Services
 import ipcService from '@/services/ipc.service';
@@ -45,7 +46,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const lang = useLanguage();
     const socket = useSocket();
     const webRTC = useWebRTC();
-
+    const contextMenu = useContextMenu();
     // Refs
     const refreshed = useRef(false);
 
@@ -353,11 +354,106 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               <div className={styles['buttons']}>
                 <div
                   className={styles['voiceModeDropdown']}
-                  onClick={() =>
-                    member &&
-                    member.permissionLevel > 2 &&
-                    setIsDropdownOpen(!isDropdownOpen)
-                  }
+                  onClick={(e) => {
+                    if (member && member.permissionLevel < 2) return;
+                    contextMenu.showContextMenu(e.clientX, e.clientY, [
+                      {
+                        id: 'freeSpeech',
+                        label: lang.tr.freeSpeech,
+                        onClick: () => {
+                          handleUpdateChannel(
+                            { voiceMode: 'free', chatMode: 'free' },
+                            currentChannelId,
+                            serverId,
+                          );
+                          handleSendMessage(
+                            {
+                              type: 'info',
+                              content: lang.tr.changeToFreeSpeech,
+                              timestamp: 0,
+                            },
+                            currentChannelId,
+                          );
+                        },
+                      },
+                      {
+                        id: 'forbiddenSpeech',
+                        label: lang.tr.forbiddenSpeech,
+                        onClick: () => {
+                          handleUpdateChannel(
+                            { voiceMode: 'forbidden', chatMode: 'forbidden' },
+                            currentChannelId,
+                            serverId,
+                          );
+                          handleSendMessage(
+                            {
+                              type: 'info',
+                              content: lang.tr.changeToForbiddenSpeech,
+                              timestamp: 0,
+                            },
+                            currentChannelId,
+                          );
+                        },
+                      },
+                      {
+                        id: 'queue',
+                        label: '排麥',
+                        icon: 'submenu',
+                        hasSubmenu: true,
+                        submenuItems: [
+                          {
+                            id: 'general',
+                            label: '一般',
+                            onClick: () => {
+                              handleUpdateChannel(
+                                {
+                                  voiceMode: 'queue',
+                                  // queueMode: 'general',
+                                },
+                                currentChannelId,
+                                serverId,
+                              );
+                              handleSendMessage(
+                                {
+                                  type: 'info',
+                                  content: '排麥模式已變更為一般',
+                                },
+                                currentChannelId,
+                              );
+                            },
+                          },
+                          {
+                            id: 'forbiddenQueue',
+                            label: '禁止排麥',
+                            onClick: () => {
+                              // handleUpdateChannel({ queueMode: 'forbidden' }, currentChannelId, serverId);
+                              handleSendMessage(
+                                {
+                                  type: 'info',
+                                  content: '排麥模式已變更為禁止',
+                                },
+                                currentChannelId,
+                              );
+                            },
+                          },
+                          {
+                            id: 'controlQueue',
+                            label: '控麥',
+                            onClick: () => {
+                              // handleUpdateChannel({ queueMode: 'control' }, currentChannelId, serverId);
+                              handleSendMessage(
+                                {
+                                  type: 'info',
+                                  content: '排麥模式已變更為控麥',
+                                },
+                                currentChannelId,
+                              );
+                            },
+                          },
+                        ],
+                      },
+                    ]);
+                  }}
                 >
                   {channelChatMode === 'free'
                     ? lang.tr.freeSpeech

@@ -79,7 +79,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 setSubMenu(
                   <ContextMenu
-                    x={rect.left + menuWidth - 10}
+                    x={rect.left + menuWidth - 3}
                     y={rect.top}
                     items={item.submenuItems || []}
                     onClose={onClose}
