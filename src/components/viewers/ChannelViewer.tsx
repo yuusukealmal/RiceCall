@@ -463,9 +463,9 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
         />
         <div className={styles['currentChannelText']}>{currentChannelName}</div>
       </div>
-      {/* Mic Queue */}
       {currentChannelVoiceMode === 'queue' && (
         <>
+          {/* Mic Queue */}
           <div className={styles['sectionTitle']}>{lang.tr.micOrder}</div>
           <div className={styles['micQueueBox']}>
             <div className={styles['userList']}>
@@ -479,11 +479,11 @@ const ChannelViewer: React.FC<ChannelViewerProps> = ({
           ))} */}
             </div>
           </div>
+
+          {/* Separator */}
+          <div className={styles['saperator-2']} />
         </>
       )}
-
-      {/* Separator */}
-      <div className={styles['saperator-2']} />
 
       {/* Channel List Title */}
       <div

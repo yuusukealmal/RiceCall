@@ -141,7 +141,6 @@
   flex: 1;
   display: flex;
   flex-direction: row;
-  border-bottom: 1px solid #ddd;
 }
 .inputBox table tr:hover {
   background: #f4f4f5;
@@ -156,6 +155,8 @@
   align-items: center;
   justify-content: center;
   text-align: left;
+  border-left: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
 }
 .inputBox table tr th:hover {
   cursor: pointer;
