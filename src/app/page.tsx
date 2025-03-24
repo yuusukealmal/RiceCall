@@ -384,16 +384,14 @@ const Home = () => {
 
   return (
     <div className="wrapper">
-      <WebRTCProvider>
-        <Header
-          user={user}
-          server={server}
-          selectedId={selectedTabId}
-          setSelectedTabId={setSelectedTabId}
-        />
-        {/* Main Content */}
-        <div className="content">{getMainContent()}</div>
-      </WebRTCProvider>
+      <Header
+        user={user}
+        server={server}
+        selectedId={selectedTabId}
+        setSelectedTabId={setSelectedTabId}
+      />
+      {/* Main Content */}
+      <div className="content">{getMainContent()}</div>
     </div>
   );
 };

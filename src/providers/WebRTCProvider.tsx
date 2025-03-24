@@ -41,7 +41,8 @@ interface WebRTCContextType {
   updateBitrate?: (newBitrate: number) => void;
   updateMicVolume?: (volume: number) => void;
   updateSpeakerVolume?: (volume: number) => void;
-  updateAudioDevice?: (deviceId: string, type: 'input' | 'output') => void;
+  updateInputDevice?: (deviceId: string) => void;
+  updateOutputDevice?: (deviceId: string) => void;
   isMute?: boolean;
   bitrate?: number;
   micVolume?: number;
@@ -290,6 +291,7 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
   const updateMicVolume = (volume: number) => {
     if (!localStream.current) return;
 
+    // Update for local stream
     const audioContext = new AudioContext();
     const source = audioContext.createMediaStreamSource(localStream.current);
     const gainNode = audioContext.createGain();
@@ -299,83 +301,55 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
 
     gainNode.gain.value = volume / 100;
 
+    // Update mic volume
     setMicVolume(volume);
     localStorage.setItem('micVolume', volume.toString());
-
-    if (volume === 0) {
-      localStream.current.getAudioTracks().forEach((track) => {
-        track.enabled = false;
-      });
-    } else {
-      localStream.current.getAudioTracks().forEach((track) => {
-        track.enabled = !isMute;
-      });
-    }
   };
 
   const updateSpeakerVolume = (volume: number) => {
+    // Update for all peers
     Object.values(peerAudioRefs.current).forEach((audio) => {
       audio.volume = volume / 100;
     });
+
+    // Update speaker volume
     setSpeakerVolume(volume);
     localStorage.setItem('speakerVolume', volume.toString());
   };
 
-  const updateAudioDevice = async (
-    deviceId: string,
-    type: 'input' | 'output',
-  ) => {
-    if (type === 'input') {
-      if (!deviceId) return;
+  const updateInputDevice = async (deviceId: string) => {
+    if (!deviceId) return;
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      audio: { deviceId: { exact: deviceId } },
+    });
+    newStream.getAudioTracks().forEach((track) => {
+      track.enabled = !isMute;
+    });
 
-      try {
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          audio: { deviceId: { exact: deviceId } },
-        });
+    if (localStream.current) {
+      localStream.current.getTracks().forEach((track) => track.stop());
+    }
+    localStream.current = newStream;
 
-        // 停止舊的音訊軌道
-        if (localStream.current) {
-          localStream.current.getTracks().forEach((track) => track.stop());
-        }
-
-        // 更新本地串流
-        localStream.current = newStream;
-
-        // 為所有現有的對等連接更新音訊軌道
-        Object.values(peerConnections.current).forEach((peerConnection) => {
-          const senders = peerConnection.getSenders();
-          senders.forEach((sender) => {
-            if (sender.track?.kind === 'audio') {
-              sender.replaceTrack(newStream.getAudioTracks()[0]);
-            }
-          });
-        });
-
-        // 應用當前的靜音狀態
-        newStream.getAudioTracks().forEach((track) => {
-          track.enabled = !isMute;
-        });
-
-        // 應用當前的音量設置
-        updateMicVolume(micVolume);
-      } catch (err) {
-        console.error('更新音訊輸入裝置失敗:', err);
-      }
-    } else if (type === 'output') {
-      // 更新所有音訊元素的輸出裝置
-      Object.values(peerAudioRefs.current).forEach((audio) => {
-        // @ts-ignore: setSinkId exists on modern browsers
-        if (audio.setSinkId) {
-          // @ts-ignore
-          audio.setSinkId(deviceId).catch((err) => {
-            console.error('更新音訊輸出裝置失敗:', err);
-          });
+    Object.values(peerConnections.current).forEach((peerConnection) => {
+      const senders = peerConnection.getSenders();
+      senders.forEach((sender) => {
+        if (sender.track?.kind === 'audio') {
+          sender.replaceTrack(newStream.getAudioTracks()[0]);
         }
       });
-    }
+    });
   };
 
-  // 當獲取到新的音訊流時應用音量設置
+  const updateOutputDevice = async (deviceId: string) => {
+    if (!deviceId) return;
+    Object.values(peerAudioRefs.current).forEach((audio) => {
+      audio
+        .setSinkId(deviceId)
+        .catch((err) => console.error('更新音訊輸出裝置失敗:', err));
+    });
+  };
+
   useEffect(() => {
     if (localStream.current) {
       updateMicVolume(micVolume);
@@ -395,7 +369,8 @@ const WebRTCProvider = ({ children }: WebRTCProviderProps) => {
         updateBitrate,
         updateMicVolume,
         updateSpeakerVolume,
-        updateAudioDevice,
+        updateInputDevice,
+        updateOutputDevice,
         isMute,
         bitrate,
         micVolume,

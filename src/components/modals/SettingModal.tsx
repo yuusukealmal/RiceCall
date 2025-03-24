@@ -46,9 +46,7 @@ const SettingModal: React.FC = React.memo(() => {
   };
 
   useEffect(() => {
-    // 獲取已保存的音訊設備設定
     ipcService.audio.get((devices) => {
-      // 如果有保存的設定就使用保存的設定，否則使用默認裝置
       setSelectedInput(devices.input || '');
       setSelectedOutput(devices.output || '');
     });
@@ -76,21 +74,21 @@ const SettingModal: React.FC = React.memo(() => {
 
   const handleConfirm = () => {
     ipcService.autoLaunch.set(autoLaunch);
+    ipcService.audio.set(selectedInput, 'input');
+    ipcService.audio.set(selectedOutput, 'output');
     handleClose();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const deviceId = e.target.value;
     setSelectedInput(deviceId);
-    ipcService.audio.set(deviceId, 'input');
-    webRTC.updateAudioDevice?.(deviceId, 'input');
+    webRTC.updateInputDevice?.(deviceId);
   };
 
   const handleOutputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const deviceId = e.target.value;
     setSelectedOutput(deviceId);
-    ipcService.audio.set(deviceId, 'output');
-    webRTC.updateAudioDevice?.(deviceId, 'output');
+    webRTC.updateOutputDevice?.(deviceId);
   };
 
   return (

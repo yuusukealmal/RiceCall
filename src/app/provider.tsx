@@ -6,6 +6,7 @@ import React from 'react';
 import SocketProvider from '@/providers/SocketProvider';
 import ContextMenuProvider from '@/providers/ContextMenuProvider';
 import { LanguageProvider } from '@/providers/LanguageProvider';
+import WebRTCProvider from '@/providers/WebRTCProvider';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -15,7 +16,9 @@ const Providers = ({ children }: ProvidersProps) => {
   return (
     <LanguageProvider>
       <SocketProvider>
-        <ContextMenuProvider>{children}</ContextMenuProvider>
+        <WebRTCProvider>
+          <ContextMenuProvider>{children}</ContextMenuProvider>
+        </WebRTCProvider>
       </SocketProvider>
     </LanguageProvider>
   );
