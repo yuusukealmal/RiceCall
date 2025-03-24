@@ -178,12 +178,9 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
     const [selectedTabId, setSelectedTabId] = useState<number>(0);
 
     // Handlers
-    const handleOpenApplyFriend = (
-      userId: User['id'],
-      targetId: User['id'],
-    ) => {
-      ipcService.popup.open(PopupType.APPLY_FRIEND);
-      ipcService.initialData.onRequest(PopupType.APPLY_FRIEND, {
+    const handleOpenAddFriend = (userId: User['id'], targetId: User['id']) => {
+      ipcService.popup.open(PopupType.ADD_FRIEND);
+      ipcService.initialData.onRequest(PopupType.ADD_FRIEND, {
         userId,
         targetId,
       });
@@ -248,7 +245,7 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
               <div
                 className={styles['button']}
                 datatype="addFriend"
-                onClick={() => handleOpenApplyFriend(userId, userId)}
+                onClick={() => handleOpenAddFriend(userId, '_')}
               >
                 {lang.tr.addFriend}
               </div>

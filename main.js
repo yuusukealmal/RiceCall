@@ -363,6 +363,10 @@ async function createPopup(type, height, width) {
     popups[type].webContents.openDevTools();
   }
 
+  popups[type].webContents.on('resize', (_, width, height) => {
+    popups[type].webContents.setSize(width, height);
+  });
+
   popups[type].webContents.on('closed', () => {
     popups[type] = null;
   });

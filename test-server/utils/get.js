@@ -11,6 +11,15 @@ const get = {
   },
 
   // User
+  searchUser: async (query) => {
+    const users = (await db.get('users')) || {};
+    const accountUserIds = (await db.get('accountUserIds')) || {};
+    const target = Object.values(users).find(
+      (u) => u.id === accountUserIds[query],
+    );
+    if (!target) return null;
+    return target;
+  },
   user: async (userId) => {
     const users = (await db.get('users')) || {};
     const user = users[userId];
@@ -110,7 +119,7 @@ const get = {
     return Object.values(applications)
       .filter(
         (app) =>
-          app.recieverId === userId && app.applicationStatus === 'pending',
+          app.receiverId === userId && app.applicationStatus === 'pending',
       )
       .map((app) => {
         // Concat user data with friend application data
@@ -245,7 +254,7 @@ const get = {
       .filter((msg) => msg.channelId === channelId && msg.type === 'general')
       .map((msg) => {
         // Concat user and member data with message data
-        const member = members[`mb_${msg.senderId}-${msg.recieverId}`];
+        const member = members[`mb_${msg.senderId}-${msg.receiverId}`];
         const user = users[msg.senderId];
         return { ...user, ...member, ...msg };
       })
@@ -302,8 +311,8 @@ const get = {
       .map((dm) => {
         // Concat user data with direct message data
         const friend =
-          friends[`fd_${dm.senderId}-${dm.recieverId}`] ||
-          friends[`fd_${dm.recieverId}-${dm.senderId}`];
+          friends[`fd_${dm.senderId}-${dm.receiverId}`] ||
+          friends[`fd_${dm.receiverId}-${dm.senderId}`];
         const user = users[dm.senderId];
         return { ...user, ...friend, ...dm };
       })

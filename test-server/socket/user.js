@@ -41,7 +41,7 @@ const userHandler = {
       // TODO: implement search results
 
       // Emit data (only to the user)
-      io.to(socket.id).emit('userSearch', {});
+      io.to(socket.id).emit('userSearch', await Get.searchUser(query));
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(

@@ -34,6 +34,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
     const refreshRef = useRef(false);
 
     // State
+    const [section, setSection] = useState<number>(0);
     const [serverName, setServerName] = useState<Server['name']>(
       createDefault.server().name,
     );
@@ -49,9 +50,6 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
 
     // Variables
     const { userId, serverId } = initialData;
-
-    // Section Control
-    const [section, setSection] = useState<number>(0);
 
     const handleCreatMemberApplication = (
       memberApplication: Partial<MemberApplication>,

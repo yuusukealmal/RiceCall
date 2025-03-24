@@ -20,7 +20,7 @@ import SystemSetting from '@/components/modals/SettingModal';
 import ApplyMember from '@/components/modals/ApplyMember';
 import ApplyFriend from '@/components/modals/ApplyFriend';
 import Dialog from '@/components/modals/Dialog';
-
+import AddFriend from '@/components/modals/AddFriend';
 // Services
 import ipcService from '@/services/ipc.service';
 
@@ -138,9 +138,6 @@ const Modal = React.memo(() => {
         setHeader(<Header title={lang.tr.editServer} buttons={['close']} />);
         setContent(<EditServer {...initialData} />);
         break;
-      case PopupType.DELETE_SERVER:
-        // This doesn't exist lol
-        break;
       case PopupType.CREATE_CHANNEL:
         setHeader(<Header title={lang.tr.createChannel} buttons={['close']} />);
         setContent(<CreateChannel {...initialData} />);
@@ -149,9 +146,6 @@ const Modal = React.memo(() => {
         setHeader(<Header title={lang.tr.editChannel} buttons={['close']} />);
         setContent(<EditChannel {...initialData} />);
         break;
-      case PopupType.DELETE_CHANNEL:
-        // This doesn't exist lol
-        break;
       case PopupType.APPLY_MEMBER:
         setHeader(<Header title={lang.tr.applyMember} buttons={['close']} />);
         setContent(<ApplyMember {...initialData} />);
@@ -159,6 +153,10 @@ const Modal = React.memo(() => {
       case PopupType.APPLY_FRIEND:
         setHeader(<Header title={lang.tr.applyFriend} buttons={['close']} />);
         setContent(<ApplyFriend {...initialData} />);
+        break;
+      case PopupType.ADD_FRIEND:
+        setHeader(<Header title={'新增好友'} buttons={['close']} />);
+        setContent(<AddFriend {...initialData} />);
         break;
       case PopupType.DIRECT_MESSAGE:
         // setHeader(<Header title={lang.tr.directMessage} buttons={['close']} />);

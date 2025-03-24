@@ -35,6 +35,7 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // State
+    const [section, setSection] = useState<number>(0);
     const [userFriendGroups, setUserFriendGroups] = useState<FriendGroup[]>(
       createDefault.user().friendGroups || [],
     );
@@ -54,14 +55,14 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     // Handlers
     const handleCreateFriendApplication = (
       friendApplication: Partial<FriendApplication>,
-      userId: User['id'],
-      targetId: User['id'],
+      senderId: User['id'],
+      receiverId: User['id'],
     ) => {
       if (!socket) return;
       socket.send.createFriendApplication({
         friendApplication,
-        userId,
-        targetId,
+        senderId,
+        receiverId,
       });
     };
 
@@ -77,6 +78,7 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
     };
 
     const handleFriendApplicationUpdate = (data: FriendApplication | null) => {
+      setSection(data ? (data.receiverId === userId ? 2 : 1) : 0);
       if (!data) data = createDefault.friendApplication();
       setApplicationDescription(data.description);
     };
@@ -88,7 +90,7 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
         submitTo: PopupType.DIALOG_SUCCESS,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
-        handleClose();
+        setSection(1);
       });
     };
 
@@ -114,82 +116,197 @@ const ApplyFriendModal: React.FC<ApplyFriendModalProps> = React.memo(
       refresh();
     }, [userId, targetId]);
 
-    return (
-      <div className={popup['popupContainer']}>
-        <div className={popup['popupBody']}>
-          <div className={setting['body']}>
-            <div className={popup['col']}>
-              <div className={popup['label']}>{lang.tr.friendLabel}</div>
-              <div className={popup['row']}>
-                <div className={applyFriend['avatarWrapper']}>
-                  <div className={applyFriend['avatarPicture']} />
-                </div>
-                <div className={applyFriend['userInfoWrapper']}>
-                  <div className={applyFriend['userAccount']}>{targetName}</div>
-                  <div className={applyFriend['userName']}>{targetId}</div>
-                </div>
-              </div>
-              <div className={applyFriend['split']} />
-              <div className={popup['inputGroup']}>
-                <div className={`${popup['inputBox']} ${popup['col']}`}>
-                  <div className={popup['label']}>
-                    {lang.tr.friendSelectGroup}
-                  </div>
+    switch (section) {
+      // Friend Application Form
+      case 0:
+        return (
+          <div className={popup['popupContainer']}>
+            <div className={popup['popupBody']}>
+              <div className={setting['body']}>
+                <div className={popup['col']}>
+                  <div className={popup['label']}>{lang.tr.friendLabel}</div>
                   <div className={popup['row']}>
-                    <select
-                      className={popup['select']}
-                      onChange={(e) => {
-                        // FIXME
-                      }}
-                    >
-                      {userFriendGroups.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className={popup['link']}>
-                      {lang.tr.friendAddGroup}
+                    <div className={applyFriend['avatarWrapper']}>
+                      <div className={applyFriend['avatarPicture']} />
+                    </div>
+                    <div className={applyFriend['userInfoWrapper']}>
+                      <div className={applyFriend['userAccount']}>
+                        {targetName}
+                      </div>
+                      <div className={applyFriend['userName']}>{targetId}</div>
+                    </div>
+                  </div>
+                  <div className={applyFriend['split']} />
+                  <div className={popup['inputGroup']}>
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>
+                        {lang.tr.friendSelectGroup}
+                      </div>
+                      <div className={popup['row']}>
+                        <select
+                          className={popup['select']}
+                          onChange={(e) => {
+                            // FIXME
+                          }}
+                        >
+                          {userFriendGroups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className={popup['link']}>
+                          {lang.tr.friendAddGroup}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>{lang.tr.friendNote}</div>
+                      <textarea
+                        rows={2}
+                        value={applicationDescription}
+                        onChange={(e) =>
+                          setApplicationDescription(e.target.value)
+                        }
+                      />
+                      <div className={popup['hint']}>
+                        {lang.tr.max120content}
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <div className={`${popup['inputBox']} ${popup['col']}`}>
-                  <div className={popup['label']}>{lang.tr.friendNote}</div>
-                  <textarea
-                    rows={2}
-                    onChange={(e) => setApplicationDescription(e.target.value)}
-                  />
-                  <div className={popup['hint']}>{lang.tr.max120content}</div>
+            <div className={popup['popupFooter']}>
+              <button
+                className={`${popup['button']} ${
+                  !applicationDescription.trim() ? popup['disabled'] : ''
+                }`}
+                disabled={!applicationDescription.trim()}
+                onClick={() => {
+                  handleCreateFriendApplication(
+                    { description: applicationDescription },
+                    userId,
+                    targetId,
+                  );
+                  handleOpenSuccessDialog(lang.tr.friendApply);
+                }}
+              >
+                {lang.tr.sendRequest}
+              </button>
+              <button className={popup['button']} onClick={() => handleClose()}>
+                {lang.tr.cancel}
+              </button>
+            </div>
+          </div>
+        );
+
+      // Show Notification
+      case 1:
+        return (
+          <div className={popup['popupContainer']}>
+            <div className={popup['popupBody']}>
+              <div className={setting['body']}>
+                <div className={popup['col']}>
+                  <div className={popup['label']}>{lang.tr.friendLabel}</div>
+                  <div className={popup['row']}>
+                    <div className={applyFriend['avatarWrapper']}>
+                      <div className={applyFriend['avatarPicture']} />
+                    </div>
+                    <div className={applyFriend['userInfoWrapper']}>
+                      <div className={applyFriend['userAccount']}>
+                        {targetName}
+                      </div>
+                      <div className={applyFriend['userName']}>{targetId}</div>
+                    </div>
+                  </div>
+                  <div className={applyFriend['split']} />
+                  <div className={popup['inputGroup']}>
+                    <div className={popup['hint']}>
+                      {'申請已送出，請等待對方回覆'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className={popup['popupFooter']}>
-          <button
-            className={`${popup['button']} ${
-              !applicationDescription.trim() ? popup['disabled'] : ''
-            }`}
-            disabled={!applicationDescription.trim()}
-            onClick={() => {
-              handleCreateFriendApplication(
-                { description: applicationDescription },
-                userId,
-                targetId,
-              );
-              handleOpenSuccessDialog(lang.tr.friendApply);
-            }}
-          >
-            {lang.tr.sendRequest}
-          </button>
-          <button className={popup['button']} onClick={() => handleClose()}>
-            {lang.tr.cancel}
-          </button>
-        </div>
-      </div>
-    );
+            <div className={popup['popupFooter']}>
+              <button className={popup['button']} onClick={() => setSection(0)}>
+                {'修改'}
+              </button>
+              <button className={popup['button']} onClick={() => handleClose()}>
+                {'確認'}
+              </button>
+            </div>
+          </div>
+        );
+
+      // Apply Friend
+      case 2:
+        return (
+          <div className={popup['popupContainer']}>
+            <div className={popup['popupBody']}>
+              <div className={setting['body']}>
+                <div className={popup['col']}>
+                  <div className={popup['label']}>{lang.tr.friendLabel}</div>
+                  <div className={popup['row']}>
+                    <div className={applyFriend['avatarWrapper']}>
+                      <div className={applyFriend['avatarPicture']} />
+                    </div>
+                    <div className={applyFriend['userInfoWrapper']}>
+                      <div className={applyFriend['userAccount']}>
+                        {targetName}
+                      </div>
+                      <div className={applyFriend['userName']}>{targetId}</div>
+                    </div>
+                  </div>
+                  <div className={applyFriend['split']} />
+                  <div className={popup['inputGroup']}>
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>
+                        {lang.tr.friendSelectGroup}
+                      </div>
+                      <div className={popup['row']}>
+                        <select
+                          className={popup['select']}
+                          onChange={(e) => {
+                            // FIXME
+                          }}
+                        >
+                          {userFriendGroups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className={popup['link']}>
+                          {lang.tr.friendAddGroup}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={popup['popupFooter']}>
+              <button
+                className={popup['button']}
+                onClick={() => {
+                  // Add Friend
+                }}
+              >
+                {'添加'}
+              </button>
+              <button className={popup['button']} onClick={() => handleClose()}>
+                {lang.tr.cancel}
+              </button>
+            </div>
+          </div>
+        );
+    }
   },
 );
 

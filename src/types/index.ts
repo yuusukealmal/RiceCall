@@ -1376,7 +1376,7 @@ export type Message = {
   content: string;
   type: 'general' | 'dm' | 'info';
   senderId: string;
-  recieverId: string;
+  receiverId: string;
   channelId: string;
   timestamp: number;
 };
@@ -1509,16 +1509,15 @@ export enum SocketServerEvent {
 }
 
 export enum PopupType {
+  EDIT_USER = 'editUser',
   CREATE_SERVER = 'createServer',
   EDIT_SERVER = 'editServer',
-  DELETE_SERVER = 'deleteServer',
   CREATE_CHANNEL = 'createChannel',
   EDIT_CHANNEL = 'editChannel',
-  DELETE_CHANNEL = 'deleteChannel',
   EDIT_MEMBER = 'editMember',
-  EDIT_USER = 'editUser',
   APPLY_MEMBER = 'applyMember',
   APPLY_FRIEND = 'applyFriend',
+  ADD_FRIEND = 'addFriend',
   DIRECT_MESSAGE = 'directMessage',
   DIALOG_ALERT = 'dialogAlert',
   DIALOG_ALERT2 = 'dialogAlert2',
@@ -1528,3 +1527,26 @@ export enum PopupType {
   DIALOG_INFO = 'dialogInfo',
   SYSTEM_SETTING = 'systemSetting',
 }
+
+export const PopupSize = {
+  [PopupType.EDIT_MEMBER]: { height: 220, width: 400 },
+  [PopupType.EDIT_USER]: { height: 650, width: 500 },
+  [PopupType.CREATE_SERVER]: { height: 430, width: 520 },
+  [PopupType.EDIT_SERVER]: { height: 450, width: 600 },
+  [PopupType.CREATE_CHANNEL]: { height: 220, width: 400 },
+  [PopupType.EDIT_CHANNEL]: { height: 220, width: 400 },
+  [PopupType.APPLY_FRIEND]: { height: 420, width: 540 },
+  [PopupType.APPLY_MEMBER]: { height: 420, width: 540 },
+  [PopupType.ADD_FRIEND]: { height: 220, width: 400 },
+  [PopupType.DIRECT_MESSAGE]: { height: 200, width: 300 },
+  [PopupType.DIALOG_ALERT]: { height: 220, width: 400 },
+  [PopupType.DIALOG_ALERT2]: { height: 220, width: 400 },
+  [PopupType.DIALOG_SUCCESS]: { height: 220, width: 400 },
+  [PopupType.DIALOG_WARNING]: { height: 220, width: 400 },
+  [PopupType.DIALOG_ERROR]: { height: 220, width: 400 },
+  [PopupType.DIALOG_INFO]: { height: 220, width: 400 },
+  [PopupType.SYSTEM_SETTING]: { height: 450, width: 600 },
+  Settings: { height: 450, width: 600 },
+  Apply: { height: 420, width: 540 },
+  Small: { height: 220, width: 400 },
+};
