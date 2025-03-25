@@ -65,6 +65,7 @@ const ChannelMessageTab: React.FC<ChannelMessageTabProps> = React.memo(
     const {
       gender: senderGender,
       name: senderName,
+      nickname: senderNickname,
       permissionLevel: messagePermission,
       contents: messageContents,
       timestamp: messageTimestamp,
@@ -80,7 +81,9 @@ const ChannelMessageTab: React.FC<ChannelMessageTabProps> = React.memo(
         />
         <div className={styles['messageBox']}>
           <div className={styles['header']}>
-            <span className={styles['name']}>{senderName}</span>
+            <span className={styles['name']}>
+              {senderNickname || senderName}
+            </span>
             <span className={styles['timestamp']}>{timestamp}</span>
           </div>
           {messageContents.map((content, index) => (
