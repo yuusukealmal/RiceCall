@@ -117,9 +117,10 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
     }, [setCategoryExpanded, userInCategory]);
 
     return (
-      <div key={categoryId}>
+      <>
         {/* Category View */}
         <div
+          key={categoryId}
           className={`
             ${styles['channelTab']} 
             ${expanded[categoryId] ? styles['expanded'] : ''} 
@@ -179,7 +180,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
               ))}
           </div>
         )}
-      </div>
+      </>
     );
   },
 );
@@ -287,14 +288,14 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     }, [setChannelExpanded, userInChannel]);
 
     return (
-      <div key={channelId}>
+      <>
         {/* Channel View */}
         <div
+          key={channelId}
           className={`
             ${styles['channelTab']} 
             ${expanded[channelId] ? styles['expanded'] : ''} 
-            ${channelIsLobby ? styles['lobby'] : styles[channelVisibility]}  
-            ${channelIsRoot ? '' : styles['subChannel']}
+            ${channelIsLobby ? styles['lobby'] : styles[channelVisibility]} 
           `}
           onDoubleClick={() => {
             if (canJoin) handleJoinChannel(userId, channelId);
@@ -339,6 +340,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             <div className={styles['myLocationIcon']} />
           )}
         </div>
+
         {/* Expanded Sections */}
         {expanded[channelId] && (
           <div className={styles['userList']}>
@@ -354,7 +356,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
               ))}
           </div>
         )}
-      </div>
+      </>
     );
   },
 );
@@ -413,125 +415,120 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     };
 
     return (
-      <div key={channelMemberId}>
-        {/* User View */}
+      <div
+        key={channelMemberId}
+        className={`${styles['userTab']}`}
+        onDoubleClick={(e) => {
+          contextMenu.showUserInfoBlock(e.pageX, e.pageY, channelMember);
+        }}
+        onContextMenu={(e) => {
+          contextMenu.showContextMenu(e.pageX, e.pageY, [
+            {
+              id: 'send-message',
+              label: '傳送即時訊息',
+              onClick: () => {},
+              show: !isCurrentUser,
+            },
+            {
+              id: 'view-profile',
+              label: '檢視個人檔案',
+              onClick: () => {},
+              show: !isCurrentUser,
+            },
+            {
+              id: 'add-friend',
+              label: lang.tr.addFriend,
+              onClick: () => handleOpenApplyFriend(userId, channelMemberUserId),
+              show: !isCurrentUser,
+            },
+            {
+              id: 'refuse-voice',
+              label: '拒聽此人語音',
+              onClick: () => {},
+              show: !isCurrentUser && !canEdit,
+            },
+            {
+              id: 'edit-nickname',
+              label: '修改群名片',
+              onClick: () =>
+                handleOpenEditMember(
+                  channelMember.serverId,
+                  channelMemberUserId,
+                ),
+              show: isCurrentUser || canEdit,
+            },
+            {
+              id: 'separator',
+              label: '',
+              show: !isCurrentUser && !canEdit,
+            },
+            {
+              id: 'move-to-my-channel',
+              label: lang.tr.moveToMyChannel,
+              // onClick: () => handleUserMove(),
+              show: !isCurrentUser && canEdit,
+            },
+            {
+              id: 'separator',
+              label: '',
+              show: !isCurrentUser && canEdit,
+            },
+            {
+              id: 'mute-voice',
+              label: '禁止此人語音',
+              onClick: () => {},
+              show: !isCurrentUser && canEdit,
+            },
+            {
+              id: 'mute-text',
+              label: '禁止文字',
+              onClick: () => {},
+              show: !isCurrentUser && canEdit,
+            },
+            {
+              id: 'kick',
+              label: lang.tr.kickOut,
+              onClick: () => {},
+              show: !isCurrentUser && canEdit,
+            },
+            {
+              id: 'block',
+              label: lang.tr.block,
+              onClick: () => {},
+              show: !isCurrentUser && canEdit,
+            },
+            {
+              id: 'separator',
+              label: '',
+              show: !isCurrentUser && canEdit,
+            },
+            {
+              id: 'member-management',
+              label: lang.tr.memberManagement,
+              onClick: () => {},
+              show: !isCurrentUser && canEdit,
+            },
+          ]);
+        }}
+      >
         <div
-          className={`${styles['userTab']}`}
-          onDoubleClick={(e) => {
-            contextMenu.showUserInfoBlock(e.pageX, e.pageY, channelMember);
-          }}
-          onContextMenu={(e) => {
-            contextMenu.showContextMenu(e.pageX, e.pageY, [
-              {
-                id: 'send-message',
-                label: '傳送即時訊息',
-                onClick: () => {},
-                show: !isCurrentUser,
-              },
-              {
-                id: 'view-profile',
-                label: '檢視個人檔案',
-                onClick: () => {},
-                show: !isCurrentUser,
-              },
-              {
-                id: 'add-friend',
-                label: lang.tr.addFriend,
-                onClick: () =>
-                  handleOpenApplyFriend(userId, channelMemberUserId),
-                show: !isCurrentUser,
-              },
-              {
-                id: 'refuse-voice',
-                label: '拒聽此人語音',
-                onClick: () => {},
-                show: !isCurrentUser && !canEdit,
-              },
-              {
-                id: 'edit-nickname',
-                label: '修改群名片',
-                onClick: () =>
-                  handleOpenEditMember(
-                    channelMember.serverId,
-                    channelMemberUserId,
-                  ),
-                show: isCurrentUser || canEdit,
-              },
-              {
-                id: 'separator',
-                label: '',
-                show: !isCurrentUser && !canEdit,
-              },
-              {
-                id: 'move-to-my-channel',
-                label: lang.tr.moveToMyChannel,
-                // onClick: () => handleUserMove(),
-                show: !isCurrentUser && canEdit,
-              },
-              {
-                id: 'separator',
-                label: '',
-                show: !isCurrentUser && canEdit,
-              },
-              {
-                id: 'mute-voice',
-                label: '禁止此人語音',
-                onClick: () => {},
-                show: !isCurrentUser && canEdit,
-              },
-              {
-                id: 'mute-text',
-                label: '禁止文字',
-                onClick: () => {},
-                show: !isCurrentUser && canEdit,
-              },
-              {
-                id: 'kick',
-                label: lang.tr.kickOut,
-                onClick: () => {},
-                show: !isCurrentUser && canEdit,
-              },
-              {
-                id: 'block',
-                label: lang.tr.block,
-                onClick: () => {},
-                show: !isCurrentUser && canEdit,
-              },
-              {
-                id: 'separator',
-                label: '',
-                show: !isCurrentUser && canEdit,
-              },
-              {
-                id: 'member-management',
-                label: lang.tr.memberManagement,
-                onClick: () => {},
-                show: !isCurrentUser && canEdit,
-              },
-            ]);
-          }}
-        >
-          <div
-            className={`${styles['userState']} ${
-              false ? styles['unplay'] : ''
-            }`}
-          />
-          <div
-            className={`${styles['userIcon']} ${
-              permission[channelMemberGender]
-            } ${permission[`lv-${channelMemberPermission}`]}`}
-          />
-          <div className={styles['userTabName']}>
-            {channelMemberNickname || channelMemberName}
-          </div>
-          <div
-            className={`${styles['userGrade']} ${
-              grade[`lv-${channelMemberGrade}`]
-            }`}
-          />
-          <BadgeViewer badges={channelMemberBadges} maxDisplay={3} />
-          {isCurrentUser && <div className={styles['myLocationIcon']} />}
+          className={`${styles['userState']} ${false ? styles['unplay'] : ''}`}
+        />
+        <div
+          className={`${styles['userIcon']} ${
+            permission[channelMemberGender]
+          } ${permission[`lv-${channelMemberPermission}`]}`}
+        />
+        <div className={styles['userTabName']}>
+          {channelMemberNickname || channelMemberName}
         </div>
+        <div
+          className={`${styles['userGrade']} ${
+            grade[`lv-${channelMemberGrade}`]
+          }`}
+        />
+        <BadgeViewer badges={channelMemberBadges} maxDisplay={3} />
+        {isCurrentUser && <div className={styles['myLocationIcon']} />}
       </div>
     );
   },

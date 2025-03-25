@@ -225,7 +225,7 @@
 
 .channelList .channelTab {
   position: relative;
-  padding: 0.125rem 20px 0.125rem 0.75rem;
+  padding: 1px 20px 1px 8px;
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -286,9 +286,9 @@
   font-size: 14px;
 }
 
-.channelList .subChannel:not(.lobby),
-.channelList .subChannel:not(.lobby) + .userList .userTab {
-  padding: 0.125rem 20px 0.125rem 1.7rem;
+.channelList .channelList:not(.lobby),
+.channelList .channelList:not(.lobby) + .userList {
+  padding-left: 16px;
 }
 
 .lobby {
@@ -306,7 +306,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  padding: 0.125rem 20px 0.125rem 0.75rem;
+  padding: 1px 20px 1px 8px;
   cursor: pointer;
   gap: 5px;
 }
@@ -716,7 +716,7 @@
   background: #bbb;
   border-radius: 2px;
   outline: none;
-  transform: rotate(-90deg); 
+  transform: rotate(-90deg);
   position: absolute;
 }
 
