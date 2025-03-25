@@ -398,12 +398,14 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     // Hooks
     const lang = useLanguage();
     const contextMenu = useContextMenu();
+    const socket = useSocket();
 
     // Variables
     const { id: userId } = user;
     const {
       id: channelMemberId,
       name: channelMemberName,
+      serverId: channelMemberServerId,
       permissionLevel: channelMemberPermission,
       nickname: channelMemberNickname,
       userId: channelMemberUserId,
@@ -413,19 +415,19 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     } = channelMember;
     const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max leve
     const isCurrentUser = userId === channelMemberUserId;
-    const canEdit = channelMemberPermission > permissionLevel;
+    const canEdit = permissionLevel > channelMemberPermission;
 
     // Handlers
-    const handleOpenApplyFriend = (
-      userId: User['id'],
-      targetId: User['id'],
-    ) => {
-      ipcService.popup.open(PopupType.APPLY_FRIEND);
-      ipcService.initialData.onRequest(PopupType.APPLY_FRIEND, {
-        userId,
-        targetId,
-      });
-    };
+    // const handleOpenApplyFriend = (
+    //   userId: User['id'],
+    //   targetId: User['id'],
+    // ) => {
+    //   ipcService.popup.open(PopupType.APPLY_FRIEND);
+    //   ipcService.initialData.onRequest(PopupType.APPLY_FRIEND, {
+    //     userId,
+    //     targetId,
+    //   });
+    // };
 
     const handleOpenEditMember = (
       serverId: Server['id'],
@@ -435,6 +437,18 @@ const UserTab: React.FC<UserTabProps> = React.memo(
       ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
         serverId,
         userId,
+      });
+    };
+
+    const handleUpdateMember = (permissionLevel: number) => {
+      if (!socket) return;
+      socket.send.updateMember({
+        member: {
+          ...channelMember,
+          permissionLevel: permissionLevel,
+        },
+        userId,
+        serverId: channelMemberServerId,
       });
     };
 
@@ -529,8 +543,36 @@ const UserTab: React.FC<UserTabProps> = React.memo(
             {
               id: 'member-management',
               label: lang.tr.memberManagement,
-              onClick: () => {},
               show: !isCurrentUser && canEdit,
+              icon: 'submenu',
+              hasSubmenu: true,
+              submenuItems: [
+                {
+                  id: 'set-guest',
+                  label: lang.tr.setGuest,
+                  onClick: () => handleUpdateMember(1),
+                },
+                {
+                  id: 'set-member',
+                  label: lang.tr.setMember,
+                  onClick: () => handleUpdateMember(2),
+                },
+                {
+                  id: 'set-channel-admin',
+                  label: lang.tr.setChannelAdmin,
+                  onClick: () => handleUpdateMember(3),
+                },
+                {
+                  id: 'set-category-admin',
+                  label: lang.tr.setCategoryAdmin,
+                  onClick: () => handleUpdateMember(4),
+                },
+                {
+                  id: 'set-admin',
+                  label: lang.tr.setAdmin,
+                  onClick: () => handleUpdateMember(5),
+                },
+              ],
             },
           ]);
         }}
@@ -612,7 +654,8 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
         onContextMenu={(e) => {
           if (
             !(e.target as HTMLElement).closest(`.${styles['channelTab']}`) &&
-            !(e.target as HTMLElement).closest(`.${styles['categoryTab']}`)
+            !(e.target as HTMLElement).closest(`.${styles['categoryTab']}`) &&
+            !(e.target as HTMLElement).closest(`.${styles['userTab']}`)
           ) {
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {

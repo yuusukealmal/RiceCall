@@ -36,6 +36,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
     const { userId, serverId } = initialData;
 
     // States
+    const [member, setMember] = useState(createDefault.member());
     const [memberNickname, setMemberNickname] = useState(
       createDefault.member().nickname,
     );
@@ -48,16 +49,21 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
 
     const handleUpdateMember = (
       member: Partial<Member>,
-      userId: User['id'],
-      serverId: Server['id'],
+      action: string | null,
     ) => {
       if (!socket) return;
-      socket.send.updateMember({ member, userId, serverId });
+      socket.send.updateMember({
+        member,
+        userId,
+        serverId,
+        action,
+      });
     };
 
     const handleMemberUpdate = (data: Member | null) => {
       if (!data) data = createDefault.member();
       setMemberNickname(data.nickname);
+      setMember(data);
     };
 
     const handleUserUpdate = (data: User | null) => {
@@ -113,9 +119,11 @@ const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(
             className={`${popup['button']}`}
             onClick={() => {
               handleUpdateMember(
-                { nickname: memberNickname },
-                userId,
-                serverId,
+                {
+                  ...member,
+                  nickname: memberNickname,
+                },
+                'nickname',
               );
               handleClose();
             }}

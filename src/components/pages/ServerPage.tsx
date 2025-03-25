@@ -59,7 +59,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const [sidebarWidth, setSidebarWidth] = useState<number>(256);
     const [isResizing, setIsResizing] = useState<boolean>(false);
     const [isFavorite, setIsFavorite] = useState<boolean>(
-      user.favServers?.some((server) => server.id === server.id) || false,
+      user.favServers?.some((favServer) => favServer.id === server.id) || false,
     );
     const [currentChannel, setCurrentChannel] = useState<Channel>(
       createDefault.channel(),
@@ -379,6 +379,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         {
                           id: 'separator',
                           label: '',
+                          show:
+                            memberPermissionLevel > 4 ||
+                            memberPermissionLevel < 2,
                         },
                         {
                           id: 'editNickname',

@@ -40,26 +40,47 @@ const channelHandler = {
       }
       const user = await Func.validate.user(users[userId]);
       const channel = await Func.validate.channel(channels[channelId]);
+      const server = await Get.server(channel.serverId);
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
       const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
-      if (!channel.isLobby) {
-        if (channel.visibility === 'readonly') {
-          throw new StandardizedError(
-            '該頻道為唯獨頻道',
-            'ValidationError',
-            'CONNECTCHANNEL',
-            'CHANNEL_IS_READONLY',
-            403,
-          );
-        }
-      }
+      if (channel.visibility === 'readonly')
+        throw new StandardizedError(
+          '該頻道為唯獨頻道',
+          'ValidationError',
+          'CONNECTCHANNEL',
+          'CHANNEL_IS_READONLY',
+          403,
+        );
+      const member = await Get.member(operator.id, channel.serverId);
+      if (
+        (server.visibility === 'member' || channel.visibility === 'member') &&
+        (!member || member.permissionLevel < 2)
+      )
+        throw new StandardizedError(
+          '您需要成為該群組的會員才能加入該頻道',
+          'ValidationError',
+          'CONNECTCHANNEL',
+          'SERVER_PRIVATE',
+          403,
+        );
+      if (
+        (server.visibility === 'private' || channel.visibility === 'private') &&
+        (!member || member.permissionLevel < 3)
+      )
+        throw new StandardizedError(
+          '您需要成為該群組的管理員才能加入該頻道',
+          'ValidationError',
+          'CONNECTCHANNEL',
+          'SERVER_PRIVATE',
+          403,
+        );
 
-      // Disconnect the user from the current channel
       if (user.currentChannelId) {
+        // Disconnect the user from the current channel
         await channelHandler.disconnectChannel(io, socket, {
           channelId: user.currentChannelId,
           userId: user.id,

@@ -829,6 +829,11 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       applicationUserId,
                                       applicationServerId,
                                     );
+                                    setServerApplications(
+                                      serverApplications.filter(
+                                        (app) => app.id !== applicationId,
+                                      ),
+                                    );
                                   },
                                 },
                                 {
@@ -839,6 +844,11 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                                       { applicationStatus: 'rejected' },
                                       applicationUserId,
                                       applicationServerId,
+                                    );
+                                    setServerApplications(
+                                      serverApplications.filter(
+                                        (app) => app.id !== applicationId,
+                                      ),
                                     );
                                   },
                                 },
