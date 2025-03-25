@@ -133,7 +133,8 @@
   gap: 5px;
 }
 
-.inputBox input[type='text'] {
+.inputBox input[type='text'],
+.inputBox input[type='number'] {
   border: 1px solid #ddd;
   padding: 2px;
   background: #fff;

@@ -85,6 +85,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
       setChannelUserLimit(data.userLimit);
       setChannelTextState(data.chatMode);
       setChannelVoiceState(data.voiceMode);
+      setChannelOrder(data.order);
     };
 
     const handleClose = () => {
@@ -144,10 +145,11 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         onChange={(e) => setChannelName(e.target.value)}
                       />
                     </div>
+
                     <div className={`${popup['inputBox']} ${popup['col']}`}>
                       <div className={popup['label']}>{lang.tr.userLimit}</div>
                       <input
-                        type="text"
+                        type="number"
                         value={channelUserLimit}
                         disabled={
                           channelVisibility === 'readonly' || channelIsLobby
@@ -160,6 +162,27 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                             ),
                           )
                         }
+                      />
+                    </div>
+
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>
+                        {lang.tr.channelOrder}
+                      </div>
+                      <input
+                        type="number"
+                        value={channelOrder}
+                        min="-999"
+                        max="999"
+                        onChange={(e) => {
+                          if (isNaN(parseInt(e.target.value))) return;
+                          setChannelOrder(
+                            Math.max(
+                              -999,
+                              Math.min(999, parseInt(e.target.value)),
+                            ),
+                          );
+                        }}
                       />
                     </div>
                   </div>
@@ -179,26 +202,6 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         {lang.tr.queueSpeech}
                       </option>
                     </select>
-                  </div>
-                  <div>
-                    <div className={popup['label']}>{lang.tr.channelOrder}</div>
-                    <input
-                      style={{ width: '75px' }}
-                      type="number"
-                      className={setting['input']}
-                      value={channelOrder}
-                      min="-999"
-                      max="999"
-                      onChange={(e) => {
-                        if (isNaN(parseInt(e.target.value))) return;
-                        setChannelOrder(
-                          Math.max(
-                            -999,
-                            Math.min(999, parseInt(e.target.value)),
-                          ),
-                        );
-                      }}
-                    />
                   </div>
                 </div>
                 <div className={setting['saperator']} />
