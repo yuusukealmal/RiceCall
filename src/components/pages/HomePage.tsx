@@ -34,11 +34,12 @@ const ServerListSection: React.FC<ServerListSectionProps> = ({
   servers,
   user,
 }) => {
+  const lang = useLanguage();
+
   const [expanded, setExpanded] = useState(false);
 
   const displayedServers = expanded ? servers : servers.slice(0, 6);
   const hasMore = servers.length > 6;
-
   return (
     <div className={homePage['myGroupsItem']}>
       <div className={homePage['myGroupsTitle']}>{title}</div>
@@ -48,12 +49,34 @@ const ServerListSection: React.FC<ServerListSectionProps> = ({
           className={`${homePage['viewMoreBtn']} ${expanded ? 'more' : 'less'}`}
           onClick={() => setExpanded(!expanded)}
         >
-          {expanded ? '檢視較少' : '檢視更多'}
+          {expanded ? lang.tr.viewLess : lang.tr.viewMore}
         </button>
       )}
     </div>
   );
 };
+
+// 新增搜尋結果項目組件
+const SearchResultItem: React.FC<{
+  server: Server;
+  onClick: () => void;
+}> = ({ server, onClick }) => (
+  <div className={homePage['dropdownItem']} onClick={onClick}>
+    <div
+      className={homePage['serverAvatar']}
+      style={{
+        backgroundImage: `url(${server.avatarUrl})`,
+      }}
+    />
+    <div className={homePage['serverInfo']}>
+      <div className={homePage['serverName']}>{server.name}</div>
+      <div className={homePage['serverIdBox']}>
+        <div className={homePage['idIcon']} />
+        <div className={homePage['serverId']}>{server.displayId}</div>
+      </div>
+    </div>
+  </div>
+);
 
 const HomePageComponent: React.FC<HomePageProps> = React.memo(
   ({ user, handleUserUpdate }) => {
@@ -65,7 +88,12 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
     const refreshed = useRef(false);
 
     // States
-    const [searchResults, setSearchResults] = useState<Server[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const searchRef = useRef<HTMLDivElement>(null);
+    const [exactMatch, setExactMatch] = useState<Server | null>(null);
+    const [personalResults, setPersonalResults] = useState<Server[]>([]);
+    const [relatedResults, setRelatedResults] = useState<Server[]>([]);
 
     // Variables
     const {
@@ -78,12 +106,56 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
 
     // Handlers
     const handleSearchServer = (query: string) => {
-      if (!socket) return;
+      if (!socket || query.trim() === '') {
+        setExactMatch(null);
+        setPersonalResults([]);
+        setRelatedResults([]);
+        return;
+      }
       socket.send.searchServer({ query });
+      setSearchQuery(query);
     };
 
-    const handleServerSearch = (servers: Server[]) => {
-      setSearchResults(servers);
+    const handleServerSearch = (servers: Server[], query: string) => {
+      if (!query.trim()) {
+        setExactMatch(null);
+        setPersonalResults([]);
+        setRelatedResults([]);
+        return;
+      }
+
+      setExactMatch(null);
+      setPersonalResults([]);
+      setRelatedResults([]);
+
+      if (!servers.length) return;
+
+      const exact = servers.find(
+        (server) => server.displayId.toString() === query.trim(),
+      );
+
+      if (exact) setExactMatch(exact);
+
+      const sortedServers = servers.sort((a, b) => {
+        const aHasId = a.displayId.toString().includes(query.trim());
+        const bHasId = b.displayId.toString().includes(query.trim());
+        if (aHasId && !bHasId) return -1;
+        if (!aHasId && bHasId) return 1;
+        return 0;
+      });
+
+      const personal = sortedServers.filter(
+        (server) =>
+          userRecentServers.some((recent) => recent.id === server.id) ||
+          userFavServers.some((fav) => fav.id === server.id) ||
+          userOwnedServers.some((owned) => owned.id === server.id),
+      );
+      setPersonalResults(personal);
+
+      const related = sortedServers
+        .filter((server) => !personal.includes(server))
+        .filter((server) => server.visibility !== 'invisible');
+      setRelatedResults(related);
     };
 
     const handleOpenCreateServer = (userId: User['id']) => {
@@ -96,7 +168,8 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
       if (!socket) return;
 
       const eventHandlers = {
-        [SocketServerEvent.SERVER_SEARCH]: handleServerSearch,
+        [SocketServerEvent.SERVER_SEARCH]: (servers: Server[]) =>
+          handleServerSearch(servers, searchQuery),
       };
       const unsubscribe: (() => void)[] = [];
 
@@ -108,7 +181,7 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
       return () => {
         unsubscribe.forEach((unsub) => unsub());
       };
-    }, [socket]);
+    }, [socket, searchQuery]);
 
     useEffect(() => {
       if (!userId || refreshed.current) return;
@@ -139,6 +212,101 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
       });
     }, [lang, userName]);
 
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          searchRef.current &&
+          !searchRef.current.contains(event.target as Node)
+        ) {
+          setShowDropdown(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.addEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // 優化後的 renderSearchBar
+    const renderSearchBar = () => {
+      const handleServerConnect = (serverId: string) => {
+        if (socket) {
+          socket.send.connectServer({
+            serverId,
+            userId: user.id,
+          });
+        }
+        setShowDropdown(false);
+        setSearchQuery('');
+      };
+
+      const hasResults =
+        exactMatch || personalResults.length > 0 || relatedResults.length > 0;
+
+      return (
+        <div className={homePage['searchBar']} ref={searchRef}>
+          <input
+            type="search"
+            placeholder={lang.tr.searchPlaceholder}
+            className={homePage['searchInput']}
+            value={searchQuery}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchQuery(value);
+              handleSearchServer(value);
+              setShowDropdown(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && exactMatch) {
+                handleServerConnect(exactMatch.id);
+              }
+            }}
+            onFocus={() => setShowDropdown(true)}
+          />
+
+          {showDropdown && hasResults && (
+            <div className={homePage['searchDropdown']}>
+              {exactMatch && (
+                <span className={homePage['dropdownHeaderText']}>
+                  {lang.tr.quickEnterServer}
+                  {exactMatch.displayId}
+                </span>
+              )}
+
+              {personalResults.length > 0 && (
+                <>
+                  <div className={homePage['dropdownHeader']}>
+                    <span>{lang.tr.personalExclusive}</span>
+                  </div>
+                  {personalResults.map((server) => (
+                    <SearchResultItem
+                      key={server.id}
+                      server={server}
+                      onClick={() => handleServerConnect(server.id)}
+                    />
+                  ))}
+                </>
+              )}
+
+              {relatedResults.length > 0 && (
+                <>
+                  <div className={homePage['dropdownHeader']}>
+                    <span>{lang.tr.relatedSearch}</span>
+                  </div>
+                  {relatedResults.map((server) => (
+                    <SearchResultItem
+                      key={server.id}
+                      server={server}
+                      onClick={() => handleServerConnect(server.id)}
+                    />
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    };
+
     return (
       <div className={homePage['homeWrapper']}>
         {/* Header */}
@@ -146,19 +314,7 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
           <div className={homePage['left']}>
             <div className={homePage['backBtn']} />
             <div className={homePage['forwardBtn']} />
-            <div className={homePage['searchBar']}>
-              <input
-                type="search"
-                placeholder={lang.tr.searchPlaceholder}
-                className={homePage['searchInput']}
-                onKeyDown={(e) => {
-                  if (e.key != 'Enter') return;
-                  if (e.currentTarget.value.trim() === '') return;
-                  handleSearchServer(e.currentTarget.value);
-                }}
-              />
-              <div className={homePage['searchIcon']} />
-            </div>
+            {renderSearchBar()}
           </div>
           <div className={homePage['mid']}>
             <button
@@ -191,13 +347,6 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
         <main className={homePage['myGroupsWrapper']}>
           <div className={homePage['myGroupsContain']}>
             <div className={homePage['myGroupsView']}>
-              {searchResults.length > 0 && (
-                <ServerListSection
-                  title={lang.tr.searchResult}
-                  servers={searchResults}
-                  user={user}
-                />
-              )}
               <ServerListSection
                 title={lang.tr.recentVisits}
                 servers={userRecentServers}

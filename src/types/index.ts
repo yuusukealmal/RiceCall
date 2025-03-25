@@ -23,12 +23,16 @@ export interface Translation {
   exit: string;
   searchPlaceholder: string;
   searchMemberPlaceholder: string;
+  viewLess: string;
+  viewMore: string;
+  personalExclusive: string;
+  quickEnterServer: string;
+  relatedSearch: string;
   searchResult: string;
   recentVisits: string;
   myGroups: string;
   favoriteGroups: string;
   createGroup: string;
-  personalExclusive: string;
   fileSizeError: string;
   fileTypeError: string;
   updateServerError: string;
@@ -262,12 +266,16 @@ export const translations: Record<LanguageKey, Translation> = {
     exit: '退出',
     searchPlaceholder: '輸入群ID或群名稱',
     searchMemberPlaceholder: '輸入關鍵字或ID搜尋',
+    viewLess: '檢視較少',
+    viewMore: '檢視更多',
+    personalExclusive: '個人專屬',
+    quickEnterServer: '按Enter鍵快速進入語音群',
+    relatedSearch: '相關搜尋',
     searchResult: '搜尋結果',
     recentVisits: '最近訪問',
     myGroups: '我的語音群',
     favoriteGroups: '收藏的語音群',
     createGroup: '創建語音群',
-    personalExclusive: '個人專屬',
     fileSizeError: '檔案大小不能超過 5MB',
     fileTypeError: '不支援的檔案格式',
     updateServerError: '更新群組失敗',
@@ -501,12 +509,16 @@ export const translations: Record<LanguageKey, Translation> = {
     exit: '退出',
     searchPlaceholder: '输入群ID或群名称',
     searchMemberPlaceholder: '输入关键字或ID搜索',
+    viewLess: '检视较少',
+    viewMore: '检视更多',
+    personalExclusive: '个人专属',
+    quickEnterServer: '按Enter键快速进入语音群',
+    relatedSearch: '相关搜索',
     searchResult: '搜索结果',
     recentVisits: '最近访问',
     myGroups: '我的语音群',
     favoriteGroups: '收藏的语音群',
     createGroup: '创建语音群',
-    personalExclusive: '个人专属',
     fileSizeError: '文件大小不能超过 5MB',
     fileTypeError: '不支持的文件格式',
     updateServerError: '更新服务器失败',
@@ -740,12 +752,16 @@ export const translations: Record<LanguageKey, Translation> = {
     exit: 'Exit',
     searchPlaceholder: 'Enter group ID or name',
     searchMemberPlaceholder: 'Enter keyword or ID search',
+    viewLess: 'View Less',
+    viewMore: 'View More',
+    personalExclusive: 'Personal Exclusive',
+    quickEnterServer: 'Press Enter to Quick Join Voice Group',
+    relatedSearch: 'Related Search',
     searchResult: 'Search Result',
     recentVisits: 'Recent Visits',
     myGroups: 'My Voice Groups',
     favoriteGroups: 'Favorite Voice Groups',
     createGroup: 'Create Voice Group',
-    personalExclusive: 'Personal Exclusive',
     fileSizeError: 'File size cannot exceed 5MB',
     fileTypeError: 'Unsupported file format',
     updateServerError: 'Failed to update server',
@@ -985,12 +1001,16 @@ export const translations: Record<LanguageKey, Translation> = {
     exit: '終了',
     searchPlaceholder: 'グループIDまたは名前を入力',
     searchMemberPlaceholder: 'キーワードまたはIDを検索',
+    viewLess: '検視較少',
+    viewMore: '検視更多',
+    personalExclusive: '個人専用',
+    quickEnterServer: 'Enterキーを押して迅速に参加',
+    relatedSearch: '関連検索',
     searchResult: '検索結果',
     recentVisits: '最近の訪問',
     myGroups: '私のボイスグループ',
     favoriteGroups: 'お気に入りのボイスグループ',
     createGroup: 'ボイスグループを作成',
-    personalExclusive: '個人専用',
     fileSizeError: 'ファイルサイズは5MBを超えることはできません',
     fileTypeError: 'サポートされていないファイル形式',
     updateServerError: 'サーバーの更新に失敗しました',

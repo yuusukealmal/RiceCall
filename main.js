@@ -197,7 +197,6 @@ function setAutoLaunch(enable) {
 function isAutoLaunchEnabled() {
   try {
     const settings = app.getLoginItemSettings();
-    console.log('讀取開機自動啟動狀態:', settings.openAtLogin);
     return settings.openAtLogin;
   } catch (error) {
     console.error('讀取開機自動啟動狀態時出錯:', error);
