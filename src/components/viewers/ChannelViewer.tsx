@@ -220,7 +220,8 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
     const canJoin =
       channelVisibility !== 'readonly' &&
       !(channelVisibility === 'private' && permissionLevel < 3) &&
-      !(channelVisibility === 'member' && permissionLevel < 2);
+      !(channelVisibility === 'member' && permissionLevel < 2) &&
+      !userInChannel;
 
     // Handlers
     const handleOpenEditChannel = (
@@ -643,78 +644,44 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
 
           {/* Channel List */}
           <div className={styles['channelList']}>
-            {view === 'current'
-              ? // 當前頻道視圖
-                serverChannels
-                  .filter((c) => c.id === user.currentChannelId)
-                  .map((channel) => (
-                    <div key={channel.id}>
-                      <div
-                        className={`
-                        ${styles['channelTab']} 
-                        ${styles['expanded']} 
-                        ${
-                          (channel as Channel).isLobby
-                            ? styles['lobby']
-                            : styles[channel.visibility]
-                        }
-                      `}
-                      >
-                        <div className={styles['channelTabLable']}>
-                          {channel.name}
-                        </div>
-                        {channel.visibility !== 'readonly' && (
-                          <div className={styles['channelTabCount']}>
-                            {`(${
-                              server.members?.filter(
-                                (mb) => mb.currentChannelId === channel.id,
-                              ).length ?? 0
-                            })`}
-                          </div>
-                        )}
-                      </div>
-                      <div className={styles['userList']}>
-                        {server.members
-                          ?.filter((mb) => mb.currentChannelId === channel.id)
-                          .sort((a, b) => a.name.localeCompare(b.name))
-                          .map((channelMember) => (
-                            <UserTab
-                              key={channelMember.id}
-                              user={user}
-                              channelMember={channelMember}
-                              permissionLevel={memberPermission}
-                            />
-                          ))}
-                      </div>
-                    </div>
-                  ))
-              : // 所有頻道視圖
-                serverChannels
-                  .filter((c) => c.isRoot)
-                  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                  .map((item) =>
-                    item.type === 'category' ? (
-                      <CategoryTab
-                        key={item.id}
-                        user={user}
-                        server={server}
-                        category={item}
-                        permissionLevel={memberPermission}
-                        expanded={expanded}
-                        setExpanded={setExpanded}
-                      />
-                    ) : (
-                      <ChannelTab
-                        key={item.id}
-                        user={user}
-                        server={server}
-                        channel={item}
-                        permissionLevel={memberPermission}
-                        expanded={expanded}
-                        setExpanded={setExpanded}
-                      />
-                    ),
-                  )}
+            {view === 'current' ? (
+              <ChannelTab
+                key={currentChannel.id}
+                user={user}
+                server={server}
+                channel={currentChannel}
+                permissionLevel={memberPermission}
+                expanded={{ [currentChannel.id]: true }}
+                setExpanded={() => {}}
+              />
+            ) : (
+              serverChannels
+                .filter((c) => c.isRoot)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                .map((item) =>
+                  item.type === 'category' ? (
+                    <CategoryTab
+                      key={item.id}
+                      user={user}
+                      server={server}
+                      category={item}
+                      permissionLevel={memberPermission}
+                      expanded={expanded}
+                      setExpanded={setExpanded}
+                    />
+                  ) : (
+                    <ChannelTab
+                      key={item.id}
+                      user={user}
+                      server={server}
+                      channel={item}
+                      permissionLevel={memberPermission}
+                      expanded={expanded}
+                      setExpanded={setExpanded}
+                    />
+                  ),
+                )
+            )}
           </div>
         </div>
 
