@@ -5,7 +5,7 @@ import React from 'react';
 // Providers
 import SocketProvider from '@/providers/SocketProvider';
 import ContextMenuProvider from '@/providers/ContextMenuProvider';
-import { LanguageProvider } from '@/providers/LanguageProvider';
+import LanguageProvider from '@/providers/LanguageProvider';
 import WebRTCProvider from '@/providers/WebRTCProvider';
 
 interface ProvidersProps {
