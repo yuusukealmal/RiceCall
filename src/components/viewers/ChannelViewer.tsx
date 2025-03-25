@@ -447,30 +447,30 @@ const UserTab: React.FC<UserTabProps> = React.memo(
         }}
         onContextMenu={(e) => {
           contextMenu.showContextMenu(e.pageX, e.pageY, [
-            {
-              id: 'send-message',
-              label: '傳送即時訊息',
-              onClick: () => {},
-              show: !isCurrentUser,
-            },
-            {
-              id: 'view-profile',
-              label: '檢視個人檔案',
-              onClick: () => {},
-              show: !isCurrentUser,
-            },
-            {
-              id: 'add-friend',
-              label: lang.tr.addFriend,
-              onClick: () => handleOpenApplyFriend(userId, channelMemberUserId),
-              show: !isCurrentUser,
-            },
-            {
-              id: 'refuse-voice',
-              label: '拒聽此人語音',
-              onClick: () => {},
-              show: !isCurrentUser && !canEdit,
-            },
+            // {
+            //   id: 'send-message',
+            //   label: '傳送即時訊息',
+            //   onClick: () => {},
+            //   show: !isCurrentUser,
+            // },
+            // {
+            //   id: 'view-profile',
+            //   label: '檢視個人檔案',
+            //   onClick: () => {},
+            //   show: !isCurrentUser,
+            // },
+            // {
+            //   id: 'add-friend',
+            //   label: lang.tr.addFriend,
+            //   onClick: () => handleOpenApplyFriend(userId, channelMemberUserId),
+            //   show: !isCurrentUser,
+            // },
+            // {
+            //   id: 'refuse-voice',
+            //   label: '拒聽此人語音',
+            //   onClick: () => {},
+            //   show: !isCurrentUser && !canEdit,
+            // },
             {
               id: 'edit-nickname',
               label: '修改群名片',
@@ -481,46 +481,46 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 ),
               show: isCurrentUser || canEdit,
             },
-            {
-              id: 'separator',
-              label: '',
-              show: !isCurrentUser && !canEdit,
-            },
-            {
-              id: 'move-to-my-channel',
-              label: lang.tr.moveToMyChannel,
-              // onClick: () => handleUserMove(),
-              show: !isCurrentUser && canEdit,
-            },
-            {
-              id: 'separator',
-              label: '',
-              show: !isCurrentUser && canEdit,
-            },
-            {
-              id: 'mute-voice',
-              label: '禁止此人語音',
-              onClick: () => {},
-              show: !isCurrentUser && canEdit,
-            },
-            {
-              id: 'mute-text',
-              label: '禁止文字',
-              onClick: () => {},
-              show: !isCurrentUser && canEdit,
-            },
-            {
-              id: 'kick',
-              label: lang.tr.kickOut,
-              onClick: () => {},
-              show: !isCurrentUser && canEdit,
-            },
-            {
-              id: 'block',
-              label: lang.tr.block,
-              onClick: () => {},
-              show: !isCurrentUser && canEdit,
-            },
+            // {
+            //   id: 'separator',
+            //   label: '',
+            //   show: !isCurrentUser && !canEdit,
+            // },
+            // {
+            //   id: 'move-to-my-channel',
+            //   label: lang.tr.moveToMyChannel,
+            //   // onClick: () => handleUserMove(),
+            //   show: !isCurrentUser && canEdit,
+            // },
+            // {
+            //   id: 'separator',
+            //   label: '',
+            //   show: !isCurrentUser && canEdit,
+            // },
+            // {
+            //   id: 'mute-voice',
+            //   label: '禁止此人語音',
+            //   onClick: () => {},
+            //   show: !isCurrentUser && canEdit,
+            // },
+            // {
+            //   id: 'mute-text',
+            //   label: '禁止文字',
+            //   onClick: () => {},
+            //   show: !isCurrentUser && canEdit,
+            // },
+            // {
+            //   id: 'kick',
+            //   label: lang.tr.kickOut,
+            //   onClick: () => {},
+            //   show: !isCurrentUser && canEdit,
+            // },
+            // {
+            //   id: 'block',
+            //   label: lang.tr.block,
+            //   onClick: () => {},
+            //   show: !isCurrentUser && canEdit,
+            // },
             {
               id: 'separator',
               label: '',

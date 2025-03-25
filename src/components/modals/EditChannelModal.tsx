@@ -175,13 +175,13 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         min="-999"
                         max="999"
                         onChange={(e) => {
-                          if (isNaN(parseInt(e.target.value))) return;
-                          setChannelOrder(
-                            Math.max(
-                              -999,
-                              Math.min(999, parseInt(e.target.value)),
-                            ),
-                          );
+                          const value = e.target.value;
+                          if (!value || isNaN(parseInt(value)))
+                            setChannelOrder(0);
+                          else
+                            setChannelOrder(
+                              Math.max(-999, Math.min(999, parseInt(value))),
+                            );
                         }}
                       />
                     </div>
@@ -189,18 +189,18 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   <div className={`${popup['inputBox']} ${popup['col']}`}>
                     <div className={popup['label']}>{lang.tr.channelMode}</div>
                     <select
-                      value={channelVisibility}
+                      value={channelVoiceState}
                       onChange={(e) =>
-                        setChannelVisibility(
-                          e.target.value as Channel['visibility'],
+                        setChannelVoiceState(
+                          e.target.value as Channel['voiceMode'],
                         )
                       }
                     >
                       <option value="free">{lang.tr.freeSpeech}</option>
-                      <option value="admin">{lang.tr.forbiddenSpeech}</option>
-                      <option value="queue" disabled>
-                        {lang.tr.queueSpeech}
+                      <option value="forbidden">
+                        {lang.tr.forbiddenSpeech}
                       </option>
+                      <option value="queue">{lang.tr.queueSpeech}</option>
                     </select>
                   </div>
                 </div>
