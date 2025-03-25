@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 
 // Types
 import { SocketServerEvent, SocketClientEvent } from '@/types';
@@ -18,7 +18,7 @@ const SocketContext = createContext<SocketContextType | null>(null);
 
 export const useSocket = (): SocketContextType => {
   const context = useContext(SocketContext);
-  if (!context)
+  if (!context || !context.on || !context.send)
     throw new Error('useSocket must be used within a SocketProvider');
   return context;
 };
@@ -28,35 +28,43 @@ interface SocketProviderProps {
 }
 
 const SocketProvider = ({ children }: SocketProviderProps) => {
-  const [on, setOn] = useState<SocketContextType['on']>(
-    {} as SocketContextType['on'],
+  // States
+  const on = useMemo<SocketContextType['on']>(
+    () =>
+      Object.values(SocketServerEvent).reduce((acc, event) => {
+        acc[event] = (callback: (data: any) => void) => {
+          ipcService.onSocketEvent(event, callback);
+          return () => ipcService.removeListener(event);
+        };
+        return acc;
+      }, {} as SocketContextType['on']),
+    [],
   );
-  const [send, setSend] = useState<SocketContextType['send']>(
-    {} as SocketContextType['send'],
+  const send = useMemo<SocketContextType['send']>(
+    () =>
+      Object.values(SocketClientEvent).reduce((acc, event) => {
+        acc[event] = (data: any) => {
+          ipcService.sendSocketEvent(event, data);
+          return () => {};
+        };
+        return acc;
+      }, {} as SocketContextType['send']),
+    [],
   );
-  const cleanupRef = useRef<(() => void)[]>([]);
+
+  // Refs
+  const cleanupRef = useRef<(() => void)[]>(
+    Object.values(SocketServerEvent).reduce((acc, event) => {
+      acc.push(() => ipcService.removeListener(event));
+      return acc;
+    }, [] as (() => void)[]),
+  );
 
   useEffect(() => {
-    const newOn = Object.values(SocketServerEvent).reduce((acc, event) => {
-      acc[event] = (callback: (data: any) => void) => {
-        ipcService.removeListener(event);
-        ipcService.onSocketEvent(event, callback);
-        const cleanup = () => ipcService.removeListener(event);
-        cleanupRef.current.push(cleanup);
-        return cleanup;
-      };
-      return acc;
-    }, {} as Record<SocketServerEvent, (callback: (data: any) => void) => () => void>);
-    setOn(newOn);
-
-    const newSend = Object.values(SocketClientEvent).reduce((acc, event) => {
-      acc[event] = (data: any) => {
-        ipcService.sendSocketEvent(event, data);
-        return () => {};
-      };
-      return acc;
-    }, {} as Record<SocketClientEvent, (data: any) => () => void>);
-    setSend(newSend);
+    ipcService.onSocketEvent(SocketServerEvent.DISCONNECT, () => {
+      cleanupRef.current.forEach((cleanup) => cleanup());
+      cleanupRef.current = [];
+    });
 
     return () => {
       cleanupRef.current.forEach((cleanup) => cleanup());
