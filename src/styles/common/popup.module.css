@@ -219,12 +219,12 @@
   display: none;
 }
 
-.disabled {
+.popupContainer .disabled {
   color: #8f8f8f;
   pointer-events: none;
 }
 
-:disabled {
+.popupContainer :disabled {
   color: #8f8f8f;
   pointer-events: none;
 }
