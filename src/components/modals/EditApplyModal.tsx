@@ -85,7 +85,7 @@ const EditApplyModal: React.FC<EditApplyModalProps> = React.memo(
                   <input
                     type="checkbox"
                     className={setting['check']}
-                    checked={isReceiveApply}
+                    checked={isReceiveApply || false}
                     onChange={() => {
                       setIsReceiveApply(!isReceiveApply);
                     }}
@@ -98,7 +98,7 @@ const EditApplyModal: React.FC<EditApplyModalProps> = React.memo(
                 <input
                   className={popup['input']}
                   type="text"
-                  value={applyNotice}
+                  value={applyNotice || ''}
                   onChange={(e) => {
                     setApplyNotice(e.target.value);
                   }}

@@ -365,17 +365,17 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           onClick: () =>
                             handleOpenApplyMember(userId, serverId),
                         },
-                        {
-                          id: 'memberChat',
-                          label: '會員群聊',
-                          show: memberPermissionLevel > 2,
-                          onClick: () => {},
-                        },
-                        {
-                          id: 'admin',
-                          label: '查看管理員',
-                          onClick: () => {},
-                        },
+                        // {
+                        //   id: 'memberChat',
+                        //   label: '會員群聊',
+                        //   show: memberPermissionLevel > 2,
+                        //   onClick: () => {},
+                        // },
+                        // {
+                        //   id: 'admin',
+                        //   label: '查看管理員',
+                        //   onClick: () => {},
+                        // },
                         {
                           id: 'separator',
                           label: '',
@@ -394,11 +394,11 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           id: 'separator',
                           label: '',
                         },
-                        {
-                          id: 'report',
-                          label: '舉報',
-                          onClick: () => {},
-                        },
+                        // {
+                        //   id: 'report',
+                        //   label: '舉報',
+                        //   onClick: () => {},
+                        // },
                         {
                           id: 'favorite',
                           label: isFavorite ? '取消收藏' : '加入收藏',

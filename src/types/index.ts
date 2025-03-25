@@ -197,6 +197,7 @@ export interface Translation {
   member: string;
   channelAdmin: string;
   channelManager: string;
+  channelOrder: string;
   serverAdmin: string;
   serverOwner: string;
   eventStaff: string;
@@ -497,6 +498,7 @@ export const translations: Record<LanguageKey, Translation> = {
     member: '會員',
     channelAdmin: '二級頻道管理員',
     channelManager: '頻道管理員',
+    channelOrder: '頻道位置',
     serverAdmin: '群管理員',
     serverOwner: '群創建者',
     eventStaff: '官方客服',
@@ -795,6 +797,7 @@ export const translations: Record<LanguageKey, Translation> = {
     member: '会员',
     channelAdmin: '二级频道管理员',
     channelManager: '频道管理员',
+    channelOrder: '频道位置',
     serverAdmin: '群管理员',
     serverOwner: '群创建者',
     eventStaff: '官方客服',
@@ -1098,6 +1101,7 @@ export const translations: Record<LanguageKey, Translation> = {
     member: 'Member',
     channelAdmin: 'Channel admin',
     channelManager: 'Channel manager',
+    channelOrder: 'Channel order',
     serverAdmin: 'Server admin',
     serverOwner: 'Server owner',
     eventStaff: 'Event staff',
@@ -1410,6 +1414,7 @@ export const translations: Record<LanguageKey, Translation> = {
     member: 'メンバー',
     channelAdmin: 'チャンネル管理者',
     channelManager: 'チャンネルマネージャー',
+    channelOrder: 'チャンネル位置',
     serverAdmin: 'サーバー管理者',
     serverOwner: 'グループ作成者',
     eventStaff: '公式カスタマーサービス',

@@ -46,6 +46,9 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const [channelVisibility, setChannelVisibility] = useState<
       Channel['visibility']
     >(createDefault.channel().visibility);
+    const [channelOrder, setChannelOrder] = useState<Channel['order']>(
+      createDefault.channel().order,
+    );
     const [channelTextState, setChannelTextState] = useState<
       Channel['chatMode']
     >(createDefault.channel().chatMode);
@@ -176,6 +179,26 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         {lang.tr.queueSpeech}
                       </option>
                     </select>
+                  </div>
+                  <div>
+                    <div className={popup['label']}>{lang.tr.channelOrder}</div>
+                    <input
+                      style={{ width: '75px' }}
+                      type="number"
+                      className={setting['input']}
+                      value={channelOrder}
+                      min="-999"
+                      max="999"
+                      onChange={(e) => {
+                        if (isNaN(parseInt(e.target.value))) return;
+                        setChannelOrder(
+                          Math.max(
+                            -999,
+                            Math.min(999, parseInt(e.target.value)),
+                          ),
+                        );
+                      }}
+                    />
                   </div>
                 </div>
                 <div className={setting['saperator']} />
@@ -451,6 +474,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   userLimit: channelUserLimit,
                   chatMode: channelTextState,
                   voiceMode: channelVoiceState,
+                  order: channelOrder,
                 },
                 channelId,
                 serverId,
