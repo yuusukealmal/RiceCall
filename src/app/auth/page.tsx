@@ -59,7 +59,7 @@ const Auth: React.FC = () => {
 
   // Effects
   useEffect(() => {
-    setTimeout(() => authService.autoLogin(), 500); // Can be change to when socket is onReady not just specific time
+    setTimeout(() => authService.autoLogin(), 1000); // Can be change to when socket is onReady not just specific time
   }, []);
 
   const getMainContent = () => {

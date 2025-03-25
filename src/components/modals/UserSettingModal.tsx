@@ -159,14 +159,13 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                       {lang.tr.gender}
                     </label>
                     <select
-                      id="profile-form-gender"
                       value={userGender}
                       onChange={(e) =>
                         setUserGender(e.target.value as User['gender'])
                       }
                     >
-                      <option value="Male">男性</option>
-                      <option value="Female">女性</option>
+                      <option value="male">{lang.tr.male}</option>
+                      <option value="female">{lang.tr.female}</option>
                     </select>
                   </div>
                 </div>
@@ -179,13 +178,8 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                     >
                       {lang.tr.country}
                     </label>
-                    <select
-                      className={popup['input']}
-                      id="profile-form-country"
-                      // value={userCountry}
-                      // onChange={(e) => setUserCountry(e.target.value)}
-                    >
-                      <option value="台灣">台灣</option>
+                    <select>
+                      <option value="taiwan">{lang.tr.taiwan}</option>
                     </select>
                   </div>
                   <div className={`${popup['inputBox']} ${popup['col']}`}>

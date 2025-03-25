@@ -76,7 +76,9 @@ const AddFriend: React.FC<AddFriendProps> = React.memo(
           <div className={setting['body']}>
             <div className={popup['inputGroup']}>
               <div className={`${popup['inputBox']} ${popup['col']}`}>
-                <div className={popup['label']}>{'請輸入好友帳號:'}</div>
+                <div className={popup['label']}>
+                  {lang.tr.pleaseInputFriendAccount}
+                </div>
                 <input
                   className={popup['input']}
                   type="text"

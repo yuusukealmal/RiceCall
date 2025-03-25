@@ -259,6 +259,37 @@ export interface Translation {
   VOICE_CHANGE_TO_FREE_SPEECH: string;
   VOICE_CHANGE_TO_FORBIDDEN_SPEECH: string;
   VOICE_CHANGE_TO_QUEUE: string;
+  pleaseInputFriendAccount: string;
+  basicInfo: string;
+  channelAnnouncement: string;
+  accessPermissions: string;
+  speakingPermissions: string;
+  textPermissions: string;
+  channelManagement: string;
+  channelNameLabel: string;
+  userLimit: string;
+  channelMode: string;
+  adminSpeech: string;
+  queueSpeech: string;
+  channelAudioQuality: string;
+  chatMode: string;
+  chatModeDescription: string;
+  entertainmentMode: string;
+  entertainmentModeDescription: string;
+  forbidGuestQueue: string;
+  forbidGuestVoice: string;
+  forbidGuestText: string;
+  forbidGuestUrl: string;
+  guestTextMaxLength: string;
+  guestTextWaitTime: string;
+  guestTextInterval: string;
+  characters: string;
+  seconds: string;
+  groups: string;
+  male: string;
+  female: string;
+  taiwan: string;
+  wealthValue: string;
 }
 
 export type LanguageKey = 'tw' | 'cn' | 'en' | 'jp';
@@ -529,6 +560,38 @@ export const translations: Record<LanguageKey, Translation> = {
     VOICE_CHANGE_TO_FREE_SPEECH: '該頻道語音已被設為自由發言',
     VOICE_CHANGE_TO_FORBIDDEN_SPEECH: '該頻道語音已被設為僅管理員發言',
     VOICE_CHANGE_TO_QUEUE: '頻道被設為排麥才能發言，請點擊"拿麥發言"等候發言',
+    pleaseInputFriendAccount: '請輸入好友帳號:',
+    basicInfo: '基本資料',
+    channelAnnouncement: '頻道公告',
+    accessPermissions: '訪問許可權',
+    speakingPermissions: '發言許可權',
+    textPermissions: '文字許可權',
+    channelManagement: '頻道管理',
+    channelNameLabel: '頻道名稱',
+    userLimit: '人數上限(人)',
+    channelMode: '頻道模式',
+    adminSpeech: '管理員發言',
+    queueSpeech: '排麥發言',
+    channelAudioQuality: '頻道音質',
+    chatMode: '聊天模式',
+    chatModeDescription: '低延遲，音質流暢（適用於自由、指揮模式下的頻道語音）',
+    entertainmentMode: '娛樂模式',
+    entertainmentModeDescription:
+      '原汁原味，立體聲效（適用於排麥模式下的頻道、K歌等型活動語音）',
+    forbidGuestQueue: '禁止遊客排麥發言',
+    forbidGuestVoice: '自由發言模式禁止遊客語音',
+    forbidGuestText: '此頻道被設定為遊客禁止發送文字訊息',
+    forbidGuestUrl: '禁止訪客發送包含URL的文字訊息',
+    guestTextMaxLength: '遊客發送文字訊息的最大長度:',
+    guestTextWaitTime: '遊客允許發送文字訊息的等待時間:',
+    guestTextInterval: '遊客每次發送文字訊息的相隔時間:',
+    characters: '字元',
+    seconds: '秒',
+    groups: '語音群',
+    male: '男性',
+    female: '女性',
+    taiwan: '台灣',
+    wealthValue: '0',
   },
   cn: {
     RPCHomePage: '正在浏览主页',
@@ -795,6 +858,38 @@ export const translations: Record<LanguageKey, Translation> = {
     VOICE_CHANGE_TO_FREE_SPEECH: '频道语音已被设为自由发言',
     VOICE_CHANGE_TO_FORBIDDEN_SPEECH: '频道语音已被设为仅管理员发言',
     VOICE_CHANGE_TO_QUEUE: '频道被设为排麦才能发言，请点击"拿麦发言"等候发言',
+    pleaseInputFriendAccount: '请输入好友账号:',
+    basicInfo: '基本资料',
+    channelAnnouncement: '频道公告',
+    accessPermissions: '访问权限',
+    speakingPermissions: '发言权限',
+    textPermissions: '文字权限',
+    channelManagement: '频道管理',
+    channelNameLabel: '频道名称',
+    userLimit: '人数上限(人)',
+    channelMode: '频道模式',
+    adminSpeech: '管理员发言',
+    queueSpeech: '排麦发言',
+    channelAudioQuality: '频道音质',
+    chatMode: '聊天模式',
+    chatModeDescription: '低延迟，音质流畅（适用于自由、指挥模式下的频道语音）',
+    entertainmentMode: '娱乐模式',
+    entertainmentModeDescription:
+      '原汁原味，立体声效（适用于排麦模式下的频道、K歌等型活动语音）',
+    forbidGuestQueue: '禁止游客排麦发言',
+    forbidGuestVoice: '自由发言模式禁止游客语音',
+    forbidGuestText: '此频道被设定为游客禁止发送文字消息',
+    forbidGuestUrl: '禁止访客发送包含URL的文字消息',
+    guestTextMaxLength: '游客发送文字消息的最大长度:',
+    guestTextWaitTime: '游客允许发送文字消息的等待时间:',
+    guestTextInterval: '游客每次发送文字消息的相隔时间:',
+    characters: '字符',
+    seconds: '秒',
+    groups: '语音群',
+    male: '男性',
+    female: '女性',
+    taiwan: '台湾',
+    wealthValue: '0',
   },
   en: {
     RPCHomePage: 'Browsing Homepage',
@@ -1075,6 +1170,39 @@ export const translations: Record<LanguageKey, Translation> = {
       'The channel voice has been set to admin-only speech',
     VOICE_CHANGE_TO_QUEUE:
       'The channel voice has been set to queue, please click "Take mic" to wait for speech',
+    pleaseInputFriendAccount: 'Please input friend account:',
+    basicInfo: 'Basic Info',
+    channelAnnouncement: 'Channel Announcement',
+    accessPermissions: 'Access Permissions',
+    speakingPermissions: 'Speaking Permissions',
+    textPermissions: 'Text Permissions',
+    channelManagement: 'Channel Management',
+    channelNameLabel: 'Channel Name',
+    userLimit: 'User Limit',
+    channelMode: 'Channel Mode',
+    adminSpeech: 'Admin Speech',
+    queueSpeech: 'Queue Speech',
+    channelAudioQuality: 'Channel Audio Quality',
+    chatMode: 'Chat Mode',
+    chatModeDescription:
+      'Low latency, smooth quality (for free speech and command mode channels)',
+    entertainmentMode: 'Entertainment Mode',
+    entertainmentModeDescription:
+      'Original quality, stereo effect (for queued channels, karaoke etc)',
+    forbidGuestQueue: 'Forbid guest queue speech',
+    forbidGuestVoice: 'Forbid guest voice in free speech mode',
+    forbidGuestText: 'Forbid guests from sending text messages in this channel',
+    forbidGuestUrl: 'Forbid guests from sending messages containing URLs',
+    guestTextMaxLength: 'Maximum length of guest text messages:',
+    guestTextWaitTime: 'Wait time before guests can send messages:',
+    guestTextInterval: 'Interval between guest messages:',
+    characters: 'characters',
+    seconds: 'seconds',
+    groups: 'Voice Groups',
+    male: 'Male',
+    female: 'Female',
+    taiwan: 'Taiwan',
+    wealthValue: '0',
   },
   jp: {
     RPCHomePage: 'ホームページを閲覧中',
@@ -1353,6 +1481,39 @@ export const translations: Record<LanguageKey, Translation> = {
       'チャンネルの音声は管理者のみの発言に設定されています',
     VOICE_CHANGE_TO_QUEUE:
       'チャンネルの音声は排麦才能発言に設定されています。"マイクを取る"をクリックして発言を待ってください',
+    pleaseInputFriendAccount: 'フレンドアカウントを入力してください:',
+    basicInfo: '基本情報',
+    channelAnnouncement: 'チャンネルお知らせ',
+    accessPermissions: 'アクセス権限',
+    speakingPermissions: '発言権限',
+    textPermissions: 'テキスト権限',
+    channelManagement: 'チャンネル管理',
+    channelNameLabel: 'チャンネル名',
+    userLimit: '人数制限(人)',
+    channelMode: 'チャンネルモード',
+    adminSpeech: '管理者発言',
+    queueSpeech: '順番待ち発言',
+    channelAudioQuality: 'チャンネル音質',
+    chatMode: 'チャットモード',
+    chatModeDescription:
+      '低遅延、音質スムーズ（自由発言、指示モードのチャンネル向け）',
+    entertainmentMode: 'エンターテイメントモード',
+    entertainmentModeDescription:
+      '原音質、ステレオ効果（順番待ちモード、カラオケなどのイベント向け）',
+    forbidGuestQueue: 'ゲストの順番待ち発言を禁止',
+    forbidGuestVoice: '自由発言モードでゲストの音声を禁止',
+    forbidGuestText: 'このチャンネルではゲストのテキストメッセージを禁止',
+    forbidGuestUrl: 'ゲストのURL含むメッセージを禁止',
+    guestTextMaxLength: 'ゲストのテキストメッセージ最大長:',
+    guestTextWaitTime: 'ゲストのメッセージ待機時間:',
+    guestTextInterval: 'ゲストのメッセージ間隔:',
+    characters: '文字',
+    seconds: '秒',
+    groups: 'ボイスグループ',
+    male: '男性',
+    female: '女性',
+    taiwan: '台湾',
+    wealthValue: '0',
   },
 };
 

@@ -171,12 +171,12 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
           <div className={setting['left']}>
             <div className={setting['tabs']}>
               {[
-                '基本資料',
-                '頻道公告',
-                '訪問許可權',
-                '發言許可權',
-                '文字許可權',
-                '頻道管理',
+                lang.tr.basicInfo,
+                lang.tr.channelAnnouncement,
+                lang.tr.accessPermissions,
+                lang.tr.speakingPermissions,
+                lang.tr.textPermissions,
+                lang.tr.channelManagement,
               ].map((title, index) => (
                 <div
                   className={`${setting['item']} ${
@@ -196,7 +196,9 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
               <>
                 <div className={`${setting['content']} ${popup['row']}`}>
                   <div>
-                    <div className={setting['label']}>頻道名稱</div>
+                    <div className={popup['label']}>
+                      {lang.tr.channelNameLabel}
+                    </div>
                     <input
                       style={{ width: '200px' }}
                       type="text"
@@ -206,7 +208,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     />
                   </div>
                   <div>
-                    <div className={setting['label']}>人數上限(人)</div>
+                    <div className={popup['label']}>{lang.tr.userLimit}</div>
                     <input
                       style={{ width: '75px' }}
                       type="number"
@@ -228,26 +230,27 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   </div>
                 </div>
                 <div>
-                  <div className={setting['label']}>頻道模式</div>
+                  <div className={popup['label']}>{lang.tr.channelMode}</div>
                   <select
                     className={setting['select']}
-                    value={channelVisibility}
+                    value={channelVoiceState.current}
                     onChange={(e) =>
-                      setChannelVisibility(
-                        e.target.value as Channel['visibility'],
-                      )
+                      setChannelVoiceState((prev) => ({
+                        ...prev,
+                        current: e.target.value as Channel['voiceMode'],
+                      }))
                     }
                   >
-                    <option value="free">自由發言</option>
-                    <option value="admin">管理員發言</option>
-                    <option value="queue" disabled>
-                      排麥發言
-                    </option>
+                    <option value="free">{lang.tr.freeSpeech}</option>
+                    <option value="forbidden">{lang.tr.forbiddenSpeech}</option>
+                    <option value="queue">{lang.tr.queueSpeech}</option>
                   </select>
                 </div>
                 <div className={setting['saperator']}></div>
                 <div className={`${setting['section']} ${popup['col']}`}>
-                  <div className={setting['label']}>頻道音質</div>
+                  <div className={popup['label']}>
+                    {lang.tr.channelAudioQuality}
+                  </div>
                   <div className={setting['radioGroup']}>
                     <label className={setting['radioLabel']}>
                       <input
@@ -257,10 +260,10 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         defaultChecked
                         disabled
                       />
-                      聊天模式
+                      <span>{lang.tr.chatMode}</span>
                     </label>
                     <div className={setting['description']}>
-                      低延遲，音質流暢（適用於自由、指揮模式下的頻道語音）
+                      <span>{lang.tr.chatModeDescription}</span>
                     </div>
                   </div>
                   <div className={setting['radioGroup']}>
@@ -271,10 +274,10 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         className={setting['radio']}
                         disabled
                       />
-                      娛樂模式
+                      <span>{lang.tr.entertainmentMode}</span>
                     </label>
                     <div className={setting['description']}>
-                      原汁原味，立體聲效（適用於排麥模式下的頻道、K歌等型活動語音）
+                      <span>{lang.tr.entertainmentModeDescription}</span>
                     </div>
                   </div>
                 </div>
@@ -300,7 +303,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
               </div>
             ) : activeTabIndex === 2 ? (
               <div className={popup['col']}>
-                <label>訪問許可權</label>
+                <label>{lang.tr.accessPermissions}</label>
                 <div className={setting['radioGroup']}>
                   <label className={setting['radioLabel']}>
                     <input
@@ -313,7 +316,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         setChannelVisibility('public');
                       }}
                     />
-                    公開
+                    <span>{lang.tr.channelPublic}</span>
                   </label>
                   <div className={setting['description']}>
                     {lang.tr.channelPublic}
@@ -331,7 +334,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         setChannelVisibility('member');
                       }}
                     />
-                    會員
+                    <span>{lang.tr.channelMember}</span>
                   </label>
                   <div className={setting['description']}>
                     {lang.tr.channelMember}
@@ -349,7 +352,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         setChannelVisibility('private');
                       }}
                     />
-                    鎖定
+                    <span>{lang.tr.channelPrivate}</span>
                   </label>
                   <div className={setting['description']}>
                     {lang.tr.channelPrivate}
@@ -367,14 +370,16 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         setChannelVisibility('readonly');
                       }}
                     />
-                    {lang.tr.channelReadonly}
+                    <span>{lang.tr.channelReadonly}</span>
                   </label>
-                  <div className={setting['description']}>任何人皆不可訪問</div>
+                  <div className={setting['description']}>
+                    {lang.tr.channelReadonly}
+                  </div>
                 </div>
               </div>
             ) : activeTabIndex === 3 ? (
               <div className={popup['col']}>
-                <label>發言許可權</label>
+                <label>{lang.tr.speakingPermissions}</label>
                 <div className={setting['checkWrapper']}>
                   <label
                     className={`${setting['checkBox']} ${popup['disabled']}`}
@@ -385,7 +390,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       checked={false}
                       onChange={() => {}}
                     />
-                    <span>禁止遊客排麥發言</span>
+                    <span>{lang.tr.forbidGuestQueue}</span>
                   </label>
                 </div>
                 <div className={setting['checkWrapper']}>
@@ -398,13 +403,13 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       checked={false}
                       onChange={() => {}}
                     />
-                    <span>自由發言模式禁止遊客語音</span>
+                    <span>{lang.tr.forbidGuestVoice}</span>
                   </label>
                 </div>
               </div>
             ) : activeTabIndex === 4 ? (
               <div className={popup['col']}>
-                <label>文字許可權</label>
+                <label>{lang.tr.textPermissions}</label>
                 <div className={setting['checkWrapper']}>
                   <label className={setting['checkBox']}>
                     <input
@@ -419,7 +424,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         }));
                       }}
                     />
-                    <span>此頻道被設定為只允許管理員發送文字訊息</span>
+                    <span>{lang.tr.forbidGuestText}</span>
                   </label>
                 </div>
                 <div className={setting['checkWrapper']}>
@@ -432,7 +437,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       checked={false}
                       onChange={() => {}}
                     />
-                    <span>此頻道被設定為遊客禁止發送文字訊息</span>
+                    <span>{lang.tr.forbidGuestUrl}</span>
                   </label>
                 </div>
                 <div className={setting['checkWrapper']}>
@@ -445,14 +450,14 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       checked={false}
                       onChange={() => {}}
                     />
-                    <span>禁止訪客發送包含URL的文字訊息</span>
+                    <span>{lang.tr.forbidGuestText}</span>
                   </label>
                 </div>
                 <div
                   className={`${setting['unitWrapper']} ${popup['disabled']}`}
                 >
                   <div className={setting['unitLabel']}>
-                    遊客發送文字訊息的最大長度:
+                    {lang.tr.guestTextMaxLength}
                   </div>
                   <input
                     type="number"
@@ -461,13 +466,13 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     value={0}
                     onChange={(e) => {}}
                   />
-                  <span className={setting['unit']}>字元</span>
+                  <span className={setting['unit']}>{lang.tr.characters}</span>
                 </div>
                 <div
                   className={`${setting['unitWrapper']} ${popup['disabled']}`}
                 >
                   <div className={setting['unitLabel']}>
-                    遊客允許發送文字訊息的等待時間:
+                    {lang.tr.guestTextWaitTime}
                   </div>
                   <input
                     type="number"
@@ -476,13 +481,13 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     value={0}
                     onChange={(e) => {}}
                   />
-                  <span className={setting['unit']}>秒</span>
+                  <span className={setting['unit']}>{lang.tr.seconds}</span>
                 </div>
                 <div
                   className={`${setting['unitWrapper']} ${popup['disabled']}`}
                 >
                   <div className={setting['unitLabel']}>
-                    遊客每次發送文字訊息的相隔時間:
+                    {lang.tr.guestTextInterval}
                   </div>
                   <input
                     type="number"
@@ -491,7 +496,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     value={0}
                     onChange={(e) => {}}
                   />
-                  <span className={setting['unit']}>秒</span>
+                  <span className={setting['unit']}>{lang.tr.seconds}</span>
                 </div>
               </div>
             ) : null}
