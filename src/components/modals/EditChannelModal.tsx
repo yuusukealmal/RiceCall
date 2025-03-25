@@ -33,6 +33,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
+    const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
     const [channelName, setChannelName] = useState<Channel['name']>(
       createDefault.channel().name,
     );
@@ -67,6 +68,18 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
       ipcService.window.close();
     };
 
+    const handleConfirm = () => {
+      handleUpdateChannel(
+        {
+          name: channelName,
+          visibility: channelVisibility,
+        },
+        channelId,
+        serverId,
+      );
+      handleClose();
+    };
+
     // Effects
     useEffect(() => {
       if (!channelId || refreshRef.current) return;
@@ -81,28 +94,59 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     return (
       <div className={popup['popupContainer']}>
         <div className={popup['popupBody']}>
-          <div className={setting['body']}>
-            <div className={popup['inputGroup']}>
-              <div className={popup['inputBox']}>
-                <div className={popup['label']}>
-                  {`${lang.tr.channel}${lang.tr.name}`}
+          {/* Left Sidebar */}
+          <div className={setting['left']}>
+            <div className={setting['tabs']}>
+              {[
+                '基本資料',
+                '頻道公告',
+                '訪問許可權',
+                '發言許可權',
+                '文字許可權',
+                '頻道管理',
+              ].map((title, index) => (
+                <div
+                  className={`${setting['item']} ${
+                    activeTabIndex === index ? setting['active'] : ''
+                  }`}
+                  onClick={() => setActiveTabIndex(index)}
+                  key={index}
+                >
+                  {title}
                 </div>
-                <div className={popup['input']}>
-                  <input
-                    type="text"
-                    value={channelName}
-                    onChange={(e) => setChannelName(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {!channelIsLobby && (
-                <div className={popup['inputBox']}>
-                  <div className={popup['label']}>
-                    {lang.tr.channelPermission}
+              ))}
+            </div>
+          </div>
+          {/* Right Content */}
+          <div className={setting['right']}>
+            {activeTabIndex === 0 ? (
+              <>
+                <div className={`${setting['content']} ${popup['row']}`}>
+                  <div>
+                    <div className={setting['label']}>頻道名稱</div>
+                    <input
+                      style={{ width: '200px' }}
+                      type="text"
+                      className={setting['input']}
+                      value={channelName}
+                      onChange={(e) => setChannelName(e.target.value)}
+                    />
                   </div>
+                  <div>
+                    <div className={setting['label']}>人數上限(人)</div>
+                    <input
+                      style={{ width: '75px' }}
+                      type="number"
+                      className={setting['input']}
+                      value="888"
+                      disabled
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className={setting['label']}>頻道模式</div>
                   <select
-                    className={popup['input']}
+                    className={setting['select']}
                     value={channelVisibility}
                     onChange={(e) =>
                       setChannelVisibility(
@@ -110,35 +154,237 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       )
                     }
                   >
-                    <option value="public">{lang.tr.channelPublic}</option>
-                    <option value="member">{lang.tr.channelMember}</option>
-                    <option value="private">{lang.tr.channelPrivate}</option>
-                    <option value="readonly">{lang.tr.channelReadonly}</option>
+                    <option value="free">自由發言</option>
+                    <option value="admin">管理員發言</option>
+                    <option value="queue" disabled>
+                      排麥發言
+                    </option>
                   </select>
                 </div>
-              )}
-            </div>
+                <div className={setting['saperator']}></div>
+                <div className={`${setting['section']} ${popup['col']}`}>
+                  <div className={setting['label']}>頻道音質</div>
+                  <div className={setting['radioGroup']}>
+                    <label className={setting['radioLabel']}>
+                      <input
+                        type="radio"
+                        name="voiceQuality"
+                        className={setting['radio']}
+                        defaultChecked
+                        disabled
+                      />
+                      聊天模式
+                    </label>
+                    <div className={setting['description']}>
+                      低延遲，音質流暢（適用於自由、指揮模式下的頻道語音）
+                    </div>
+                  </div>
+                  <div className={setting['radioGroup']}>
+                    <label className={setting['radioLabel']}>
+                      <input
+                        type="radio"
+                        name="voiceQuality"
+                        className={setting['radio']}
+                        disabled
+                      />
+                      娛樂模式
+                    </label>
+                    <div className={setting['description']}>
+                      原汁原味，立體聲效（適用於排麥模式下的頻道、K歌等型活動語音）
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : activeTabIndex === 1 ? (
+              <div className={popup['col']}>
+                <div className={popup['label']}>
+                  {lang.tr.inputAnnouncement}
+                </div>
+                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <textarea
+                    style={{ minHeight: '200px' }}
+                    // value={channelAnnouncement}
+                    value={''}
+                    // onChange={(e) => setChannelAnnouncement(e.target.value)}
+                    onChange={() => {}}
+                  />
+                  <div className={popup['label']}>
+                    {lang.tr.markdownSupport}
+                  </div>
+                </div>
+              </div>
+            ) : activeTabIndex === 2 ? (
+              <div className={popup['col']}>
+                <label>訪問許可權</label>
+                <div className={setting['radioGroup']}>
+                  <label className={setting['radioLabel']}>
+                    <input
+                      type="radio"
+                      name="voiceQuality"
+                      className={setting['radio']}
+                      checked={channelVisibility === 'public'}
+                      onChange={() => {
+                        setChannelVisibility('public');
+                      }}
+                    />
+                    公開
+                  </label>
+                  <div className={setting['description']}>
+                    {lang.tr.channelPublic}
+                  </div>
+                </div>
+                <div className={setting['radioGroup']}>
+                  <label className={setting['radioLabel']}>
+                    <input
+                      type="radio"
+                      name="voiceQuality"
+                      className={setting['radio']}
+                      checked={channelVisibility === 'member'}
+                      onChange={() => {
+                        setChannelVisibility('member');
+                      }}
+                    />
+                    會員
+                  </label>
+                  <div className={setting['description']}>
+                    {lang.tr.channelMember}
+                  </div>
+                </div>
+                <div className={setting['radioGroup']}>
+                  <label className={setting['radioLabel']}>
+                    <input
+                      type="radio"
+                      name="voiceQuality"
+                      className={setting['radio']}
+                      checked={channelVisibility === 'private'}
+                      onChange={() => {
+                        setChannelVisibility('private');
+                      }}
+                    />
+                    鎖定
+                  </label>
+                  <div className={setting['description']}>
+                    {lang.tr.channelPrivate}
+                  </div>
+                </div>
+                <div className={setting['radioGroup']}>
+                  <label className={setting['radioLabel']}>
+                    <input
+                      type="radio"
+                      name="voiceQuality"
+                      className={setting['radio']}
+                      checked={channelVisibility === 'readonly'}
+                      onChange={() => {
+                        setChannelVisibility('readonly');
+                      }}
+                    />
+                    {lang.tr.channelReadonly}
+                  </label>
+                  <div className={setting['description']}>任何人皆不可訪問</div>
+                </div>
+              </div>
+            ) : activeTabIndex === 3 ? (
+              <div className={popup['col']}>
+                <label>發言許可權</label>
+                <div className={setting['checkWrapper']}>
+                  <label
+                    className={`${setting['checkBox']} ${popup['disabled']}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className={setting['check']}
+                      onChange={() => {}}
+                    />
+                    <span>禁止遊客排麥發言</span>
+                  </label>
+                </div>
+                <div className={setting['checkWrapper']}>
+                  <label
+                    className={`${setting['checkBox']} ${popup['disabled']}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className={setting['check']}
+                      onChange={() => {}}
+                    />
+                    <span>自由發言模式禁止遊客語音</span>
+                  </label>
+                </div>
+              </div>
+            ) : activeTabIndex === 4 ? (
+              <div className={popup['col']}>
+                <label>文字許可權</label>
+                <div className={setting['checkWrapper']}>
+                  <label className={setting['checkBox']}>
+                    <input type="checkbox" className={setting['check']} />
+                    <span>此頻道被設定為只允許管理員發送文字訊息</span>
+                  </label>
+                </div>
+                <div className={setting['checkWrapper']}>
+                  <label className={setting['checkBox']}>
+                    <input type="checkbox" className={setting['check']} />
+                    <span>此頻道被設定為只允許禁音訪客發送文字訊息</span>
+                  </label>
+                </div>
+                <div className={setting['checkWrapper']}>
+                  <label className={setting['checkBox']}>
+                    <input type="checkbox" className={setting['check']} />
+                    <span>禁止訪客發送包含URL的文字訊息</span>
+                  </label>
+                </div>
+                <div className={setting['unitWrapper']}>
+                  <div className={setting['unitLabel']}>
+                    遊客發送文字訊息的最大長度:
+                  </div>
+                  <input
+                    type="number"
+                    className={setting['input']}
+                    style={{ width: '60px' }}
+                    value={0}
+                    onChange={(e) => {}}
+                  />
+                  <span className={setting['unit']}>字元</span>
+                </div>
+                <div className={setting['unitWrapper']}>
+                  <div className={setting['unitLabel']}>
+                    遊客允許發送文字訊息的等待時間:
+                  </div>
+                  <input
+                    type="number"
+                    className={setting['input']}
+                    style={{ width: '60px' }}
+                    value={0}
+                    onChange={(e) => {}}
+                  />
+                  <span className={setting['unit']}>秒</span>
+                </div>
+                <div className={setting['unitWrapper']}>
+                  <div className={setting['unitLabel']}>
+                    遊客每次發送文字訊息的相隔時間:
+                  </div>
+                  <input
+                    type="number"
+                    className={setting['input']}
+                    style={{ width: '60px' }}
+                    value={0}
+                    onChange={(e) => {}}
+                  />
+                  <span className={setting['unit']}>秒</span>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
+
         <div className={popup['popupFooter']}>
-          <button
-            className={popup['button']}
-            onClick={() => {
-              handleUpdateChannel(
-                {
-                  id: channelId,
-                  name: channelName,
-                  visibility: channelVisibility,
-                },
-                channelId,
-                serverId,
-              );
-              handleClose();
-            }}
-          >
+          <button className={popup['button']} onClick={handleConfirm}>
             {lang.tr.confirm}
           </button>
-          <button className={popup['button']} onClick={() => handleClose()}>
+          <button
+            type="button"
+            className={popup['button']}
+            onClick={() => handleClose()}
+          >
             {lang.tr.cancel}
           </button>
         </div>

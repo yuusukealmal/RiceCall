@@ -106,3 +106,147 @@
   background-size: cover;
   margin-left: 3px;
 }
+
+/* Form Elements */
+.content {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.label {
+  width: 80px;
+  color: #333;
+  font-size: 13px;
+}
+
+.saperator {
+  height: 1px;
+  width: 100%;
+  background-color: #dbdbdb;
+  margin: 20px 0;
+}
+
+.input {
+  height: 22px;
+  border: 1px solid #ccc;
+  padding: 0 4px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+}
+
+.input:disabled {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.select {
+  height: 22px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  min-width: 160px;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #333;
+  font-size: 13px;
+}
+
+.radio {
+  margin: 0;
+  width: 13px;
+  height: 13px;
+}
+
+.description {
+  color: #999;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.checkWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  font-size: 12px;
+  color: #000;
+  padding: 0 10px;
+}
+
+.checkWrapper .checkBox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkWrapper .check {
+  appearance: none;
+  cursor: pointer;
+}
+
+.checkWrapper .check:before {
+  content: '';
+  background: url('../../../public/ctrl/checkbox_icon.png') no-repeat center center;
+  background-size: auto;
+  background-position: 0 0;
+  height: 18px;
+  width: 18px;
+  display: block;
+  margin-right: 3px;
+}
+
+.checkBox:hover > .check:before {
+  background-position: -18px 0;
+}
+
+.checkBox .check:checked:before {
+  background-position: 0 -18px;
+}
+
+.checkBox:hover > .check:checked:before {
+  background-position: -18px -18px;
+}
+
+.unitWrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.unit {
+  margin-left: 4px;
+  color: #333;
+  font-size: 13px;
+}
+
+.unitLabel {
+  display: flex;
+  align-items: center;
+  margin-left: 30px;
+  gap: 8px;
+  color: #333;
+  font-size: 12px;
+  white-space: nowrap;
+}
