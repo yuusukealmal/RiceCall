@@ -105,10 +105,6 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     };
 
     const handleConfirm = () => {
-      const validUserLimit = Math.max(0, Math.min(999, channelUserLimit));
-      if (validUserLimit !== channelUserLimit)
-        setChannelUserLimit(validUserLimit);
-
       if (channelTextState.current !== channelTextState.original) {
         handleSendMessage(
           {
@@ -143,7 +139,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
         {
           name: channelName,
           visibility: channelVisibility,
-          userLimit: validUserLimit,
+          userLimit: channelUserLimit,
           chatMode: channelTextState.current,
           voiceMode: channelVoiceState.current,
         },
@@ -194,90 +190,88 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
           <div className={setting['right']}>
             {activeTabIndex === 0 ? (
               <>
-                <div className={`${setting['content']} ${popup['row']}`}>
-                  <div>
-                    <div className={popup['label']}>
-                      {lang.tr.channelNameLabel}
+                <div className={popup['col']}>
+                  <div className={popup['row']}>
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>
+                        {lang.tr.channelNameLabel}
+                      </div>
+                      <input
+                        type="text"
+                        value={channelName}
+                        onChange={(e) => setChannelName(e.target.value)}
+                      />
                     </div>
-                    <input
-                      style={{ width: '200px' }}
-                      type="text"
-                      className={setting['input']}
-                      value={channelName}
-                      onChange={(e) => setChannelName(e.target.value)}
-                    />
+                    <div className={`${popup['inputBox']} ${popup['col']}`}>
+                      <div className={popup['label']}>{lang.tr.userLimit}</div>
+                      <input
+                        type="text"
+                        value={channelUserLimit}
+                        disabled={
+                          channelVisibility === 'readonly' || channelIsLobby
+                        }
+                        onChange={(e) =>
+                          setChannelUserLimit(
+                            Math.max(
+                              0,
+                              Math.min(999, parseInt(e.target.value) || 0),
+                            ),
+                          )
+                        }
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <div className={popup['label']}>{lang.tr.userLimit}</div>
-                    <input
-                      style={{ width: '75px' }}
-                      type="number"
-                      min="0"
-                      max="999"
-                      className={setting['input']}
-                      value={channelUserLimit}
-                      disabled={
-                        channelVisibility === 'readonly' || channelIsLobby
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <div className={popup['label']}>{lang.tr.channelMode}</div>
+                    <select
+                      value={channelVisibility}
+                      onChange={(e) =>
+                        setChannelVisibility(
+                          e.target.value as Channel['visibility'],
+                        )
                       }
-                      onChange={(e) => {
-                        const value = Math.max(
-                          0,
-                          Math.min(999, parseInt(e.target.value) || 0),
-                        );
-                        setChannelUserLimit(value);
-                      }}
-                    />
+                    >
+                      <option value="free">{lang.tr.freeSpeech}</option>
+                      <option value="admin">{lang.tr.forbiddenSpeech}</option>
+                      <option value="queue" disabled>
+                        {lang.tr.queueSpeech}
+                      </option>
+                    </select>
                   </div>
                 </div>
-                <div>
-                  <div className={popup['label']}>{lang.tr.channelMode}</div>
-                  <select
-                    className={setting['select']}
-                    value={channelVoiceState.current}
-                    onChange={(e) =>
-                      setChannelVoiceState((prev) => ({
-                        ...prev,
-                        current: e.target.value as Channel['voiceMode'],
-                      }))
-                    }
-                  >
-                    <option value="free">{lang.tr.freeSpeech}</option>
-                    <option value="forbidden">{lang.tr.forbiddenSpeech}</option>
-                    <option value="queue">{lang.tr.queueSpeech}</option>
-                  </select>
-                </div>
-                <div className={setting['saperator']}></div>
-                <div className={`${setting['section']} ${popup['col']}`}>
+                <div className={setting['saperator']} />
+                <div className={popup['col']}>
                   <div className={popup['label']}>
                     {lang.tr.channelAudioQuality}
                   </div>
-                  <div className={setting['radioGroup']}>
-                    <label className={setting['radioLabel']}>
+                  <div className={popup['inputGroup']}>
+                    <div className={`${popup['inputBox']} ${popup['row']}`}>
                       <input
                         type="radio"
                         name="voiceQuality"
-                        className={setting['radio']}
                         defaultChecked
                         disabled
                       />
-                      <span>{lang.tr.chatMode}</span>
-                    </label>
-                    <div className={setting['description']}>
-                      <span>{lang.tr.chatModeDescription}</span>
+                      <div>
+                        <label className={popup['label']}>
+                          {lang.tr.chatMode}
+                        </label>
+                        <div className={popup['hint']}>
+                          {lang.tr.chatModeDescription}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className={setting['radioGroup']}>
-                    <label className={setting['radioLabel']}>
-                      <input
-                        type="radio"
-                        name="voiceQuality"
-                        className={setting['radio']}
-                        disabled
-                      />
-                      <span>{lang.tr.entertainmentMode}</span>
-                    </label>
-                    <div className={setting['description']}>
-                      <span>{lang.tr.entertainmentModeDescription}</span>
+
+                    <div className={`${popup['inputBox']} ${popup['row']}`}>
+                      <input type="radio" name="voiceQuality" disabled />
+                      <div>
+                        <label className={popup['label']}>
+                          {lang.tr.entertainmentMode}
+                        </label>
+                        <div className={popup['hint']}>
+                          {lang.tr.entertainmentModeDescription}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -304,118 +298,118 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
             ) : activeTabIndex === 2 ? (
               <div className={popup['col']}>
                 <label>{lang.tr.accessPermissions}</label>
-                <div className={setting['radioGroup']}>
-                  <label className={setting['radioLabel']}>
+                <div className={popup['inputGroup']}>
+                  <div className={popup['inputBox']}>
                     <input
                       type="radio"
                       name="voiceQuality"
-                      className={setting['radio']}
                       checked={channelVisibility === 'public'}
                       disabled={channelIsLobby}
                       onChange={() => {
                         setChannelVisibility('public');
                       }}
                     />
-                    <span>{lang.tr.channelPublic}</span>
-                  </label>
-                  <div className={setting['description']}>
-                    {lang.tr.channelPublic}
+                    <div>
+                      <label className={popup['label']}>
+                        {lang.tr.channelPublic}
+                      </label>
+                    </div>
                   </div>
-                </div>
-                <div className={setting['radioGroup']}>
-                  <label className={setting['radioLabel']}>
+
+                  <div className={popup['inputBox']}>
                     <input
                       type="radio"
                       name="voiceQuality"
-                      className={setting['radio']}
                       checked={channelVisibility === 'member'}
                       disabled={channelIsLobby}
                       onChange={() => {
                         setChannelVisibility('member');
                       }}
                     />
-                    <span>{lang.tr.channelMember}</span>
-                  </label>
-                  <div className={setting['description']}>
-                    {lang.tr.channelMember}
+                    <div>
+                      <label className={popup['label']}>
+                        {lang.tr.channelMember}
+                      </label>
+                    </div>
                   </div>
-                </div>
-                <div className={setting['radioGroup']}>
-                  <label className={setting['radioLabel']}>
+
+                  <div className={popup['inputBox']}>
                     <input
                       type="radio"
                       name="voiceQuality"
-                      className={setting['radio']}
                       checked={channelVisibility === 'private'}
                       disabled={channelIsLobby}
                       onChange={() => {
                         setChannelVisibility('private');
                       }}
                     />
-                    <span>{lang.tr.channelPrivate}</span>
-                  </label>
-                  <div className={setting['description']}>
-                    {lang.tr.channelPrivate}
+                    <div>
+                      <label className={popup['label']}>
+                        {lang.tr.channelPrivate}
+                      </label>
+                    </div>
                   </div>
-                </div>
-                <div className={setting['radioGroup']}>
-                  <label className={setting['radioLabel']}>
+
+                  <div className={popup['inputBox']}>
                     <input
                       type="radio"
                       name="voiceQuality"
-                      className={setting['radio']}
                       checked={channelVisibility === 'readonly'}
                       disabled={channelIsLobby}
                       onChange={() => {
                         setChannelVisibility('readonly');
                       }}
                     />
-                    <span>{lang.tr.channelReadonly}</span>
-                  </label>
-                  <div className={setting['description']}>
-                    {lang.tr.channelReadonly}
+                    <div>
+                      <label className={popup['label']}>
+                        {lang.tr.channelReadonly}
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
             ) : activeTabIndex === 3 ? (
               <div className={popup['col']}>
                 <label>{lang.tr.speakingPermissions}</label>
-                <div className={setting['checkWrapper']}>
-                  <label
-                    className={`${setting['checkBox']} ${popup['disabled']}`}
-                  >
+                <div className={popup['inputGroup']}>
+                  <div className={popup['inputBox']}>
                     <input
                       type="checkbox"
-                      className={setting['check']}
                       checked={false}
+                      disabled
                       onChange={() => {}}
                     />
-                    <span>{lang.tr.forbidGuestQueue}</span>
-                  </label>
-                </div>
-                <div className={setting['checkWrapper']}>
-                  <label
-                    className={`${setting['checkBox']} ${popup['disabled']}`}
-                  >
+                    <div>
+                      <label className={popup['label']}>
+                        {lang.tr.forbidGuestQueue}
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className={popup['inputBox']}>
                     <input
                       type="checkbox"
-                      className={setting['check']}
                       checked={false}
+                      disabled
                       onChange={() => {}}
                     />
-                    <span>{lang.tr.forbidGuestVoice}</span>
-                  </label>
+                    <div>
+                      <label className={popup['label']}>
+                        {lang.tr.forbidGuestVoice}
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : activeTabIndex === 4 ? (
               <div className={popup['col']}>
                 <label>{lang.tr.textPermissions}</label>
-                <div className={setting['checkWrapper']}>
-                  <label className={setting['checkBox']}>
+                <div className={popup['inputGroup']}>
+                  <div className={popup['inputBox']}>
                     <input
                       type="checkbox"
-                      className={setting['check']}
                       checked={channelTextState.current === 'forbidden'}
+                      disabled={true}
                       onChange={(e) => {
                         const newMode = e.target.checked ? 'forbidden' : 'free';
                         setChannelTextState((prev) => ({
@@ -424,79 +418,76 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                         }));
                       }}
                     />
-                    <span>{lang.tr.forbidGuestText}</span>
-                  </label>
-                </div>
-                <div className={setting['checkWrapper']}>
-                  <label
-                    className={`${setting['checkBox']} ${popup['disabled']}`}
-                  >
+                    <label className={popup['label']}>
+                      {lang.tr.forbidGuestText}
+                    </label>
+                  </div>
+
+                  <div className={popup['inputBox']}>
                     <input
                       type="checkbox"
-                      className={setting['check']}
                       checked={false}
+                      disabled={true}
                       onChange={() => {}}
                     />
-                    <span>{lang.tr.forbidGuestUrl}</span>
-                  </label>
-                </div>
-                <div className={setting['checkWrapper']}>
-                  <label
-                    className={`${setting['checkBox']} ${popup['disabled']}`}
-                  >
+                    <label className={popup['label']}>
+                      {lang.tr.forbidGuestText}
+                    </label>
+                  </div>
+
+                  <div className={popup['inputBox']}>
                     <input
                       type="checkbox"
-                      className={setting['check']}
                       checked={false}
+                      disabled={true}
                       onChange={() => {}}
                     />
-                    <span>{lang.tr.forbidGuestText}</span>
-                  </label>
-                </div>
-                <div
-                  className={`${setting['unitWrapper']} ${popup['disabled']}`}
-                >
-                  <div className={setting['unitLabel']}>
-                    {lang.tr.guestTextMaxLength}
+                    <label className={popup['label']}>
+                      {lang.tr.forbidGuestUrl}
+                    </label>
                   </div>
-                  <input
-                    type="number"
-                    className={setting['input']}
-                    style={{ width: '60px' }}
-                    value={0}
-                    onChange={(e) => {}}
-                  />
-                  <span className={setting['unit']}>{lang.tr.characters}</span>
-                </div>
-                <div
-                  className={`${setting['unitWrapper']} ${popup['disabled']}`}
-                >
-                  <div className={setting['unitLabel']}>
-                    {lang.tr.guestTextWaitTime}
+
+                  <div className={`${popup['inputBox']} ${popup['row']}`}>
+                    <div className={popup['label']}>
+                      {lang.tr.guestTextMaxLength}
+                    </div>
+                    <input
+                      type="text"
+                      value={0}
+                      disabled
+                      onChange={() => {}}
+                      style={{ width: '60px' }}
+                    />
+                    <div className={popup['label']}>{lang.tr.characters}</div>
                   </div>
-                  <input
-                    type="number"
-                    className={setting['input']}
-                    style={{ width: '60px' }}
-                    value={0}
-                    onChange={(e) => {}}
-                  />
-                  <span className={setting['unit']}>{lang.tr.seconds}</span>
-                </div>
-                <div
-                  className={`${setting['unitWrapper']} ${popup['disabled']}`}
-                >
-                  <div className={setting['unitLabel']}>
-                    {lang.tr.guestTextInterval}
+
+                  <div className={`${popup['inputBox']} ${popup['row']}`}>
+                    <div className={popup['label']}>
+                      {lang.tr.guestTextWaitTime}
+                    </div>
+                    <input
+                      type="text"
+                      value={0}
+                      disabled
+                      onChange={() => {}}
+                      style={{ width: '60px' }}
+                    />
+                    <div className={popup['label']}>{lang.tr.seconds}</div>
                   </div>
-                  <input
-                    type="number"
-                    className={setting['input']}
-                    style={{ width: '60px' }}
-                    value={0}
-                    onChange={(e) => {}}
-                  />
-                  <span className={setting['unit']}>{lang.tr.seconds}</span>
+
+                  <div className={`${popup['inputBox']} ${popup['row']}`}>
+                    <div className={popup['label']}>
+                      {lang.tr.guestTextInterval}
+                    </div>
+                    <input
+                      type="text"
+                      value={0}
+                      disabled
+                      onChange={() => {}}
+                      style={{ width: '60px' }}
+                    />
+                    <div className={popup['label']}>{lang.tr.seconds}</div>
+                  </div>
                 </div>
               </div>
             ) : null}

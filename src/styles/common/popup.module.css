@@ -190,6 +190,7 @@
   display: inline-block;
   height: 2rem;
   max-height: 4rem;
+  max-width: 200px;
 }
 .inputBox select::before {
   content: '';
@@ -218,10 +219,12 @@
   display: none;
 }
 
-.disabled,
-.disabled div,
-.disabled input,
-.disabled button {
+.disabled {
+  color: #8f8f8f;
+  pointer-events: none;
+}
+
+:disabled {
   color: #8f8f8f;
   pointer-events: none;
 }
