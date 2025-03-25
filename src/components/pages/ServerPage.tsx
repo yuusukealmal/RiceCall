@@ -71,6 +71,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const [speakerVolume, setSpeakerVolume] = useState(
       webRTC.speakerVolume || 100,
     );
+    const [usersInServer, setUsersInServer] = useState<Member[]>(
+      server.users || [],
+    );
 
     // Variables
     const { id: userId, currentChannelId: userCurrentChannelId } = user;
@@ -287,7 +290,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     useEffect(() => {
       ipcService.discord.updatePresence({
         details: `${lang.tr.in} ${serverName}`,
-        state: `${lang.tr.with} ${serverMembers.length} ${lang.tr.chatWithMembers}`,
+        state: `${lang.tr.with} ${usersInServer.length} ${lang.tr.chatWithMembers}`,
         largeImageKey: 'app_icon',
         largeImageText: 'RC Voice',
         smallImageKey: 'home_icon',
@@ -300,12 +303,20 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
           },
         ],
       });
-    }, [lang, serverName, serverMembers]);
+    }, [lang, serverName, usersInServer]);
 
     useEffect(() => {
       if (!webRTC.updateBitrate || !channelBitrate) return;
       webRTC.updateBitrate(channelBitrate);
     }, [webRTC, webRTC.updateBitrate, channelBitrate]);
+
+    useEffect(() => {
+      if (!serverMembers) return;
+      const updatedUsersInServer = serverMembers.filter(
+        (member) => member.currentServerId === serverId,
+      );
+      setUsersInServer(updatedUsersInServer);
+    }, [serverMembers, serverId]);
 
     return (
       <div className={styles['serverWrapper']}>
@@ -332,7 +343,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                   <div className={styles['idText']}>{serverDisplayId}</div>
                   <div className={styles['memberIcon']} />
                   <div className={styles['memberText']}>
-                    {serverMembers.length}
+                    {usersInServer.length}
                   </div>
                 </div>
               </div>
@@ -564,7 +575,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                   </div>
                 )}
               </div>
-
               <div
                 className={`${styles['micButton']} ${
                   webRTC.isMute ? '' : styles['active']

@@ -110,6 +110,7 @@ const channelHandler = {
       // Emit updated data (to all users in the server)
       io.to(`server_${channel.serverId}`).emit('serverUpdate', {
         members: await Get.serverMembers(channel.serverId),
+        users: await Get.serverUsers(channel.serverId),
       });
 
       new Logger('WebSocket').success(

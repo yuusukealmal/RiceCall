@@ -128,20 +128,20 @@ const xpSystem = {
       // Process XP and level
       user.xp += XP_SYSTEM.XP_PER_HOUR;
 
-      let requiredXP = 0;
+      let requiredXp = 0;
       while (true) {
-        requiredXP = xpSystem.getRequiredXP(user.level);
-        if (user.xp < requiredXP) break;
+        requiredXp = xpSystem.getRequiredXP(user.level);
+        if (user.xp < requiredXp) break;
         user.level += 1;
-        user.xp -= requiredXP;
+        user.xp -= requiredXp;
       }
 
       // Update user
       const userUpdate = {
         level: user.level,
         xp: user.xp,
-        requiredXP,
-        progress: user.xp / requiredXP,
+        requiredXp: requiredXp,
+        progress: user.xp / requiredXp,
       };
       await Set.user(user.id, userUpdate);
 
@@ -157,12 +157,17 @@ const xpSystem = {
 
         // Process member contribution
         member.contribution += XP_SYSTEM.XP_PER_HOUR;
+        server.wealth += XP_SYSTEM.XP_PER_HOUR;
 
         // Update member
         const memberUpdate = {
           contribution: member.contribution,
         };
+        const serverUpdate = {
+          wealth: server.wealth,
+        };
         await Set.member(member.id, memberUpdate);
+        await Set.server(server.id, serverUpdate);
       }
 
       // Reset elapsed time

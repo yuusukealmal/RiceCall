@@ -55,8 +55,9 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
     // Variables
     const { userId } = initialData;
     const userGrade = Math.min(56, Math.ceil(userLevel / 5)); // 56 is max level
-    const userVip = 1; // REMOVE: only for testing
+    const userVip = 0; // REMOVE: only for testing
     const currentYear = new Date().getFullYear();
+    const userAge = 20; // REMOVE: only for testing
     const years = Array.from(
       { length: currentYear - 1900 + 1 },
       (_, i) => currentYear - i,
@@ -115,20 +116,21 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                 className={`${grade['grade']} ${grade[`lv-${userGrade}`]}`}
               />
             </div>
-            <div className={popup['p1']}>@ROSE_REBACCA</div>
-            <div className={popup['p1']}>男 . 29 . Taiwan(台灣)</div>
+            <div className={popup['p1']}>{userName}</div>
             <div className={popup['p1']}>
-              沒事別找我，有事也別找我，找&quot;管理員&quot;
+              {lang.tr[userGender === 'Male' ? 'female' : 'female']} . {userAge}
+              . Taiwan
             </div>
+            <div className={popup['p1']}>{userSignature}</div>
 
             <div className={popup['tab']}>
               <div
                 className={`${popup['item']} ${popup['about']} ${popup['selected']}`}
               >
-                {'關於'}
+                {lang.tr.about}
               </div>
               <div className={`${popup['item']} ${popup['groups']}`}>
-                {'語音群'}
+                {lang.tr.groups}
               </div>
             </div>
           </div>
@@ -164,14 +166,16 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                         setUserGender(e.target.value as User['gender'])
                       }
                     >
-                      <option value="male">{lang.tr.male}</option>
-                      <option value="female">{lang.tr.female}</option>
+                      <option value="Male">{lang.tr.male}</option>
+                      <option value="Female">{lang.tr.female}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className={popup['row']}>
-                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <div
+                    className={`${popup['inputBox']} ${popup['col']} ${popup['disabled']}`}
+                  >
                     <label
                       className={popup['label']}
                       htmlFor="profile-form-country"
@@ -182,7 +186,9 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                       <option value="taiwan">{lang.tr.taiwan}</option>
                     </select>
                   </div>
-                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                  <div
+                    className={`${popup['inputBox']} ${popup['col']} ${popup['disabled']}`}
+                  >
                     <label
                       className={popup['label']}
                       htmlFor="profile-form-birthdate"
@@ -244,7 +250,9 @@ const UserSettingModal: React.FC<UserSettingModalProps> = React.memo(
                   />
                 </div>
 
-                <div className={`${popup['inputBox']} ${popup['col']}`}>
+                <div
+                  className={`${popup['inputBox']} ${popup['col']} ${popup['disabled']}`}
+                >
                   <label
                     className={popup['label']}
                     htmlFor="profile-form-about"

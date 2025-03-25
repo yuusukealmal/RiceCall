@@ -1635,6 +1635,7 @@ export type Server = {
   owner?: ServerMember;
   channels?: (Channel | Category)[];
   members?: ServerMember[];
+  users?: ServerMember[];
   memberApplications?: MemberApplication[];
 };
 

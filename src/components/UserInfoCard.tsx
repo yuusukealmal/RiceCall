@@ -28,10 +28,10 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
 
     const {
       name: memberName,
-      avatar: memberAvatar,
+      avatarUrl: memberAvatarUrl,
       gender: memberGender,
       level: memberLevel,
-      // xp: memberXp,
+      xp: memberXp,
       progress: memberXpProgress,
       requiredXp: memberRequiredXp,
       badges: memberBadges = [],
@@ -40,7 +40,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
       nickname: memberNickname,
     } = member;
     const memberGrade = Math.min(56, Math.ceil(memberLevel / 5));
-    const memberVip = 1;
+    const memberVip = 0;
 
     return (
       <div
@@ -54,7 +54,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             {/* Left Avatar */}
             <div
               className={userInfoCard['avatarPicture']}
-              style={{ backgroundImage: `url(${memberAvatar})` }}
+              style={{ backgroundImage: `url(${memberAvatarUrl})` }}
             />
             {/* Right Info */}
             <div className={userInfoCard['userInfoWrapper']}>
@@ -77,30 +77,28 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
               )}
               {/* Xp Section */}
               <div className={userInfoCard['xpWrapper']}>
-                {/** Show Xp Progress */}
                 <div className={userInfoCard['xpBox']}>
                   <div
                     className={userInfoCard['xpProgress']}
-                    style={{
-                      width: `${memberXpProgress * 100}%`,
-                    }}
+                    style={{ width: `${memberXpProgress * 100}%` }}
                   />
                 </div>
-                {/** Xp Text */}
-                <div className={userInfoCard['xpText']}>
+
+                <div
+                  className={userInfoCard['xpText']}
+                  style={{ position: 'relative' }}
+                >
                   <div>0</div>
-                  {/* <div
-                      style={{
-                        position: 'absolute',
-                        left: `${memberXpProgress * 100}%`,
-                        transform: 'translateX(-50%) scale(0.8)',
-                        bottom: '-25px',
-                      }}
-                      className="flex flex-col items-center"
-                    >
-                      <ArrowUp size={12} className="text-blue-500" />
-                      <span>{memberXp}</span>
-                    </div> */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${memberXpProgress * 100}%`,
+                      transform: 'translateX(-50%) scale(0.8)',
+                    }}
+                    className="flex flex-col items-center"
+                  >
+                    <span>{memberXp}</span>
+                  </div>
                   <div>{memberRequiredXp}</div>
                 </div>
               </div>

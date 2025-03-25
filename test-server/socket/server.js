@@ -102,7 +102,6 @@ const serverHandler = {
 
       if (!member) {
         await Set.member(`mb_${user.id}-${server.id}`, {
-          nickname: user.name,
           serverId: server.id,
           userId: user.id,
           createdAt: Date.now(),
@@ -311,7 +310,6 @@ const serverHandler = {
 
       // Create member
       await Set.member(`mb_${operator.id}-${server.id}`, {
-        nickname: operator.name,
         permissionLevel: 6,
         userId: operator.id,
         serverId: server.id,
