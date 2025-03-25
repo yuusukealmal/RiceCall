@@ -284,6 +284,7 @@ export interface Translation {
   entertainmentModeDescription: string;
   forbidGuestQueue: string;
   forbidGuestVoice: string;
+  forbidOnlyAdminText: string;
   forbidGuestText: string;
   forbidGuestUrl: string;
   guestTextMaxLength: string;
@@ -592,6 +593,7 @@ export const translations: Record<LanguageKey, Translation> = {
       '原汁原味，立體聲效（適用於排麥模式下的頻道、K歌等型活動語音）',
     forbidGuestQueue: '禁止遊客排麥發言',
     forbidGuestVoice: '自由發言模式禁止遊客語音',
+    forbidOnlyAdminText: '此頻道被設定為只允許管理員發送文字訊息',
     forbidGuestText: '此頻道被設定為遊客禁止發送文字訊息',
     forbidGuestUrl: '禁止訪客發送包含URL的文字訊息',
     guestTextMaxLength: '遊客發送文字訊息的最大長度:',
@@ -896,6 +898,7 @@ export const translations: Record<LanguageKey, Translation> = {
       '原汁原味，立体声效（适用于排麦模式下的频道、K歌等型活动语音）',
     forbidGuestQueue: '禁止游客排麦发言',
     forbidGuestVoice: '自由发言模式禁止游客语音',
+    forbidOnlyAdminText: '此频道被设定为仅管理员可以发送文字消息',
     forbidGuestText: '此频道被设定为游客禁止发送文字消息',
     forbidGuestUrl: '禁止访客发送包含URL的文字消息',
     guestTextMaxLength: '游客发送文字消息的最大长度:',
@@ -1215,6 +1218,8 @@ export const translations: Record<LanguageKey, Translation> = {
       'Original quality, stereo effect (for queued channels, karaoke etc)',
     forbidGuestQueue: 'Forbid guest queue speech',
     forbidGuestVoice: 'Forbid guest voice in free speech mode',
+    forbidOnlyAdminText:
+      'This channel is set to allow only admin to send text messages',
     forbidGuestText: 'Forbid guests from sending text messages in this channel',
     forbidGuestUrl: 'Forbid guests from sending messages containing URLs',
     guestTextMaxLength: 'Maximum length of guest text messages:',
@@ -1532,6 +1537,8 @@ export const translations: Record<LanguageKey, Translation> = {
       '原音質、ステレオ効果（順番待ちモード、カラオケなどのイベント向け）',
     forbidGuestQueue: 'ゲストの順番待ち発言を禁止',
     forbidGuestVoice: '自由発言モードでゲストの音声を禁止',
+    forbidOnlyAdminText:
+      'このチャンネルでは管理員のみがテキストメッセージを送信できます',
     forbidGuestText: 'このチャンネルではゲストのテキストメッセージを禁止',
     forbidGuestUrl: 'ゲストのURL含むメッセージを禁止',
     guestTextMaxLength: 'ゲストのテキストメッセージ最大長:',

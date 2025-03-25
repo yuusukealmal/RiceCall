@@ -49,12 +49,20 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const [channelOrder, setChannelOrder] = useState<Channel['order']>(
       createDefault.channel().order,
     );
-    const [channelTextState, setChannelTextState] = useState<
-      Channel['chatMode']
-    >(createDefault.channel().chatMode);
-    const [channelVoiceState, setChannelVoiceState] = useState<
-      Channel['voiceMode']
-    >(createDefault.channel().voiceMode);
+    const [channelTextState, setChannelTextState] = useState<{
+      current: Channel['chatMode'];
+      original: Channel['chatMode'];
+    }>({
+      current: 'free',
+      original: 'free',
+    });
+    const [channelVoiceState, setChannelVoiceState] = useState<{
+      current: Channel['voiceMode'];
+      original: Channel['voiceMode'];
+    }>({
+      current: 'free',
+      original: 'free',
+    });
 
     // Variables
     const { channelId, serverId } = initialData;
@@ -83,8 +91,16 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
       setChannelIsLobby(data.isLobby);
       setChannelVisibility(data.visibility);
       setChannelUserLimit(data.userLimit);
-      setChannelTextState(data.chatMode);
-      setChannelVoiceState(data.voiceMode);
+      const chatMode = data.chatMode || 'free';
+      setChannelTextState({
+        current: chatMode,
+        original: chatMode,
+      });
+      const voiceMode = data.voiceMode || 'free';
+      setChannelVoiceState({
+        current: voiceMode,
+        original: voiceMode,
+      });
       setChannelOrder(data.order);
     };
 
@@ -189,11 +205,12 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   <div className={`${popup['inputBox']} ${popup['col']}`}>
                     <div className={popup['label']}>{lang.tr.channelMode}</div>
                     <select
-                      value={channelVoiceState}
+                      value={channelVoiceState.current}
                       onChange={(e) =>
-                        setChannelVoiceState(
-                          e.target.value as Channel['voiceMode'],
-                        )
+                        setChannelVoiceState((prev) => ({
+                          ...prev,
+                          current: e.target.value as Channel['voiceMode'],
+                        }))
                       }
                     >
                       <option value="free">{lang.tr.freeSpeech}</option>
@@ -373,25 +390,17 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   <div className={popup['inputBox']}>
                     <input
                       type="checkbox"
-                      checked={channelTextState === 'forbidden'}
-                      disabled={true}
+                      checked={channelTextState.current == 'forbidden'}
                       onChange={(e) => {
                         const newMode = e.target.checked ? 'forbidden' : 'free';
-                        setChannelTextState(newMode);
-                        handleSendMessage(
-                          {
-                            type: 'info',
-                            content: e.target.checked
-                              ? 'TEXT_CHANGE_TO_FORBIDDEN_SPEECH'
-                              : 'TEXT_CHANGE_TO_FREE_SPEECH',
-                            timestamp: 0,
-                          },
-                          channelId,
-                        );
+                        setChannelTextState((prev) => ({
+                          ...prev,
+                          current: newMode,
+                        }));
                       }}
                     />
                     <label className={popup['label']}>
-                      {lang.tr.forbidGuestText}
+                      {lang.tr.forbidOnlyAdminText}
                     </label>
                   </div>
 
@@ -470,13 +479,50 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
           <button
             className={popup['button']}
             onClick={() => {
+              const validUserLimit = Math.max(
+                0,
+                Math.min(999, channelUserLimit),
+              );
+              if (validUserLimit !== channelUserLimit)
+                setChannelUserLimit(validUserLimit);
+
+              if (channelTextState.current !== channelTextState.original) {
+                handleSendMessage(
+                  {
+                    type: 'info',
+                    content:
+                      channelTextState.current === 'free'
+                        ? 'TEXT_CHANGE_TO_FREE_SPEECH'
+                        : 'TEXT_CHANGE_TO_FORBIDDEN_SPEECH',
+                    timestamp: 0,
+                  },
+                  channelId,
+                );
+              }
+
+              if (channelVoiceState.current !== channelVoiceState.original) {
+                handleSendMessage(
+                  {
+                    type: 'info',
+                    content:
+                      channelVoiceState.current === 'queue'
+                        ? 'VOICE_CHANGE_TO_QUEUE'
+                        : channelVoiceState.current === 'forbidden'
+                        ? 'VOICE_CHANGE_TO_FORBIDDEN_SPEECH'
+                        : 'VOICE_CHANGE_TO_FREE_SPEECH',
+                    timestamp: 0,
+                  },
+                  channelId,
+                );
+              }
+
               handleUpdateChannel(
                 {
                   name: channelName,
                   visibility: channelVisibility,
                   userLimit: channelUserLimit,
-                  chatMode: channelTextState,
-                  voiceMode: channelVoiceState,
+                  chatMode: channelTextState.current,
+                  voiceMode: channelVoiceState.current,
                   order: channelOrder,
                 },
                 channelId,
