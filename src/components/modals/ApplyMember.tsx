@@ -44,6 +44,9 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
     const [serverDisplayId, setServerDisplayId] = useState<Server['displayId']>(
       createDefault.server().displayId,
     );
+    const [serverApplyNotice, setServerApplyNotice] = useState<
+      Server['applyNotice']
+    >(createDefault.server().applyNotice);
     const [applicationDescription, setApplicationDescription] = useState<
       MemberApplication['description']
     >(createDefault.memberApplication().description);
@@ -69,6 +72,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
       setServerName(data.name);
       setServerDisplayId(data.displayId);
       setServerAvatarUrl(data.avatarUrl);
+      setServerApplyNotice(data.applyNotice);
     };
 
     const handleMemberApplicationUpdate = (data: MemberApplication | null) => {
@@ -137,7 +141,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
                       {lang.tr.serverApplyNotice}
                     </div>
                     <div className={popup['hint']}>
-                      {'{server.settings.applicationNote}'}
+                      {serverApplyNotice || lang.tr.none}
                     </div>
                   </div>
                   <div className={applyMember['split']} />
@@ -213,14 +217,12 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
                       {lang.tr.serverApplyNotice}
                     </div>
                     <div className={popup['hint']}>
-                      {'{server.settings.applicationNote}'}
+                      {serverApplyNotice || lang.tr.none}
                     </div>
                   </div>
                   <div className={applyMember['split']} />
                   <div className={popup['inputGroup']}>
-                    <div className={popup['hint']}>
-                      {'申請已送出，請等待管理員審核'}
-                    </div>
+                    <div className={popup['hint']}>{lang.tr.applySuccess}</div>
                   </div>
                 </div>
               </div>
@@ -228,10 +230,10 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
 
             <div className={popup['popupFooter']}>
               <button className={popup['button']} onClick={() => setSection(0)}>
-                {'修改'}
+                {lang.tr.modify}
               </button>
               <button className={popup['button']} onClick={() => handleClose()}>
-                {'確認'}
+                {lang.tr.confirm}
               </button>
             </div>
           </div>

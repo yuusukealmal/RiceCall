@@ -77,6 +77,8 @@ const set = {
       lobbyId: '',
       ownerId: '',
       createdAt: 0,
+      receiveApply: true,
+      applyNotice: '',
       ...servers[id],
       ...data,
       id,

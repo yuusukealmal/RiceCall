@@ -284,6 +284,13 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
       });
     };
 
+    const handleOpenApplySettings = () => {
+      ipcService.popup.open(PopupType.EDIT_APPLY);
+      ipcService.initialData.onRequest(PopupType.EDIT_APPLY, {
+        serverId,
+      });
+    };
+
     const handleOpenEditMember = (
       serverId: Server['id'],
       userId: User['id'],
@@ -757,16 +764,15 @@ const EditServerModal: React.FC<ServerSettingModalProps> = React.memo(
                   <div className={popup['label']}>
                     {lang.tr.applicants}: {serverApplications.length}
                   </div>
-                  <input
-                    style={{ width: '50%', marginLeft: 'auto' }}
-                    className={popup['input']}
-                    type="search"
-                    placeholder={lang.tr.searchMemberPlaceholder}
-                    value={applicationSearchText}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setApplicationSearchText(e.target.value)
-                    }
-                  />
+                  <button
+                    style={{ marginLeft: 'auto' }}
+                    className={popup['button']}
+                    onClick={() => {
+                      handleOpenApplySettings();
+                    }}
+                  >
+                    {lang.tr.editApply}
+                  </button>
                 </div>
                 <div className={`${popup['inputBox']} ${popup['col']}`}>
                   <table style={{ minHeight: '280px' }}>

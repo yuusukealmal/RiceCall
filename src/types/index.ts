@@ -81,12 +81,16 @@ export interface Translation {
   memberApplicationManagement: string;
   blacklistManagement: string;
   confirm: string;
+  modify: string;
   cancel: string;
   next: string;
   previous: string;
   signaturePlaceholder: string;
   friendActive: string;
   editUser: string;
+  editApply: string;
+  systemSetting: string;
+  editApplySettings: string;
   editMemberCard: string;
   createServer: string;
   editServer: string;
@@ -238,6 +242,10 @@ export interface Translation {
   frontendDeveloper: string;
   backendDeveloper: string;
   copyright: string;
+  isReceiveApply: string;
+  setApplyNotice: string;
+  cannotApply: string;
+  applySuccess: string;
 }
 
 export type LanguageKey = 'tw' | 'cn' | 'en' | 'jp';
@@ -328,12 +336,16 @@ export const translations: Record<LanguageKey, Translation> = {
     memberApplicationManagement: '會員申請管理',
     blacklistManagement: '黑名單管理',
     confirm: '確定',
+    modify: '修改',
     cancel: '取消',
     next: '下一步',
     previous: '上一步',
     signaturePlaceholder: '點擊更改簽名',
     friendActive: '好友動態',
     editUser: '編輯使用者',
+    editApply: '申請設定',
+    systemSetting: '系統設定',
+    editApplySettings: '會員申請設定',
     editMemberCard: '會員群名片',
     createServer: '創建語音群',
     editServer: '編輯語音群',
@@ -487,6 +499,10 @@ export const translations: Record<LanguageKey, Translation> = {
     frontendDeveloper: '前端開發',
     backendDeveloper: '後端開發',
     copyright: '版權所有',
+    isReceiveApply: '是否接收會員申請',
+    setApplyNotice: '會員申請須知',
+    cannotApply: '無法申請會員，此群組不接受會員申請',
+    applySuccess: '申請已送出，請等待管理員審核',
   },
   cn: {
     RPCHomePage: '正在浏览主页',
@@ -573,12 +589,16 @@ export const translations: Record<LanguageKey, Translation> = {
     memberApplicationManagement: '会员申请管理',
     blacklistManagement: '黑名单管理',
     confirm: '确定',
+    modify: '修改',
     cancel: '取消',
     next: '下一步',
     previous: '上一步',
     signaturePlaceholder: '点击更改签名',
     friendActive: '好友动态',
     editUser: '编辑用户',
+    editApply: '申请设置',
+    systemSetting: '系统设置',
+    editApplySettings: '会员申请设置',
     editMemberCard: '会员群名片',
     createServer: '创建语音群',
     editServer: '编辑语音群',
@@ -732,6 +752,10 @@ export const translations: Record<LanguageKey, Translation> = {
     frontendDeveloper: '前端开发',
     backendDeveloper: '后端开发',
     copyright: '版权所有',
+    isReceiveApply: '是否接收会员申请',
+    setApplyNotice: '会员申请须知',
+    cannotApply: '无法申请会员，此群组不接受会员申请',
+    applySuccess: '申请已送出，请等待管理员审核',
   },
   en: {
     RPCHomePage: 'Browsing Homepage',
@@ -819,12 +843,16 @@ export const translations: Record<LanguageKey, Translation> = {
     memberApplicationManagement: 'Member Application Management',
     blacklistManagement: 'Blacklist Management',
     confirm: 'Confirm',
+    modify: 'Modify',
     cancel: 'Cancel',
     next: 'Next',
     previous: 'Previous',
     signaturePlaceholder: 'Click to change signature',
     friendActive: 'Friend Active',
     editUser: 'Edit User',
+    editApply: 'Apply Settings',
+    systemSetting: 'System Settings',
+    editApplySettings: 'Member Application Settings',
     editMemberCard: 'Member Card',
     createServer: 'Create Voice Group',
     editServer: 'Edit Voice Group',
@@ -983,6 +1011,11 @@ export const translations: Record<LanguageKey, Translation> = {
     frontendDeveloper: 'Frontend Developer',
     backendDeveloper: 'Backend Developer',
     copyright: 'Copyright',
+    isReceiveApply: 'Receive Member Application',
+    setApplyNotice: 'Application Notice',
+    cannotApply:
+      'Cannot apply for membership, this group does not accept membership applications',
+    applySuccess: 'Application submitted, please wait for admin review',
   },
   jp: {
     RPCHomePage: 'ホームページを閲覧中',
@@ -1069,12 +1102,16 @@ export const translations: Record<LanguageKey, Translation> = {
     memberApplicationManagement: 'メンバーアプリケーション管理',
     blacklistManagement: 'ブラックリスト管理',
     confirm: '確認',
+    modify: '変更',
     cancel: 'キャンセル',
     next: '次へ',
     previous: '前へ',
     signaturePlaceholder: 'クリックして署名を変更',
     friendActive: '友達のアクティブ',
     editUser: 'ユーザーを編集',
+    editApply: '申請設定',
+    systemSetting: 'システム設定',
+    editApplySettings: 'メンバー申請設定',
     editMemberCard: 'メンバーカード',
     createServer: 'ボイスグループを作成',
     editServer: 'ボイスグループを編集',
@@ -1231,6 +1268,10 @@ export const translations: Record<LanguageKey, Translation> = {
     frontendDeveloper: 'フロントエンド開発者',
     backendDeveloper: 'バックエンド開発者',
     copyright: '著作権所有',
+    isReceiveApply: 'メンバー申請を受け取る',
+    setApplyNotice: 'メンバー申請須知',
+    cannotApply: 'メンバー申請を受け取ることができません',
+    applySuccess: 'メンバー申請が送信されました',
   },
 };
 
@@ -1315,6 +1356,8 @@ export type Server = {
   lobbyId: string;
   ownerId: string;
   createdAt: number;
+  receiveApply: boolean;
+  applyNotice: string;
   // THESE WERE NOT SAVE IN THE DATABASE
   lobby?: Channel;
   owner?: ServerMember;
@@ -1545,6 +1588,7 @@ export enum PopupType {
   CREATE_CHANNEL = 'createChannel',
   EDIT_CHANNEL = 'editChannel',
   EDIT_MEMBER = 'editMember',
+  EDIT_APPLY = 'editApply',
   APPLY_MEMBER = 'applyMember',
   APPLY_FRIEND = 'applyFriend',
   ADD_FRIEND = 'addFriend',
@@ -1559,6 +1603,7 @@ export enum PopupType {
 }
 
 export const PopupSize = {
+  [PopupType.EDIT_APPLY]: { height: 220, width: 400 },
   [PopupType.EDIT_MEMBER]: { height: 220, width: 400 },
   [PopupType.EDIT_USER]: { height: 650, width: 500 },
   [PopupType.CREATE_SERVER]: { height: 430, width: 520 },

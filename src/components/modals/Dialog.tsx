@@ -46,8 +46,8 @@ const Dialog: React.FC<DialogProps> = (initialData: DialogProps) => {
     <div className={popup['popupContainer']}>
       <div className={popup['popupBody']}>
         <div className={setting['body']}>
-          <div className={popup['inputGroup']}>
-            <div className={popup['inputBox']}>
+          <div className={`${popup['inputGroup']} ${popup['dialogCenter']}`}>
+            <div className={`${popup['inputBox']} ${popup['dialogContent']}`}>
               <div
                 className={`${popup['dialogIcon']} ${
                   popup[DIALOG_ICON[iconType]]

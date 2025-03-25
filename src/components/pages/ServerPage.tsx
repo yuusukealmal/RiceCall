@@ -147,6 +147,14 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       userId: User['id'],
       serverId: Server['id'],
     ) => {
+      if (server.receiveApply === false) {
+        ipcService.popup.open(PopupType.DIALOG_ALERT2);
+        ipcService.initialData.onRequest(PopupType.DIALOG_ALERT2, {
+          title: lang.tr.cannotApply,
+        });
+        return;
+      }
+
       ipcService.popup.open(PopupType.APPLY_MEMBER);
       ipcService.initialData.onRequest(PopupType.APPLY_MEMBER, {
         userId,

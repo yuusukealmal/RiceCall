@@ -16,6 +16,7 @@ import EditServer from '@/components/modals/EditServerModal';
 import EditChannel from '@/components/modals/EditChannelModal';
 import EditUser from '@/components/modals/UserSettingModal';
 import EditMember from '@/components/modals/EditMemberModal';
+import EditApply from '@/components/modals/EditApplyModal';
 import SystemSetting from '@/components/modals/SettingModal';
 import ApplyMember from '@/components/modals/ApplyMember';
 import ApplyFriend from '@/components/modals/ApplyFriend';
@@ -117,8 +118,14 @@ const Modal = React.memo(() => {
 
     switch (type) {
       case PopupType.SYSTEM_SETTING:
-        setHeader(<Header title={'系統設定'} buttons={['close']} />);
+        setHeader(<Header title={lang.tr.systemSetting} buttons={['close']} />);
         setContent(<SystemSetting {...initialData} />);
+        break;
+      case PopupType.EDIT_APPLY:
+        setHeader(
+          <Header title={lang.tr.editApplySettings} buttons={['close']} />,
+        );
+        setContent(<EditApply {...initialData} />);
         break;
       case PopupType.EDIT_MEMBER:
         setHeader(

@@ -344,3 +344,17 @@
   background-repeat: no-repeat;
   background-position: 0 0;
 }
+
+.dialogCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.dialogContent {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: left;
+}

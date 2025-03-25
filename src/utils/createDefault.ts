@@ -68,6 +68,8 @@ export const createDefault = {
     lobbyId: '',
     ownerId: '',
     createdAt: 0,
+    receiveApply: true,
+    applyNotice: '',
     ...overrides,
   }),
 
