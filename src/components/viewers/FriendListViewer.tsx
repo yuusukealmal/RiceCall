@@ -172,6 +172,14 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
     const filteredFriends = userFriends.filter((fd) =>
       fd.name.includes(searchQuery),
     );
+    const defaultFriendGroup: FriendGroup = {
+      id: 'default',
+      name: '我的好友',
+      order: 0,
+      userId,
+      createdAt: Date.now(),
+      friends: userFriends,
+    };
 
     // States
     const [searchQuery, setSearchQuery] = useState<string>('');
@@ -229,7 +237,7 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
             </div>
             {/* Friend Groups */}
             <div className={styles['friendGroups']}>
-              {userFriendGroups.map((friendGroup) => (
+              {[defaultFriendGroup, ...userFriendGroups].map((friendGroup) => (
                 <FriendGroupTab
                   key={friendGroup.id}
                   friendGroup={friendGroup}
