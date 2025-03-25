@@ -135,20 +135,20 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
                 id: 'edit',
-                label: lang.tr.edit,
+                label: lang.tr.editChannel,
                 show: canEdit,
                 onClick: () => handleOpenEditChannel(categoryId, serverId),
               },
               {
                 id: 'add',
-                label: lang.tr.add,
+                label: lang.tr.addChannel,
                 show: canEdit,
                 onClick: () =>
                   handleOpenCreateChannel(serverId, categoryId, userId),
               },
               {
                 id: 'delete',
-                label: lang.tr.delete,
+                label: lang.tr.deleteChannel,
                 show: canEdit,
                 onClick: () => handleOpenWarning(lang.tr.warningDeleteChannel),
               },
@@ -308,20 +308,20 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
                 id: 'edit',
-                label: lang.tr.edit,
+                label: lang.tr.editChannel,
                 show: canEdit,
                 onClick: () => handleOpenEditChannel(channelId, serverId),
               },
               {
                 id: 'add',
-                label: lang.tr.add,
+                label: lang.tr.addChannel,
                 show: canEdit && !channelIsLobby && channelIsRoot,
                 onClick: () =>
                   handleOpenCreateChannel(serverId, channelId, userId),
               },
               {
                 id: 'delete',
-                label: lang.tr.delete,
+                label: lang.tr.deleteChannel,
                 show: canEdit && !channelIsLobby,
                 onClick: () => handleOpenWarning(lang.tr.warningDeleteChannel),
               },
@@ -553,6 +553,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
 
     // States
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+    const [view, setView] = useState<'all' | 'current'>('all');
 
     // Variables
     const connectStatus = 3;
@@ -584,88 +585,159 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
     }, [serverChannels]);
 
     return (
-      <>
-        {/* Current Channel */}
-        <div className={styles['currentChannelBox']}>
-          <div
-            className={`${styles['currentChannelIcon']} ${
-              styles[`status${connectStatus}`]
-            }`}
-          />
-          <div className={styles['currentChannelText']}>
-            {currentChannelName}
-          </div>
-        </div>
-
-        {/* Mic Queue */}
-        {currentChannelVoiceMode === 'queue' && (
-          <>
-            <div className={styles['sectionTitle']}>{lang.tr.micOrder}</div>
-            <div className={styles['micQueueBox']}>
-              <div className={styles['userList']}>
-                {/* {micQueueUsers.map((user) => (
-              <UserTab
-                key={user.id}
-                user={user}
-                server={server}
-                mainUser={user}
-              />
-            ))} */}
-              </div>
-            </div>
-
-            {/* Separator */}
-            <div className={styles['saperator-2']} />
-          </>
-        )}
-
-        {/* Channel List Title */}
-        <div
-          className={styles['sectionTitle']}
-          onContextMenu={(e) => {
+      <div
+        style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
+        onContextMenu={(e) => {
+          if (
+            !(e.target as HTMLElement).closest(`.${styles['channelTab']}`) &&
+            !(e.target as HTMLElement).closest(`.${styles['categoryTab']}`)
+          ) {
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
                 id: 'addChannel',
-                label: lang.tr.add,
+                label: lang.tr.addChannel,
                 show: canEdit,
                 onClick: handleCreateRootChannel,
               },
             ]);
-          }}
-        >
-          {lang.tr.allChannel}
+          }
+        }}
+      >
+        <div style={{ flexGrow: 1, overflow: 'auto' }}>
+          {/* Current Channel */}
+          <div className={styles['currentChannelBox']}>
+            <div
+              className={`${styles['currentChannelIcon']} ${
+                styles[`status${connectStatus}`]
+              }`}
+            />
+            <div className={styles['currentChannelText']}>
+              {currentChannelName}
+            </div>
+          </div>
+
+          {/* Mic Queue */}
+          {currentChannelVoiceMode === 'queue' && (
+            <>
+              <div className={styles['sectionTitle']}>{lang.tr.micOrder}</div>
+              <div className={styles['micQueueBox']}>
+                <div className={styles['userList']}>
+                  {/* {micQueueUsers.map((user) => (
+                    <UserTab
+                      key={user.id}
+                      user={user}
+                      server={server}
+                      mainUser={user}
+                    />
+                  ))} */}
+                </div>
+              </div>
+              <div className={styles['saperator-2']} />
+            </>
+          )}
+
+          {/* Channel List Title */}
+          <div className={styles['sectionTitle']}>
+            {view === 'current' ? lang.tr.currentChannel : lang.tr.allChannel}
+          </div>
+
+          {/* Channel List */}
+          <div className={styles['channelList']}>
+            {view === 'current'
+              ? // 當前頻道視圖
+                serverChannels
+                  .filter((c) => c.id === user.currentChannelId)
+                  .map((channel) => (
+                    <div key={channel.id}>
+                      <div
+                        className={`
+                        ${styles['channelTab']} 
+                        ${styles['expanded']} 
+                        ${
+                          (channel as Channel).isLobby
+                            ? styles['lobby']
+                            : styles[channel.visibility]
+                        }
+                      `}
+                      >
+                        <div className={styles['channelTabLable']}>
+                          {channel.name}
+                        </div>
+                        {channel.visibility !== 'readonly' && (
+                          <div className={styles['channelTabCount']}>
+                            {`(${
+                              server.members?.filter(
+                                (mb) => mb.currentChannelId === channel.id,
+                              ).length ?? 0
+                            })`}
+                          </div>
+                        )}
+                      </div>
+                      <div className={styles['userList']}>
+                        {server.members
+                          ?.filter((mb) => mb.currentChannelId === channel.id)
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((channelMember) => (
+                            <UserTab
+                              key={channelMember.id}
+                              user={user}
+                              channelMember={channelMember}
+                              permissionLevel={memberPermission}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  ))
+              : // 所有頻道視圖
+                serverChannels
+                  .filter((c) => c.isRoot)
+                  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                  .map((item) =>
+                    item.type === 'category' ? (
+                      <CategoryTab
+                        key={item.id}
+                        user={user}
+                        server={server}
+                        category={item}
+                        permissionLevel={memberPermission}
+                        expanded={expanded}
+                        setExpanded={setExpanded}
+                      />
+                    ) : (
+                      <ChannelTab
+                        key={item.id}
+                        user={user}
+                        server={server}
+                        channel={item}
+                        permissionLevel={memberPermission}
+                        expanded={expanded}
+                        setExpanded={setExpanded}
+                      />
+                    ),
+                  )}
+          </div>
         </div>
 
-        {/* Channel List */}
-        <div className={styles['channelList']}>
-          {serverChannels
-            .filter((c) => c.isRoot)
-            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-            .map((item) =>
-              item.type === 'category' ? (
-                <CategoryTab
-                  key={item.id}
-                  user={user}
-                  server={server}
-                  category={item}
-                  permissionLevel={memberPermission}
-                  expanded={expanded}
-                  setExpanded={setExpanded}
-                />
-              ) : (
-                <ChannelTab
-                  key={item.id}
-                  user={user}
-                  server={server}
-                  channel={item}
-                  permissionLevel={memberPermission}
-                  expanded={expanded}
-                  setExpanded={setExpanded}
-                />
-              ),
-            )}
+        {/* Bottom Navigation */}
+        <div className={styles['bottomNav']}>
+          <div
+            className={`${styles['navItem']} ${
+              view === 'current' ? styles['active'] : ''
+            }`}
+            onClick={() => setView('current')}
+          >
+            {lang.tr.currentChannel}
+          </div>
+          <div
+            className={`${styles['navItem']} ${
+              view === 'all' ? styles['active'] : ''
+            }`}
+            onClick={() => setView('all')}
+          >
+            {lang.tr.allChannel}
+          </div>
         </div>
-      </>
+      </div>
     );
   },
 );

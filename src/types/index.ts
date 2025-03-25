@@ -172,9 +172,11 @@ export interface Translation {
   delete: string;
   kick: string;
   addFriend: string;
+  addChannel: string;
   unknownChannel: string;
   micOrder: string;
   allChannel: string;
+  currentChannel: string;
   inputMessage: string;
   messageInputBox: string;
   deleteFriend: string;
@@ -418,9 +420,11 @@ export const translations: Record<LanguageKey, Translation> = {
     delete: '刪除',
     kick: '踢出',
     addFriend: '新增好友',
+    addChannel: '新增頻道',
     unknownChannel: '未知頻道',
     micOrder: '麥序',
     allChannel: '所有頻道',
+    currentChannel: '當前頻道',
     inputMessage: '輸入訊息...',
     messageInputBox: '訊息輸入框',
     deleteFriend: '刪除好友',
@@ -661,9 +665,11 @@ export const translations: Record<LanguageKey, Translation> = {
     delete: '删除',
     kick: '踢出',
     addFriend: '新增好友',
+    addChannel: '新增频道',
     unknownChannel: '未知频道',
     micOrder: '麦序',
     allChannel: '所有频道',
+    currentChannel: '当前频道',
     inputMessage: '输入消息...',
     messageInputBox: '消息输入框',
     deleteFriend: '删除好友',
@@ -906,9 +912,11 @@ export const translations: Record<LanguageKey, Translation> = {
     delete: 'Delete',
     kick: 'Kick',
     addFriend: 'Add friend',
+    addChannel: 'Add channel',
     unknownChannel: 'Unknown channel',
     micOrder: 'Mic order',
     allChannel: 'All channels',
+    currentChannel: 'Current channel',
     inputMessage: 'Input message...',
     messageInputBox: 'Message input box',
     deleteFriend: 'Delete friend',
@@ -1153,9 +1161,11 @@ export const translations: Record<LanguageKey, Translation> = {
     delete: '削除',
     kick: 'キック',
     addFriend: 'フレンドを追加',
+    addChannel: 'チャンネルを追加',
     unknownChannel: '不明なチャンネル',
     micOrder: 'マイクの順序',
     allChannel: 'すべてのチャンネル',
+    currentChannel: '現在のチャンネル',
     inputMessage: 'メッセージを入力...',
     messageInputBox: 'メッセージ入力ボックス',
     deleteFriend: 'フレンドを削除',

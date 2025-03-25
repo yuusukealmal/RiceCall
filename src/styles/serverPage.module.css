@@ -720,7 +720,6 @@
   position: absolute;
 }
 
-/* 滑块的按钮 */
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px;
@@ -730,4 +729,79 @@
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.bottomNav {
+  display: flex;
+  position: relative;
+  border-top: 1px solid #e2e8f0;
+}
+
+.bottomNav::before {
+  content: '';
+  position: absolute;
+  background: url(../../public/channel/switch_arrow.png) no-repeat center top;
+  background-size: auto;
+  min-height: 280px;
+  min-width: 280px;
+  background-position: -210px 0;
+  top: 11px;
+  left: 75%;
+  transform: translateX(-50%) scale(1.2);
+  transition: left 0.2s ease;
+}
+
+.bottomNav:has(.navItem:last-child.active)::before {
+  left: 125%;
+}
+
+.navItem {
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+  color: #b3b3b3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  z-index: 1;
+  transition: transform 0.2s ease;
+}
+
+.navItem::before {
+  content: '';
+  display: inline-block;
+  height: 15px;
+  width: 15px;
+  min-height: 15px;
+  min-width: 15px;
+  background-repeat: no-repeat;
+  background-size: auto;
+  margin-right: 4px;
+}
+
+.navItem.active {
+  color: #8b8b8b;
+  transform: translateY(-1px);
+}
+
+.navItem:first-child::before {
+  background-image: url(../../public/channel/rdb_cur_channel.png);
+  background-position: 0 0;
+  background-size: auto;
+  min-height: 18px;
+  min-width: 18px;
+}
+
+.navItem:last-child::before {
+  background-image: url(../../public/channel/rdb_all_channel.png);
+  background-position: 0 0;
+  background-size: auto;
+  min-height: 18px;
+  min-width: 18px;
+}
+
+.navItem.active::before {
+  background-position: 0 -18px;
 }
