@@ -8,7 +8,7 @@ const set = {
     users[id] = {
       name: '',
       avatar: '',
-      avatarUrl: 'https://localhost:4500/images/userAvatars/',
+      avatarUrl: 'http://localhost:4500/images/userAvatars/',
       signature: '',
       status: 'online',
       gender: 'Male',
@@ -64,7 +64,7 @@ const set = {
     servers[id] = {
       name: '',
       avatar: '',
-      avatarUrl: 'https://localhost:3000/images/serverAvatars/',
+      avatarUrl: 'http://localhost:4500/images/serverAvatars/',
       announcement: '',
       description: '',
       slogan: '',
