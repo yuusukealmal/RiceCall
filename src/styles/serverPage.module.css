@@ -740,19 +740,18 @@
 .bottomNav::before {
   content: '';
   position: absolute;
+  min-height: 20px;
+  min-width: 70px;
+  top: -15px;
+  left: calc(25% - 35px);
+  transition: left 0.2s ease;
   background: url(../../public/channel/switch_arrow.png) no-repeat center top;
   background-size: auto;
-  min-height: 280px;
-  min-width: 280px;
-  background-position: -210px 0;
-  top: 10.5px;
-  left: 75%;
-  transform: translateX(-50%) scale(1.2);
-  transition: left 0.2s ease;
+  background-position: 0 0;
 }
 
 .bottomNav:has(.navItem:last-child.active)::before {
-  left: 125%;
+  left: calc(75% - 35px);
 }
 
 .navItem {
