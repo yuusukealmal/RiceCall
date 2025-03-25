@@ -17,11 +17,11 @@
 }
 
 .contextMenu .separator {
-  min-height: 8px;
+  min-height: 1px;
   min-width: 100%;
   display: block;
   margin: 3px 0;
-  background-image: url(../../public/channel/chn_tree_split.png);
+  background-image: url(../../public/ctrl/menu_spliter.png);
   background-repeat: no-repeat;
   background-size: auto;
 }
