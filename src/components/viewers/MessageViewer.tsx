@@ -8,12 +8,7 @@ import permission from '@/styles/common/permission.module.css';
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 
 // Types
-import type {
-  ChannelMessage,
-  DirectMessage,
-  InfoMessage,
-  Message,
-} from '@/types';
+import type { ChannelMessage, DirectMessage, InfoMessage } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
