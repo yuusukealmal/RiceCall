@@ -163,8 +163,16 @@ export interface Translation {
   register: string;
   freeSpeech: string;
   forbiddenSpeech: string;
-  changeToFreeSpeech: string;
-  changeToForbiddenSpeech: string;
+  queue: string;
+  forbiddenQueue: string;
+  controlQueue: string;
+  textChangeToFreeSpeech: string;
+  textChangeToForbiddenSpeech: string;
+  voiceChangeToFreeSpeech: string;
+  voiceChangeToForbiddenSpeech: string;
+  voiceChangeToQueue: string;
+  voiceChangeToForbiddenQueue: string;
+  voiceChangeToControlQueue: string;
   takeMic: string;
   takenMic: string;
   mixing: string;
@@ -246,6 +254,11 @@ export interface Translation {
   setApplyNotice: string;
   cannotApply: string;
   applySuccess: string;
+  TEXT_CHANGE_TO_FREE_SPEECH: string;
+  TEXT_CHANGE_TO_FORBIDDEN_SPEECH: string;
+  VOICE_CHANGE_TO_FREE_SPEECH: string;
+  VOICE_CHANGE_TO_FORBIDDEN_SPEECH: string;
+  VOICE_CHANGE_TO_QUEUE: string;
 }
 
 export type LanguageKey = 'tw' | 'cn' | 'en' | 'jp';
@@ -419,8 +432,16 @@ export const translations: Record<LanguageKey, Translation> = {
     register: '註冊',
     freeSpeech: '自由發言',
     forbiddenSpeech: '限制發言',
-    changeToFreeSpeech: '該頻道已被設為自由發言',
-    changeToForbiddenSpeech: '該頻道已被設為僅管理員發言',
+    queue: '排麥',
+    forbiddenQueue: '禁止排麥',
+    controlQueue: '控麥',
+    textChangeToFreeSpeech: '該頻道聊天室已被設為自由發言',
+    textChangeToForbiddenSpeech: '該頻道聊天室已被設為僅管理員發言',
+    voiceChangeToFreeSpeech: '該頻道語音已被設為自由發言',
+    voiceChangeToForbiddenSpeech: '該頻道語音已被設為僅管理員發言',
+    voiceChangeToQueue: '頻道被設為排麥才能發言，請點擊"拿麥發言"等候發言',
+    voiceChangeToForbiddenQueue: '排麥模式已變更為禁止',
+    voiceChangeToControlQueue: '排麥模式已變更為控麥',
     takeMic: '拿麥發言',
     takenMic: '已拿麥',
     mixing: '混音',
@@ -503,6 +524,11 @@ export const translations: Record<LanguageKey, Translation> = {
     setApplyNotice: '會員申請須知',
     cannotApply: '無法申請會員，此群組不接受會員申請',
     applySuccess: '申請已送出，請等待管理員審核',
+    TEXT_CHANGE_TO_FREE_SPEECH: '該頻道聊天室已被設為自由發言',
+    TEXT_CHANGE_TO_FORBIDDEN_SPEECH: '該頻道聊天室已被設為僅管理員發言',
+    VOICE_CHANGE_TO_FREE_SPEECH: '該頻道語音已被設為自由發言',
+    VOICE_CHANGE_TO_FORBIDDEN_SPEECH: '該頻道語音已被設為僅管理員發言',
+    VOICE_CHANGE_TO_QUEUE: '頻道被設為排麥才能發言，請點擊"拿麥發言"等候發言',
   },
   cn: {
     RPCHomePage: '正在浏览主页',
@@ -672,8 +698,16 @@ export const translations: Record<LanguageKey, Translation> = {
     register: '注册',
     freeSpeech: '自由发言',
     forbiddenSpeech: '限制发言',
-    changeToFreeSpeech: '该频道已被设为自由发言',
-    changeToForbiddenSpeech: '该频道已被设为仅管理员发言',
+    queue: '排麦',
+    forbiddenQueue: '禁止排麦',
+    controlQueue: '控麦',
+    textChangeToFreeSpeech: '该频道聊天室已被设为自由发言',
+    textChangeToForbiddenSpeech: '该频道聊天室已被设为仅管理员发言',
+    voiceChangeToFreeSpeech: '该频道语音已被设为自由发言',
+    voiceChangeToForbiddenSpeech: '该频道语音已被设为仅管理员发言',
+    voiceChangeToQueue: '频道被设为排麦才能发言，请点击"拿麦发言"等候发言',
+    voiceChangeToForbiddenQueue: '排麦模式已变更为禁止',
+    voiceChangeToControlQueue: '排麦模式已变更为控麦',
     takeMic: '拿麦发言',
     takenMic: '已拿麦',
     mixing: '混音',
@@ -756,6 +790,11 @@ export const translations: Record<LanguageKey, Translation> = {
     setApplyNotice: '会员申请须知',
     cannotApply: '无法申请会员，此群组不接受会员申请',
     applySuccess: '申请已送出，请等待管理员审核',
+    TEXT_CHANGE_TO_FREE_SPEECH: '频道聊天室已被设为自由发言',
+    TEXT_CHANGE_TO_FORBIDDEN_SPEECH: '频道聊天室已被设为仅管理员发言',
+    VOICE_CHANGE_TO_FREE_SPEECH: '频道语音已被设为自由发言',
+    VOICE_CHANGE_TO_FORBIDDEN_SPEECH: '频道语音已被设为仅管理员发言',
+    VOICE_CHANGE_TO_QUEUE: '频道被设为排麦才能发言，请点击"拿麦发言"等候发言',
   },
   en: {
     RPCHomePage: 'Browsing Homepage',
@@ -927,8 +966,19 @@ export const translations: Record<LanguageKey, Translation> = {
     register: 'Register',
     freeSpeech: 'Free speech',
     forbiddenSpeech: 'Restricted speech',
-    changeToFreeSpeech: 'The channel has been set to free speech',
-    changeToForbiddenSpeech: 'The channel has been set to admin-only speech',
+    queue: 'Queue',
+    forbiddenQueue: 'Forbidden queue',
+    controlQueue: 'Control queue',
+    textChangeToFreeSpeech: 'The channel chat has been set to free speech',
+    textChangeToForbiddenSpeech:
+      'The channel chat has been set to admin-only speech',
+    voiceChangeToFreeSpeech: 'The channel voice has been set to free speech',
+    voiceChangeToForbiddenSpeech:
+      'The channel voice has been set to admin-only speech',
+    voiceChangeToQueue:
+      'The channel voice has been set to queue, please click "Take mic" to wait for speech',
+    voiceChangeToForbiddenQueue: 'The queue mode has been changed to forbidden',
+    voiceChangeToControlQueue: 'The queue mode has been changed to control',
     takeMic: 'Take mic',
     takenMic: 'Mic taken',
     mixing: 'Mixing',
@@ -1016,6 +1066,15 @@ export const translations: Record<LanguageKey, Translation> = {
     cannotApply:
       'Cannot apply for membership, this group does not accept membership applications',
     applySuccess: 'Application submitted, please wait for admin review',
+    TEXT_CHANGE_TO_FREE_SPEECH: 'The channel chat has been set to free speech',
+    TEXT_CHANGE_TO_FORBIDDEN_SPEECH:
+      'The channel chat has been set to admin-only speech',
+    VOICE_CHANGE_TO_FREE_SPEECH:
+      'The channel voice has been set to free speech',
+    VOICE_CHANGE_TO_FORBIDDEN_SPEECH:
+      'The channel voice has been set to admin-only speech',
+    VOICE_CHANGE_TO_QUEUE:
+      'The channel voice has been set to queue, please click "Take mic" to wait for speech',
   },
   jp: {
     RPCHomePage: 'ホームページを閲覧中',
@@ -1185,8 +1244,20 @@ export const translations: Record<LanguageKey, Translation> = {
     register: '登録',
     freeSpeech: '自由な発言',
     forbiddenSpeech: '発言を制限',
-    changeToFreeSpeech: 'チャンネルは自由な発言に設定されています',
-    changeToForbiddenSpeech: 'チャンネルは管理者のみの発言に設定されています',
+    queue: '排麦',
+    forbiddenQueue: '禁止排麦',
+    controlQueue: '控麦',
+    textChangeToFreeSpeech:
+      'チャンネルのチャットは自由な発言に設定されています',
+    textChangeToForbiddenSpeech:
+      'チャンネルのチャットは管理者のみの発言に設定されています',
+    voiceChangeToFreeSpeech: 'チャンネルの音声は自由な発言に設定されています',
+    voiceChangeToForbiddenSpeech:
+      'チャンネルの音声は管理者のみの発言に設定されています',
+    voiceChangeToQueue:
+      'チャンネルの音声は排麦才能発言に設定されています。"マイクを取る"をクリックして発言を待ってください',
+    voiceChangeToForbiddenQueue: '排麦モードは禁止に設定されています',
+    voiceChangeToControlQueue: '排麦モードは控麦に設定されています',
     takeMic: 'マイクを取る',
     takenMic: 'マイクを取った',
     mixing: 'ミキシング',
@@ -1272,6 +1343,16 @@ export const translations: Record<LanguageKey, Translation> = {
     setApplyNotice: 'メンバー申請須知',
     cannotApply: 'メンバー申請を受け取ることができません',
     applySuccess: 'メンバー申請が送信されました',
+    TEXT_CHANGE_TO_FREE_SPEECH:
+      'チャンネルのチャットは自由な発言に設定されています',
+    TEXT_CHANGE_TO_FORBIDDEN_SPEECH:
+      'チャンネルのチャットは管理者のみの発言に設定されています',
+    VOICE_CHANGE_TO_FREE_SPEECH:
+      'チャンネルの音声は自由な発言に設定されています',
+    VOICE_CHANGE_TO_FORBIDDEN_SPEECH:
+      'チャンネルの音声は管理者のみの発言に設定されています',
+    VOICE_CHANGE_TO_QUEUE:
+      'チャンネルの音声は排麦才能発言に設定されています。"マイクを取る"をクリックして発言を待ってください',
   },
 };
 

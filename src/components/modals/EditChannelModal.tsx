@@ -5,7 +5,7 @@ import popup from '@/styles/common/popup.module.css';
 import setting from '@/styles/popups/editServer.module.css';
 
 // Types
-import { Channel, Server } from '@/types';
+import { Channel, Message, Server } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -37,12 +37,29 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const [channelName, setChannelName] = useState<Channel['name']>(
       createDefault.channel().name,
     );
+    const [channelUserLimit, setChannelUserLimit] = useState<
+      Channel['userLimit']
+    >(createDefault.channel().userLimit);
     const [channelIsLobby, setChannelIsLobby] = useState<Channel['isLobby']>(
       createDefault.channel().isLobby,
     );
     const [channelVisibility, setChannelVisibility] = useState<
       Channel['visibility']
     >(createDefault.channel().visibility);
+    const [channelTextState, setChannelTextState] = useState<{
+      current: Channel['chatMode'];
+      original: Channel['chatMode'];
+    }>({
+      current: 'free',
+      original: 'free',
+    });
+    const [channelVoiceState, setChannelVoiceState] = useState<{
+      current: Channel['voiceMode'];
+      original: Channel['voiceMode'];
+    }>({
+      current: 'free',
+      original: 'free',
+    });
 
     // Variables
     const { channelId, serverId } = initialData;
@@ -57,11 +74,30 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
       socket.send.updateChannel({ channel, channelId, serverId });
     };
 
+    const handleSendMessage = (
+      message: Partial<Message>,
+      channelId: Channel['id'],
+    ): void => {
+      if (!socket) return;
+      socket.send.message({ message, channelId });
+    };
+
     const handleChannelUpdate = (data: Channel | null) => {
       if (!data) data = createDefault.channel();
       setChannelName(data.name);
       setChannelIsLobby(data.isLobby);
       setChannelVisibility(data.visibility);
+      setChannelUserLimit(data.userLimit);
+      const chatMode = data.chatMode || 'free';
+      setChannelTextState({
+        current: chatMode,
+        original: chatMode,
+      });
+      const voiceMode = data.voiceMode || 'free';
+      setChannelVoiceState({
+        current: voiceMode,
+        original: voiceMode,
+      });
     };
 
     const handleClose = () => {
@@ -69,10 +105,47 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     };
 
     const handleConfirm = () => {
+      const validUserLimit = Math.max(0, Math.min(999, channelUserLimit));
+      if (validUserLimit !== channelUserLimit)
+        setChannelUserLimit(validUserLimit);
+
+      if (channelTextState.current !== channelTextState.original) {
+        handleSendMessage(
+          {
+            type: 'info',
+            content:
+              channelTextState.current === 'free'
+                ? 'TEXT_CHANGE_TO_FREE_SPEECH'
+                : 'TEXT_CHANGE_TO_FORBIDDEN_SPEECH',
+            timestamp: 0,
+          },
+          channelId,
+        );
+      }
+
+      if (channelVoiceState.current !== channelVoiceState.original) {
+        handleSendMessage(
+          {
+            type: 'info',
+            content:
+              channelVoiceState.current === 'queue'
+                ? 'VOICE_CHANGE_TO_QUEUE'
+                : channelVoiceState.current === 'forbidden'
+                ? 'VOICE_CHANGE_TO_FORBIDDEN_SPEECH'
+                : 'VOICE_CHANGE_TO_FREE_SPEECH',
+            timestamp: 0,
+          },
+          channelId,
+        );
+      }
+
       handleUpdateChannel(
         {
           name: channelName,
           visibility: channelVisibility,
+          userLimit: validUserLimit,
+          chatMode: channelTextState.current,
+          voiceMode: channelVoiceState.current,
         },
         channelId,
         serverId,
@@ -137,9 +210,20 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     <input
                       style={{ width: '75px' }}
                       type="number"
+                      min="0"
+                      max="999"
                       className={setting['input']}
-                      value="888"
-                      disabled
+                      value={channelUserLimit}
+                      disabled={
+                        channelVisibility === 'readonly' || channelIsLobby
+                      }
+                      onChange={(e) => {
+                        const value = Math.max(
+                          0,
+                          Math.min(999, parseInt(e.target.value) || 0),
+                        );
+                        setChannelUserLimit(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -202,6 +286,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                 </div>
                 <div className={`${popup['inputBox']} ${popup['col']}`}>
                   <textarea
+                    disabled
                     style={{ minHeight: '200px' }}
                     // value={channelAnnouncement}
                     value={''}
@@ -223,6 +308,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       name="voiceQuality"
                       className={setting['radio']}
                       checked={channelVisibility === 'public'}
+                      disabled={channelIsLobby}
                       onChange={() => {
                         setChannelVisibility('public');
                       }}
@@ -240,6 +326,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       name="voiceQuality"
                       className={setting['radio']}
                       checked={channelVisibility === 'member'}
+                      disabled={channelIsLobby}
                       onChange={() => {
                         setChannelVisibility('member');
                       }}
@@ -257,6 +344,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       name="voiceQuality"
                       className={setting['radio']}
                       checked={channelVisibility === 'private'}
+                      disabled={channelIsLobby}
                       onChange={() => {
                         setChannelVisibility('private');
                       }}
@@ -274,6 +362,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                       name="voiceQuality"
                       className={setting['radio']}
                       checked={channelVisibility === 'readonly'}
+                      disabled={channelIsLobby}
                       onChange={() => {
                         setChannelVisibility('readonly');
                       }}
@@ -293,6 +382,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     <input
                       type="checkbox"
                       className={setting['check']}
+                      checked={false}
                       onChange={() => {}}
                     />
                     <span>禁止遊客排麥發言</span>
@@ -305,6 +395,7 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                     <input
                       type="checkbox"
                       className={setting['check']}
+                      checked={false}
                       onChange={() => {}}
                     />
                     <span>自由發言模式禁止遊客語音</span>
@@ -316,23 +407,50 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                 <label>文字許可權</label>
                 <div className={setting['checkWrapper']}>
                   <label className={setting['checkBox']}>
-                    <input type="checkbox" className={setting['check']} />
+                    <input
+                      type="checkbox"
+                      className={setting['check']}
+                      checked={channelTextState.current === 'forbidden'}
+                      onChange={(e) => {
+                        const newMode = e.target.checked ? 'forbidden' : 'free';
+                        setChannelTextState((prev) => ({
+                          ...prev,
+                          current: newMode,
+                        }));
+                      }}
+                    />
                     <span>此頻道被設定為只允許管理員發送文字訊息</span>
                   </label>
                 </div>
                 <div className={setting['checkWrapper']}>
-                  <label className={setting['checkBox']}>
-                    <input type="checkbox" className={setting['check']} />
-                    <span>此頻道被設定為只允許禁音訪客發送文字訊息</span>
+                  <label
+                    className={`${setting['checkBox']} ${popup['disabled']}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className={setting['check']}
+                      checked={false}
+                      onChange={() => {}}
+                    />
+                    <span>此頻道被設定為遊客禁止發送文字訊息</span>
                   </label>
                 </div>
                 <div className={setting['checkWrapper']}>
-                  <label className={setting['checkBox']}>
-                    <input type="checkbox" className={setting['check']} />
+                  <label
+                    className={`${setting['checkBox']} ${popup['disabled']}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className={setting['check']}
+                      checked={false}
+                      onChange={() => {}}
+                    />
                     <span>禁止訪客發送包含URL的文字訊息</span>
                   </label>
                 </div>
-                <div className={setting['unitWrapper']}>
+                <div
+                  className={`${setting['unitWrapper']} ${popup['disabled']}`}
+                >
                   <div className={setting['unitLabel']}>
                     遊客發送文字訊息的最大長度:
                   </div>
@@ -345,7 +463,9 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   />
                   <span className={setting['unit']}>字元</span>
                 </div>
-                <div className={setting['unitWrapper']}>
+                <div
+                  className={`${setting['unitWrapper']} ${popup['disabled']}`}
+                >
                   <div className={setting['unitLabel']}>
                     遊客允許發送文字訊息的等待時間:
                   </div>
@@ -358,7 +478,9 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   />
                   <span className={setting['unit']}>秒</span>
                 </div>
-                <div className={setting['unitWrapper']}>
+                <div
+                  className={`${setting['unitWrapper']} ${popup['disabled']}`}
+                >
                   <div className={setting['unitLabel']}>
                     遊客每次發送文字訊息的相隔時間:
                   </div>

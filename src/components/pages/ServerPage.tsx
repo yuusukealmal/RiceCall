@@ -469,7 +469,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                             handleSendMessage(
                               {
                                 type: 'info',
-                                content: lang.tr.changeToFreeSpeech,
+                                content: 'VOICE_CHANGE_TO_FREE_SPEECH',
                                 timestamp: 0,
                               },
                               currentChannelId,
@@ -488,7 +488,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                             handleSendMessage(
                               {
                                 type: 'info',
-                                content: lang.tr.changeToForbiddenSpeech,
+                                content: 'VOICE_CHANGE_TO_FORBIDDEN_SPEECH',
                                 timestamp: 0,
                               },
                               currentChannelId,
@@ -497,7 +497,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         },
                         {
                           id: 'queue',
-                          label: '排麥',
+                          label: lang.tr.queue,
                           icon: 'submenu',
                           hasSubmenu: true,
                           onClick: () => {
@@ -509,8 +509,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                             handleSendMessage(
                               {
                                 type: 'info',
-                                content:
-                                  '頻道被設為排麥才能發言，請點擊"拿麥發言"等候發言',
+                                content: 'VOICE_CHANGE_TO_QUEUE',
                                 timestamp: 0,
                               },
                               currentChannelId,
@@ -519,14 +518,14 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           submenuItems: [
                             {
                               id: 'forbiddenQueue',
-                              label: '禁止排麥',
+                              label: lang.tr.forbiddenQueue,
                               disabled: channelVoiceMode === 'queue',
                               onClick: () => {
                                 // handleUpdateChannel({ queueMode: 'forbidden' }, currentChannelId, serverId);
                                 handleSendMessage(
                                   {
                                     type: 'info',
-                                    content: '排麥模式已變更為禁止',
+                                    content: 'VOICE_CHANGE_TO_FORBIDDEN_QUEUE',
                                   },
                                   currentChannelId,
                                 );
@@ -534,14 +533,14 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                             },
                             {
                               id: 'controlQueue',
-                              label: '控麥',
+                              label: lang.tr.controlQueue,
                               disabled: channelVoiceMode === 'queue',
                               onClick: () => {
                                 // handleUpdateChannel({ queueMode: 'control' }, currentChannelId, serverId);
                                 handleSendMessage(
                                   {
                                     type: 'info',
-                                    content: '排麥模式已變更為控麥',
+                                    content: 'VOICE_CHANGE_TO_CONTROL_QUEUE',
                                   },
                                   currentChannelId,
                                 );
@@ -553,7 +552,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                     }
                   >
                     {channelVoiceMode === 'queue'
-                      ? '排麥'
+                      ? lang.tr.queue
                       : channelVoiceMode === 'free'
                       ? lang.tr.freeSpeech
                       : channelVoiceMode === 'forbidden'

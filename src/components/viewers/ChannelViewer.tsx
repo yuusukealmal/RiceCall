@@ -31,6 +31,7 @@ import ipcService from '@/services/ipc.service';
 interface CategoryTabProps {
   user: User;
   server: Server;
+  member: Member;
   category: Category;
   permissionLevel: number;
   expanded: Record<string, boolean>;
@@ -38,7 +39,15 @@ interface CategoryTabProps {
 }
 
 const CategoryTab: React.FC<CategoryTabProps> = React.memo(
-  ({ user, server, category, permissionLevel, expanded, setExpanded }) => {
+  ({
+    user,
+    server,
+    member,
+    category,
+    permissionLevel,
+    expanded,
+    setExpanded,
+  }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -172,6 +181,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
                   key={channel.id}
                   user={user}
                   server={server}
+                  member={member}
                   channel={channel}
                   permissionLevel={permissionLevel}
                   expanded={expanded}
@@ -190,6 +200,7 @@ CategoryTab.displayName = 'CategoryTab';
 interface ChannelTabProps {
   user: User;
   server: Server;
+  member: Member;
   channel: Channel;
   permissionLevel: number;
   expanded: Record<string, boolean>;
@@ -197,7 +208,15 @@ interface ChannelTabProps {
 }
 
 const ChannelTab: React.FC<ChannelTabProps> = React.memo(
-  ({ user, server, channel, permissionLevel, expanded, setExpanded }) => {
+  ({
+    user,
+    server,
+    member,
+    channel,
+    permissionLevel,
+    expanded,
+    setExpanded,
+  }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -212,17 +231,20 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
       isRoot: channelIsRoot,
       isLobby: channelIsLobby,
       visibility: channelVisibility,
+      userLimit: channelUserLimit,
     } = channel;
+    const { permissionLevel: userPermission } = member;
     const channelMembers = serverMembers.filter(
       (mb) => mb.currentChannelId === channelId,
     );
     const userInChannel = user.currentChannelId === channelId;
     const canEdit = permissionLevel >= 5;
     const canJoin =
+      !userInChannel &&
       channelVisibility !== 'readonly' &&
       !(channelVisibility === 'private' && permissionLevel < 3) &&
       !(channelVisibility === 'member' && permissionLevel < 2) &&
-      !userInChannel;
+      (channelUserLimit > channelMembers.length || userPermission > 4);
 
     // Handlers
     const handleOpenEditChannel = (
@@ -333,7 +355,9 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
           <div className={styles['channelTabLable']}>{channelName}</div>
           {channelVisibility !== 'readonly' && (
             <div className={styles['channelTabCount']}>
-              {`(${channelMembers.length})`}
+              {`(${channelMembers.length}${
+                channelUserLimit > 0 ? `/${channelUserLimit}` : ''
+              })`}
             </div>
           )}
           {userInChannel && !expanded[channelId] && (
@@ -646,6 +670,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
                 key={currentChannel.id}
                 user={user}
                 server={server}
+                member={member}
                 channel={currentChannel}
                 permissionLevel={memberPermission}
                 expanded={{ [currentChannel.id]: true }}
@@ -661,6 +686,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
                       key={item.id}
                       user={user}
                       server={server}
+                      member={member}
                       category={item}
                       permissionLevel={memberPermission}
                       expanded={expanded}
@@ -671,6 +697,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
                       key={item.id}
                       user={user}
                       server={server}
+                      member={member}
                       channel={item}
                       permissionLevel={memberPermission}
                       expanded={expanded}

@@ -62,7 +62,7 @@ const MessageInputBox: React.FC<MessageInputBoxProps> = React.memo(
                 ${locked ? 'bg-transparent' : ''}`}
           rows={2}
           placeholder={
-            locked ? lang.tr.changeToForbiddenSpeech : lang.tr.inputMessage
+            locked ? lang.tr.textChangeToForbiddenSpeech : lang.tr.inputMessage
           }
           value={messageInput}
           onChange={(e) => {

@@ -8,7 +8,12 @@ import permission from '@/styles/common/permission.module.css';
 import MarkdownViewer from '@/components/viewers/MarkdownViewer';
 
 // Types
-import type { ChannelMessage, DirectMessage, InfoMessage } from '@/types';
+import type {
+  ChannelMessage,
+  DirectMessage,
+  InfoMessage,
+  Message,
+} from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -104,7 +109,7 @@ interface InfoMessageTabProps {
 
 const InfoMessageTab: React.FC<InfoMessageTabProps> = React.memo(
   ({ messageGroup }) => {
-    // Variables
+    const lang = useLanguage();
     const { contents: messageContents } = messageGroup;
 
     return (
@@ -113,7 +118,13 @@ const InfoMessageTab: React.FC<InfoMessageTabProps> = React.memo(
         <div className={styles['messageBox']}>
           {messageContents.map((content, index) => (
             <div key={index} className="break-words">
-              <MarkdownViewer markdownText={content} />
+              <MarkdownViewer
+                markdownText={
+                  Object.prototype.hasOwnProperty.call(lang.tr, content)
+                    ? lang.tr[content as keyof typeof lang.tr]
+                    : content
+                }
+              />
             </div>
           ))}
         </div>

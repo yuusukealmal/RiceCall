@@ -486,16 +486,21 @@ const func = {
           'BITRATE_INVALID',
         );
       }
-      if (
-        channel.userLimit &&
-        (channel.userLimit < 1 || channel.userLimit > 99)
-      ) {
-        throw new StandardizedError(
-          '人數限制必須在1-99之間',
-          'ValidationError',
-          'CHANNEL',
-          'USER_LIMIT_INVALID',
-        );
+      if (channel.userLimit) {
+        if (channel.userLimit < 1 || channel.userLimit > 999)
+          throw new StandardizedError(
+            '人數限制必須在1-999之間',
+            'ValidationError',
+            'CHANNEL',
+            'USER_LIMIT_INVALID',
+          );
+        if (channel.isLobby)
+          throw new StandardizedError(
+            '大廳頻道不能設置人數限制',
+            'ValidationError',
+            'CHANNEL',
+            'USER_LIMIT_INVALID',
+          );
       }
       if (
         channel.visibility &&

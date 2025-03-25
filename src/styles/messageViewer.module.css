@@ -43,6 +43,7 @@
 }
 
 .messageBox .header .timestamp {
+  margin-left: .5rem;
   font-size: 12px;
   color: #888;
 }
