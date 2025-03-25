@@ -46,20 +46,12 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
     const [channelVisibility, setChannelVisibility] = useState<
       Channel['visibility']
     >(createDefault.channel().visibility);
-    const [channelTextState, setChannelTextState] = useState<{
-      current: Channel['chatMode'];
-      original: Channel['chatMode'];
-    }>({
-      current: 'free',
-      original: 'free',
-    });
-    const [channelVoiceState, setChannelVoiceState] = useState<{
-      current: Channel['voiceMode'];
-      original: Channel['voiceMode'];
-    }>({
-      current: 'free',
-      original: 'free',
-    });
+    const [channelTextState, setChannelTextState] = useState<
+      Channel['chatMode']
+    >(createDefault.channel().chatMode);
+    const [channelVoiceState, setChannelVoiceState] = useState<
+      Channel['voiceMode']
+    >(createDefault.channel().voiceMode);
 
     // Variables
     const { channelId, serverId } = initialData;
@@ -88,65 +80,12 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
       setChannelIsLobby(data.isLobby);
       setChannelVisibility(data.visibility);
       setChannelUserLimit(data.userLimit);
-      const chatMode = data.chatMode || 'free';
-      setChannelTextState({
-        current: chatMode,
-        original: chatMode,
-      });
-      const voiceMode = data.voiceMode || 'free';
-      setChannelVoiceState({
-        current: voiceMode,
-        original: voiceMode,
-      });
+      setChannelTextState(data.chatMode);
+      setChannelVoiceState(data.voiceMode);
     };
 
     const handleClose = () => {
       ipcService.window.close();
-    };
-
-    const handleConfirm = () => {
-      if (channelTextState.current !== channelTextState.original) {
-        handleSendMessage(
-          {
-            type: 'info',
-            content:
-              channelTextState.current === 'free'
-                ? 'TEXT_CHANGE_TO_FREE_SPEECH'
-                : 'TEXT_CHANGE_TO_FORBIDDEN_SPEECH',
-            timestamp: 0,
-          },
-          channelId,
-        );
-      }
-
-      if (channelVoiceState.current !== channelVoiceState.original) {
-        handleSendMessage(
-          {
-            type: 'info',
-            content:
-              channelVoiceState.current === 'queue'
-                ? 'VOICE_CHANGE_TO_QUEUE'
-                : channelVoiceState.current === 'forbidden'
-                ? 'VOICE_CHANGE_TO_FORBIDDEN_SPEECH'
-                : 'VOICE_CHANGE_TO_FREE_SPEECH',
-            timestamp: 0,
-          },
-          channelId,
-        );
-      }
-
-      handleUpdateChannel(
-        {
-          name: channelName,
-          visibility: channelVisibility,
-          userLimit: channelUserLimit,
-          chatMode: channelTextState.current,
-          voiceMode: channelVoiceState.current,
-        },
-        channelId,
-        serverId,
-      );
-      handleClose();
     };
 
     // Effects
@@ -408,14 +347,21 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
                   <div className={popup['inputBox']}>
                     <input
                       type="checkbox"
-                      checked={channelTextState.current === 'forbidden'}
+                      checked={channelTextState === 'forbidden'}
                       disabled={true}
                       onChange={(e) => {
                         const newMode = e.target.checked ? 'forbidden' : 'free';
-                        setChannelTextState((prev) => ({
-                          ...prev,
-                          current: newMode,
-                        }));
+                        setChannelTextState(newMode);
+                        handleSendMessage(
+                          {
+                            type: 'info',
+                            content: e.target.checked
+                              ? 'TEXT_CHANGE_TO_FORBIDDEN_SPEECH'
+                              : 'TEXT_CHANGE_TO_FREE_SPEECH',
+                            timestamp: 0,
+                          },
+                          channelId,
+                        );
                       }}
                     />
                     <label className={popup['label']}>
@@ -495,7 +441,23 @@ const EditChannelModal: React.FC<EditChannelModalProps> = React.memo(
         </div>
 
         <div className={popup['popupFooter']}>
-          <button className={popup['button']} onClick={handleConfirm}>
+          <button
+            className={popup['button']}
+            onClick={() => {
+              handleUpdateChannel(
+                {
+                  name: channelName,
+                  visibility: channelVisibility,
+                  userLimit: channelUserLimit,
+                  chatMode: channelTextState,
+                  voiceMode: channelVoiceState,
+                },
+                channelId,
+                serverId,
+              );
+              handleClose();
+            }}
+          >
             {lang.tr.confirm}
           </button>
           <button
