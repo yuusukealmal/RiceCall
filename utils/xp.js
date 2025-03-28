@@ -124,6 +124,13 @@ const xpSystem = {
         );
         return;
       }
+      const server = await Get.server(user.currentServerId);
+      if (!server) {
+        new Logger('XPSystem').warn(
+          `Server(${user.currentServerId}) not found, cannot obtain XP`,
+        );
+        return;
+      }
 
       // Process XP and level
       user.xp += XP_SYSTEM.XP_PER_HOUR;
@@ -136,6 +143,8 @@ const xpSystem = {
         user.xp -= requiredXp;
       }
 
+      const { user: setUser } = require('./set');
+
       // Update user
       const userUpdate = {
         level: user.level,
@@ -143,7 +152,7 @@ const xpSystem = {
         requiredXp: requiredXp,
         progress: user.xp / requiredXp,
       };
-      await Set.user(user.id, userUpdate);
+      await setUser(user.id, userUpdate);
 
       // Update member contribution if in a server
       if (user.currentServerId) {

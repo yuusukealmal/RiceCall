@@ -76,6 +76,7 @@ const memberHandler = {
   updateMember: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
+    const members = (await db.get('members')) || {};
 
     try {
       // data = {
@@ -87,7 +88,7 @@ const memberHandler = {
       // }
 
       // Validate data
-      const { member: _editedMember, userId, serverId, action } = data;
+      const { member: _editedMember, userId, serverId } = data;
       if (!_editedMember || !userId || !serverId) {
         throw new StandardizedError(
           '無效的資料',
@@ -99,34 +100,26 @@ const memberHandler = {
       }
 
       const editedMember = await Func.validate.member(_editedMember);
-      const [originalMember, authorMember] = await Promise.all([
-        Get.member(editedMember.userId, serverId),
-        Get.member(userId, serverId),
-      ]);
+      const member = await Func.validate.member(
+        members[`mb_${userId}-${serverId}`],
+      );
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
       const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
+      const authorMember = await Get.member(operatorId, serverId);
       const permission = authorMember.permissionLevel;
-      if (action == 'nickname') {
-        if (userId != editedMember.userId && permission < 5) {
+
+      if (operatorId === userId) {
+        if (editedMember.permissionLevel) {
           throw new StandardizedError(
-            '你沒有權限更改其他成員的暱稱',
+            '你沒有權限更改自己的權限',
             'ValidationError',
             'UPDATEMEMBER',
             'PERMISSION_DENIED',
             403,
-          );
-        }
-        if (editedMember.nickname.length > 30) {
-          throw new StandardizedError(
-            '暱稱長度不得超過 30 個字元',
-            'ValidationError',
-            'UPDATEMEMBER',
-            'NICKNAME_TOO_LONG',
-            400,
           );
         }
       } else {
@@ -139,19 +132,16 @@ const memberHandler = {
             403,
           );
         }
-        if (authorMember.id === editedMember.id) {
+        if (editedMember.nickname && permission < 5) {
           throw new StandardizedError(
-            '無法更改自己的權限',
+            '你沒有權限更改其他成員的暱稱',
             'ValidationError',
             'UPDATEMEMBER',
             'PERMISSION_DENIED',
             403,
           );
         }
-        if (
-          permission < originalMember.permissionLevel ||
-          permission < editedMember.permissionLevel
-        ) {
+        if (permission < member.permissionLevel) {
           throw new StandardizedError(
             '你沒有權限更改此成員的權限',
             'ValidationError',
@@ -160,26 +150,35 @@ const memberHandler = {
             403,
           );
         }
-
-        // if (action == 'disconnect' && editedUser.currentServerId == server.id) {
-        //   FIXME: Replace socket to target socket
-        //   serverHandler.disconnectServer(io, socket, {
-        //     userId: editedMember.id,
-        //     serverId: server.id,
-        //   });
-        // }
+        if (permission < editedMember.permissionLevel) {
+          throw new StandardizedError(
+            '你無法設置高於自己的權限',
+            'ValidationError',
+            'UPDATEMEMBER',
+            'PERMISSION_TOO_HIGH',
+            403,
+          );
+        }
       }
 
+      // if (action == 'disconnect' && editedUser.currentServerId == server.id) {
+      //   FIXME: Replace socket to target socket
+      //   serverHandler.disconnectServer(io, socket, {
+      //     userId: editedMember.id,
+      //     serverId: server.id,
+      //   });
+      // }
+
       // Update member
-      await Set.member(editedMember.id, editedMember);
+      await Set.member(member.id, editedMember);
 
       // Emit updated data to all users in the server
-      io.to(`server_${editedMember.serverId}`).emit('serverUpdate', {
-        members: await Get.serverMembers(editedMember.serverId),
+      io.to(`server_${serverId}`).emit('serverUpdate', {
+        members: await Get.serverMembers(serverId),
       });
 
       new Logger('Server').success(
-        `Member(${editedMember.id}) of server(${editedMember.serverId}) updated by User(${operator.id})`,
+        `Member(${member.id}) of server(${serverId}) updated by User(${operator.id})`,
       );
     } catch (error) {
       console.log(error);
