@@ -124,13 +124,6 @@ const xpSystem = {
         );
         return;
       }
-      const server = await Get.server(user.currentServerId);
-      if (!server) {
-        new Logger('XPSystem').warn(
-          `Server(${user.currentServerId}) not found, cannot obtain XP`,
-        );
-        return;
-      }
 
       // Process XP and level
       user.xp += XP_SYSTEM.XP_PER_HOUR;
@@ -143,7 +136,11 @@ const xpSystem = {
         user.xp -= requiredXp;
       }
 
-      const { user: setUser } = require('./set');
+      const {
+        user: setUser,
+        member: setMember,
+        server: setServer,
+      } = require('./set');
 
       // Update user
       const userUpdate = {
@@ -163,20 +160,25 @@ const xpSystem = {
           );
           return;
         }
+        const server = await Get.server(user.currentServerId);
+        if (!server) {
+          new Logger('XPSystem').warn(
+            `Server(${user.currentServerId}) not found, cannot obtain XP`,
+          );
+          return;
+        }
 
-        // Process member contribution
+        // Process member contribution and server wealth
         member.contribution += XP_SYSTEM.XP_PER_HOUR;
         server.wealth += XP_SYSTEM.XP_PER_HOUR;
 
-        // Update member
-        const memberUpdate = {
-          contribution: member.contribution,
-        };
-        const serverUpdate = {
-          wealth: server.wealth,
-        };
-        await Set.member(member.id, memberUpdate);
-        await Set.server(server.id, serverUpdate);
+        // Update member and server
+        await setMember(member.id, { contribution: member.contribution });
+        await setServer(server.id, { wealth: server.wealth });
+
+        new Logger('XPSystem').info(
+          `Server(${server.id}) wealth updated to: ${server.wealth}`,
+        );
       }
 
       // Reset elapsed time
