@@ -159,6 +159,15 @@ const memberHandler = {
             403,
           );
         }
+        if (editedMember.permissionLevel && member.permissionLevel === 6) {
+          throw new StandardizedError(
+            '你無法更改群創建者的權限',
+            'ValidationError',
+            'UPDATEMEMBER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
       }
 
       // if (action == 'disconnect' && editedUser.currentServerId == server.id) {

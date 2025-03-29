@@ -701,7 +701,9 @@ const server = http.createServer((req, res) => {
           message: 'success',
           data: {
             avatar: fileName,
-            avatarUrl: `http://localhost:4500/images/${Path()}/${fullFileName}`,
+            avatarUrl: `${
+              process.env.SERVER_URL
+            }/images/${Path()}/${fullFileName}`,
           },
         });
       } catch (error) {

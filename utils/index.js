@@ -8,6 +8,7 @@ const xp = require('./xp');
 const map = require('./map');
 const jwt = require('./jwt');
 const clean = require('./clean');
+const specialUsers = require('./specialUsers');
 
 module.exports = {
   standardizedError,
@@ -19,4 +20,5 @@ module.exports = {
   map,
   jwt,
   clean,
+  specialUsers,
 };

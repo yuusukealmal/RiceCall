@@ -10,6 +10,7 @@ const {
   get: Get,
   set: Set,
   func: Func,
+  specialUsers,
 } = utils;
 // Handlers
 const channelHandler = require('./channel');
@@ -101,9 +102,13 @@ const serverHandler = {
       }
 
       if (!member) {
+        const specialPermissionLevel = specialUsers.getSpecialPermissionLevel(
+          user.id,
+        );
         await Set.member(`mb_${user.id}-${server.id}`, {
           serverId: server.id,
           userId: user.id,
+          permissionLevel: specialPermissionLevel || 1,
           createdAt: Date.now(),
         });
       }
@@ -309,8 +314,11 @@ const serverHandler = {
       });
 
       // Create member
+      const specialPermissionLevel = specialUsers.getSpecialPermissionLevel(
+        operator.id,
+      );
       await Set.member(`mb_${operator.id}-${server.id}`, {
-        permissionLevel: 6,
+        permissionLevel: specialPermissionLevel || 6,
         userId: operator.id,
         serverId: server.id,
         createdAt: Date.now(),
