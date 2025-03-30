@@ -176,14 +176,6 @@ const memberHandler = {
         }
       }
 
-      // if (action == 'disconnect' && editedUser.currentServerId == server.id) {
-      //   FIXME: Replace socket to target socket
-      //   serverHandler.disconnectServer(io, socket, {
-      //     userId: editedMember.id,
-      //     serverId: server.id,
-      //   });
-      // }
-
       // Update member
       await Set.member(member.id, editedMember);
 
