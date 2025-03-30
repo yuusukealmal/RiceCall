@@ -291,11 +291,9 @@ const get = {
   },
 
   // Friend
-  friend: async (userId1, userId2) => {
+  friend: async (userId, targetId) => {
     const friends = (await db.get('friends')) || {};
-    const friend =
-      friends[`fd_${userId1}-${userId2}`] ||
-      friends[`fd_${userId2}-${userId1}`];
+    const friend = friends[`fd_${userId}-${targetId}`];
     if (!friend) return null;
     return {
       ...friend,
@@ -320,11 +318,9 @@ const get = {
   },
 
   // Friend Application
-  friendApplication: async (userId1, userId2) => {
+  friendApplication: async (senderId, receiverId) => {
     const applications = (await db.get('friendApplications')) || {};
-    const application =
-      applications[`fa_${userId1}-${userId2}`] ||
-      applications[`fa_${userId2}-${userId1}`];
+    const application = applications[`fa_${senderId}-${receiverId}`];
     if (!application) return null;
     return {
       ...application,

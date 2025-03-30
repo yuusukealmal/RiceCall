@@ -118,14 +118,14 @@ const set = {
     await db.set(`channels.${id}`, channels[id]);
     return channels[id];
   },
-  // `fd_${user1Id}-${user2Id}`
+  // `fd_${userId}-${targetId}`
   friend: async (id, data) => {
     const friends = await db.get('friends');
     friends[id] = {
       isBlocked: false,
       friendGroupId: '',
-      user1Id: '',
-      user2Id: '',
+      userId: '',
+      targetId: '',
       createdAt: 0,
       ...friends[id],
       ...data,
