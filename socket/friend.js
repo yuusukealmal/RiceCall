@@ -8,6 +8,7 @@ const {
   logger: Logger,
   set: Set,
   func: Func,
+  get: Get,
 } = utils;
 
 const friendHandler = {
@@ -125,6 +126,50 @@ const friendHandler = {
 
       new Logger('Friend').error(
         `Error updating friend: ${error.error_message}`,
+      );
+    }
+  },
+  deleteFriend: async (io, socket, data) => {
+    // Get database
+    const friends = (await db.get('friends')) || {};
+
+    try {
+      const { friendId } = data;
+      if (!friendId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'DELETEFRIEND',
+          'DATA_INVALID',
+          401,
+        );
+      }
+
+      const operatorId = await Func.validate.socket(socket);
+      const friend = await Func.validate.friend(friends[friendId]);
+
+      await db.delete(`friends.${friend.id}`);
+      io.to(socket.id).emit('userUpdate', {
+        friends: await Get.userFriends(operatorId),
+      });
+
+      new Logger('Friend').success(`Friend(${friend.id}) deleted`);
+    } catch (error) {
+      if (!(error instanceof StandardizedError)) {
+        error = new StandardizedError(
+          `刪除好友時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'DELETEFRIEND',
+          'EXCEPTION_ERROR',
+          500,
+        );
+      }
+
+      // Emit data (only to the user)
+      io.to(socket.id).emit('error', error);
+
+      new Logger('Friend').error(
+        `Error deleting friend: ${error.error_message}`,
       );
     }
   },
