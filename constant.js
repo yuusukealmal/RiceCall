@@ -11,7 +11,7 @@ const XP_SYSTEM = {
   INTERVAL_MS: 60 * 60 * 1000, // 1 hour in milliseconds
 };
 
-const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CLEANUP_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 const MIME_TYPES = {
   '.jpg': 'image/jpeg',
