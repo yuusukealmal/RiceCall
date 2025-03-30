@@ -28,6 +28,15 @@ const memberHandler = {
 
       // Validate data
       const { member: _newMember, userId, serverId } = data;
+      if (!_newMember || !userId || !serverId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'CREATEMEMBER',
+          'DATA_INVALID',
+          401,
+        );
+      }
       const user = await Func.validate.user(users[userId]);
       const server = await Func.validate.server(servers[serverId]);
       const newMember = await Func.validate.member(_newMember);
