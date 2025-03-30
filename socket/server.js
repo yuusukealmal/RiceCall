@@ -279,7 +279,11 @@ const serverHandler = {
       // TODO: Add validation for operator
 
       const userOwnedServers = await Get.userOwnedServers(operator.id);
-      if (userOwnedServers.length >= 3) {
+      const userLevel = (await Get.user(operator.id)).level;
+      const MAX_GROUPS =
+        userLevel >= 16 ? 5 : userLevel >= 6 && userLevel < 16 ? 4 : 3;
+
+      if (userOwnedServers.length >= MAX_GROUPS) {
         throw new StandardizedError(
           '您已經創建了最大數量的群組',
           'ValidationError',
