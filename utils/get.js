@@ -66,8 +66,8 @@ const get = {
     const servers = (await db.get('servers')) || {};
     return Object.values(userServers)
       .filter((us) => us.userId === userId && us.recent)
-      .map((us) => servers[us.serverId])
       .sort((a, b) => b.timestamp - a.timestamp)
+      .map((us) => servers[us.serverId])
       .filter((s) => s)
       .slice(0, 10);
   },

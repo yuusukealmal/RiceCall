@@ -150,7 +150,6 @@ const set = {
     await db.set(`friendApplications.${id}`, applications[id]);
     return applications[id];
   },
-  // `fg_${userId}-${friendGroupId}`
   friendGroup: async (id, data) => {
     const friendGroups = await db.get('friendGroups');
     friendGroups[id] = {
