@@ -161,8 +161,11 @@ const friendHandler = {
 
     try {
       // data = {
-      //   friendId: string
+      //   userId: string
+      //   targetId: string
       // }
+
+      // FIX: Change to userId and targetId
 
       // Validate data
       const { friendId } = data;
