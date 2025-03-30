@@ -14,6 +14,7 @@ const {
 } = utils;
 // Handlers
 const rtcHandler = require('./rtc');
+const messageHandler = require('./message');
 
 const channelHandler = {
   connectChannel: async (io, socket, data) => {
@@ -45,7 +46,9 @@ const channelHandler = {
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
       const operator = await Func.validate.user(users[operatorId]);
+
       // TODO: Add validation for operator
+      const operatorMember = await Get.member(operator.id, channel.serverId);
 
       if (channel.visibility === 'readonly')
         throw new StandardizedError(
@@ -55,10 +58,9 @@ const channelHandler = {
           'CHANNEL_IS_READONLY',
           403,
         );
-      const member = await Get.member(operator.id, channel.serverId);
       if (
         (server.visibility === 'member' || channel.visibility === 'member') &&
-        (!member || member.permissionLevel < 2)
+        (!operatorMember || operatorMember.permissionLevel < 2)
       )
         throw new StandardizedError(
           '您需要成為該群組的會員才能加入該頻道',
@@ -69,7 +71,7 @@ const channelHandler = {
         );
       if (
         (server.visibility === 'private' || channel.visibility === 'private') &&
-        (!member || member.permissionLevel < 3)
+        (!operatorMember || operatorMember.permissionLevel < 3)
       )
         throw new StandardizedError(
           '您需要成為該群組的管理員才能加入該頻道',
@@ -92,7 +94,12 @@ const channelHandler = {
         currentChannelId: channel.id,
         lastActiveAt: Date.now(),
       };
-      await Set.user(userId, update);
+      await Set.user(user.id, update);
+
+      // Update Member
+      await Set.member(operatorMember.id, {
+        lastJoinChannelTime: Date.now(),
+      });
 
       // Setup user interval for accumulate contribution
       XP.setup(socket);
@@ -353,6 +360,109 @@ const channelHandler = {
           'USER_PERMISSION',
           403,
         );
+      }
+
+      if (
+        editedChannel.voiceMode &&
+        editedChannel.voiceMode !== channel.voiceMode
+      ) {
+        messageHandler.sendMessage(io, socket, {
+          message: {
+            type: 'info',
+            content:
+              editedChannel.voiceMode === 'free'
+                ? 'VOICE_CHANGE_TO_FREE_SPEECH'
+                : editedChannel.voiceMode === 'forbidden'
+                ? 'VOICE_CHANGE_TO_FORBIDDEN_SPEECH'
+                : 'VOICE_CHANGE_TO_QUEUE',
+            timestamp: Date.now().valueOf(),
+          },
+          channelId,
+        });
+      }
+      if (
+        editedChannel.forbidText &&
+        editedChannel.forbidText !== channel.forbidText
+      ) {
+        messageHandler.sendMessage(io, socket, {
+          message: {
+            type: 'info',
+            content: editedChannel.forbidText
+              ? 'TEXT_CHANGE_TO_FORBIDDEN_SPEECH'
+              : 'TEXT_CHANGE_TO_FREE_SPEECH',
+            timestamp: Date.now().valueOf(),
+          },
+          channelId,
+        });
+      }
+      if (
+        editedChannel.forbidGuestText &&
+        editedChannel.forbidGuestText !== channel.forbidGuestText
+      ) {
+        messageHandler.sendMessage(io, socket, {
+          message: {
+            type: 'info',
+            content: editedChannel.forbidGuestText
+              ? 'TEXT_CHANGE_TO_FORBIDDEN_TEXT'
+              : 'TEXT_CHANGE_TO_ALLOWED_TEXT',
+            timestamp: Date.now().valueOf(),
+          },
+          channelId,
+        });
+      }
+      if (
+        editedChannel.forbidGuestUrl &&
+        editedChannel.forbidGuestUrl !== channel.forbidGuestUrl
+      ) {
+        messageHandler.sendMessage(io, socket, {
+          message: {
+            type: 'info',
+            content: editedChannel.forbidGuestUrl
+              ? 'TEXT_CHANGE_TO_FORBIDDEN_URL'
+              : 'TEXT_CHANGE_TO_ALLOWED_URL',
+            timestamp: Date.now().valueOf(),
+          },
+          channelId,
+        });
+      }
+      if (
+        editedChannel.guestTextMaxLength &&
+        editedChannel.guestTextMaxLength !== channel.guestTextMaxLength
+      ) {
+        messageHandler.sendMessage(io, socket, {
+          message: {
+            type: 'info',
+            content: `TEXT_CHANGE_TO_MAX_LENGTH ${editedChannel.guestTextMaxLength}`,
+            timestamp: Date.now().valueOf(),
+          },
+          channelId,
+        });
+      }
+      if (
+        editedChannel.guestTextWaitTime &&
+        editedChannel.guestTextWaitTime !== channel.guestTextWaitTime
+      ) {
+        messageHandler.sendMessage(io, socket, {
+          message: {
+            type: 'info',
+            content: `TEXT_CHANGE_TO_WAIT_TIME ${editedChannel.guestTextWaitTime}`,
+            timestamp: Date.now().valueOf(),
+          },
+          channelId,
+        });
+      }
+      if (
+        editedChannel.guestTextGapTime &&
+        editedChannel.guestTextGapTime !== channel.guestTextGapTime
+      ) {
+        messageHandler.sendMessage(io, socket, {
+          message: {
+            type: 'info',
+            content: `TEXT_CHANGE_TO_GAP_TIME ${editedChannel.guestTextGapTime}`,
+            timestamp: Date.now().valueOf(),
+          },
+          channelId,
+        });
       }
 
       // Update channel

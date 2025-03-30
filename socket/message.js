@@ -37,13 +37,24 @@ const messageHandler = {
           401,
         );
       }
-      const channel = await Func.validate.channel(channels[channelId]);
       const newMessage = await Func.validate.message(_newMessage);
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
       const operator = await Func.validate.user(users[operatorId]);
+
       // TODO: Add validation for operator
+      const channel = await Get.channel(channelId);
+      const operatorMember = await Get.member(operator.id, channel.serverId);
+      if (channel.forbidGuestUrl && operatorMember.permissionLevel === 1) {
+        throw new StandardizedError(
+          '禁止發送外部連結',
+          'SENDMESSAGE',
+          'ValidationError',
+          'LINK_NOT_ALLOWED',
+          401,
+        );
+      }
 
       // Create new message
       const messageId = uuidv4();
@@ -52,6 +63,11 @@ const messageHandler = {
         senderId: operator.id,
         channelId: channel.id,
         timestamp: Date.now().valueOf(),
+      });
+
+      // Update member
+      await Set.member(operatorMember.id, {
+        lastMessageTime: Date.now().valueOf(),
       });
 
       // Emit updated data (to all users in the channel)
@@ -109,13 +125,14 @@ const messageHandler = {
           401,
         );
       }
-      const friend = await Func.validate.friend(friends[friendId]);
       const newDirectMessage = await Func.validate.message(_newDirectMessage);
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
       const operator = await Func.validate.user(users[operatorId]);
+
       // TODO: Add validation for operator
+      const friend = await Get.friend(friendId);
 
       // Create new message
       const directMessageId = uuidv4();
