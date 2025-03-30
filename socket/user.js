@@ -131,13 +131,13 @@ const userHandler = {
       Map.deleteUserIdSocketIdMap(userId, socket.id);
 
       // Update user
-      const update = {
+      const user_update = {
         lastActiveAt: Date.now(),
       };
-      await Set.user(userId, update);
+      await Set.user(userId, user_update);
 
       // Emit data (only to the user)
-      io.to(socket.id).emit('userUpdate', null);
+      io.to(socket.id).emit('userUpdate', user_update);
 
       new Logger('WebSocket').success(`User(${userId}) disconnected`);
     } catch (error) {

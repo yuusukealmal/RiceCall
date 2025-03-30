@@ -136,17 +136,17 @@ const serverHandler = {
       });
 
       // Update user
-      const update = {
+      const user_update = {
         currentServerId: server.id,
         lastActiveAt: Date.now(),
       };
-      await Set.user(user.id, update);
+      await Set.user(user.id, user_update);
 
       // Join the server
       socket.join(`server_${server.id}`);
 
       // Emit data (only to the user)
-      io.to(socket.id).emit('userUpdate', update);
+      io.to(socket.id).emit('userUpdate', user_update);
       io.to(socket.id).emit('serverUpdate', await Get.server(server.id));
 
       new Logger('WebSocket').success(
@@ -212,17 +212,17 @@ const serverHandler = {
       }
 
       // Update user presence
-      const update = {
+      const user_update = {
         currentServerId: null,
         lastActiveAt: Date.now(),
       };
-      await Set.user(user.id, update);
+      await Set.user(user.id, user_update);
 
       // Leave the server
       socket.leave(`server_${server.id}`);
 
       // Emit data (only to the user)
-      io.to(socket.id).emit('userUpdate', update);
+      io.to(socket.id).emit('userUpdate', user_update);
       io.to(socket.id).emit('serverUpdate', null);
 
       new Logger('WebSocket').success(

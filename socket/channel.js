@@ -90,16 +90,17 @@ const channelHandler = {
       }
 
       // Update user
-      const update = {
+      const user_update = {
         currentChannelId: channel.id,
         lastActiveAt: Date.now(),
       };
-      await Set.user(user.id, update);
+      await Set.user(user.id, user_update);
 
       // Update Member
-      await Set.member(operatorMember.id, {
+      const member_update = {
         lastJoinChannelTime: Date.now(),
-      });
+      };
+      await Set.member(operatorMember.id, member_update);
 
       // Setup user interval for accumulate contribution
       XP.setup(socket);
@@ -111,7 +112,8 @@ const channelHandler = {
       await rtcHandler.join(io, socket, { channelId: channel.id });
 
       // Emit updated data (only to the user)
-      io.to(socket.id).emit('userUpdate', update);
+      io.to(socket.id).emit('userUpdate', user_update);
+      io.to(socket.id).emit('memberUpdate', member_update);
       io.to(socket.id).emit('channelUpdate', await Get.channel(channel.id));
 
       // Emit updated data (to all users in the server)
@@ -175,11 +177,11 @@ const channelHandler = {
       const operator = await Func.validate.user(users[operatorId]);
 
       // Update user
-      const update = {
+      const user_update = {
         currentChannelId: null,
         lastActiveAt: Date.now(),
       };
-      await Set.user(userId, update);
+      await Set.user(userId, user_update);
 
       // Clear user contribution interval
       XP.clear(socket);
@@ -191,7 +193,7 @@ const channelHandler = {
       io.to(`channel_${channel.id}`).emit('playSound', 'leave');
 
       // Emit updated data (only to the user)
-      io.to(socket.id).emit('userUpdate', update);
+      io.to(socket.id).emit('userUpdate', user_update);
       io.to(socket.id).emit('channelUpdate', null);
 
       // Emit updated data (to all users in the server)

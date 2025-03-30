@@ -66,9 +66,13 @@ const messageHandler = {
       });
 
       // Update member
-      await Set.member(operatorMember.id, {
+      const member_update = {
         lastMessageTime: Date.now().valueOf(),
-      });
+      };
+      await Set.member(operatorMember.id, member_update);
+
+      // Emit updated data (to the operator)
+      io.to(socket.id).emit('memberUpdate', member_update);
 
       // Emit updated data (to all users in the channel)
       io.to(`channel_${channel.id}`).emit('channelUpdate', {

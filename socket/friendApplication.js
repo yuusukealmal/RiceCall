@@ -99,8 +99,12 @@ const friendApplicationHandler = {
       // }
 
       // Get data
-      const { friendApplication: _newApplication, senderId, receiverId } = data;
-      if (!_newApplication || !senderId || !receiverId) {
+      const {
+        friendApplication: _editedApplication,
+        senderId,
+        receiverId,
+      } = data;
+      if (!_editedApplication || !senderId || !receiverId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -111,8 +115,8 @@ const friendApplicationHandler = {
       }
       const sender = await Func.validate.user(users[senderId]);
       const receiver = await Func.validate.user(users[receiverId]);
-      const newApplication = await Func.validate.friendApplication(
-        _newApplication,
+      const editedApplication = await Func.validate.friendApplication(
+        _editedApplication,
       );
       const application = await Func.validate.friendApplication(
         friendApplications[
@@ -125,10 +129,7 @@ const friendApplicationHandler = {
       const operator = await Func.validate.user(users[operatorId]);
 
       // Update friend application
-      const updatedApplication = await Set.friendApplication(application.id, {
-        ...newApplication,
-        createdAt: application.createdAt,
-      });
+      await Set.friendApplication(application.id, editedApplication);
 
       // Emit updated data to receiver
       // io.to(receiver.id).emit('friendApplicationUpdate', {
@@ -136,7 +137,7 @@ const friendApplicationHandler = {
       // });
 
       new Logger('WebSocket').success(
-        `Friend application(${updatedApplication.id}) of User(${sender.id}) and User(${receiver.id}) updated by User(${operator.id})`,
+        `Friend application(${application.id}) of User(${sender.id}) and User(${receiver.id}) updated by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
