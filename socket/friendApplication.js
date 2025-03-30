@@ -153,6 +153,45 @@ const friendApplicationHandler = {
       );
     }
   },
+  deleteFriendApplication: async (io, socket, data) => {
+    try {
+      const { senderId, receiverId } = data;
+      if (!senderId || !receiverId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'DELETEFRIENDAPPLICATION',
+          'DATA_INVALID',
+          401,
+        );
+      }
+
+      const operatorId = await Func.validate.socket(socket);
+      const operator = await Func.validate.user(users[operatorId]);
+
+      await db.delete(`friendApplications.${senderId}-${receiverId}`);
+
+      new Logger('WebSocket').success(
+        `Friend application(${senderId}-${receiverId}) deleted by User(${operator.id})`,
+      );
+    } catch (error) {
+      if (!(error instanceof StandardizedError)) {
+        error = new StandardizedError(
+          `刪除好友申請時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'DELETEFRIENDAPPLICATION',
+          'EXCEPTION_ERROR',
+          500,
+        );
+      }
+
+      io.to(socket.id).emit('error', error);
+
+      new Logger('WebSocket').error(
+        `Error deleting friend application: ${error.error_message}`,
+      );
+    }
+  },
 };
 
 module.exports = { ...friendApplicationHandler };
