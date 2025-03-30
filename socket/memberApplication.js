@@ -193,18 +193,18 @@ const memberApplicationHandler = {
   deleteMemberApplication: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
+    const servers = (await db.get('servers')) || {};
     const memberApplications = (await db.get('memberApplications')) || {};
 
     try {
       // data = {
       //   userId: string,
       //   serverId: string,
-      //   memberApplicationId: string,
       // }
 
       // Validate data
-      const { memberApplicationId: applicationId, userId, serverId } = data;
-      if (!applicationId || !userId || !serverId) {
+      const { userId, serverId } = data;
+      if (!userId || !serverId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -216,7 +216,7 @@ const memberApplicationHandler = {
       const user = await Func.validate.user(users[userId]);
       const server = await Func.validate.server(servers[serverId]);
       const application = await Func.validate.memberApplication(
-        memberApplications[applicationId],
+        memberApplications[`ma_${user.id}-${server.id}`],
       );
 
       // Validate operation
@@ -225,7 +225,7 @@ const memberApplicationHandler = {
       // TODO: Add validation for operator
 
       // Remove member application
-      await db.delete(`memberApplications.${applicationId}`);
+      await db.delete(`memberApplications.${application.id}`);
 
       // Emit updated data to all users in the server
       io.to(`server_${server.id}`).emit('serverUpdate', {

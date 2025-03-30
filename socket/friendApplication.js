@@ -154,6 +154,10 @@ const friendApplicationHandler = {
     }
   },
   deleteFriendApplication: async (io, socket, data) => {
+    // Get database
+    const users = (await db.get('users')) || {};
+    const friendApplications = (await db.get('friendApplications')) || {};
+
     try {
       const { senderId, receiverId } = data;
       if (!senderId || !receiverId) {
@@ -168,11 +172,14 @@ const friendApplicationHandler = {
 
       const operatorId = await Func.validate.socket(socket);
       const operator = await Func.validate.user(users[operatorId]);
+      const application = await Func.validate.friendApplication(
+        friendApplications[`fa_${senderId}-${receiverId}`],
+      );
 
-      await db.delete(`friendApplications.${senderId}-${receiverId}`);
+      await db.delete(`friendApplications.${application.id}`);
 
       new Logger('WebSocket').success(
-        `Friend application(${senderId}-${receiverId}) deleted by User(${operator.id})`,
+        `Friend application(${application.id}) deleted by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
