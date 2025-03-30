@@ -381,9 +381,12 @@ const channelHandler = {
           },
           channelId,
         });
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+
       if (
-        editedChannel.forbidText &&
+        editedChannel.forbidText !== undefined &&
         editedChannel.forbidText !== channel.forbidText
       ) {
         messageHandler.sendMessage(io, socket, {
@@ -396,9 +399,12 @@ const channelHandler = {
           },
           channelId,
         });
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+
       if (
-        editedChannel.forbidGuestText &&
+        editedChannel.forbidGuestText !== undefined &&
         editedChannel.forbidGuestText !== channel.forbidGuestText
       ) {
         messageHandler.sendMessage(io, socket, {
@@ -411,9 +417,12 @@ const channelHandler = {
           },
           channelId,
         });
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+
       if (
-        editedChannel.forbidGuestUrl &&
+        editedChannel.forbidGuestUrl !== undefined &&
         editedChannel.forbidGuestUrl !== channel.forbidGuestUrl
       ) {
         messageHandler.sendMessage(io, socket, {
@@ -426,9 +435,12 @@ const channelHandler = {
           },
           channelId,
         });
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+
       if (
-        editedChannel.guestTextMaxLength &&
+        editedChannel.guestTextMaxLength !== undefined &&
         editedChannel.guestTextMaxLength !== channel.guestTextMaxLength
       ) {
         messageHandler.sendMessage(io, socket, {
@@ -439,9 +451,12 @@ const channelHandler = {
           },
           channelId,
         });
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+
       if (
-        editedChannel.guestTextWaitTime &&
+        editedChannel.guestTextWaitTime !== undefined &&
         editedChannel.guestTextWaitTime !== channel.guestTextWaitTime
       ) {
         messageHandler.sendMessage(io, socket, {
@@ -452,9 +467,12 @@ const channelHandler = {
           },
           channelId,
         });
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+
       if (
-        editedChannel.guestTextGapTime &&
+        editedChannel.guestTextGapTime !== undefined &&
         editedChannel.guestTextGapTime !== channel.guestTextGapTime
       ) {
         messageHandler.sendMessage(io, socket, {
@@ -465,6 +483,8 @@ const channelHandler = {
           },
           channelId,
         });
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Update channel

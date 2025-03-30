@@ -47,12 +47,9 @@ const messageHandler = {
       const channel = await Get.channel(channelId);
       const operatorMember = await Get.member(operator.id, channel.serverId);
       if (channel.forbidGuestUrl && operatorMember.permissionLevel === 1) {
-        throw new StandardizedError(
-          '禁止發送外部連結',
-          'SENDMESSAGE',
-          'ValidationError',
-          'LINK_NOT_ALLOWED',
-          401,
+        newMessage.content = newMessage.content.replace(
+          /https?:\/\/[^\s]+/g,
+          '{{GUEST_SEND_AN_EXTERNAL_LINK}}',
         );
       }
 

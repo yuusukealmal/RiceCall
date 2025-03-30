@@ -87,7 +87,11 @@ const serverHandler = {
 
       // Create new membership if there isn't one
       const member = await Get.member(user.id, server.id);
+      const specialPermissionLevel = specialUsers.getSpecialPermissionLevel(
+        user.id,
+      );
       if (
+        !specialPermissionLevel &&
         server.visibility == 'invisible' &&
         (!member || member.permissionLevel < 2)
       ) {
@@ -102,9 +106,6 @@ const serverHandler = {
       }
 
       if (!member) {
-        const specialPermissionLevel = specialUsers.getSpecialPermissionLevel(
-          user.id,
-        );
         await Set.member(`mb_${user.id}-${server.id}`, {
           serverId: server.id,
           userId: user.id,
