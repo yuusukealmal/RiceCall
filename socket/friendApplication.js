@@ -36,8 +36,6 @@ const friendApplicationHandler = {
           401,
         );
       }
-      const sender = await Func.validate.user(users[senderId]);
-      const receiver = await Func.validate.user(users[receiverId]);
       const newApplication = await Func.validate.friendApplication(
         _newApplication,
       );
@@ -47,11 +45,11 @@ const friendApplicationHandler = {
       const operator = await Func.validate.user(users[operatorId]);
 
       // Create friend application
-      const applicationId = `fa_${sender.id}-${receiver.id}`;
+      const applicationId = `fa_${senderId}-${receiverId}`;
       const application = await Set.friendApplication(applicationId, {
         ...newApplication,
-        senderId: sender.id,
-        receiverId: receiver.id,
+        senderId: senderId,
+        receiverId: receiverId,
         createdAt: Date.now(),
       });
 
@@ -61,7 +59,7 @@ const friendApplicationHandler = {
       // });
 
       new Logger('WebSocket').success(
-        `Friend application(${application.id}) of User(${sender.id}) and User(${receiver.id}) created by User(${operator.id})`,
+        `Friend application(${application.id}) of User(${senderId}) and User(${receiverId}) created by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)
@@ -113,15 +111,12 @@ const friendApplicationHandler = {
           401,
         );
       }
-      const sender = await Func.validate.user(users[senderId]);
-      const receiver = await Func.validate.user(users[receiverId]);
       const editedApplication = await Func.validate.friendApplication(
         _editedApplication,
       );
       const application = await Func.validate.friendApplication(
-        friendApplications[
-          `fa_${sender.id}-${receiver.id}` || `fa_${receiver.id}-${sender.id}`
-        ],
+        friendApplications[`fa_${senderId}-${receiverId}`] ||
+          friendApplications[`fa_${receiverId}-${senderId}`],
       );
 
       // Validate operation
@@ -137,7 +132,7 @@ const friendApplicationHandler = {
       // });
 
       new Logger('WebSocket').success(
-        `Friend application(${application.id}) of User(${sender.id}) and User(${receiver.id}) updated by User(${operator.id})`,
+        `Friend application(${application.id}) of User(${senderId}) and User(${receiverId}) updated by User(${operator.id})`,
       );
     } catch (error) {
       // Emit error data (only to the user)

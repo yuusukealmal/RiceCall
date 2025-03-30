@@ -15,7 +15,6 @@ const memberHandler = {
   createMember: async (io, socket, data) => {
     // Get database
     const users = (await db.get('users')) || {};
-    const servers = (await db.get('servers')) || {};
 
     try {
       // data = {
@@ -37,8 +36,6 @@ const memberHandler = {
           401,
         );
       }
-      const user = await Func.validate.user(users[userId]);
-      const server = await Func.validate.server(servers[serverId]);
       const newMember = await Func.validate.member(_newMember);
 
       // Validate operation
@@ -46,21 +43,21 @@ const memberHandler = {
       const operator = await Func.validate.user(users[operatorId]);
 
       // Create member
-      const memberId = `mb_${user.id}-${server.id}`;
+      const memberId = `mb_${userId}-${serverId}`;
       const member = await Set.member(memberId, {
         ...newMember,
-        userId: user.id,
-        serverId: server.id,
+        userId: userId,
+        serverId: serverId,
         createdAt: Date.now(),
       });
 
       // Emit updated data to all users in the server
-      io.to(`server_${server.id}`).emit('serverUpdate', {
-        members: await Get.serverMembers(server.id),
+      io.to(`server_${serverId}`).emit('serverUpdate', {
+        members: await Get.serverMembers(serverId),
       });
 
       new Logger('Server').success(
-        `Member(${member.id}) of server(${server.id}) created by User(${operator.id})`,
+        `Member(${member.id}) of server(${serverId}) created by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -118,8 +115,8 @@ const memberHandler = {
       const operator = await Func.validate.user(users[operatorId]);
       // TODO: Add validation for operator
 
-      const authorMember = await Get.member(operatorId, serverId);
-      const permission = authorMember.permissionLevel;
+      const operatorMember = await Get.member(operatorId, serverId);
+      const operatorPermission = operatorMember.permissionLevel;
 
       if (operatorId === userId) {
         if (editedMember.permissionLevel) {
@@ -132,7 +129,7 @@ const memberHandler = {
           );
         }
       } else {
-        if (!permission || permission < 3) {
+        if (!operatorPermission || operatorPermission < 3) {
           throw new StandardizedError(
             '無足夠的權限',
             'ValidationError',
@@ -141,7 +138,7 @@ const memberHandler = {
             403,
           );
         }
-        if (editedMember.nickname && permission < 5) {
+        if (editedMember.nickname && operatorPermission < 5) {
           throw new StandardizedError(
             '你沒有權限更改其他成員的暱稱',
             'ValidationError',
@@ -150,7 +147,7 @@ const memberHandler = {
             403,
           );
         }
-        if (permission < member.permissionLevel) {
+        if (operatorPermission < member.permissionLevel) {
           throw new StandardizedError(
             '你沒有權限更改此成員的權限',
             'ValidationError',
@@ -159,7 +156,7 @@ const memberHandler = {
             403,
           );
         }
-        if (permission < editedMember.permissionLevel) {
+        if (operatorPermission < editedMember.permissionLevel) {
           throw new StandardizedError(
             '你無法設置高於自己的權限',
             'ValidationError',
