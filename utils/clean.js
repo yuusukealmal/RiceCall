@@ -9,6 +9,7 @@ const {
   MIME_TYPES,
   CLEANUP_INTERVAL_MS,
   SERVER_AVATAR_DIR,
+  USER_AVATAR_DIR,
 } = require('../constant');
 // Utils
 const Logger = require('./logger');
@@ -32,48 +33,69 @@ const clean = {
   },
 
   cleanServerAvatars: async () => {
-    try {
-      const files = await fs.readdir(SERVER_AVATAR_DIR);
-      const servers = (await db.get('servers')) || {};
-      const avatarMap = {};
+    await cleanAvatars('server');
+    await cleanAvatars('user');
+  },
+};
 
-      Object.values(servers).forEach(async (server) => {
-        if (server.avatar) {
-          const filePrefix = `upload-`;
-          const fileName = server.avatar;
-          avatarMap[`${filePrefix}${fileName}`.split('.').shift()] = true;
-        }
-      });
+const cleanAvatars = async (TYPE) => {
+  try {
+    const DIR = TYPE === 'server' ? SERVER_AVATAR_DIR : USER_AVATAR_DIR;
+    const files = await fs.readdir(DIR);
+    const data =
+      TYPE === 'server'
+        ? (await db.get('servers')) || {}
+        : (await db.get('users')) || {};
+    const avatarMap = {};
 
-      const unusedFiles = files.filter(
-        (file) =>
-          Object.keys(MIME_TYPES).some((ext) => file.endsWith(ext)) &&
-          !file.startsWith('__') &&
-          !avatarMap[file.split('.').shift()],
-      );
-
-      for (const file of unusedFiles) {
-        try {
-          await fs.unlink(path.join(SERVER_AVATAR_DIR, file));
-          new Logger('Cleanup').success(`Deleted unused avatar: ${file}`);
-        } catch (error) {
-          new Logger('Cleanup').error(
-            `Error deleting unused avatar ${file}: ${error.message}`,
-          );
-        }
+    Object.values(data).forEach((item) => {
+      if (item.avatar) {
+        avatarMap[`upload-${item.avatar}`] = true;
       }
+    });
 
-      if (unusedFiles.length === 0) {
-        new Logger('Cleanup').info('No unused avatars deleted');
-      } else {
-        new Logger('Cleanup').info(
-          `Deleted ${unusedFiles.length} unused avatars`,
+    const unusedFiles = files.filter((file) => {
+      const isValidType = Object.keys(MIME_TYPES).some((ext) =>
+        file.endsWith(ext),
+      );
+      const isNotReserved = !file.startsWith('__');
+      const fileNameWithoutExt = file.split('.')[0];
+      const isNotInUse = !avatarMap[fileNameWithoutExt];
+
+      return isValidType && isNotReserved && isNotInUse;
+    });
+
+    for (const file of unusedFiles) {
+      try {
+        await fs.unlink(path.join(DIR, file));
+        new Logger('Cleanup').success(
+          `Deleted ${
+            TYPE === 'server' ? 'server' : 'user'
+          } unused avatar: ${file}`,
+        );
+      } catch (error) {
+        new Logger('Cleanup').error(
+          `Error deleting ${
+            TYPE === 'server' ? 'server' : 'user'
+          } unused avatar ${file}: ${error.message}`,
         );
       }
-    } catch (error) {
-      new Logger('Cleanup').error(`Avatar cleanup failed: ${error.message}`);
     }
-  },
+
+    if (unusedFiles.length === 0) {
+      new Logger('Cleanup').info(
+        `No ${TYPE === 'server' ? 'server' : 'user'} unused avatars deleted`,
+      );
+    } else {
+      new Logger('Cleanup').info(
+        `Deleted ${TYPE === 'server' ? 'server' : 'user'} ${
+          unusedFiles.length
+        } unused avatars`,
+      );
+    }
+  } catch (error) {
+    new Logger('Cleanup').error(`Avatar cleanup failed: ${error.message}`);
+  }
 };
 
 module.exports = { ...clean };

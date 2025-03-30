@@ -703,7 +703,7 @@ const server = http.createServer((req, res) => {
             avatar: fileName,
             avatarUrl: `${
               process.env.SERVER_URL
-            }/images/${Path()}/${fullFileName}`,
+            }:${PORT}/images/${Path()}/${fullFileName}`,
           },
         });
       } catch (error) {

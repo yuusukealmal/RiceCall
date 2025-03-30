@@ -10,7 +10,7 @@ const set = {
       name: '',
       avatar: '',
       // avatarUrl: '/images/userAvatars/',
-      avatarUrl: `${process.env.SERVER_URL}/images/userAvatars/`,
+      avatarUrl: `${process.env.SERVER_URL}:${process.env.PORT}/images/userAvatars/`,
       signature: '',
       status: 'online',
       gender: 'Male',
@@ -66,7 +66,7 @@ const set = {
     servers[id] = {
       name: '',
       avatar: '',
-      avatarUrl: `${process.env.SERVER_URL}/images/serverAvatars/`,
+      avatarUrl: `${process.env.SERVER_URL}:${process.env.PORT}/images/serverAvatars/`,
       announcement: '',
       description: '',
       slogan: '',
