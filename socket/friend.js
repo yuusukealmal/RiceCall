@@ -27,6 +27,16 @@ const friendHandler = {
 
       // Validate data
       const { friend: _newFriend, userId, targetId } = data;
+      if (!_newFriend || !userId || !targetId) {
+        throw new StandardizedError(
+          '無效的資料',
+          'ValidationError',
+          'CREATEFRIEND',
+          'DATA_INVALID',
+          401,
+        );
+      }
+
       const newFriend = await Func.validate.friend(_newFriend);
 
       // Validate operation
@@ -35,15 +45,25 @@ const friendHandler = {
 
       // Create friend
       const friendId = `fd_${userId}-${targetId}`;
-      const friend = await Set.friend(friendId, {
+      await Set.friend(friendId, {
         ...newFriend,
-        user1Id: userId,
-        user2Id: targetId,
+        userId: userId,
+        targetId: targetId,
+        createdAt: Date.now(),
+      });
+
+      // Create reverse friend
+      const reverseFriendId = `fd_${targetId}-${userId}`;
+      await Set.friend(reverseFriendId, {
+        ...newFriend,
+        friendGroupId: '',
+        userId: targetId,
+        targetId: userId,
         createdAt: Date.now(),
       });
 
       new Logger('Friend').success(
-        `Friend(${friend.id}) of User(${userId}) and User(${targetId}) created by User(${operator.id})`,
+        `Friend(${friendId}) and Friend(${reverseFriendId}) of User(${userId}) and User(${targetId}) created by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -90,16 +110,14 @@ const friendHandler = {
           401,
         );
       }
-      const _friend =
-        friends[`fd_${userId}-${targetId}`] ||
-        friends[`fd_${targetId}-${userId}`];
-      const friend = await Func.validate.friend(_friend);
+
       const editedFriend = await Func.validate.friend(_editedFriend);
+      const friendId = `fd_${userId}-${targetId}`;
+      const friend = await Func.validate.friend(friends[friendId]);
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
       const operator = await Func.validate.user(users[operatorId]);
-      // TODO: Add validation for operator
 
       // Update friend
       await Set.friend(friend.id, editedFriend);
@@ -134,6 +152,11 @@ const friendHandler = {
     const friends = (await db.get('friends')) || {};
 
     try {
+      // data = {
+      //   friendId: string
+      // }
+
+      // Validate data
       const { friendId } = data;
       if (!friendId) {
         throw new StandardizedError(
@@ -145,10 +168,14 @@ const friendHandler = {
         );
       }
 
-      const operatorId = await Func.validate.socket(socket);
       const friend = await Func.validate.friend(friends[friendId]);
 
-      await db.delete(`friends.${friend.id}`);
+      // Validate operation
+      const operatorId = await Func.validate.socket(socket);
+
+      await db.delete(`friends.${`fd_${friend.userId}-${friend.targetId}`}`);
+      await db.delete(`friends.${`fd_${friend.targetId}-${friend.userId}`}`);
+
       io.to(socket.id).emit('userUpdate', {
         friends: await Get.userFriends(operatorId),
       });
