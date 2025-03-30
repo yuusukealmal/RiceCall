@@ -8,7 +8,7 @@ const Logger = require('./logger');
 
 const specialUsers = {
   eventStaffIds: [],
-  officialIds: [],
+  officialIds: ['6b874ca1-2151-47bf-b1b5-390beaf0b500'],
   vipCheckInterval: null,
   vipFilePath: path.join(__dirname, '..', 'vip.json'),
 
