@@ -658,6 +658,27 @@ const func = {
       return friendApplication;
     },
 
+    friendGroup: (friendGroup) => {
+      if (!friendGroup) {
+        throw new StandardizedError(
+          '好友群組不存在',
+          'ValidationError',
+          'FRIEND_GROUP',
+          'FRIEND_GROUP_NOT_FOUND',
+          401,
+        );
+      }
+      if (friendGroup.name && friendGroup.name.length > 20) {
+        throw new StandardizedError(
+          '好友群組名稱不能超過20個字符',
+          'ValidationError',
+          'FRIEND_GROUP',
+          'NAME_TOO_LONG',
+        );
+      }
+      return friendGroup;
+    },
+
     message: (message) => {
       if (!message) {
         throw new StandardizedError(
