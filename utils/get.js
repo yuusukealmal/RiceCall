@@ -105,10 +105,10 @@ const get = {
     const friends = (await db.get('friends')) || {};
     const users = (await db.get('users')) || {};
     return Object.values(friends)
-      .filter((fd) => fd.user1Id === userId || fd.user2Id === userId)
+      .filter((fd) => fd.userId === userId)
       .map((fd) => {
         // Concat user data with friend data
-        const user = users[fd.user1Id === userId ? fd.user2Id : fd.user1Id];
+        const user = users[fd.targetId];
         return { ...user, ...fd };
       })
       .filter((fd) => fd);
