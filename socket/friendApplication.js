@@ -115,8 +115,7 @@ const friendApplicationHandler = {
         _editedApplication,
       );
       const application = await Func.validate.friendApplication(
-        friendApplications[`fa_${senderId}-${receiverId}`] ||
-          friendApplications[`fa_${receiverId}-${senderId}`],
+        friendApplications[`fa_${senderId}-${receiverId}`],
       );
 
       // Validate operation

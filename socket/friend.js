@@ -18,6 +18,7 @@ const friendHandler = {
     try {
       // data = {
       //   userId: string;
+      //   targetId: string;
       //   friend: {
       //     ...
       //   },
@@ -25,8 +26,6 @@ const friendHandler = {
 
       // Validate data
       const { friend: _newFriend, userId, targetId } = data;
-      const user = await Func.validate.user(users[userId]);
-      const target = await Func.validate.user(users[targetId]);
       const newFriend = await Func.validate.friend(_newFriend);
 
       // Validate operation
@@ -34,16 +33,16 @@ const friendHandler = {
       const operator = await Func.validate.user(users[operatorId]);
 
       // Create friend
-      const friendId = `fd_${user.id}-${target.id}`;
+      const friendId = `fd_${userId}-${targetId}`;
       const friend = await Set.friend(friendId, {
         ...newFriend,
-        user1Id: user.id,
-        user2Id: target.id,
+        user1Id: userId,
+        user2Id: targetId,
         createdAt: Date.now(),
       });
 
       new Logger('Friend').success(
-        `Friend(${friend.id}) of User(${user.id}) and User(${target.id}) created by User(${operator.id})`,
+        `Friend(${friend.id}) of User(${userId}) and User(${targetId}) created by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -90,10 +89,10 @@ const friendHandler = {
           401,
         );
       }
-      const friend = await Func.validate.friend(
+      const _friend =
         friends[`fd_${userId}-${targetId}`] ||
-          friends[`fd_${targetId}-${userId}`],
-      );
+        friends[`fd_${targetId}-${userId}`];
+      const friend = await Func.validate.friend(_friend);
       const editedFriend = await Func.validate.friend(_editedFriend);
 
       // Validate operation
