@@ -126,7 +126,13 @@ const xpSystem = {
       }
 
       // Process XP and level
-      user.xp += XP_SYSTEM.XP_PER_HOUR;
+      const userVip = user.vip;
+      if (userVip) {
+        const vipBoostMultiplier = Math.min(2, 1 + userVip * 0.2);
+        user.xp += XP_SYSTEM.XP_PER_HOUR * vipBoostMultiplier;
+      } else {
+        user.xp += XP_SYSTEM.XP_PER_HOUR;
+      }
 
       let requiredXp = 0;
       while (true) {
@@ -169,8 +175,15 @@ const xpSystem = {
         }
 
         // Process member contribution and server wealth
-        member.contribution += XP_SYSTEM.XP_PER_HOUR;
-        server.wealth += XP_SYSTEM.XP_PER_HOUR;
+        const userVip = user.vip;
+        if (userVip) {
+          const vipBoostMultiplier = Math.min(2, 1 + userVip * 0.2);
+          member.contribution += XP_SYSTEM.XP_PER_HOUR * vipBoostMultiplier;
+          server.wealth += XP_SYSTEM.XP_PER_HOUR * vipBoostMultiplier;
+        } else {
+          member.contribution += XP_SYSTEM.XP_PER_HOUR;
+          server.wealth += XP_SYSTEM.XP_PER_HOUR;
+        }
 
         // Update member and server
         await setMember(member.id, { contribution: member.contribution });
