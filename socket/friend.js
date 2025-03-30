@@ -62,6 +62,11 @@ const friendHandler = {
         createdAt: Date.now(),
       });
 
+      // Emit data (only to the user)
+      io.to(socket.id).emit('userUpdate', {
+        friends: await Get.userFriends(userId),
+      });
+
       new Logger('Friend').success(
         `Friend(${friendId}) and Friend(${reverseFriendId}) of User(${userId}) and User(${targetId}) created by User(${operator.id})`,
       );
@@ -124,6 +129,9 @@ const friendHandler = {
 
       // Emit data (only to the user)
       io.to(socket.id).emit('friendUpdate', editedFriend);
+      io.to(socket.id).emit('userUpdate', {
+        friends: await Get.userFriends(userId),
+      });
 
       new Logger('Friend').success(
         `Friend(${friend.id}) of User(${userId}) and User(${targetId}) updated by User(${operator.id})`,
@@ -176,6 +184,7 @@ const friendHandler = {
       await db.delete(`friends.${`fd_${friend.userId}-${friend.targetId}`}`);
       await db.delete(`friends.${`fd_${friend.targetId}-${friend.userId}`}`);
 
+      // Emit data (only to the user)
       io.to(socket.id).emit('userUpdate', {
         friends: await Get.userFriends(operatorId),
       });
