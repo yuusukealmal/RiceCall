@@ -108,8 +108,13 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
       if (!channelId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const channel = await refreshService.channel({ channelId: channelId });
-        handleChannelUpdate(channel);
+        Promise.all([
+          refreshService.channel({
+            channelId: channelId,
+          }),
+        ]).then(([channel]) => {
+          handleChannelUpdate(channel);
+        });
       };
       refresh();
     }, [channelId]);

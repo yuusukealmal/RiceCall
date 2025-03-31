@@ -100,14 +100,19 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
     useEffect(() => {
       if (!serverId || !userId || refreshRef.current) return;
       const refresh = async () => {
-        const server = await refreshService.server({ serverId: serverId });
-        handleServerUpdate(server);
-        const memberApplication = await refreshService.memberApplication({
-          userId: userId,
-          serverId: serverId,
-        });
-        handleMemberApplicationUpdate(memberApplication);
         refreshRef.current = true;
+        Promise.all([
+          refreshService.server({
+            serverId: serverId,
+          }),
+          refreshService.memberApplication({
+            userId: userId,
+            serverId: serverId,
+          }),
+        ]).then(([server, memberApplication]) => {
+          handleServerUpdate(server);
+          handleMemberApplicationUpdate(memberApplication);
+        });
       };
       refresh();
     }, [serverId, userId]);

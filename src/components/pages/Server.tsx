@@ -296,17 +296,22 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
         return;
       const refresh = async () => {
         refreshed.current = true;
-        const server = await refreshService.server({ serverId: serverId });
-        handleServerUpdate(server);
-        const channel = await refreshService.channel({
-          channelId: userCurrentChannelId,
+        Promise.all([
+          refreshService.server({
+            serverId: serverId,
+          }),
+          refreshService.channel({
+            channelId: userCurrentChannelId,
+          }),
+          refreshService.member({
+            userId: userId,
+            serverId: serverId,
+          }),
+        ]).then(([server, channel, member]) => {
+          handleServerUpdate(server);
+          handleChannelUpdate(channel);
+          handleMemberUpdate(member);
         });
-        handleChannelUpdate(channel);
-        const member = await refreshService.member({
-          userId: userId,
-          serverId: serverId,
-        });
-        handleMemberUpdate(member);
       };
       refresh();
     }, [userId, serverId, userCurrentChannelId, handleServerUpdate]);

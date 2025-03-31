@@ -68,8 +68,13 @@ const AddChannelPopup: React.FC<AddChannelPopupProps> = React.memo(
       if (!categoryId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const channel = await refreshService.channel({ channelId: categoryId });
-        handleChannelUpdate(channel);
+        Promise.all([
+          refreshService.channel({
+            channelId: categoryId,
+          }),
+        ]).then(([channel]) => {
+          handleChannelUpdate(channel);
+        });
       };
       refresh();
     }, [categoryId]);

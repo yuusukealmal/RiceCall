@@ -32,9 +32,12 @@ interface UserSettingPopupProps {
 }
 
 const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
-  ({ userId }) => {
+  (initialData: UserSettingPopupProps) => {
+    // Props
     const socket = useSocket();
     const lang = useLanguage();
+
+    // Refs
     const refreshRef = useRef(false);
 
     // Date related constants
@@ -71,6 +74,7 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     }));
 
     // Computed values
+    const { userId } = initialData;
     const userGrade = Math.min(56, Math.ceil(userData.level / 5));
 
     const getDaysInMonth = useCallback((year: number, month: number) => {
@@ -198,8 +202,13 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
       if (!userId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const user = await refreshService.user({ userId });
-        handleUserUpdate(user);
+        Promise.all([
+          refreshService.user({
+            userId: userId,
+          }),
+        ]).then(([user]) => {
+          handleUserUpdate(user);
+        });
       };
       refresh();
     }, [userId, handleUserUpdate]);

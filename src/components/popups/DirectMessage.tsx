@@ -73,8 +73,13 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
       if (!userId || !friendId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const friend = await refreshService.user({ userId: friendId });
-        handleFriendUpdate(friend);
+        Promise.all([
+          refreshService.user({
+            userId: friendId,
+          }),
+        ]).then(([friend]) => {
+          handleFriendUpdate(friend);
+        });
       };
       refresh();
     }, [userId, friendId]);

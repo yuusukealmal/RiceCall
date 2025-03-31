@@ -109,8 +109,13 @@ const CreateServerPopup: React.FC<CreateServerPopupProps> = React.memo(
       if (!userId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const user = await refreshService.user({ userId: userId });
-        handleUserUpdate(user);
+        Promise.all([
+          refreshService.user({
+            userId: userId,
+          }),
+        ]).then(([user]) => {
+          handleUserUpdate(user);
+        });
       };
       refresh();
     }, [userId]);

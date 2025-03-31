@@ -143,20 +143,27 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
       if (!userId || !targetId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const user = await refreshService.user({ userId: userId });
-        handleUserUpdate(user);
-        const target = await refreshService.user({ userId: targetId });
-        handleTargetUpdate(target);
-        const sentApplication = await refreshService.friendApplication({
-          senderId: userId,
-          receiverId: targetId,
+        Promise.all([
+          refreshService.user({
+            userId: userId,
+          }),
+          refreshService.user({
+            userId: targetId,
+          }),
+          refreshService.friendApplication({
+            senderId: userId,
+            receiverId: targetId,
+          }),
+          refreshService.friendApplication({
+            senderId: targetId,
+            receiverId: userId,
+          }),
+        ]).then(([user, target, sentApplication, receivedApplication]) => {
+          handleUserUpdate(user);
+          handleTargetUpdate(target);
+          handleSentApplicationUpdate(sentApplication);
+          handleReceivedApplicationUpdate(receivedApplication);
         });
-        handleSentApplicationUpdate(sentApplication);
-        const receivedApplication = await refreshService.friendApplication({
-          senderId: targetId,
-          receiverId: userId,
-        });
-        handleReceivedApplicationUpdate(receivedApplication);
       };
       refresh();
     }, [userId, targetId, socket]);

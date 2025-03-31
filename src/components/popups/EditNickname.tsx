@@ -70,15 +70,18 @@ const EditNicknamePopup: React.FC<EditNicknamePopupProps> = React.memo(
       if (!userId || !serverId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const member = await refreshService.member({
-          userId: userId,
-          serverId: serverId,
+        Promise.all([
+          refreshService.member({
+            userId: userId,
+            serverId: serverId,
+          }),
+          refreshService.user({
+            userId: userId,
+          }),
+        ]).then(([member, user]) => {
+          handleMemberUpdate(member);
+          handleUserUpdate(user);
         });
-        const user = await refreshService.user({
-          userId: userId,
-        });
-        handleMemberUpdate(member);
-        handleUserUpdate(user);
       };
       refresh();
     }, [userId, serverId]);

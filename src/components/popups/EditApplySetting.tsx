@@ -66,10 +66,13 @@ const EditApplySettingPopup: React.FC<EditApplySettingPopupProps> = React.memo(
       if (!serverId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const server = await refreshService.server({
-          serverId: serverId,
+        Promise.all([
+          refreshService.server({
+            serverId: serverId,
+          }),
+        ]).then(([server]) => {
+          handleServerUpdate(server);
         });
-        handleServerUpdate(server);
       };
       refresh();
     }, [serverId]);

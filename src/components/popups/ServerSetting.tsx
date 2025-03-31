@@ -339,8 +339,13 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
       if (!serverId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const server = await refreshService.server({ serverId: serverId });
-        handleServerUpdate(server);
+        Promise.all([
+          refreshService.server({
+            serverId: serverId,
+          }),
+        ]).then(([server]) => {
+          handleServerUpdate(server);
+        });
       };
       refresh();
     }, [serverId]);

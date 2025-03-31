@@ -216,10 +216,13 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
     if (!friendCurrentServerId || refreshed.current) return;
     const refresh = async () => {
       refreshed.current = true;
-      const server = await refreshService.server({
-        serverId: friendCurrentServerId,
+      Promise.all([
+        refreshService.server({
+          serverId: friendCurrentServerId,
+        }),
+      ]).then(([server]) => {
+        handleServerUpdate(server);
       });
-      handleServerUpdate(server);
     };
     refresh();
   }, [friendCurrentServerId]);

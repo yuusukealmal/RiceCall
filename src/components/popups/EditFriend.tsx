@@ -72,15 +72,18 @@ const EditFriendPopup: React.FC<EditFriendPopupProps> = React.memo(
       if (!userId || !targetId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
-        const user = await refreshService.user({
-          userId: userId,
+        Promise.all([
+          refreshService.user({
+            userId: userId,
+          }),
+          refreshService.friend({
+            userId: userId,
+            targetId: targetId,
+          }),
+        ]).then(([user, friend]) => {
+          handleUserUpdate(user);
+          handleFriendUpdate(friend);
         });
-        handleUserUpdate(user);
-        const friend = await refreshService.friend({
-          userId: userId,
-          targetId: targetId,
-        });
-        handleFriendUpdate(friend);
       };
       refresh();
     }, [userId, targetId]);

@@ -200,8 +200,13 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
       if (!userId || refreshed.current) return;
       const refresh = async () => {
         refreshed.current = true;
-        const user = await refreshService.user({ userId: userId });
-        handleUserUpdate(user);
+        Promise.all([
+          refreshService.user({
+            userId: userId,
+          }),
+        ]).then(([user]) => {
+          handleUserUpdate(user);
+        });
       };
       refresh();
     }, [userId, handleUserUpdate]);
