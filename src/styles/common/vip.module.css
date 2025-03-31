@@ -1,0 +1,60 @@
+.vipIcon {
+  background-image: url('../../../public/channel/vip_icons.png');
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  min-height: 14px;
+  min-width: 14px;
+  margin-right: 2px;
+}
+
+.vip-small-1 {
+  background-position: 0 0;
+}
+
+.vip-small-2 {
+  background-position: -14px 0;
+}
+
+.vip-small-3 {
+  background-position: -28px 0;
+}
+
+.vip-small-4 {
+  background-position: -42px 0;
+}
+
+.vip-small-5 {
+  background-position: -56px 0;
+}
+
+.vipIconBig {
+  height: 14px;
+  width: 55px;
+  margin-right: 2px;
+}
+
+.vip-big-1 {
+  background: url('../../../public/channel/icon_vip1.gif') no-repeat center
+    center;
+}
+
+.vip-big-2 {
+  background: url('../../../public/channel/icon_vip2.gif') no-repeat center
+    center;
+}
+
+.vip-big-3 {
+  background: url('../../../public/channel/icon_vip3.gif') no-repeat center
+    center;
+}
+
+.vip-big-4 {
+  background: url('../../../public/channel/icon_vip4.gif') no-repeat center
+    center;
+}
+
+.vip-big-5 {
+  background: url('../../../public/channel/icon_vip5.gif') no-repeat center
+    center;
+}

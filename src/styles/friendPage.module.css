@@ -1,0 +1,408 @@
+.friendWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+/* Header */
+
+.friendHeader {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 4px 10px;
+  gap: 5px;
+}
+
+.avatarBox {
+  padding: 2px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.avatarPicture {
+  position: relative;
+  cursor: pointer;
+  object-fit: cover;
+  min-width: 40px;
+  min-height: 40px;
+  background-image: url('../../public/im/SecretaryLogo.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+}
+
+.avatarPicture::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  z-index: 99;
+  min-width: 42px;
+  min-height: 42px;
+  background: url('../../public/win_border.png') no-repeat center center;
+  background-size: cover;
+}
+
+.baseInfoBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  height: 100%;
+  gap: 5px;
+}
+
+.baseInfoBox .container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.levelIcon {
+  min-width: 16px;
+  min-height: 16px;
+  background: url('../../public/im/LV.png') no-repeat center center;
+  background-size: auto;
+  background-position: 0 0;
+}
+
+.wealthIcon {
+  min-width: 16px;
+  min-height: 16px;
+  background: url('../../public/silver_pea.png') no-repeat center;
+  background-size: cover;
+  border: none;
+  cursor: pointer;
+  margin-left: 3rem;
+}
+
+.wealthValue {
+  color: #7e7c6e;
+  text-align: left;
+}
+
+.signatureBox {
+  display: flex;
+  min-width: 30%;
+  margin-left: 7rem;
+  align-items: center;
+}
+
+.signatureInput {
+  z-index: 1;
+  border-color: unset;
+  border-width: unset;
+  border-style: unset;
+  padding: 5px;
+  width: 100%;
+  resize: none;
+  overflow: hidden;
+  outline: unset;
+}
+
+.signatureInput:focus {
+  border: 1px solid #b4b4b4;
+  border-radius: 3px;
+}
+
+.badgeBox {
+  display: flex;
+  height: 20px;
+  gap: 1px;
+  align-items: center;
+}
+
+/* Content */
+
+.friendContent {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background-color: #f4f6fa;
+  border-top: 2px solid #e0e0e4;
+  border-right: 1px solid #ddd;
+}
+
+.sidebar .navigateTabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 36px;
+  cursor: pointer;
+}
+
+.sidebar .navigateTabs .tab {
+  display: flex;
+  flex: 1;
+  text-align: center;
+  cursor: pointer;
+  background: url('../../public/friend_tab_item_bg.png') no-repeat center;
+  background-size: 100% 72px;
+  background-position: 0 0;
+  min-height: 36px;
+  justify-content: center;
+  align-items: center;
+}
+
+.friendListIcon {
+  min-width: 16px;
+  min-height: 16px;
+  background: url('../../public/im/friend_list_page.png') no-repeat center
+    center;
+  background-size: auto;
+  background-position: 0 0;
+}
+
+.recentIcon {
+  min-width: 16px;
+  min-height: 16px;
+  background: url('../../public/im/recently_list_page.png') no-repeat center
+    center;
+  background-size: auto;
+  background-position: 0 0;
+}
+
+.sidebar .navigateTabs .tab.selected {
+  background-position: 0 -36px;
+}
+
+.selected .friendListIcon,
+.selected .recentIcon {
+  background-position: -64px 0;
+}
+
+.friendList {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-right: 0;
+  border-top: 1px solid #ddd;
+  margin-top: 5px;
+  background: #fff;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 5px;
+  border: 1px solid #fff;
+  width: 125px;
+  outline: none;
+}
+
+.searchIcon {
+  min-width: 20px;
+  min-height: 20px;
+  background: url('../../public/channel/channel_search.png') no-repeat center
+    center;
+  background-position: 0 0;
+}
+
+.searchBar:hover:not(:has(.prevIcon:hover, .nextIcon:hover)) .searchIcon {
+  background-position: -20px 0;
+}
+
+.prevIcon {
+  min-width: 30px;
+  min-height: 30px;
+  background: url('../../public/channel/search_pre.png') no-repeat center center;
+  background-position: 0 0;
+  cursor: pointer;
+}
+
+.nextIcon {
+  min-width: 30px;
+  min-height: 30px;
+  background: url('../../public/channel/search_next.png') no-repeat center
+    center;
+  background-position: 0 0;
+  cursor: pointer;
+}
+
+.prevIcon:hover,
+.nextIcon:hover {
+  background-position: -29px 0;
+}
+
+.prevIcon:active,
+.nextIcon:active {
+  background-position: -58px 0;
+}
+
+.bottomButtons {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f4f4f5;
+  border-top: 1px solid #e3e3e5;
+  border-bottom-left-radius: 5px;
+}
+
+.bottomButtons .button {
+  flex: 1;
+  display: flex;
+  border: 1px solid #dbdde0;
+  border-radius: 5px;
+  background: #fff;
+  text-align: center;
+  height: auto;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6e7c7e;
+  padding: 5px;
+}
+
+.bottomButtons .button:hover {
+  background-color: #d1d5da5c;
+}
+
+.bottomButtons .button[datatype='addGroup']::before {
+  content: '';
+  background: url('../../public/im/add_group.png') no-repeat center center;
+  min-height: 16px;
+  min-width: 16px;
+  margin-right: 5px;
+}
+
+.bottomButtons .button[datatype='addFriend']::before {
+  content: '';
+  background: url('../../public/im/add_friend.png') no-repeat center center;
+  min-height: 16px;
+  min-width: 16px;
+  margin-right: 5px;
+}
+
+.friendGroups {
+  flex: 1;
+  padding: 0.75rem;
+}
+
+.friendGroups .tab {
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.friendGroups .tab:hover {
+  background-color: #d1d5da5c;
+}
+
+.friendGroups .tab .tabLable {
+  font-size: 1rem;
+  margin-right: 5px;
+}
+
+.friendGroups .tab .tabCount {
+  font-size: 1rem;
+}
+
+.toggleIcon {
+  content: '';
+  display: inline-block;
+  min-width: 14px;
+  min-height: 14px;
+  background: url('../../public/channel/channelIcon.png') no-repeat center
+    center;
+  background-size: auto;
+  background-position: 0 0;
+  margin-right: 5px;
+}
+
+.tab:hover .toggleIcon {
+  background-position: 0 -14px;
+}
+
+.toggleIcon.expanded {
+  background-position: -14px 0;
+}
+
+.tab:hover .toggleIcon.expanded {
+  background-position: -14px -14px;
+}
+
+.friendCard {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+  position: relative;
+  padding: 5px;
+  border-radius: 3px;
+  gap: 5px;
+}
+
+.friendCard:hover {
+  background-color: #d1d5da5c;
+}
+
+.friendCard .name {
+  font-weight: bold;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.friendCard .signature {
+  color: #888;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.friendCard .serverName {
+  color: #3a9abe;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friendCard .location {
+  content: '';
+  min-height: 16px;
+  min-width: 16px;
+  background-image: url('../../public/mylocation.png');
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.recentList {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.mainContent {
+  flex: 1;
+  height: auto;
+  border-top: 2px solid #e0e0e4;
+}
+
+.mainContent .header {
+  font-size: 1rem;
+  padding: 10px;
+  background-color: #f4f6fa;
+  font-weight: bold;
+}

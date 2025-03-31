@@ -1,0 +1,57 @@
+.messageViewerWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  gap: 0.25rem;
+}
+
+.messageWrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+}
+
+.senderIcon {
+  display: flex;
+}
+
+.infoIcon {
+  display: flex;
+  min-width: 12px;
+  min-height: 12px;
+  background-image: url('/channel/NT_NOTIFY.png');
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.messageBox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  gap: 0.25rem;
+}
+
+.messageBox .header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.messageBox .header .name {
+  font-weight: bold;
+}
+
+.messageBox .header .timestamp {
+  margin-left: 0.5rem;
+  color: #888;
+}
+
+.messageBox .content {
+  color: #4a5568;
+  user-select: text;
+  word-break: break-all;
+}

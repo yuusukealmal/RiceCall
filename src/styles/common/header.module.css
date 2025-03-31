@@ -1,0 +1,493 @@
+.header {
+  display: flex;
+  background-color: #0073c6;
+  -webkit-app-region: drag;
+  justify-content: space-between;
+  min-height: 30px;
+}
+
+.appIcon {
+  position: absolute;
+  display: inline-block;
+  min-width: 60px;
+  min-height: 24px;
+  background: url('../../../public/login_logo_title.png') no-repeat center
+    center;
+  vertical-align: middle;
+  background-size: contain;
+  left: 2.5rem;
+}
+
+.titleBox {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  width: auto;
+  color: #fff;
+}
+
+.titleBox::before {
+  content: '';
+  display: inline-block;
+  min-width: 18px;
+  min-height: 18px;
+  background: url('../../../public/rc_logo_small.png') no-repeat center center;
+  background-size: auto;
+}
+
+.big {
+  height: 40px;
+}
+
+.title {
+  margin-left: 5px;
+}
+
+.buttons,
+.mainTabs,
+.userStatus {
+  -webkit-app-region: no-drag;
+}
+
+/* Buttons */
+
+.buttons {
+  min-width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.gift {
+  min-width: 28px;
+  min-height: 28px;
+  background: url('../../../public/gift.png') no-repeat center center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.game {
+  min-width: 28px;
+  min-height: 28px;
+  background: url('../../../public/game.png') no-repeat center center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.notice {
+  min-width: 24px;
+  min-height: 24px;
+  background: url('../../../public/icon_notice.png') no-repeat center center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.overlay {
+  min-width: 24px;
+  min-height: 24px;
+  background: url('../../../public/icon_notice_overlay.png') no-repeat center
+    center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.spliter {
+  min-width: 2px;
+  min-height: 19px;
+  background: url('../../../public/mf_spliter.png') no-repeat center center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.menu {
+  min-width: 20px;
+  min-height: 20px;
+  background: url('../../../public/BtnMenu.png') no-repeat center center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.minimize {
+  min-width: 20px;
+  min-height: 20px;
+  background: url('../../../public/Button_Minsize.png') no-repeat center center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.restore {
+  min-width: 20px;
+  min-height: 20px;
+  background: url('../../../public/Button_Restore.png') no-repeat center center !important;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0 !important;
+}
+
+.maxsize {
+  min-width: 20px;
+  min-height: 20px;
+  background: url('../../../public/Button_Maxsize.png') no-repeat center center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.close {
+  min-width: 20px;
+  min-height: 20px;
+  background: url('../../../public/Button_Close.png') no-repeat center center;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 0 0;
+}
+
+.overlayNew {
+  background-position: -24px 0;
+}
+
+.game:hover,
+.gift:hover {
+  background-position: -28px 0;
+}
+
+.notice:hover {
+  background-position: -24px 0;
+}
+
+.minimize:hover,
+.maxsize:hover,
+.close:hover,
+.menu:hover:not(:has(.menuDropDown:hover)) {
+  background-position: -20px 0;
+}
+
+.restore:hover {
+  background-position: -20px 0 !important;
+}
+
+.game:active,
+.gift:active {
+  background-position: -56px 0;
+}
+
+.notice:active {
+  background-position: -48px 0;
+}
+
+.minimize:active,
+.close:active,
+.maxsize:active,
+.menu:active:not(:has(.menuDropDown:active)) {
+  background-position: -40px 0;
+}
+
+.restore:active {
+  background-position: -40px 0 !important;
+}
+
+.selected::before {
+  width: 13px;
+  height: 13px;
+  background: url('../../../public/user_state.png') no-repeat center center;
+  background-size: auto;
+  background-position: 0 0;
+}
+
+/* Main Tab */
+
+.mainTabs {
+  display: flex;
+  align-items: flex-end;
+  cursor: pointer;
+  width: auto;
+  height: 40px;
+  margin-left: 9rem;
+  gap: 20px;
+}
+
+.mainTabs .tab {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 10px 0;
+  width: max-content;
+  width: 140px;
+  height: 30px;
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.mainTabs .tab:before {
+  content: '';
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 31px;
+  background-image: url('../../../public/tab_item_mainframe.png');
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.mainTabs .tab::after {
+  content: '';
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 31px;
+  background-image: url('../../../public/tab_item_mainframe.png');
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.mainTabs .tabClose {
+  z-index: 1;
+  position: absolute;
+  top: 0.5rem;
+  right: 10px;
+  min-width: 15px;
+  min-height: 15px;
+  background-image: url('../../../public/tapCloseBtn.png');
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.mainTabs .tabClose:hover {
+  background-position: -15px 0;
+}
+
+.mainTabs .tabClose:active {
+  background-position: -30px 0;
+}
+
+.mainTabs .tab .tabBg {
+  position: absolute;
+  overflow: hidden;
+  width: 120px;
+  height: 30px;
+  bottom: 0;
+  left: 10px;
+}
+
+.mainTabs .tab.selected::before {
+  background-position: 0 -32px;
+}
+
+.mainTabs .tab.selected::after {
+  background-position: -11px -32px;
+}
+
+.mainTabs .tab.selected .tabBg {
+  background-color: #fff;
+  color: rgb(55 144 206);
+}
+
+.mainTabs .tab .tabLable {
+  flex: 1;
+  z-index: 1;
+  max-width: 100%;
+  padding-right: 1rem;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+  color: rgb(255 255 255);
+}
+
+.mainTabs .tab.selected .tabLable {
+  color: rgb(0 115 198);
+}
+
+.mainTabs .tab.selected .tabClose {
+  color: #0073c6;
+}
+
+/* User Status */
+
+.userStatus {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  position: absolute;
+  left: 2.5rem;
+  height: 40px;
+}
+
+.nameDisplay {
+  color: #000;
+  text-shadow: 0 0 4px #fff9;
+  font-size: 0.9rem;
+  font-weight: bold;
+  line-height: 16px;
+  margin-right: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+  padding: 3px;
+}
+
+.nameDisplay:hover {
+  color: #222;
+  text-shadow: 0 0 4px #fff;
+  background: #ffffff1f;
+  border-radius: 3px;
+}
+
+.nameDisplay:active {
+  color: #222;
+  text-shadow: 0 0 4px #fff;
+  background: #ffffff36;
+}
+
+.statusBox {
+  position: relative;
+  display: flex;
+  padding: 2px;
+  height: fit-content;
+}
+
+.statusBox:hover:not(:has(.statusDropdown:hover)) {
+  text-shadow: 0 0 4px #fff;
+  background: #ffffff1f;
+  border-radius: 3px;
+}
+
+.statusBox:active:not(:has(.statusDropdown:active)) {
+  text-shadow: 0 0 4px #fff;
+  background: #ffffff36;
+}
+
+.statusDisplay {
+  display: inline-block;
+  min-width: 13px;
+  min-height: 13px;
+  background: url('../../../public/user_state.png') no-repeat center center;
+  background-size: auto;
+  background-position: 0 0 !important;
+}
+
+.statusDisplay[datatype='online'] {
+  background-position: 0 0 !important;
+}
+
+.statusDisplay[datatype='dnd'] {
+  background-position: -13px 0 !important;
+}
+
+.statusDisplay[datatype='idle'] {
+  background-position: -26px 0 !important;
+}
+
+.statusDisplay[datatype='gn'] {
+  background-position: -39px 0 !important;
+}
+
+.statusTriangle {
+  display: inline-block;
+  min-width: 8px;
+  min-height: 13px;
+  margin-left: 5px;
+  background: url('../../../public/state_triangle.png') no-repeat center center;
+  background-size: auto;
+  background-position: 0 4px;
+}
+
+.statusBox:hover:not(:has(.statusDropdown:hover)) .statusTriangle {
+  background-position: -9px 4px;
+}
+
+.statusBox:active:not(:has(.statusDropdown:active)) .statusTriangle {
+  background-position: -18px 4px;
+}
+
+.statusDropdown {
+  position: absolute;
+  display: flex;
+  flex-flow: column wrap;
+  justify-content: space-between;
+  align-items: center;
+  top: 1.4rem;
+  width: fit-content;
+  height: fit-content;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
+  z-index: 1000;
+  padding: 3px;
+}
+
+.statusDropdown.hidden {
+  display: none;
+}
+
+.statusDropdown .option {
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  box-sizing: unset;
+  width: 13px;
+  height: 13px;
+  padding: 0.2rem;
+}
+
+.statusDropdown .option:hover {
+  background-color: #0073c6;
+  color: #fff;
+}
+
+.statusDropdown .option::before {
+  content: '';
+  display: inline-block;
+  min-width: 13px;
+  min-height: 13px;
+  background: url('../../../public/user_state.png') no-repeat center center;
+  background-size: auto;
+}
+
+.statusDropdown .option[datatype='online']::before {
+  background-position: 0 0;
+}
+
+.statusDropdown .option[datatype='dnd']::before {
+  background-position: -13px 0;
+}
+
+.statusDropdown .option[datatype='idle']::before {
+  background-position: -26px 0;
+}
+
+.statusDropdown .option[datatype='gn']::before {
+  background-position: -39px 0;
+}

@@ -1,0 +1,155 @@
+.loginWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: url('../../public/dialog_body_bg.png') no-repeat center center;
+  background-size: cover;
+}
+
+.loadingBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 256px;
+  height: 12px;
+  background-image: url('../../public/icon_loading.gif');
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.loginContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60%;
+  width: 100%;
+}
+
+.formWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 300px;
+  gap: 1rem;
+}
+
+.errorBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.input {
+  position: relative;
+  flex: 1;
+  height: 29px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 5px rgb(0 0 0 / 10%);
+  transition: box-shadow 0.3s ease;
+  background: #fcfcfc;
+  font-size: 12px;
+  font-family: SimSun, sans-serif;
+}
+
+.input:focus {
+  outline: none;
+  background: #fff;
+}
+
+.inputBox {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.inputBox label {
+  font-size: 0.9rem;
+  color: #333;
+  display: inline-block;
+  width: 80px;
+  text-align: right;
+}
+
+.inputBox label::after {
+  content: '：';
+}
+
+.warning {
+  margin-left: 80px;
+  color: red;
+}
+
+.hint {
+  margin-left: 80px;
+  color: #777;
+}
+
+.button {
+  width: 200px;
+  height: 42px;
+  background-color: #1680ce;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: SimSun, sans-serif;
+}
+
+/* Footer */
+.loginFooter {
+  width: 100%;
+  padding: 10px 15px;
+  background-color: #f4f4f5;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  border-top: 1px solid #e3e3e5;
+  margin-top: auto;
+}
+
+.backToLogin {
+  text-decoration: none;
+  font-size: 0.9rem;
+  color: #838383;
+  display: flex;
+  align-items: flex-end;
+  cursor: pointer;
+}
+
+.backToLogin:hover {
+  color: #0073c6;
+}
+
+.backToLogin::before {
+  content: '';
+  min-width: 14px;
+  min-height: 14px;
+
+  /* background: url('../../public/icon_back.png') no-repeat center center; */
+  background-size: contain;
+  margin-right: 5px;
+  vertical-align: middle;
+}

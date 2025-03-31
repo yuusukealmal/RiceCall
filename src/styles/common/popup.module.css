@@ -1,0 +1,430 @@
+.popupContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: url('../../../public/dialog_body_bg.png') no-repeat center center;
+  background-size: cover;
+}
+
+.popupTab {
+  background: #f0f0f0;
+  height: 40px;
+  display: flex;
+}
+
+.popupTab .item {
+  height: 100%;
+  width: 125px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.popupTab .item.active {
+  background: #a7c0e9;
+}
+
+.popupBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.popupFooter {
+  min-height: 50px;
+  max-height: 50px;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: #f4f4f5;
+  border-top: 1px solid #e3e3e5;
+  border-bottom: 1px solid #e3e3e5;
+}
+
+/* Button Styles */
+
+.button {
+  margin-right: 5px;
+  min-width: 78px;
+  min-height: 24px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid #cbcccd;
+  border-radius: 5px;
+  background: #fff;
+}
+
+.button:hover {
+  background: #fafafa;
+}
+
+.button:active {
+  background: #f5f5f5;
+}
+
+/* Text Styles */
+
+.label {
+  min-width: 5rem;
+}
+
+.label.required::after {
+  content: '*';
+  color: red;
+}
+
+.hint {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.value {
+  color: #777;
+}
+
+.link {
+  color: #69a5ff;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.h3 {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.p1 {
+  font-size: 1rem;
+  color: #777;
+}
+
+/* Layout Styles */
+
+.col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Input Styles */
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 16px;
+  padding: 16px;
+}
+
+.inputBox {
+  width: 100%;
+  display: flex;
+  gap: 5px;
+}
+
+.inputBox input[type='text'],
+.inputBox input[type='number'] {
+  border: 1px solid #ddd;
+  padding: 2px;
+  background: #fff;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 2rem;
+}
+
+.inputBox table {
+  background: #fff;
+  display: flex;
+  height: auto;
+  border: 1px solid #ccc;
+  flex-direction: column;
+}
+
+.inputBox table thead {
+  display: flex;
+  position: sticky;
+  top: 0;
+  background: #f4f4f5;
+}
+
+.inputBox table tr {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+.inputBox table tr:hover {
+  background: #f4f4f5;
+}
+
+.inputBox table tr th {
+  height: 28px;
+  width: 100%;
+  background: #e9ebec;
+  border: 1px solid #ccc;
+  border-right: 0;
+  border-top: 0;
+  padding-left: 5px;
+  text-align: left;
+  font-weight: unset;
+  display: flex;
+  align-items: center;
+}
+
+.inputBox table tr td {
+  height: 28px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-right: 0;
+  border-top: 0;
+  padding-left: 5px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.inputBox table tr th:first-child,
+.inputBox table tr td:first-child {
+  border-left: 0;
+}
+
+.inputBox table tr th:hover {
+  cursor: pointer;
+  background: #d1d1d1;
+}
+
+.inputBox textarea {
+  border: 1px solid #ddd;
+  padding: 2px;
+  background: #fff;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 4rem;
+  resize: none;
+}
+
+.inputBox .selectBox {
+  display: flex;
+  width: fit-content;
+  position: relative;
+}
+
+.inputBox .selectBox select {
+  border: 1px solid #ddd;
+  padding: 2px;
+  padding-right: 25px;
+  background: #fff;
+  position: relative;
+  display: inline-block;
+  min-width: 100px;
+  max-width: 100%;
+  height: 2rem;
+  appearance: none;
+}
+
+.inputBox .selectBox::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  height: 2rem;
+  width: 25px;
+  z-index: 1;
+  background-image: url('../../../public/channel/spliter.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+}
+
+.inputBox .selectBox::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  right: 0;
+  width: 26px;
+  height: 12px;
+  background-image: url('../../../public/login_combobox_triangle.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  pointer-events: none;
+}
+
+.inputBox .selectBox:hover::after {
+  background-position: -26px 0;
+}
+
+.inputBox .selectBox:active::after {
+  background-position: -52px 0;
+}
+
+.hidden {
+  display: none;
+}
+
+.popupContainer :disabled,
+.popupContainer .disabled {
+  color: #8f8f8f;
+  pointer-events: none;
+}
+
+/* Dialog Styles */
+
+.dialogIcon {
+  margin-right: 1rem;
+  content: '';
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  background: url('../../../public/pic_alert.png') no-repeat center center;
+  vertical-align: middle;
+  background-size: contain;
+  min-width: 36px;
+}
+
+.dialogIcon.alert {
+  background: url('../../../public/pic_alert.png') no-repeat center center;
+}
+
+.dialogIcon.alert2 {
+  background: url('../../../public/pic_alert2.png') no-repeat center center;
+}
+
+.dialogIcon.error {
+  background: url('../../../public/pic_error.png') no-repeat center center;
+}
+
+.dialogIcon.warning {
+  background: url('../../../public/pic_warning.png') no-repeat center center;
+}
+
+.dialogIcon.info {
+  background: url('../../../public/pic_information.png') no-repeat center center;
+}
+
+.dialogIcon.success {
+  background: url('../../../public/pic_ok.png') no-repeat center center;
+}
+
+/* User Profile Styles */
+
+.userProfile .header {
+  position: relative;
+  min-height: 250px;
+  width: 100%;
+  padding-bottom: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background-image: url('../../../public/im/wallpaper.png');
+  background-size: cover;
+  gap: 5px;
+}
+
+.userProfile .avatar {
+  position: relative;
+  min-width: 74px;
+  min-height: 74px;
+  cursor: pointer;
+  object-fit: cover;
+  display: inline-block;
+  background-image: url('../../../public/im/IMLogo.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+}
+
+.userProfile .avatar::after {
+  position: absolute;
+  content: '';
+  z-index: 2;
+  top: -7px;
+  left: -7px;
+  width: 88px;
+  height: 88px;
+  background: url('../../../public/im/avatar_border.png') no-repeat center
+    center;
+  background-position: 0 0;
+}
+
+.userProfile .tab {
+  height: 38px;
+  width: 100%;
+  bottom: 0;
+  position: absolute;
+  display: flex;
+}
+
+.userProfile .tab .item {
+  height: 100%;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 6px;
+  gap: 5px;
+  position: relative;
+  background-image: url('../../../public/im/userpage_tab.png');
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.userProfile .tab .item.selected {
+  background-position: 0 -38px;
+}
+
+.userProfile .tab .item.about::before {
+  content: '';
+  min-height: 14px;
+  min-width: 13px;
+  background-image: url('../../../public/im/icon-about.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.userProfile .tab .item.groups::before {
+  content: '';
+  min-height: 14px;
+  min-width: 18px;
+  background-image: url('../../../public/im/icon-group.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+
+.dialogCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.dialogContent {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: left;
+}
