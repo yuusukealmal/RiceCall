@@ -46,9 +46,6 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
     const [channelVisibility, setChannelVisibility] = useState<
       Channel['visibility']
     >(createDefault.channel().visibility);
-    const [channelOrder, setChannelOrder] = useState<Channel['order']>(
-      createDefault.channel().order,
-    );
     const [channelForbidText, setChannelForbidText] = useState<
       Channel['forbidText']
     >(createDefault.channel().forbidText);
@@ -70,6 +67,9 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
     const [channelGuestTextForbidUrl, setChannelGuestTextForbidUrl] = useState<
       Channel['forbidGuestUrl']
     >(createDefault.channel().forbidGuestUrl);
+    const [channelOrder, setChannelOrder] = useState<Channel['order']>(
+      createDefault.channel().order,
+    );
 
     // Variables
     const { channelId, serverId } = initialData;
@@ -97,6 +97,7 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
       setChannelGuestTextMaxLength(data.guestTextMaxLength);
       setChannelGuestTextWaitTime(data.guestTextWaitTime);
       setChannelGuestTextGapTime(data.guestTextGapTime);
+      setChannelOrder(data.order);
     };
 
     const handleClose = () => {
