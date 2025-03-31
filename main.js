@@ -478,33 +478,33 @@ async function setActivity(activity) {
 }
 
 function configureAutoUpdater() {
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.allowDowngrade = false;
+
   if (isDev) {
     autoUpdater.forceDevUpdateConfig = true;
     autoUpdater.updateConfigPath = path.join(__dirname, 'dev-app-update.yml');
   }
 
-  // autoUpdater.on('error', (error) => {
-  //   if (isDev && error.message.includes('dev-app-update.yml')) {
-  //     console.log('開發環境中跳過更新檢查');
-  //     return;
-  //   }
-  //   dialog.showMessageBox({
-  //     type: 'error',
-  //     title: '更新錯誤',
-  //     message: '檢查更新時發生錯誤：' + error.message,
-  //   });
-  // });
-
-  autoUpdater.on('checking-for-update', () => {
-    console.log('正在檢查更新...');
+  autoUpdater.on('error', (error) => {
+    if (isDev && error.message.includes('dev-app-update.yml')) {
+      console.log('開發環境中跳過更新檢查');
+      return;
+    }
+    dialog.showMessageBox({
+      type: 'error',
+      title: '更新錯誤',
+      message: '檢查更新時發生錯誤：' + error.message,
+    });
   });
 
   autoUpdater.on('update-available', (info) => {
     dialog.showMessageBox({
       type: 'info',
       title: '有新版本可用',
-      message: `正在下載新版本 ${info.version}，請稍後...`,
-      buttons: ['確定'],
+      message: `正在下載新版本 ${info.version} 發布於 ${info.releaseDate}，請不要關閉此視窗及進行其他操作...`,
+      buttons: [''],
     });
   });
 
@@ -524,7 +524,7 @@ function configureAutoUpdater() {
       .showMessageBox({
         type: 'info',
         title: '安裝更新',
-        message: `版本 ${info.version} 已下載完成，是否立即安裝？`,
+        message: `版本 ${info.version} 已下載完成，請點擊立即安裝按鈕進行安裝`,
         buttons: ['立即安裝'],
       })
       .then((buttonIndex) => {
