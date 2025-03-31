@@ -68,9 +68,9 @@ const CreateServerPopup: React.FC<CreateServerPopupProps> = React.memo(
     const [serverAvatarUrl, setServerAvatarUrl] = useState<Server['avatarUrl']>(
       createDefault.server().avatarUrl,
     );
-    const [serverDescription, setServerDescription] = useState<
-      Server['description']
-    >(createDefault.server().description);
+    const [serverSlogan, setServerSlogan] = useState<Server['slogan']>(
+      createDefault.server().slogan,
+    );
     const [section, setSection] = useState<number>(0);
 
     // Variables
@@ -263,8 +263,8 @@ const CreateServerPopup: React.FC<CreateServerPopupProps> = React.memo(
                     <div className={popup['label']}>{lang.tr.groupSlogan}</div>
                     <textarea
                       className={popup['input']}
-                      value={serverDescription}
-                      onChange={(e) => setServerDescription(e.target.value)}
+                      value={serverSlogan}
+                      onChange={(e) => setServerSlogan(e.target.value)}
                       placeholder={lang.tr.groupSloganPlaceholder}
                     />
                   </div>
@@ -286,7 +286,7 @@ const CreateServerPopup: React.FC<CreateServerPopupProps> = React.memo(
                     name: serverName,
                     avatar: serverAvatar,
                     avatarUrl: serverAvatarUrl,
-                    description: serverDescription,
+                    slogan: serverSlogan,
                     type: serverType,
                     ownerId: userId,
                   });
