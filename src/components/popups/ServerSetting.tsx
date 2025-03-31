@@ -933,7 +933,11 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                               ]);
                             }}
                           >
-                            <td>{applicationName}</td>
+                            <td>
+                              <div className={popup['p1']}>
+                                {applicationName}
+                              </div>
+                            </td>
                             <td>{applicationDescription}</td>
                             <td>
                               {new Date(applicationCreatedDate)
