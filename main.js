@@ -218,8 +218,8 @@ async function createMainWindow() {
   }
 
   mainWindow = new BrowserWindow({
-    minWidth: 1400,
-    minHeight: 800,
+    minWidth: 950,
+    minHeight: 700,
     frame: false,
     transparent: true,
     resizable: true,
@@ -279,7 +279,7 @@ async function createAuthWindow() {
   }
 
   authWindow = new BrowserWindow({
-    width: 610,
+    width: 600,
     height: 450,
     resizable: false,
     frame: false,
