@@ -248,12 +248,11 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                 fileInput.onchange = (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (!file) return;
-
                   const reader = new FileReader();
                   reader.onloadend = async () => {
                     const formData = new FormData();
                     formData.append('_type', 'user');
-                    formData.append('_fileName', userAvatar);
+                    formData.append('_fileName', userId); //FIX: Change back to userAvatar
                     formData.append('_file', reader.result as string);
                     const data = await apiService.post('/upload', formData);
                     if (data) {
