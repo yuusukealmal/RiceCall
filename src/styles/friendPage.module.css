@@ -51,7 +51,7 @@
   justify-content: flex-start;
   overflow: hidden;
   height: 100%;
-  gap: 10px;
+  gap: 5px;
 }
 
 .baseInfoBox .container {
@@ -345,7 +345,6 @@
 .friendCard {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
   justify-content: flex-start;
   cursor: pointer;
   position: relative;
@@ -359,7 +358,6 @@
 }
 
 .friendCard .name {
-  font-size: 1rem;
   font-weight: bold;
   overflow: hidden;
   white-space: nowrap;
@@ -367,7 +365,6 @@
 }
 
 .friendCard .signature {
-  font-size: 0.9rem;
   color: #888;
   overflow: hidden;
   white-space: nowrap;
@@ -375,7 +372,6 @@
 }
 
 .friendCard .serverName {
-  font-size: 0.9rem;
   color: #3a9abe;
   white-space: nowrap;
   overflow: hidden;
