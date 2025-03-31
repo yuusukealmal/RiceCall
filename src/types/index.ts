@@ -2044,8 +2044,8 @@ export const PopupSize = {
   [PopupType.EDIT_SERVER]: { height: 450, width: 600 },
   [PopupType.CREATE_CHANNEL]: { height: 220, width: 400 },
   [PopupType.EDIT_CHANNEL]: { height: 450, width: 600 },
-  [PopupType.APPLY_FRIEND]: { height: 420, width: 540 },
-  [PopupType.APPLY_MEMBER]: { height: 420, width: 540 },
+  [PopupType.APPLY_FRIEND]: { height: 320, width: 500 },
+  [PopupType.APPLY_MEMBER]: { height: 320, width: 500 },
   [PopupType.ADD_FRIEND]: { height: 220, width: 400 },
   [PopupType.ADD_FRIEND_GROUP]: { height: 220, width: 400 },
   [PopupType.EDIT_FRIEND_GROUP]: { height: 220, width: 400 },
@@ -2058,6 +2058,6 @@ export const PopupSize = {
   [PopupType.DIALOG_INFO]: { height: 220, width: 400 },
   [PopupType.SYSTEM_SETTING]: { height: 450, width: 600 },
   Settings: { height: 450, width: 600 },
-  Apply: { height: 420, width: 540 },
+  Apply: { height: 320, width: 500 },
   Small: { height: 220, width: 400 },
 };

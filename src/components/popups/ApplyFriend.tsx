@@ -95,19 +95,19 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
     };
 
     const handleUserUpdate = (data: User | null) => {
-      if (!data) data = createDefault.user();
+      if (!data) return;
       setUserFriendGroups(data.friendGroups || []);
     };
 
     const handleTargetUpdate = (data: User | null) => {
-      if (!data) data = createDefault.user();
+      if (!data) return;
       setTargetName(data.name);
       setTargetAvatarUrl(data.avatarUrl);
     };
 
     const handleSentApplicationUpdate = (data: FriendApplication | null) => {
-      setSection(data ? 1 : 0);
-      if (!data) data = createDefault.friendApplication();
+      if (data) setSection(1);
+      if (!data) return;
       setApplicationDescription(data.description);
       setApplicationSenderId(data.senderId);
       setApplicationReceiverId(data.receiverId);
@@ -116,8 +116,8 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
     const handleReceivedApplicationUpdate = (
       data: FriendApplication | null,
     ) => {
-      setSection(data ? 2 : 0);
-      if (!data) data = createDefault.friendApplication();
+      if (data) setSection(2);
+      if (!data) return;
       setApplicationDescription(data.description);
       setApplicationSenderId(data.senderId);
       setApplicationReceiverId(data.receiverId);
@@ -177,28 +177,24 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
                         style={{ backgroundImage: `url(${targetAvatarUrl})` }}
                       />
                     </div>
-                    <div className={applyFriend['userInfoWrapper']}>
-                      <div className={applyFriend['userAccount']}>
+                    <div className={applyFriend['infoWrapper']}>
+                      <div className={applyFriend['mainText']}>
                         {targetName}
                       </div>
-                      <div className={applyFriend['userName']}>{targetId}</div>
+                      <div className={applyFriend['subText']}>{targetName}</div>
                     </div>
                   </div>
                   <div className={applyFriend['split']} />
-                  <div className={popup['inputGroup']}>
-                    <div className={`${popup['inputBox']} ${popup['col']}`}>
-                      <div className={popup['label']}>{lang.tr.friendNote}</div>
-                      <textarea
-                        rows={2}
-                        value={applicationDescription}
-                        onChange={(e) =>
-                          setApplicationDescription(e.target.value)
-                        }
-                      />
-                      <div className={popup['hint']}>
-                        {lang.tr.max120content}
-                      </div>
-                    </div>
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <div className={popup['label']}>{lang.tr.friendNote}</div>
+                    <textarea
+                      rows={2}
+                      value={applicationDescription}
+                      onChange={(e) =>
+                        setApplicationDescription(e.target.value)
+                      }
+                    />
+                    <div className={popup['hint']}>{lang.tr.max120content}</div>
                   </div>
                 </div>
               </div>
@@ -240,19 +236,15 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
                         style={{ backgroundImage: `url(${targetAvatarUrl})` }}
                       />
                     </div>
-                    <div className={applyFriend['userInfoWrapper']}>
-                      <div className={applyFriend['userAccount']}>
+                    <div className={applyFriend['infoWrapper']}>
+                      <div className={applyFriend['mainText']}>
                         {targetName}
                       </div>
-                      <div className={applyFriend['userName']}>{targetId}</div>
+                      <div className={applyFriend['subText']}>{targetName}</div>
                     </div>
                   </div>
                   <div className={applyFriend['split']} />
-                  <div className={popup['inputGroup']}>
-                    <div className={popup['hint']}>
-                      {lang.tr.friendApplySent}
-                    </div>
-                  </div>
+                  <div className={popup['hint']}>{lang.tr.friendApplySent}</div>
                 </div>
               </div>
             </div>
@@ -283,39 +275,37 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
                         style={{ backgroundImage: `url(${targetAvatarUrl})` }}
                       />
                     </div>
-                    <div className={applyFriend['userInfoWrapper']}>
-                      <div className={applyFriend['userAccount']}>
+                    <div className={applyFriend['infoWrapper']}>
+                      <div className={applyFriend['mainText']}>
                         {targetName}
                       </div>
-                      <div className={applyFriend['userName']}>{targetId}</div>
+                      <div className={applyFriend['subText']}>{targetName}</div>
                     </div>
                   </div>
                   <div className={applyFriend['split']} />
-                  <div className={popup['inputGroup']}>
-                    <div className={`${popup['inputBox']} ${popup['col']}`}>
-                      <div className={popup['label']}>
-                        {lang.tr.friendSelectGroup}
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <div className={popup['label']}>
+                      {lang.tr.friendSelectGroup}
+                    </div>
+                    <div className={popup['row']}>
+                      <div className={popup['selectBox']}>
+                        <select
+                          className={popup['select']}
+                          value={selectedFriendGroupId}
+                          onChange={(e) =>
+                            setSelectedFriendGroupId(e.target.value)
+                          }
+                        >
+                          <option value={''}>{lang.tr.none}</option>
+                          {userFriendGroups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                      <div className={popup['row']}>
-                        <div className={popup['selectBox']}>
-                          <select
-                            className={popup['select']}
-                            value={selectedFriendGroupId}
-                            onChange={(e) =>
-                              setSelectedFriendGroupId(e.target.value)
-                            }
-                          >
-                            <option value={''}>{lang.tr.none}</option>
-                            {userFriendGroups.map((group) => (
-                              <option key={group.id} value={group.id}>
-                                {group.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className={popup['link']}>
-                          {lang.tr.friendAddGroup}
-                        </div>
+                      <div className={popup['link']}>
+                        {lang.tr.friendAddGroup}
                       </div>
                     </div>
                   </div>

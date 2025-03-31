@@ -29,19 +29,19 @@
   background-position: 0 0;
 }
 
-.userInfoWrapper {
+.infoWrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
+  height: 100%;
 }
 
-.userAccount {
-  margin-left: 10px;
+.mainText {
+  font-weight: bold;
 }
 
-.userName {
-  margin-left: 10px;
+.subText {
   color: #777;
 }
 

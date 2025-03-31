@@ -68,7 +68,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
     };
 
     const handleServerUpdate = (data: Server | null) => {
-      if (!data) data = createDefault.server();
+      if (!data) return;
       setServerName(data.name);
       setServerDisplayId(data.displayId);
       setServerAvatarUrl(data.avatarUrl);
@@ -76,8 +76,8 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
     };
 
     const handleMemberApplicationUpdate = (data: MemberApplication | null) => {
-      setSection(data ? 1 : 0);
-      if (!data) data = createDefault.memberApplication();
+      if (data) setSection(1);
+      if (!data) return;
       setApplicationDescription(data.description);
     };
 
@@ -127,11 +127,11 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
                         style={{ backgroundImage: `url(${serverAvatarUrl})` }}
                       />
                     </div>
-                    <div className={applyMember['userInfoWrapper']}>
-                      <div className={applyMember['userAccount']}>
+                    <div className={applyMember['infoWrapper']}>
+                      <div className={applyMember['mainText']}>
                         {serverName}
                       </div>
-                      <div className={applyMember['userName']}>
+                      <div className={applyMember['subText']}>
                         {`ID: ${serverDisplayId}`}
                       </div>
                     </div>
@@ -145,19 +145,17 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
                     </div>
                   </div>
                   <div className={applyMember['split']} />
-                  <div className={popup['inputGroup']}>
-                    <div className={`${popup['inputBox']} ${popup['col']}`}>
-                      <div className={popup['label']}>
-                        {lang.tr.serverApplyDescription}
-                      </div>
-                      <textarea
-                        rows={2}
-                        onChange={(e) =>
-                          setApplicationDescription(e.target.value)
-                        }
-                        value={applicationDescription}
-                      />
+                  <div className={`${popup['inputBox']} ${popup['col']}`}>
+                    <div className={popup['label']}>
+                      {lang.tr.serverApplyDescription}
                     </div>
+                    <textarea
+                      rows={2}
+                      onChange={(e) =>
+                        setApplicationDescription(e.target.value)
+                      }
+                      value={applicationDescription}
+                    />
                   </div>
                 </div>
               </div>
@@ -203,11 +201,11 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
                         style={{ backgroundImage: `url(${serverAvatarUrl})` }}
                       />
                     </div>
-                    <div className={applyMember['userInfoWrapper']}>
-                      <div className={applyMember['userAccount']}>
+                    <div className={applyMember['infoWrapper']}>
+                      <div className={applyMember['mainText']}>
                         {serverName}
                       </div>
-                      <div className={applyMember['userName']}>
+                      <div className={applyMember['subText']}>
                         {`ID: ${serverDisplayId}`}
                       </div>
                     </div>
@@ -221,9 +219,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
                     </div>
                   </div>
                   <div className={applyMember['split']} />
-                  <div className={popup['inputGroup']}>
-                    <div className={popup['hint']}>{lang.tr.applySuccess}</div>
-                  </div>
+                  <div className={popup['hint']}>{lang.tr.applySuccess}</div>
                 </div>
               </div>
             </div>
