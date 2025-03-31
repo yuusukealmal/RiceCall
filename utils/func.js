@@ -276,12 +276,68 @@ const func = {
           401,
         );
       }
+      if (!user.name) {
+        throw new StandardizedError(
+          '顯示名稱不可為空',
+          'ValidationError',
+          'USER',
+          'USERNAME_MISSING',
+        );
+      }
+      if (user.name && user.name.length < 2) {
+        throw new StandardizedError(
+          '顯示名稱不能小於2個字符',
+          'ValidationError',
+          'USER',
+          'USERNAME_TOO_SHORT',
+        );
+      }
       if (user.name && user.name.length > 32) {
         throw new StandardizedError(
           '顯示名稱不能超過32個字符',
           'ValidationError',
           'USER',
           'USERNAME_TOO_LONG',
+        );
+      }
+      if (user.birthYear && user.birthYear < 1900) {
+        throw new StandardizedError(
+          '出生年份不能小於1900',
+          'ValidationError',
+          'USER',
+          'BIRTH_YEAR_INVALID',
+        );
+      }
+      if (user.birthMonth && user.birthMonth < 1) {
+        throw new StandardizedError(
+          '出生月份不能小於1',
+          'ValidationError',
+          'USER',
+          'BIRTH_MONTH_INVALID',
+        );
+      }
+      if (user.birthMonth && user.birthMonth > 12) {
+        throw new StandardizedError(
+          '出生月份不能大於12',
+          'ValidationError',
+          'USER',
+          'BIRTH_MONTH_INVALID',
+        );
+      }
+      if (user.birthDay && user.birthDay < 1) {
+        throw new StandardizedError(
+          '出生日不能小於1',
+          'ValidationError',
+          'USER',
+          'BIRTH_DAY_INVALID',
+        );
+      }
+      if (user.birthDay && user.birthDay > 31) {
+        throw new StandardizedError(
+          '出生日不能大於31',
+          'ValidationError',
+          'USER',
+          'BIRTH_DAY_INVALID',
         );
       }
       if (user.signature && user.signature.length > 200) {
