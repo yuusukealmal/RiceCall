@@ -1977,6 +1977,9 @@ export enum SocketServerEvent {
   // Socket
   CONNECT = 'connect',
   DISCONNECT = 'disconnect',
+  CONNECT_ERROR = 'connect_error',
+  RECONNECT = 'reconnect',
+  RECONNECT_ERROR = 'reconnect_error',
   // Notification
   NOTIFICATION = 'notification', // not used yet
   // User

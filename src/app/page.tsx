@@ -339,8 +339,6 @@ const Home = () => {
     if (!socket) return;
 
     const eventHandlers = {
-      [SocketServerEvent.CONNECT]: handleConnect,
-      [SocketServerEvent.DISCONNECT]: handleDisconnect,
       [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
       [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
       [SocketServerEvent.OPEN_POPUP]: handleOpenPopup,
@@ -365,7 +363,7 @@ const Home = () => {
   }, [lang]);
 
   const getMainContent = () => {
-    if (!socket) return <LoadingSpinner />;
+    if (!socket.isConnected) return <LoadingSpinner />;
     switch (selectedTabId) {
       case 'home':
         return <HomePage user={user} handleUserUpdate={handleUserUpdate} />;

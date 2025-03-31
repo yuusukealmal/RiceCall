@@ -1,5 +1,7 @@
 import React from 'react';
-import Image from 'next/image';
+
+// CSS
+import loadingSpinner from '@/styles/common/loadingSpinner.module.css';
 
 interface LoadingSpinnerProps {
   className?: string;
@@ -17,7 +19,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = React.memo(
           height: '100%',
         }}
       >
-        <Image src="/loading.gif" className={className} alt="Loading..." />
+        <div className={loadingSpinner['spinner']} />
       </div>
     );
   },

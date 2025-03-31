@@ -66,9 +66,6 @@ const SocketClientEvent = {
 };
 
 const SocketServerEvent = {
-  // Socket
-  CONNECT: 'connect',
-  DISCONNECT: 'disconnect',
   // Notification
   NOTIFICATION: 'notification', // not used yet
   // User
@@ -384,7 +381,7 @@ function connectSocket(token) {
   const socket = io(WS_URL, {
     transports: ['websocket'],
     reconnection: true,
-    reconnectionAttempts: 5,
+    // reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 20000,
@@ -417,18 +414,37 @@ function connectSocket(token) {
     });
 
     console.log('Socket 連線成功');
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('connect', null);
+    });
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Socket 連線失敗:', error);
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('connect_error', error);
+    });
   });
 
   socket.on('disconnect', (reason) => {
     console.log('Socket 斷開連線，原因:', reason);
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('disconnect', reason);
+    });
   });
 
   socket.on('reconnect', (attemptNumber) => {
     console.log('Socket 重新連線成功，嘗試次數:', attemptNumber);
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('reconnect', attemptNumber);
+    });
   });
 
   socket.on('reconnect_error', (error) => {
     console.error('Socket 重新連線失敗:', error);
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('reconnect_error', error);
+    });
   });
 
   socket.ipcHandlers = ipcHandlers;
@@ -447,10 +463,6 @@ function disconnectSocket(socket) {
   Object.values(SocketServerEvent).forEach((event) => {
     socket.off(event);
   });
-
-  if (socket.connected) {
-    socket.disconnect();
-  }
 
   return null;
 }
@@ -582,12 +594,6 @@ app.on('ready', async () => {
   ipcMain.on('login', (_, token) => {
     mainWindow.show();
     authWindow.hide();
-
-    if (socketInstance) {
-      socketInstance.disconnect();
-      socketInstance = disconnectSocket(socketInstance);
-    }
-
     socketInstance = connectSocket(token);
     socketInstance.connect();
   });
