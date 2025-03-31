@@ -276,14 +276,6 @@ const func = {
           401,
         );
       }
-      if (!user.name) {
-        throw new StandardizedError(
-          '顯示名稱不可為空',
-          'ValidationError',
-          'USER',
-          'USERNAME_MISSING',
-        );
-      }
       if (user.name && user.name.length < 2) {
         throw new StandardizedError(
           '顯示名稱不能小於2個字符',

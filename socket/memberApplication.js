@@ -28,6 +28,7 @@ const memberApplicationHandler = {
 
       // Get data
       const { memberApplication: _newApplication, userId, serverId } = data;
+      console.log(data);
       if (!_newApplication || !userId || !serverId) {
         throw new StandardizedError(
           '無效的資料',

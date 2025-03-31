@@ -59,6 +59,7 @@ const channelHandler = {
           403,
         );
       if (
+        !channel.isLobby &&
         (server.visibility === 'member' || channel.visibility === 'member') &&
         (!operatorMember || operatorMember.permissionLevel < 2)
       )
@@ -70,7 +71,8 @@ const channelHandler = {
           403,
         );
       if (
-        (server.visibility === 'private' || channel.visibility === 'private') &&
+        !channel.isLobby &&
+        channel.visibility === 'private' &&
         (!operatorMember || operatorMember.permissionLevel < 3)
       )
         throw new StandardizedError(
