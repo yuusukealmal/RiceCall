@@ -4,7 +4,7 @@
   <img src="https://github.com/user-attachments/assets/74f23cae-f3aa-4deb-bbd1-72290d9193f3" width="200px" align="center">
 </div>
 
-<img src="https://img.shields.io/badge/Join-Discord-blue?logo=discord&link=https%3A%2F%2Fdiscord.gg%2FadCWzv6wwS"/> <img src="https://img.shields.io/badge/Current_Version-v0.1.0a-green"/>
+<img src="https://img.shields.io/badge/Join-Discord-blue?logo=discord&link=https%3A%2F%2Fdiscord.gg%2FadCWzv6wwS"/> <img src="https://img.shields.io/badge/Current_Version-v0.1.0-green"/>
 
 RiceCall，RaidCall 的非官方復刻版，使用 react 框架開發，electron 建置
 
@@ -26,13 +26,21 @@ RiceCall，RaidCall 的非官方復刻版，使用 react 框架開發，electron
 
 ## - 常見問題 (FAQ)
 
-### :question: Q: 啟動 `yarn electron-dev` 時出現錯誤？
+### :question: Q: 我卡在轉圈圈畫面怎麼辦
 
-:white_check_mark: A: 請確保你已經安裝 `yarn`，如果沒有可以執行：
+:white_check_mark: A: 請從右上角選單 -> 登出，然後再登入一次
 
-```bash
-npm install -g yarn
-```
+### :question: Q: 我沒辦法加入伺服器
+
+:white_check_mark: A: 請從右上角選單 -> 登出，然後再登入一次
+
+### :question: Q: 我語音一直沒聲音
+
+:white_check_mark: A: 如果你正在使用學校、公司等網路，可能會導致連線不到，請換一個網路連線，目前還沒有根除方法
+
+### :question: Q: 我開機自動啟動後沒有連線
+
+:white_check_mark: A: 重新啟動應用程式再試一次
 
 ### :question: Q: 我的問題不在以上的內容中
 
@@ -61,14 +69,14 @@ npm install -g yarn
 - [ ] 新增雜音抑制
 - [ ] 混音功能
 
-## - 專案倉庫
+## - 專案倉庫 (Repository)
 
 | Repo                                                                                          | Role     |
 | --------------------------------------------------------------------------------------------- | -------- |
 | [/NerdyHomeReOpen/RiceCall](https://github.com/NerdyHomeReOpen/RiceCall)                      | frontend |
 | [/NerdyHomeReOpen/RiceCallServer](https://github.com/NerdyHomeReOpen/RiceCall/tree/Websocket) | backend  |
 
-## - 專案架構
+## - 專案架構 (Framework)
 
 ```bash
 RiceCall
@@ -96,7 +104,7 @@ RiceCall
 ├── yarn.lock                 # Yarn 鎖定依賴版本
 ```
 
-## - 建置本地環境
+## - 建置本地環境 (Build)
 
 1. 安裝 Modules
 
@@ -110,16 +118,16 @@ yarn install
 yarn electron-dev
 ```
 
-3. 啟動 Test-Server (前端開發用)
+3. 啟動 Server (前端開發用)
 
 ```bash
-node ./test-server/index.js
-```
+node ./index.js
+``` 
 
 4. 建置 Database
 
 ```bash
-node ./test-server/initial.js
+node ./initial.js
 ```
 
 客戶端及伺服器即會運行於本地電腦上
@@ -128,7 +136,7 @@ node ./test-server/initial.js
 > 
 > [伺服器端](localhost:4500) (localhost:4500)
 
-## - 免責聲明
+## - 免責聲明 (Disclaimer)
 
 **RiceCall** 是一個**獨立開發**的專案，與 RaidCall 的原開發團隊、伺服器或任何官方組織 **沒有任何關聯**。本專案**並非** RaidCall 的延續或官方授權版本，亦**不涉及恢復過去的 RaidCall 服務或其伺服器**。
 
