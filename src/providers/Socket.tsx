@@ -88,7 +88,7 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
 
   // Effects
   useEffect(() => {
-    console.log('SocketProvider useEffect');
+    console.log('SocketProvider initialization');
 
     setOn(
       Object.values(SocketServerEvent).reduce((acc, event) => {
@@ -110,17 +110,11 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
       }, {} as SocketContextType['send']),
     );
 
-    ipcService.onSocketEvent(SocketServerEvent.CONNECT, handleConnect);
-    ipcService.onSocketEvent(
-      SocketServerEvent.CONNECT_ERROR,
-      handleConnectError,
-    );
-    ipcService.onSocketEvent(SocketServerEvent.RECONNECT, handleReconnect);
-    ipcService.onSocketEvent(
-      SocketServerEvent.RECONNECT_ERROR,
-      handleReconnectError,
-    );
-    ipcService.onSocketEvent(SocketServerEvent.DISCONNECT, handleDisconnect);
+    ipcService.onSocketEvent('connect', handleConnect);
+    ipcService.onSocketEvent('connect_error', handleConnectError);
+    ipcService.onSocketEvent('reconnect', handleReconnect);
+    ipcService.onSocketEvent('reconnect_error', handleReconnectError);
+    ipcService.onSocketEvent('disconnect', handleDisconnect);
 
     return () => {
       console.log('SocketProvider cleanup');

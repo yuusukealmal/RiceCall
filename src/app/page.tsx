@@ -303,16 +303,6 @@ const Home = () => {
   >('home');
 
   // Handlers
-  const handleConnect = () => {
-    setSelectedTabId('home');
-  };
-
-  const handleDisconnect = () => {
-    setSelectedTabId('home');
-    setUser(createDefault.user());
-    setServer(createDefault.server());
-  };
-
   const handleError = (error: StandardizedError) => {
     new errorHandler(error).show();
   };
@@ -323,7 +313,7 @@ const Home = () => {
   };
 
   const handleServerUpdate = (data: Partial<Server> | null) => {
-    setSelectedTabId(data ? 'server' : 'home');
+    if (data && data.id) setSelectedTabId('server');
     if (!data) data = createDefault.server();
     setServer((prev) => ({ ...prev, ...data }));
   };
@@ -355,6 +345,16 @@ const Home = () => {
       unsubscribe.forEach((unsub) => unsub());
     };
   }, [socket]);
+
+  useEffect(() => {
+    if (socket.isConnected) {
+      setSelectedTabId('home');
+    } else {
+      setSelectedTabId('home');
+      setUser(createDefault.user());
+      setServer(createDefault.server());
+    }
+  }, [socket.isConnected]);
 
   useEffect(() => {
     if (!lang) return;
