@@ -13,16 +13,18 @@ RiceCall，RaidCall 的非官方復刻版，使用 react 框架開發，electron
 - 高度還原 RaidCall 介面和功能
 - 重溫曾經的情懷
 
-## - 更新日誌 (Update Log)
-
-### v0.1.0 (2025-03-31)
+## - v0.1.0 更新日誌 (Update Log)
 
 - **初版發布**
-- 支援基礎語音與文字聊天功能
-- 基於 Electron 建構桌面應用
-- 大致還原 UI 介面
+- 高度還原的 UI 介面
+- 基本的語音、文字聊天功能
+- 基本的創建群組、頻道功能
+- 基本的會員管理功能
+- 好友功能 (私訊會在近期版本更新)
 
 ## - 安裝方法
+
+請至 [下載點](https://github.com/NerdyHomeReOpen/RiceCall/releases/latest)，先閱讀過說明文件後再開始下載
 
 ## - 常見問題 (FAQ)
 
