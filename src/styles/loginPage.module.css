@@ -21,8 +21,22 @@
   display: block;
   min-width: 226px;
   min-height: 54px;
-  background: url('../../public/login_logo.png') no-repeat center center;
+  background-image: url('../../public/login_logo.png');
   background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.loadingBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 256px;
+  height: 12px;
+  background-image: url('../../public/icon_loading.gif');
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .formWrapper {
@@ -30,6 +44,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  height: 60%;
   width: 100%;
   gap: 1rem;
 }

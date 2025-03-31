@@ -9,15 +9,26 @@
   background-size: cover;
 }
 
+.loadingBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 256px;
+  height: 12px;
+  background-image: url('../../public/icon_loading.gif');
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 .loginContent {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 60%;
-  flex: 1;
-  padding: 1rem 0;
-  margin: auto;
+  height: 60%;
+  width: 100%;
 }
 
 .formWrapper {
@@ -27,7 +38,6 @@
   justify-content: center;
   width: 300px;
   gap: 1rem;
-  margin: auto;
 }
 
 .errorBox {

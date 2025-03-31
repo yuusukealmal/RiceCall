@@ -118,112 +118,123 @@ const RegisterPage: React.FC<RegisterPageProps> = React.memo(
         <div className={styles['loginContent']}>
           <div className={styles['appLogo']} />
           <div className={styles['formWrapper']}>
-            {errors.general && (
-              <div className={styles['errorBox']}>{errors.general}</div>
-            )}
             {isLoading && (
-              <div className={styles['loadingIndicator']}>
-                {lang.tr.onLogin}
-              </div>
+              <>
+                <div className={styles['loadingIndicator']}>{'註冊中'}</div>
+                <div className={styles['loadingBar']} />
+              </>
             )}
-            <div className={styles['inputWrapper']}>
-              <div className={styles['inputBox']}>
-                <label className={styles['label']}>{lang.tr.account}</label>
-                <input
-                  type="text"
-                  name="account"
-                  value={formData.account}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  placeholder={lang.tr.pleaseInputAccount}
-                  className={styles['input']}
-                  style={{
-                    borderColor: errors.account ? '#f87171' : '#d1d5db',
-                  }}
-                />
-              </div>
-              {errors.account ? (
-                <div className={styles['warning']}>{errors.account}</div>
-              ) : (
-                <div className={styles['hint']}>
-                  {lang.tr.accountCannotChange}
+            {!isLoading && (
+              <>
+                <div className={styles['inputWrapper']}>
+                  {errors.general && (
+                    <div className={styles['errorBox']}>{errors.general}</div>
+                  )}
+                  <div className={styles['inputBox']}>
+                    <label className={styles['label']}>{lang.tr.account}</label>
+                    <input
+                      type="text"
+                      name="account"
+                      value={formData.account}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      placeholder={lang.tr.pleaseInputAccount}
+                      className={styles['input']}
+                      style={{
+                        borderColor: errors.account ? '#f87171' : '#d1d5db',
+                      }}
+                    />
+                  </div>
+                  {errors.account ? (
+                    <div className={styles['warning']}>{errors.account}</div>
+                  ) : (
+                    <div className={styles['hint']}>
+                      {lang.tr.accountCannotChange}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className={styles['inputWrapper']}>
-              <div className={styles['inputBox']}>
-                <label className={styles['label']}>{lang.tr.password}</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  placeholder={lang.tr.pleaseInputPassword}
-                  className={styles['input']}
-                  style={{
-                    borderColor: errors.password ? '#f87171' : '#d1d5db',
-                  }}
-                />
-              </div>
-              {errors.password ? (
-                <div className={styles['warning']}>{errors.password}</div>
-              ) : (
-                <div className={styles['hint']}>{lang.tr.passwordHint}</div>
-              )}
-            </div>
-            <div className={styles['inputWrapper']}>
-              <div className={styles['inputBox']}>
-                <label className={styles['label']}>
-                  {lang.tr.confirmPassword}
-                </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  placeholder={lang.tr.pleaseInputPasswordAgain}
-                  className={styles['input']}
-                  style={{
-                    borderColor: errors.confirmPassword ? '#f87171' : '#d1d5db',
-                  }}
-                />
-              </div>
-              {errors.confirmPassword ? (
-                <div className={styles['warning']}>
-                  {errors.confirmPassword}
+                <div className={styles['inputWrapper']}>
+                  <div className={styles['inputBox']}>
+                    <label className={styles['label']}>
+                      {lang.tr.password}
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      placeholder={lang.tr.pleaseInputPassword}
+                      className={styles['input']}
+                      style={{
+                        borderColor: errors.password ? '#f87171' : '#d1d5db',
+                      }}
+                    />
+                  </div>
+                  {errors.password ? (
+                    <div className={styles['warning']}>{errors.password}</div>
+                  ) : (
+                    <div className={styles['hint']}>{lang.tr.passwordHint}</div>
+                  )}
                 </div>
-              ) : (
-                <div className={styles['hint']}>
-                  {lang.tr.repeatInputPassword}
+                <div className={styles['inputWrapper']}>
+                  <div className={styles['inputBox']}>
+                    <label className={styles['label']}>
+                      {lang.tr.confirmPassword}
+                    </label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      placeholder={lang.tr.pleaseInputPasswordAgain}
+                      className={styles['input']}
+                      style={{
+                        borderColor: errors.confirmPassword
+                          ? '#f87171'
+                          : '#d1d5db',
+                      }}
+                    />
+                  </div>
+                  {errors.confirmPassword ? (
+                    <div className={styles['warning']}>
+                      {errors.confirmPassword}
+                    </div>
+                  ) : (
+                    <div className={styles['hint']}>
+                      {lang.tr.repeatInputPassword}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className={styles['inputWrapper']}>
-              <div className={styles['inputBox']}>
-                <label className={styles['label']}>{lang.tr.nickname}</label>
-                <input
-                  name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  placeholder={lang.tr.pleaseInputNickname}
-                  className={styles['input']}
-                  style={{
-                    borderColor: errors.username ? '#f87171' : '#d1d5db',
-                  }}
-                />
-              </div>
-              {errors.username ? (
-                <div className={styles['warning']}>{errors.username}</div>
-              ) : (
-                <div className={styles['hint']}>{lang.tr.nicknameHint}</div>
-              )}
-            </div>
-            <button className={styles['button']} onClick={handleSubmit}>
-              {lang.tr.register}
-            </button>
+                <div className={styles['inputWrapper']}>
+                  <div className={styles['inputBox']}>
+                    <label className={styles['label']}>
+                      {lang.tr.nickname}
+                    </label>
+                    <input
+                      name="username"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      placeholder={lang.tr.pleaseInputNickname}
+                      className={styles['input']}
+                      style={{
+                        borderColor: errors.username ? '#f87171' : '#d1d5db',
+                      }}
+                    />
+                  </div>
+                  {errors.username ? (
+                    <div className={styles['warning']}>{errors.username}</div>
+                  ) : (
+                    <div className={styles['hint']}>{lang.tr.nicknameHint}</div>
+                  )}
+                </div>
+                <button className={styles['button']} onClick={handleSubmit}>
+                  {lang.tr.register}
+                </button>
+              </>
+            )}
           </div>
         </div>
         <div className={styles['loginFooter']}>
