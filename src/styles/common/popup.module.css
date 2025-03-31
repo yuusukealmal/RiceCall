@@ -350,8 +350,9 @@
   object-fit: cover;
   display: inline-block;
   background-image: url('../../../public/im/IMLogo.png');
-  background-size: contain;
-  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
 }
 
 .userProfile .avatar::after {

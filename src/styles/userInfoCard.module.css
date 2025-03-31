@@ -58,8 +58,10 @@
 .avatarPicture {
   min-height: 98px;
   min-width: 98px;
-  background: url('../../public/im/IMLogo.png') no-repeat center center;
+  background-image: url('../../public/im/IMLogo.png');
+  background-repeat: no-repeat;
   background-size: cover;
+  background-position: center center;
 }
 
 .userInfoWrapper {

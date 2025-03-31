@@ -27,9 +27,10 @@
   object-fit: cover;
   min-width: 40px;
   min-height: 40px;
-  background: url('../../public/im/SecretaryLogo.png') no-repeat center center;
-  background-size: contain;
-  background-position: 0 0;
+  background-image: url('../../public/im/SecretaryLogo.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
 }
 
 .avatarPicture::before {
