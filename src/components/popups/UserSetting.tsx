@@ -51,8 +51,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
       name: User['name'];
       gender: User['gender'];
       signature: User['signature'];
-      avatar: User['avatar'];
-      avatarUrl: User['avatarUrl'];
       level: User['level'];
       vip: User['vip'];
       birthYear: User['birthYear'];
@@ -63,8 +61,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
       name: createDefault.user().name,
       gender: createDefault.user().gender,
       signature: createDefault.user().signature,
-      avatar: createDefault.user().avatar,
-      avatarUrl: createDefault.user().avatarUrl,
       level: createDefault.user().level,
       vip: createDefault.user().vip,
       birthYear: createDefault.user().birthYear,
@@ -72,6 +68,12 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
       birthDay: createDefault.user().birthDay,
       country: createDefault.user().country,
     }));
+    const [userAvatar, setUserAvatar] = useState<User['avatar']>(
+      createDefault.user().avatar,
+    );
+    const [userAvatarUrl, setUserAvatarUrl] = useState<User['avatarUrl']>(
+      createDefault.user().avatarUrl,
+    );
 
     // Computed values
     const { userId } = initialData;
@@ -164,8 +166,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
         name: data.name,
         gender: data.gender,
         signature: data.signature,
-        avatar: data.avatar,
-        avatarUrl: data.avatarUrl,
         level: data.level,
         vip: data.vip,
         birthYear: data.birthYear,
@@ -173,29 +173,8 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
         birthDay: data.birthDay,
         country: data.country,
       });
+      setUserAvatarUrl(data.avatarUrl);
     }, []);
-
-    const handleAvatarUpload = useCallback(
-      async (file: File) => {
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const formData = new FormData();
-          formData.append('_type', 'user');
-          formData.append('_fileName', userData.avatar);
-          formData.append('_file', reader.result as string);
-          const data = await apiService.post('/upload', formData);
-          if (data) {
-            setUserData((prev) => ({
-              ...prev,
-              avatar: data.avatar,
-              avatarUrl: data.avatarUrl,
-            }));
-          }
-        };
-        reader.readAsDataURL(file);
-      },
-      [userData.avatar],
-    );
 
     // Effects
     useEffect(() => {
@@ -278,7 +257,7 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
           <div className={popup['header']}>
             <div
               className={popup['avatar']}
-              style={{ backgroundImage: `url(${userData.avatarUrl})` }}
+              style={{ backgroundImage: `url(${userAvatarUrl})` }}
               onClick={() => {
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
@@ -286,7 +265,20 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                 fileInput.onchange = (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (!file) return;
-                  handleAvatarUpload(file);
+
+                  const reader = new FileReader();
+                  reader.onloadend = async () => {
+                    const formData = new FormData();
+                    formData.append('_type', 'user');
+                    formData.append('_fileName', userAvatar);
+                    formData.append('_file', reader.result as string);
+                    const data = await apiService.post('/upload', formData);
+                    if (data) {
+                      setUserAvatar(data.avatar);
+                      setUserAvatarUrl(data.avatarUrl);
+                    }
+                  };
+                  reader.readAsDataURL(file);
                 };
                 fileInput.click();
               }}
@@ -582,7 +574,11 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                 : ''
             }`}
             onClick={() => {
-              handleUpdateUser(userData);
+              handleUpdateUser({
+                ...userData,
+                avatar: userAvatar,
+                avatarUrl: userAvatarUrl,
+              });
               handleClose();
             }}
           >
