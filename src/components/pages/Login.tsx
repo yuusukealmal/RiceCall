@@ -80,67 +80,76 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
       <div className={styles['loginContent']}>
         <div className={styles['appLogo']} />
         <div className={styles['formWrapper']}>
-          {errors.general && (
-            <div className={styles['errorBox']}>{errors.general}</div>
-          )}
           {isLoading && (
-            <div className={styles['loadingIndicator']}>{lang.tr.onLogin}</div>
+            <>
+              <div className={styles['loadingIndicator']}>
+                {lang.tr.onLogin}
+              </div>
+              <div className={styles['loadingBar']} />
+            </>
           )}
-          <div className={styles['inputBox']}>
-            <label className={styles['label']}>{lang.tr.account}</label>
-            <input
-              type="text"
-              name="account"
-              value={formData.account}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              placeholder={lang.tr.pleaseInputAccount}
-              className={styles['input']}
-              style={{
-                borderColor: errors.account ? '#f87171' : '#d1d5db',
-              }}
-            />
-          </div>
-          <div className={styles['inputBox']}>
-            <label className={styles['label']}>{lang.tr.password}</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              placeholder={lang.tr.pleaseInputPassword}
-              className={styles['input']}
-              style={{
-                borderColor: errors.password ? '#f87171' : '#d1d5db',
-              }}
-            />
-          </div>
-          <div className={styles['checkWrapper']}>
-            <label className={styles['checkBox']}>
-              <input
-                type="checkbox"
-                name="rememberAccount"
-                checked={formData.rememberAccount}
-                onChange={handleInputChange}
-                className={styles['check']}
-              />
-              {lang.tr.rememberAccount}
-            </label>
-            <label className={styles['checkBox']}>
-              <input
-                type="checkbox"
-                name="autoLogin"
-                checked={formData.autoLogin}
-                onChange={handleInputChange}
-                className={styles['check']}
-              />
-              {lang.tr.autoLogin}
-            </label>
-          </div>
-          <button className={styles['button']} onClick={handleSubmit}>
-            {lang.tr.login}
-          </button>
+          {!isLoading && (
+            <>
+              {errors.general && (
+                <div className={styles['errorBox']}>{errors.general}</div>
+              )}
+              <div className={styles['inputBox']}>
+                <label className={styles['label']}>{lang.tr.account}</label>
+                <input
+                  type="text"
+                  name="account"
+                  value={formData.account}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  placeholder={lang.tr.pleaseInputAccount}
+                  className={styles['input']}
+                  style={{
+                    borderColor: errors.account ? '#f87171' : '#d1d5db',
+                  }}
+                />
+              </div>
+              <div className={styles['inputBox']}>
+                <label className={styles['label']}>{lang.tr.password}</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  placeholder={lang.tr.pleaseInputPassword}
+                  className={styles['input']}
+                  style={{
+                    borderColor: errors.password ? '#f87171' : '#d1d5db',
+                  }}
+                />
+              </div>
+              <div className={styles['checkWrapper']}>
+                <label className={styles['checkBox']}>
+                  <input
+                    type="checkbox"
+                    name="rememberAccount"
+                    checked={formData.rememberAccount}
+                    onChange={handleInputChange}
+                    className={styles['check']}
+                  />
+                  {lang.tr.rememberAccount}
+                </label>
+                <label className={styles['checkBox']}>
+                  <input
+                    type="checkbox"
+                    name="autoLogin"
+                    checked={formData.autoLogin}
+                    onChange={handleInputChange}
+                    className={styles['check']}
+                  />
+                  {lang.tr.autoLogin}
+                </label>
+              </div>
+              <button className={styles['button']} onClick={handleSubmit}>
+                {lang.tr.login}
+              </button>
+            </>
+          )}
         </div>
       </div>
       {/* Footer */}
