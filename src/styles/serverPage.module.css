@@ -282,7 +282,6 @@
 }
 
 .channelList .channelTab .channelTabLable {
-  font-size: 1.1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -290,7 +289,6 @@
 
 .channelList .channelTab .channelTabCount {
   color: #555;
-  font-size: 1.1rem;
 }
 
 .channelList .channelList:not(.lobby) .channelTab,
@@ -303,9 +301,9 @@
 }
 
 .userList {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex: 1;
   overflow-y: auto;
 }
 
@@ -324,7 +322,6 @@
 }
 
 .userList .userTab .userTabName {
-  font-size: 1.1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -491,7 +488,7 @@
 
 .micText {
   margin-left: 5px;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   color: #28a0da;
   font-family: 'Noto Sans TC', '微軟正黑體', sans-serif;
 }
