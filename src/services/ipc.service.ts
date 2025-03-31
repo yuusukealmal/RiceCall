@@ -31,7 +31,16 @@ const ipcService = {
       console.warn('IPC not available - not in Electron environment');
     }
   },
-  onSocketEvent: (event: SocketServerEvent, callback: (data: any) => void) => {
+  onSocketEvent: (
+    event:
+      | SocketServerEvent
+      | 'connect'
+      | 'connect_error'
+      | 'reconnect'
+      | 'reconnect_error'
+      | 'disconnect',
+    callback: (data: any) => void,
+  ) => {
     if (isElectron) {
       ipcRenderer.on(event, (_: any, data: any) => callback(data));
     } else {
