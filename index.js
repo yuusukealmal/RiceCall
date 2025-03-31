@@ -31,14 +31,10 @@ const {
   UPLOADS_DIR,
   SERVER_AVATAR_DIR,
   USER_AVATAR_DIR,
+  BACKUP_DIR,
 } = require('./constant');
 
 const DB_PATH = path.join(__dirname, 'path/to/json.sqlite');
-const BACKUP_DIR = path.join(__dirname, 'backups');
-
-if (!fs.existsSync(BACKUP_DIR)) {
-  fs.mkdirSync(BACKUP_DIR);
-}
 
 const backupDatabase = async () => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');

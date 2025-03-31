@@ -27,16 +27,19 @@ const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' };
 const UPLOADS_PATH = 'uploads';
 const SERVER_AVATAR_PATH = 'serverAvatars';
 const USER_AVATAR_PATH = 'userAvatars';
+const BACKUP_PATH = 'backups';
 const UPLOADS_DIR = path.join(__dirname, UPLOADS_PATH);
 const SERVER_AVATAR_DIR = path.join(
   __dirname,
   UPLOADS_PATH,
   SERVER_AVATAR_PATH,
 );
+const BACKUP_DIR = path.join(__dirname, BACKUP_PATH);
 const USER_AVATAR_DIR = path.join(__dirname, UPLOADS_PATH, USER_AVATAR_PATH);
 fs.mkdir(UPLOADS_DIR, { recursive: true }).catch(console.error);
 fs.mkdir(SERVER_AVATAR_DIR, { recursive: true }).catch(console.error);
 fs.mkdir(USER_AVATAR_DIR, { recursive: true }).catch(console.error);
+fs.mkdir(BACKUP_DIR, { recursive: true }).catch(console.error);
 
 module.exports = {
   XP_SYSTEM,
@@ -50,4 +53,5 @@ module.exports = {
   UPLOADS_DIR,
   SERVER_AVATAR_DIR,
   USER_AVATAR_DIR,
+  BACKUP_DIR,
 };
