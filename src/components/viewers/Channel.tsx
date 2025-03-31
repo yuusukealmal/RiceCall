@@ -421,7 +421,6 @@ const UserTab: React.FC<UserTabProps> = React.memo(
     } = channelMember;
     const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max leve
     const isCurrentUser = userId === channelMemberUserId;
-    const canEdit = permissionLevel > channelMemberPermission;
     // const isSpeaking = isCurrentUser
     //   ? webRTC.speakingUsers?.includes('local')
     //   : webRTC.speakingUsers?.includes(channelMemberUserId);
@@ -486,23 +485,30 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                   channelMember.serverId,
                   channelMemberUserId,
                 ),
-              show: isCurrentUser || canEdit,
+              show: isCurrentUser || permissionLevel > 4,
             },
             {
               id: 'separator',
               label: '',
-              show: !isCurrentUser && canEdit,
+              show:
+                !isCurrentUser &&
+                permissionLevel > channelMemberPermission &&
+                (channelMemberPermission > 1 || permissionLevel > 5),
             },
             {
               id: 'member-management',
               label: lang.tr.memberManagement,
-              show: !isCurrentUser && canEdit,
+              show:
+                !isCurrentUser &&
+                permissionLevel > channelMemberPermission &&
+                (channelMemberPermission > 1 || permissionLevel > 5),
               icon: 'submenu',
               hasSubmenu: true,
               submenuItems: [
                 {
                   id: 'set-guest',
                   label: lang.tr.setGuest,
+                  show: permissionLevel > 5 && channelMemberPermission !== 1,
                   onClick: () =>
                     handleUpdateMember(
                       { permissionLevel: 1 },
@@ -513,6 +519,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 {
                   id: 'set-member',
                   label: lang.tr.setMember,
+                  show: permissionLevel > 2 && channelMemberPermission !== 2,
                   onClick: () =>
                     handleUpdateMember(
                       { permissionLevel: 2 },
@@ -523,6 +530,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 {
                   id: 'set-channel-admin',
                   label: lang.tr.setChannelAdmin,
+                  show: permissionLevel > 3 && channelMemberPermission !== 3,
                   onClick: () =>
                     handleUpdateMember(
                       { permissionLevel: 3 },
@@ -533,6 +541,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 {
                   id: 'set-category-admin',
                   label: lang.tr.setCategoryAdmin,
+                  show: permissionLevel > 4 && channelMemberPermission !== 4,
                   onClick: () =>
                     handleUpdateMember(
                       { permissionLevel: 4 },
@@ -543,6 +552,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
                 {
                   id: 'set-admin',
                   label: lang.tr.setAdmin,
+                  show: permissionLevel > 5 && channelMemberPermission !== 5,
                   onClick: () =>
                     handleUpdateMember(
                       { permissionLevel: 5 },
