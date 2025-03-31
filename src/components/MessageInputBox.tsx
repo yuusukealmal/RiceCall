@@ -80,8 +80,6 @@ const MessageInputBox: React.FC<MessageInputBoxProps> = React.memo(
         </div>
 
         <textarea
-          className={`${messageInputBox['textarea']} 
-          ${isDisabled ? 'bg-transparent' : ''}`}
           rows={2}
           placeholder={placeholder}
           value={messageInput}
