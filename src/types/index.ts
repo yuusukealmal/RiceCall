@@ -301,6 +301,44 @@ export interface Translation {
   male: string;
   female: string;
   taiwan: string;
+  china: string;
+  japan: string;
+  korea: string;
+  usa: string;
+  uk: string;
+  france: string;
+  germany: string;
+  italy: string;
+  spain: string;
+  portugal: string;
+  brazil: string;
+  argentina: string;
+  mexico: string;
+  colombia: string;
+  chile: string;
+  peru: string;
+  venezuela: string;
+  bolivia: string;
+  ecuador: string;
+  paraguay: string;
+  uruguay: string;
+  nigeria: string;
+  southAfrica: string;
+  india: string;
+  indonesia: string;
+  malaysia: string;
+  philippines: string;
+  thailand: string;
+  vietnam: string;
+  turkey: string;
+  saudiArabia: string;
+  qatar: string;
+  kuwait: string;
+  oman: string;
+  bahrain: string;
+  algeria: string;
+  morocco: string;
+  tunisia: string;
   wealthValue: string;
   addFriendGroup: string;
   getHelp: string;
@@ -636,6 +674,44 @@ export const translations: Record<LanguageKey, Translation> = {
     male: '男性',
     female: '女性',
     taiwan: '台灣',
+    china: '中國',
+    japan: '日本',
+    korea: '韓國',
+    usa: '美國',
+    uk: '英國',
+    france: '法國',
+    germany: '德國',
+    italy: '義大利',
+    spain: '西班牙',
+    portugal: '葡萄牙',
+    brazil: '巴西',
+    argentina: '阿根廷',
+    mexico: '墨西哥',
+    colombia: '哥倫比亞',
+    chile: '智利',
+    peru: '秘魯',
+    venezuela: '委內瑞拉',
+    bolivia: '玻利維亞',
+    ecuador: '厄瓜多爾',
+    paraguay: '巴拉圭',
+    uruguay: '烏拉圭',
+    nigeria: '奈及利亞',
+    southAfrica: '南非',
+    india: '印度',
+    indonesia: '印尼',
+    malaysia: '馬來西亞',
+    philippines: '菲律賓',
+    thailand: '泰國',
+    vietnam: '越南',
+    turkey: '土耳其',
+    saudiArabia: '沙烏地阿拉伯',
+    qatar: '卡達',
+    kuwait: '科威特',
+    oman: '阿曼',
+    bahrain: '巴林',
+    algeria: '阿爾及利亞',
+    morocco: '摩洛哥',
+    tunisia: '突尼西亞',
     wealthValue: '0',
     addFriendGroup: '請填寫分組名稱',
     getHelp: '獲得協助',
@@ -968,6 +1044,44 @@ export const translations: Record<LanguageKey, Translation> = {
     male: '男性',
     female: '女性',
     taiwan: '台湾',
+    china: '中国',
+    japan: '日本',
+    korea: '韩国',
+    usa: '美国',
+    uk: '英国',
+    france: '法国',
+    germany: '德国',
+    italy: '意大利',
+    spain: '西班牙',
+    portugal: '葡萄牙',
+    brazil: '巴西',
+    argentina: '阿根廷',
+    mexico: '墨西哥',
+    colombia: '哥伦比亚',
+    chile: '智利',
+    peru: '秘鲁',
+    venezuela: '委内瑞拉',
+    bolivia: '玻利维亚',
+    ecuador: '厄瓜多尔',
+    paraguay: '巴拉圭',
+    uruguay: '乌拉圭',
+    nigeria: '尼日利亚',
+    southAfrica: '南非',
+    india: '印度',
+    indonesia: '印度尼西亚',
+    malaysia: '马来西亚',
+    philippines: '菲律宾',
+    thailand: '泰国',
+    vietnam: '越南',
+    turkey: '土耳其',
+    saudiArabia: '沙特阿拉伯',
+    qatar: '卡塔尔',
+    kuwait: '科威特',
+    oman: '阿曼',
+    bahrain: '巴林',
+    algeria: '阿尔及利亚',
+    morocco: '摩洛哥',
+    tunisia: '突尼斯',
     wealthValue: '0',
     addFriendGroup: '请输入分组名称',
     getHelp: 'Get Help',
@@ -1315,6 +1429,44 @@ export const translations: Record<LanguageKey, Translation> = {
     male: 'Male',
     female: 'Female',
     taiwan: 'Taiwan',
+    china: 'China',
+    japan: 'Japan',
+    korea: 'Korea',
+    usa: 'USA',
+    uk: 'UK',
+    france: 'France',
+    germany: 'Germany',
+    italy: 'Italy',
+    spain: 'Spain',
+    portugal: 'Portugal',
+    brazil: 'Brazil',
+    argentina: 'Argentina',
+    mexico: 'Mexico',
+    colombia: 'Colombia',
+    chile: 'Chile',
+    peru: 'Peru',
+    venezuela: 'Venezuela',
+    bolivia: 'Bolivia',
+    ecuador: 'Ecuador',
+    paraguay: 'Paraguay',
+    uruguay: 'Uruguay',
+    nigeria: 'Nigeria',
+    southAfrica: 'South Africa',
+    india: 'India',
+    indonesia: 'Indonesia',
+    malaysia: 'Malaysia',
+    philippines: 'Philippines',
+    thailand: 'Thailand',
+    vietnam: 'Vietnam',
+    turkey: 'Turkey',
+    saudiArabia: 'Saudi Arabia',
+    qatar: 'Qatar',
+    kuwait: 'Kuwait',
+    oman: 'Oman',
+    bahrain: 'Bahrain',
+    algeria: 'Algeria',
+    morocco: 'Morocco',
+    tunisia: 'Tunisia',
     wealthValue: '0',
     addFriendGroup: 'Please fill in the subgroup name',
     getHelp: 'Get Help',
@@ -1667,6 +1819,44 @@ export const translations: Record<LanguageKey, Translation> = {
     male: '男性',
     female: '女性',
     taiwan: '台湾',
+    china: '中国',
+    japan: '日本',
+    korea: '韓国',
+    usa: 'アメリカ',
+    uk: '英国',
+    france: 'フランス',
+    germany: 'ドイツ',
+    italy: 'イタリア',
+    spain: 'スペイン',
+    portugal: 'ポルトガル',
+    brazil: 'ブラジル',
+    argentina: 'アルゼンチン',
+    mexico: 'メキシコ',
+    colombia: 'コロンビア',
+    chile: 'チリ',
+    peru: 'ペルー',
+    venezuela: 'ベネズエラ',
+    bolivia: 'ボリビア',
+    ecuador: 'エクアドル',
+    paraguay: 'パラグアイ',
+    uruguay: 'ウルグアイ',
+    nigeria: 'ナイジェリア',
+    southAfrica: '南アフリカ',
+    india: 'インド',
+    indonesia: 'インドネシア',
+    malaysia: 'マレーシア',
+    philippines: 'フィリピン',
+    thailand: 'タイ',
+    vietnam: 'ベトナム',
+    turkey: 'トルコ',
+    saudiArabia: 'サウジアラビア',
+    qatar: 'カタール',
+    kuwait: 'クウェート',
+    oman: 'オマーン',
+    bahrain: 'バーレーン',
+    algeria: 'アルジェリア',
+    morocco: 'モロッコ',
+    tunisia: 'チュニジア',
     wealthValue: '0',
     addFriendGroup: 'サブグループ名を記入してください',
     getHelp: 'ヘルプを取得',
@@ -1720,6 +1910,10 @@ export type User = {
   progress: number;
   status: 'online' | 'dnd' | 'idle' | 'gn';
   gender: 'Male' | 'Female';
+  birthYear: number;
+  birthMonth: number;
+  birthDay: number;
+  country: string;
   currentChannelId: string;
   currentServerId: string;
   lastActiveAt: number;
