@@ -56,7 +56,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const refreshed = useRef(false);
 
     // States
-    const [sidebarWidth, setSidebarWidth] = useState<number>(256);
+    const [sidebarWidth, setSidebarWidth] = useState<number>(270);
     const [isResizing, setIsResizing] = useState<boolean>(false);
     const [isFavorite, setIsFavorite] = useState<boolean>(
       user.favServers?.some((favServer) => favServer.id === server.id) || false,

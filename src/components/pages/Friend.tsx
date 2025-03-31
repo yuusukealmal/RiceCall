@@ -41,7 +41,7 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
     // States
     const [input, setInput] = useState<string>(user.signature);
     const [isComposing, setIsComposing] = useState<boolean>(false);
-    const [sidebarWidth, setSidebarWidth] = useState<number>(256);
+    const [sidebarWidth, setSidebarWidth] = useState<number>(270);
     const [isResizing, setIsResizing] = useState<boolean>(false);
 
     // Variables
