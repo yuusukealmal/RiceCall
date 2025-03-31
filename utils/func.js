@@ -276,14 +276,6 @@ const func = {
           401,
         );
       }
-      if (user.name && user.name.length < 2) {
-        throw new StandardizedError(
-          '顯示名稱不能小於2個字符',
-          'ValidationError',
-          'USER',
-          'USERNAME_TOO_SHORT',
-        );
-      }
       if (user.name && user.name.length > 32) {
         throw new StandardizedError(
           '顯示名稱不能超過32個字符',
