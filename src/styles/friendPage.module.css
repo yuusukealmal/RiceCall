@@ -359,8 +359,11 @@
 }
 
 .friendCard .name {
-  font-weight: bold;
   font-size: 1rem;
+  font-weight: bold;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .friendCard .signature {
