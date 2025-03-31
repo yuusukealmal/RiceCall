@@ -171,18 +171,18 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
   const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
 
   // Handlers
-  // const handleOpenDirectMessage = (
-  //   userId: User['id'],
-  //   targetId: User['id'],
-  //   targetName: User['name'],
-  // ) => {
-  //   ipcService.popup.open(PopupType.DIRECT_MESSAGE);
-  //   ipcService.initialData.onRequest(PopupType.DIRECT_MESSAGE, {
-  //     userId,
-  //     targetId,
-  //     targetName,
-  //   });
-  // };
+  const handleOpenDirectMessage = (
+    userId: User['id'],
+    targetId: User['id'],
+    targetName: User['name'],
+  ) => {
+    ipcService.popup.open(PopupType.DIRECT_MESSAGE);
+    ipcService.initialData.onRequest(PopupType.DIRECT_MESSAGE, {
+      userId,
+      targetId,
+      targetName,
+    });
+  };
 
   // Handlers
   const handleServerUpdate = (server: Server | null) => {
@@ -246,9 +246,9 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
             },
           ]);
         }}
-        // onDoubleClick={() => {
-        //   handleOpenDirectMessage(friendUserId1, friendUserId2, friendName);
-        // }}
+        onDoubleClick={() => {
+          handleOpenDirectMessage(friendUserId, friendTargetId, friendName);
+        }}
       >
         <div
           className={styles['avatarPicture']}
