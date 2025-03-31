@@ -1,7 +1,7 @@
 {
   "name": "ricecall",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "main": "main.js",
   "description": "Ricecall is a voice chat app that allows you to chat with your friends.",
