@@ -550,7 +550,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                   </div>
                 </div>
                 <div className={`${popup['inputBox']} ${popup['col']}`}>
-                  <table style={{ minHeight: '260px' }}>
+                  <table style={{ height: '260px' }}>
                     <thead>
                       <tr>
                         {MEMBER_FIELDS.map((field) => (
@@ -563,14 +563,12 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                             }
                           >
                             {field.name}
-                            <span className="absolute right-0">
-                              {sortField === field.field &&
-                                (sortState === 1 ? (
-                                  <ChevronUp size={16} />
-                                ) : (
-                                  <ChevronDown size={16} />
-                                ))}
-                            </span>
+                            {sortField === field.field &&
+                              (sortState === 1 ? (
+                                <ChevronUp size={16} />
+                              ) : (
+                                <ChevronDown size={16} />
+                              ))}
                           </th>
                         ))}
                       </tr>
@@ -730,21 +728,19 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                             }}
                           >
                             <td>
-                              <div className={popup['row']}>
-                                <div
-                                  className={`${permission[memberGender]} ${
-                                    permission[`lv-${memberPermissionLevel}`]
-                                  }`}
-                                />
-                                <div
-                                  className={`${popup['p1']} ${
-                                    memberNickname && memberName
-                                      ? setting['memberName']
-                                      : ''
-                                  }`}
-                                >
-                                  {memberNickname || memberName}
-                                </div>
+                              <div
+                                className={`${permission[memberGender]} ${
+                                  permission[`lv-${memberPermissionLevel}`]
+                                }`}
+                              />
+                              <div
+                                className={`${popup['p1']} ${
+                                  memberNickname && memberName
+                                    ? setting['memberName']
+                                    : ''
+                                }`}
+                              >
+                                {memberNickname || memberName}
                               </div>
                             </td>
                             <td>
@@ -861,7 +857,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                   </div>
                 </div>
                 <div className={`${popup['inputBox']} ${popup['col']}`}>
-                  <table style={{ minHeight: '260px' }}>
+                  <table style={{ height: '260px' }}>
                     <thead>
                       <tr>
                         {APPLICATION_FIELDS.map((field) => (
@@ -874,14 +870,12 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                             }
                           >
                             {field.name}
-                            <span className="absolute right-0">
-                              {sortField === field.field &&
-                                (sortState === 1 ? (
-                                  <ChevronUp size={16} />
-                                ) : (
-                                  <ChevronDown size={16} />
-                                ))}
-                            </span>
+                            {sortField === field.field &&
+                              (sortState === 1 ? (
+                                <ChevronUp size={16} />
+                              ) : (
+                                <ChevronDown size={16} />
+                              ))}
                           </th>
                         ))}
                       </tr>
@@ -980,7 +974,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                   </div>
                 </div>
                 <div className={`${popup['inputBox']} ${popup['col']}`}>
-                  <table style={{ minHeight: '260px' }}>
+                  <table style={{ height: '260px' }}>
                     <thead>
                       <tr>
                         {BLOCK_MEMBER_FIELDS.map((field) => (
@@ -993,14 +987,12 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                             }
                           >
                             {field.name}
-                            <span className="absolute right-0">
-                              {sortField === field.field &&
-                                (sortState === 1 ? (
-                                  <ChevronUp size={16} />
-                                ) : (
-                                  <ChevronDown size={16} />
-                                ))}
-                            </span>
+                            {sortField === field.field &&
+                              (sortState === 1 ? (
+                                <ChevronUp size={16} />
+                              ) : (
+                                <ChevronDown size={16} />
+                              ))}
                           </th>
                         ))}
                       </tr>
