@@ -222,8 +222,11 @@
 }
 
 .myGroupsRoomName {
-  font-size: 1.1rem;
   color: #10469e;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .myGroupsRoomIDBox {
