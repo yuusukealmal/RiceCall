@@ -641,7 +641,12 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
 
     return (
       <div
-        style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
+        style={{
+          minHeight: '0',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
         onContextMenu={(e) => {
           if (
             !(e.target as HTMLElement).closest(`.${styles['channelTab']}`) &&
@@ -659,7 +664,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
           }
         }}
       >
-        <div style={{ flexGrow: 1, overflow: 'auto' }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
           {/* Current Channel */}
           <div className={styles['currentChannelBox']}>
             <div
