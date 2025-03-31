@@ -332,7 +332,6 @@
 /* User Status */
 
 .userStatus {
-  max-width: 7rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -352,7 +351,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 220px;
   padding: 3px;
 }
 
