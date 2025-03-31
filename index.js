@@ -4,7 +4,8 @@ const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const formidable = require('formidable');
 
@@ -46,25 +47,25 @@ const backupDatabase = async () => {
   const backupFilePath = path.join(BACKUP_DIR, backupFileName);
 
   try {
-    await fs.copyFile(DB_PATH, backupFilePath);
+    await fsPromises.copyFile(DB_PATH, backupFilePath);
     console.log(`備份成功: ${backupFilePath}`);
   } catch (err) {
     console.error('備份失敗:', err);
   }
 
   try {
-    const files = await fs.readdir(BACKUP_DIR);
+    const files = await fsPromises.readdir(BACKUP_DIR);
     const now = Date.now();
     const expirationTime = 8 * 60 * 60 * 1000;
 
     await Promise.all(
       files.map(async (file) => {
         const filePath = path.join(BACKUP_DIR, file);
-        const stats = await fs.stat(filePath);
+        const stats = await fsPromises.stat(filePath);
         const fileAge = now - stats.mtimeMs;
 
         if (fileAge > expirationTime) {
-          await fs.unlink(filePath);
+          await fsPromises.unlink(filePath);
           console.log(`刪除過期備份: ${filePath}`);
         }
       }),
@@ -577,7 +578,7 @@ const server = http.createServer((req, res) => {
       }
 
       // Read and serve the file
-      fs.readFile(fullFilePath)
+      fsPromises.readFile(fullFilePath)
         .then((data) => {
           res.writeHead(200, {
             'Content-Type':
@@ -715,14 +716,14 @@ const server = http.createServer((req, res) => {
         const filePath = path.join(Dir(), `${filePrefix}${fullFileName}`);
 
         try {
-          const files = await fs.readdir(Dir());
+          const files = await fsPromises.readdir(Dir());
           const matchingFiles = files.filter(
             (file) =>
               file.startsWith(`${filePrefix}${fileName}`) &&
               !file.startsWith('__'),
           );
           await Promise.all(
-            matchingFiles.map((file) => fs.unlink(path.join(Dir(), file))),
+            matchingFiles.map((file) => fsPromises.unlink(path.join(Dir(), file))),
           );
         } catch (error) {
           if (error.code !== 'ENOENT') {
@@ -742,7 +743,7 @@ const server = http.createServer((req, res) => {
         // Return Avatar URL Example:
         // 'http://localhost:4500/images/serverAvatars/test.jpg'
 
-        await fs.writeFile(filePath, dataBuffer);
+        await fsPromises.writeFile(filePath, dataBuffer);
         sendSuccess(res, {
           message: 'success',
           data: {
@@ -781,6 +782,12 @@ const io = new Server(server, {
     origin: '*', // Allow all origins
     methods: ['GET', 'POST'],
   },
+});
+
+// 初始化 SFU 管理器
+const sfuManager = require('./sfu');
+sfuManager.initialize().catch(error => {
+  new Logger('SFU').error(`初始化 SFU 管理器時發生錯誤: ${error.message}`);
 });
 
 require('./socket/index')(io, db);

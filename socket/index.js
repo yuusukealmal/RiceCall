@@ -86,7 +86,10 @@ module.exports = (io) => {
     // Connect
     userHandler.connectUser(io, socket);
     // Disconnect
-    socket.on('disconnect', () => userHandler.disconnectUser(io, socket));
+    socket.on('disconnect', () => {
+      userHandler.disconnectUser(io, socket);
+      rtcHandler.disconnect(socket);
+    });
     // User
     socket.on('searchUser', async (data) =>
       userHandler.searchUser(io, socket, data),
@@ -189,5 +192,7 @@ module.exports = (io) => {
     socket.on('RTCIceCandidate', async (data) =>
       rtcHandler.candidate(io, socket, data),
     );
+    socket.on('RTCJoin', async (data) => rtcHandler.join(io, socket, data));
+    socket.on('RTCLeave', async (data) => rtcHandler.leave(io, socket, data));
   });
 };
