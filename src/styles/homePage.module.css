@@ -229,12 +229,8 @@
 }
 
 .myGroupsRoomIDBox {
-  display: flex;
-}
-
-.myGroupsRoomIDBox,
-.myGroupsRoomSlogen {
   color: #777;
+  display: flex;
 }
 
 .myGroupsRoomIDTitle {
@@ -243,10 +239,10 @@
 }
 
 .myGroupsRoomSlogen {
+  color: #777;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 70%;
 }
 
 .myGroupsRoomIDTitle.IsOwner::before {
