@@ -47,27 +47,33 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     const currentDay = today.getDate();
 
     // User states
-    const [userData, setUserData] = useState<{
-      name: User['name'];
-      gender: User['gender'];
-      signature: User['signature'];
-      level: User['level'];
-      vip: User['vip'];
-      birthYear: User['birthYear'];
-      birthMonth: User['birthMonth'];
-      birthDay: User['birthDay'];
-      country: User['country'];
-    }>(() => ({
-      name: createDefault.user().name,
-      gender: createDefault.user().gender,
-      signature: createDefault.user().signature,
-      level: createDefault.user().level,
-      vip: createDefault.user().vip,
-      birthYear: createDefault.user().birthYear,
-      birthMonth: createDefault.user().birthMonth,
-      birthDay: createDefault.user().birthDay,
-      country: createDefault.user().country,
-    }));
+    const [userName, setUserName] = useState<User['name']>(
+      createDefault.user().name,
+    );
+    const [userGender, setUserGender] = useState<User['gender']>(
+      createDefault.user().gender,
+    );
+    const [userSignature, setUserSignature] = useState<User['signature']>(
+      createDefault.user().signature,
+    );
+    const [userLevel, setUserLevel] = useState<User['level']>(
+      createDefault.user().level,
+    );
+    const [userVip, setUserVip] = useState<User['vip']>(
+      createDefault.user().vip,
+    );
+    const [userBirthYear, setUserBirthYear] = useState<User['birthYear']>(
+      createDefault.user().birthYear,
+    );
+    const [userBirthMonth, setUserBirthMonth] = useState<User['birthMonth']>(
+      createDefault.user().birthMonth,
+    );
+    const [userBirthDay, setUserBirthDay] = useState<User['birthDay']>(
+      createDefault.user().birthDay,
+    );
+    const [userCountry, setUserCountry] = useState<User['country']>(
+      createDefault.user().country,
+    );
     const [userAvatar, setUserAvatar] = useState<User['avatar']>(
       createDefault.user().avatar,
     );
@@ -77,7 +83,7 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
 
     // Computed values
     const { userId } = initialData;
-    const userGrade = Math.min(56, Math.ceil(userData.level / 5));
+    const userGrade = Math.min(56, Math.ceil(userLevel / 5));
 
     const getDaysInMonth = useCallback((year: number, month: number) => {
       return new Date(year, month, 0).getDate();
@@ -87,7 +93,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
       (birthYear: number, birthMonth: number, birthDay: number) => {
         const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
         let age = today.getFullYear() - birthDate.getFullYear();
-
         const monthDiff = today.getMonth() - birthDate.getMonth();
         if (
           monthDiff < 0 ||
@@ -101,18 +106,8 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     );
 
     const userAge = useMemo(
-      () =>
-        calculateAge(
-          userData.birthYear,
-          userData.birthMonth,
-          userData.birthDay,
-        ),
-      [
-        calculateAge,
-        userData.birthYear,
-        userData.birthMonth,
-        userData.birthDay,
-      ],
+      () => calculateAge(userBirthYear, userBirthMonth, userBirthDay),
+      [calculateAge, userBirthYear, userBirthMonth, userBirthDay],
     );
 
     // Date options
@@ -133,10 +128,10 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     const days = useMemo(
       () =>
         Array.from(
-          { length: getDaysInMonth(userData.birthYear, userData.birthMonth) },
+          { length: getDaysInMonth(userBirthYear, userBirthMonth) },
           (_, i) => i + 1,
         ),
-      [userData.birthYear, userData.birthMonth, getDaysInMonth],
+      [userBirthYear, userBirthMonth, getDaysInMonth],
     );
 
     // Date validation
@@ -162,17 +157,16 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
 
     const handleUserUpdate = useCallback((data: User | null) => {
       if (!data) data = createDefault.user();
-      setUserData({
-        name: data.name,
-        gender: data.gender,
-        signature: data.signature,
-        level: data.level,
-        vip: data.vip,
-        birthYear: data.birthYear,
-        birthMonth: data.birthMonth,
-        birthDay: data.birthDay,
-        country: data.country,
-      });
+      setUserName(data.name);
+      setUserGender(data.gender);
+      setUserSignature(data.signature);
+      setUserLevel(data.level);
+      setUserVip(data.vip);
+      setUserBirthYear(data.birthYear);
+      setUserBirthMonth(data.birthMonth);
+      setUserBirthDay(data.birthDay);
+      setUserCountry(data.country);
+      setUserAvatar(data.avatar);
       setUserAvatarUrl(data.avatarUrl);
     }, []);
 
@@ -193,20 +187,15 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     }, [userId, handleUserUpdate]);
 
     useEffect(() => {
-      if (
-        isFutureDate(userData.birthYear, userData.birthMonth, userData.birthDay)
-      ) {
-        setUserData((prev) => ({
-          ...prev,
-          birthYear: currentYear,
-          birthMonth: currentMonth,
-          birthDay: currentDay,
-        }));
+      if (isFutureDate(userBirthYear, userBirthMonth, userBirthDay)) {
+        setUserBirthYear(currentYear);
+        setUserBirthMonth(currentMonth);
+        setUserBirthDay(currentDay);
       }
     }, [
-      userData.birthYear,
-      userData.birthMonth,
-      userData.birthDay,
+      userBirthYear,
+      userBirthMonth,
+      userBirthDay,
       currentYear,
       currentMonth,
       currentDay,
@@ -214,32 +203,26 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     ]);
 
     useEffect(() => {
-      const daysInMonth = getDaysInMonth(
-        userData.birthYear,
-        userData.birthMonth,
-      );
-      let newDay = userData.birthDay;
+      const daysInMonth = getDaysInMonth(userBirthYear, userBirthMonth);
+      let newDay = userBirthDay;
 
       if (newDay > daysInMonth) {
         newDay = daysInMonth;
       }
 
-      if (isFutureDate(userData.birthYear, userData.birthMonth, newDay)) {
-        if (
-          userData.birthYear === currentYear &&
-          userData.birthMonth === currentMonth
-        ) {
+      if (isFutureDate(userBirthYear, userBirthMonth, newDay)) {
+        if (userBirthYear === currentYear && userBirthMonth === currentMonth) {
           newDay = Math.min(newDay, currentDay);
         }
       }
 
-      if (newDay !== userData.birthDay) {
-        setUserData((prev) => ({ ...prev, birthDay: newDay }));
+      if (newDay !== userBirthDay) {
+        setUserBirthDay(newDay);
       }
     }, [
-      userData.birthYear,
-      userData.birthMonth,
-      userData.birthDay,
+      userBirthYear,
+      userBirthMonth,
+      userBirthDay,
       currentYear,
       currentMonth,
       currentDay,
@@ -287,12 +270,10 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
               className={popup['row']}
               style={{ alignItems: 'center', gap: '5px' }}
             >
-              <div className={popup['h3']}>{userData.name}</div>
-              {userData.vip > 0 && (
+              <div className={popup['h3']}>{userName}</div>
+              {userVip > 0 && (
                 <div
-                  className={`${vip['vipIcon']} ${
-                    vip[`vip-small-${userData.vip}`]
-                  }`}
+                  className={`${vip['vipIcon']} ${vip[`vip-small-${userVip}`]}`}
                 />
               )}
               <div
@@ -306,14 +287,14 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                 navigator.clipboard.writeText(userId);
               }}
             >
-              @{userData.name}
+              @{userName}
             </div>
             <div className={popup['p1']} style={{ color: '#fff' }}>
-              {lang.tr[userData.gender === 'Male' ? 'male' : 'female']} .{' '}
-              {userAge} .{lang.tr[userData.country as keyof typeof lang.tr]}
+              {lang.tr[userGender === 'Male' ? 'male' : 'female']} . {userAge} .
+              {lang.tr[userCountry as keyof typeof lang.tr]}
             </div>
             <div className={popup['p1']} style={{ color: '#fff' }}>
-              {userData.signature}
+              {userSignature}
             </div>
 
             <div className={popup['tab']}>
@@ -340,12 +321,10 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                   <input
                     type="text"
                     id="profile-form-nickname"
-                    value={userData.name}
+                    value={userName}
                     maxLength={32}
                     minLength={2}
-                    onChange={(e) =>
-                      setUserData((prev) => ({ ...prev, name: e.target.value }))
-                    }
+                    onChange={(e) => setUserName(e.target.value)}
                   />
                 </div>
 
@@ -358,12 +337,9 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                   </label>
                   <div className={popup['selectBox']}>
                     <select
-                      value={userData.gender}
+                      value={userGender}
                       onChange={(e) =>
-                        setUserData((prev) => ({
-                          ...prev,
-                          gender: e.target.value as User['gender'],
-                        }))
+                        setUserGender(e.target.value as User['gender'])
                       }
                     >
                       <option value="Male">{lang.tr.male}</option>
@@ -383,13 +359,8 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                   </label>
                   <div className={popup['selectBox']}>
                     <select
-                      value={userData.country}
-                      onChange={(e) =>
-                        setUserData((prev) => ({
-                          ...prev,
-                          country: e.target.value,
-                        }))
-                      }
+                      value={userCountry}
+                      onChange={(e) => setUserCountry(e.target.value)}
                     >
                       <option value="taiwan">{lang.tr.taiwan}</option>
                       <option value="china">{lang.tr.china}</option>
@@ -445,14 +416,10 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                     <div className={popup['selectBox']}>
                       <select
                         id="birthYear"
-                        value={userData.birthYear}
-                        onChange={(e) => {
-                          const newYear = Number(e.target.value);
-                          setUserData((prev) => ({
-                            ...prev,
-                            birthYear: newYear,
-                          }));
-                        }}
+                        value={userBirthYear}
+                        onChange={(e) =>
+                          setUserBirthYear(Number(e.target.value))
+                        }
                       >
                         {years.map((year) => (
                           <option
@@ -469,21 +436,17 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                       <select
                         className={popup['input']}
                         id="birthMonth"
-                        value={userData.birthMonth}
-                        onChange={(e) => {
-                          const newMonth = Number(e.target.value);
-                          setUserData((prev) => ({
-                            ...prev,
-                            birthMonth: newMonth,
-                          }));
-                        }}
+                        value={userBirthMonth}
+                        onChange={(e) =>
+                          setUserBirthMonth(Number(e.target.value))
+                        }
                       >
                         {months.map((month) => (
                           <option
                             key={month}
                             value={month}
                             disabled={
-                              userData.birthYear === currentYear &&
+                              userBirthYear === currentYear &&
                               month > currentMonth
                             }
                           >
@@ -496,22 +459,18 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                       <select
                         className={popup['input']}
                         id="birthDay"
-                        value={userData.birthDay}
-                        onChange={(e) => {
-                          const newDay = Number(e.target.value);
-                          setUserData((prev) => ({
-                            ...prev,
-                            birthDay: newDay,
-                          }));
-                        }}
+                        value={userBirthDay}
+                        onChange={(e) =>
+                          setUserBirthDay(Number(e.target.value))
+                        }
                       >
                         {days.map((day) => (
                           <option
                             key={day}
                             value={day}
                             disabled={
-                              userData.birthYear === currentYear &&
-                              userData.birthMonth === currentMonth &&
+                              userBirthYear === currentYear &&
+                              userBirthMonth === currentMonth &&
                               day > currentDay
                             }
                           >
@@ -534,14 +493,9 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                 <input
                   type="text"
                   id="profile-form-signature"
-                  value={userData.signature}
+                  value={userSignature}
                   maxLength={200}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      signature: e.target.value,
-                    }))
-                  }
+                  onChange={(e) => setUserSignature(e.target.value)}
                 />
               </div>
 
@@ -563,21 +517,29 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
           </div>
           <div
             className={`${popup['button']} ${
-              !userData.name ||
-              userData.name.length < 2 ||
-              !userData.gender ||
-              !userData.country ||
-              !userData.birthYear ||
-              !userData.birthMonth ||
-              !userData.birthDay
+              !userName ||
+              userName.length < 2 ||
+              !userGender ||
+              !userCountry ||
+              !userBirthYear ||
+              !userBirthMonth ||
+              !userBirthDay
                 ? popup['disabled']
                 : ''
             }`}
             onClick={() => {
               handleUpdateUser({
-                ...userData,
                 avatar: userAvatar,
                 avatarUrl: userAvatarUrl,
+                name: userName,
+                gender: userGender,
+                country: userCountry,
+                birthYear: userBirthYear,
+                birthMonth: userBirthMonth,
+                birthDay: userBirthDay,
+                signature: userSignature,
+                level: userLevel,
+                vip: userVip,
               });
               handleClose();
             }}
