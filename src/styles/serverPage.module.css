@@ -283,6 +283,9 @@
 
 .channelList .channelTab .channelTabLable {
   font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .channelList .channelTab .channelTabCount {
