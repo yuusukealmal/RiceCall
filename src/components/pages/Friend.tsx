@@ -54,7 +54,7 @@ const FriendPageComponent: React.FC<FriendPageProps> = React.memo(
       badges: userBadges = [],
       vip: userVip,
     } = user;
-    const userGrade = Math.min(56, Math.ceil(userLevel / 5)); // 56 is max level
+    const userGrade = Math.min(56, userLevel); // 56 is max level
 
     // Handlers
     const handleChangeSignature = (

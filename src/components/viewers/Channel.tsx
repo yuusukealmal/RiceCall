@@ -419,7 +419,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
       badges: channelMemberBadges = [],
       vip: channelMemberVip,
     } = channelMember;
-    const channelMemberGrade = Math.min(56, Math.ceil(channelMemberLevel / 5)); // 56 is max leve
+    const channelMemberGrade = Math.min(56, channelMemberLevel); // 56 is max leve
     const isCurrentUser = userId === channelMemberUserId;
     // const isSpeaking = isCurrentUser
     //   ? webRTC.speakingUsers?.includes('local')

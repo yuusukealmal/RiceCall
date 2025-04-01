@@ -83,7 +83,7 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
 
     // Computed values
     const { userId } = initialData;
-    const userGrade = Math.min(56, Math.ceil(userLevel / 5));
+    const userGrade = Math.min(56, userLevel);
 
     const getDaysInMonth = useCallback((year: number, month: number) => {
       return new Date(year, month, 0).getDate();

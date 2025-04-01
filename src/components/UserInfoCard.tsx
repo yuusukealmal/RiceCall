@@ -70,7 +70,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
       nickname: memberNickname,
       vip: memberVip,
     } = member;
-    const memberGrade = Math.min(56, Math.ceil(memberLevel / 5));
+    const memberGrade = Math.min(56, memberLevel);
     const vipBoostMultiplier = Math.min(2, 1 + memberVip * 0.2);
 
     return (
