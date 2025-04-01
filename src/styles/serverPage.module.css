@@ -309,8 +309,8 @@
 }
 
 .channelList .channelList:not(.lobby) .channelTab,
-.channelList .channelList:not(.lobby) + .userList .channelTab {
-  padding-left: 16px;
+.channelList .channelList:not(.lobby) .userTab {
+  padding-left: 25px;
 }
 
 .lobby {
