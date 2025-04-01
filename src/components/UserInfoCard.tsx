@@ -138,40 +138,35 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
 
           {/* Bottom Section */}
           <div className={userInfoCard['bottom']}>
-            {/* Member Info Section */}
-            <div className={userInfoCard['bottomContent']}>
-              {/* Nickname Row */}
-              {memberNickname && (
-                <div className={userInfoCard['nicknameRow']}>
-                  <div className={userInfoCard['nickname']}>
-                    {memberNickname}
-                  </div>
-                </div>
-              )}
-              {/* Info Row */}
-              <div className={userInfoCard['infoRow']}>
-                {/* Permission */}
-                <div className={userInfoCard['permissionWrapper']}>
-                  <div
-                    className={`
+            {/* Nickname Row */}
+            {memberNickname && (
+              <div className={userInfoCard['nicknameRow']}>
+                <div className={userInfoCard['nickname']}>{memberNickname}</div>
+              </div>
+            )}
+            {/* Info Row */}
+            <div className={userInfoCard['infoRow']}>
+              {/* Permission */}
+              <div className={userInfoCard['permissionWrapper']}>
+                <div
+                  className={`
                       ${permission[memberGender]} 
                       ${permission[`lv-${memberPermission}`]}`}
-                  />
-                  <div className={userInfoCard['permissionText']}>
-                    {lang.getPermissionText(memberPermission)}
-                  </div>
+                />
+                <div className={userInfoCard['permissionText']}>
+                  {lang.getPermissionText(memberPermission)}
                 </div>
+              </div>
 
-                <div className={userInfoCard['saperator']} />
+              <div className={userInfoCard['saperator']} />
 
-                {/* Contribution */}
-                <div className={userInfoCard['contributionBox']}>
-                  <div className={userInfoCard['contributionText']}>
-                    {lang.tr.contribution}:
-                  </div>
-                  <div className={userInfoCard['contributionValue']}>
-                    {memberContributions}
-                  </div>
+              {/* Contribution */}
+              <div className={userInfoCard['contributionBox']}>
+                <div className={userInfoCard['contributionText']}>
+                  {lang.tr.contribution}:
+                </div>
+                <div className={userInfoCard['contributionValue']}>
+                  {memberContributions}
                 </div>
               </div>
             </div>
