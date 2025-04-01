@@ -517,7 +517,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
           <div
             className={`${popup['button']} ${
               !userName ||
-              userName.length < 2 ||
               !userGender ||
               !userCountry ||
               !userBirthYear ||
