@@ -19,8 +19,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
 
   // State
   const [showSubmenu, setShowSubmenu] = useState(false);
-  const [subMenu, setSubMenu] = useState<React.ReactNode>(null);
-  const [menuWidth, setMenuWidth] = useState(0);
   const [menuX, setMenuX] = useState(x);
   const [menuY, setMenuY] = useState(y);
 
@@ -43,7 +41,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
         newMenuY = windowHeight - menuHeight - 20;
       }
 
-      setMenuWidth(menuWidth);
       setMenuX(newMenuX);
       setMenuY(newMenuY);
     }
