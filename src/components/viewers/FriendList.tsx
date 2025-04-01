@@ -168,7 +168,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
     badges: friendBadges = [],
     currentServerId: friendCurrentServerId,
   } = friend;
-  const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
+  const friendGrade = Math.min(56, friendLevel); // 56 is max level
 
   // Handlers
   const handleOpenDirectMessage = (
