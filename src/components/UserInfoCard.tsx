@@ -90,17 +90,24 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
             />
             {/* Right Info */}
             <div className={userInfoCard['userInfoWrapper']}>
-              <div className={userInfoCard['name']}>{memberName}</div>
-              <div className={`${userInfoCard['iconBox']}`}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 4,
+                }}
+              >
+                <div className={userInfoCard['name']}>{memberName}</div>
                 <div
                   className={`${grade['grade']} ${grade[`lv-${memberGrade}`]}`}
                 />
-                <div
-                  className={`${vip['vipIconBig']} ${
-                    vip[`vip-big-${memberVip}`]
-                  }`}
-                />
               </div>
+              <div
+                className={`${vip['vipIconBig']} ${
+                  vip[`vip-big-${memberVip}`]
+                }`}
+              />
               {/* VIP Info Text */}
               {memberVip > 0 && (
                 <div className={userInfoCard['vipText']}>
@@ -112,26 +119,17 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
               )}
               {/* Xp Section */}
               <div className={userInfoCard['xpWrapper']}>
+                <div className={userInfoCard['levelText']}>
+                  {`${lang.tr.level} ${memberLevel} `}
+                </div>
                 <div className={userInfoCard['xpBox']}>
                   <div
                     className={userInfoCard['xpProgress']}
                     style={{ width: `${memberXpProgress * 100}%` }}
                   />
                 </div>
-
-                <div
-                  className={userInfoCard['xpText']}
-                  style={{ position: 'relative' }}
-                >
+                <div className={userInfoCard['xpText']}>
                   <div>0</div>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: `${memberXpProgress * 100}%`,
-                      transform: 'translateX(-50%) scale(0.8)',
-                    }}
-                    className="flex flex-col items-center"
-                  />
                   <div>{memberRequiredXp}</div>
                 </div>
               </div>
@@ -142,20 +140,23 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
           <div className={userInfoCard['bottom']}>
             {/* Member Info Section */}
             <div className={userInfoCard['bottomContent']}>
-              {/* First Row - Nickname */}
-              <div className={userInfoCard['nicknameRow']}>
-                <div className={userInfoCard['nickname']}>{memberNickname}</div>
-              </div>
-
-              {/* Second Row - Permission & Contribution */}
+              {/* Nickname Row */}
+              {memberNickname && (
+                <div className={userInfoCard['nicknameRow']}>
+                  <div className={userInfoCard['nickname']}>
+                    {memberNickname}
+                  </div>
+                </div>
+              )}
+              {/* Info Row */}
               <div className={userInfoCard['infoRow']}>
                 {/* Permission */}
                 <div className={userInfoCard['permissionWrapper']}>
                   <div
-                    className={`${permission[memberGender]} ${
-                      permission[`lv-${memberPermission}`]
-                    }`}
-                  ></div>
+                    className={`
+                      ${permission[memberGender]} 
+                      ${permission[`lv-${memberPermission}`]}`}
+                  />
                   <div className={userInfoCard['permissionText']}>
                     {lang.getPermissionText(memberPermission)}
                   </div>
