@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // CSS
 import userInfoCard from '@/styles/userInfoCard.module.css';
@@ -23,8 +23,39 @@ interface UserInfoCardProps {
 
 const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
   ({ x, y, member }) => {
+    // Refs
+    const cardRef = useRef<HTMLDivElement>(null);
+
     // Language
     const lang = useLanguage();
+
+    // State
+    const [cardX, setCardX] = useState(x);
+    const [cardY, setCardY] = useState(y);
+
+    // Effect
+    useEffect(() => {
+      if (cardRef.current) {
+        const cardWidth = cardRef.current.offsetWidth;
+        const cardHeight = cardRef.current.offsetHeight;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        let newCardX = x;
+        let newCardY = y;
+
+        if (x + cardWidth > windowWidth - 20) {
+          newCardX = windowWidth - cardWidth - 20;
+        }
+
+        if (y + cardHeight > windowHeight - 20) {
+          newCardY = windowHeight - cardHeight - 20;
+        }
+
+        setCardX(newCardX);
+        setCardY(newCardY);
+      }
+    }, [x, y, cardRef]);
 
     const {
       name: memberName,
@@ -44,10 +75,11 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
 
     return (
       <div
+        ref={cardRef}
         className={`${userInfoCard['userInfoCard']} ${
           userInfoCard[`vip-${memberVip}`]
         }`}
-        style={{ top: y, left: x }}
+        style={{ top: cardY, left: cardX }}
       >
         <div className={userInfoCard['body']}>
           <div className={userInfoCard['top']}>
