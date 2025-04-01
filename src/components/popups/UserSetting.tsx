@@ -47,6 +47,12 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     const currentDay = today.getDate();
 
     // User states
+    const [userAvatar, setUserAvatar] = useState<User['avatar']>(
+      createDefault.user().avatar,
+    );
+    const [userAvatarUrl, setUserAvatarUrl] = useState<User['avatarUrl']>(
+      createDefault.user().avatarUrl,
+    );
     const [userName, setUserName] = useState<User['name']>(
       createDefault.user().name,
     );
@@ -73,12 +79,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     );
     const [userCountry, setUserCountry] = useState<User['country']>(
       createDefault.user().country,
-    );
-    const [userAvatar, setUserAvatar] = useState<User['avatar']>(
-      createDefault.user().avatar,
-    );
-    const [userAvatarUrl, setUserAvatarUrl] = useState<User['avatarUrl']>(
-      createDefault.user().avatarUrl,
     );
 
     // Computed values
@@ -536,8 +536,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                 birthMonth: userBirthMonth,
                 birthDay: userBirthDay,
                 signature: userSignature,
-                level: userLevel,
-                vip: userVip,
               });
               handleClose();
             }}
