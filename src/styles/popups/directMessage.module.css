@@ -1,0 +1,447 @@
+.directBox {
+  height: 100%;
+  width: 100%;
+  background: url(../../../public/dialog_body_bg.png) no-repeat center center;
+  background-size: cover;
+}
+
+.headerBox {
+  display: flex;
+  justify-content: space-between;
+  background-color: #0073c6;
+  -webkit-app-region: drag;
+}
+
+.header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 16px;
+  width: 100%;
+  color: #fff;
+}
+
+.header:before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: url(../../../public/im/chat.png) no-repeat center center;
+  vertical-align: middle;
+  background-size: contain;
+}
+
+.directOptionButtons {
+  display: flex;
+  justify-content: left;
+  background-color: #0073c6;
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+
+.directOptionFileShareButton,
+.directOptionBlockUserButton,
+.directOptionUnBlockUserButton,
+.directOptionInviteTempGroupButton,
+.directOptionReportButton {
+  content: '';
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  vertical-align: middle;
+  background-size: contain;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.directOptionFileShareButton {
+  background: url(../../../public/im/Fileshare.png) no-repeat center center;
+  margin-left: 2rem;
+}
+
+.directOptionBlockUserButton {
+  background: url(../../../public/im/BlockUser.png) no-repeat center center;
+}
+
+.directOptionUnBlockUserButton {
+  background: url(../../../public/im/UnblockUser.PNG) no-repeat center center;
+}
+
+.directOptionInviteTempGroupButton {
+  background: url(../../../public/im/InviteTempGroup.png) no-repeat center
+    center;
+}
+
+.directOptionReportButton {
+  background: url(../../../public/im/report.png) no-repeat center center;
+}
+
+.targetUserInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.targetUserName {
+  margin-left: 5px;
+  font-size: 16px;
+  color: #000;
+  font-weight: bold;
+}
+
+.targetUserDescription {
+  margin-left: 5px;
+  font-size: 15px;
+  color: #000;
+}
+
+.actionButtons {
+  width: 110px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  -webkit-app-region: no-drag;
+}
+
+.actionButton {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.minimizeButton {
+  background: url(../../../public/Button_Minsize.png) no-repeat center center;
+  background-position: 0 0;
+  background-size: cover;
+}
+
+.maxsizeButton {
+  background: url(../../../public/Button_Maxsize.png) no-repeat center center;
+  background-position: 0 0;
+  background-size: cover;
+}
+
+.closeButton {
+  background: url(../../../public/Button_Close.png) no-repeat center center;
+  background-position: 0 0;
+  background-size: cover;
+}
+
+.minimizeButton:hover,
+.closeButton:hover,
+.maxsizeButton:hover {
+  background-position: -20px 0;
+}
+
+.minimizeButton:active,
+.closeButton:active,
+.maxsizeButton:active {
+  background-position: -40px 0;
+}
+
+.bodyWrapper {
+  height: 100%;
+  width: 100%;
+}
+
+.bodyBox {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  flex-direction: row;
+}
+
+.disrectLeftItems {
+  display: flex;
+  height: 100%;
+  width: 200px;
+  flex-direction: column;
+  border-right: 2px solid #e0e0e4;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.disrectLeftHeader {
+  height: 30px;
+  width: 100%;
+  border-bottom: 1px solid #e0e0e4;
+  display: flex;
+  align-items: center;
+  background: #f4fbfe;
+  justify-content: space-between;
+}
+
+.disrectRightItems {
+  height: 100%;
+  width: 100%;
+}
+
+.disrectLeftTargetAvatarBorder,
+.disrectLeftSelfAvatarBorder {
+  z-index: 2;
+  width: 120px;
+  height: 120px;
+  background: url(../../../public/im/logoframe.png) no-repeat center center;
+  background-position: 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.disrectLeftTargetAvatarImage,
+.disrectLeftSelfAvatarImage {
+  width: 100px;
+  height: 100px;
+  background: url(../../../public/im/IMLogo.png) no-repeat center center;
+  background-size: contain;
+  background-position: 0 0;
+}
+
+.disrectLeftTargetAvatarBorder {
+  top: 10px;
+  position: relative;
+}
+
+.disrectLeftSelfAvatarBorder {
+  bottom: 100px;
+  position: relative;
+}
+
+.disrectLeftTargetBox {
+  display: flex;
+  flex-direction: column;
+}
+
+.disrectTargetVIP {
+  height: 14px;
+  width: 55px;
+  margin-top: 20px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.disrectTargetLevel {
+  margin-top: 10px;
+  margin-left: 7px;
+  cursor: pointer;
+}
+
+.serverInBox {
+  height: 30px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.serverInIcon {
+  background: url(../../../public/im/server_in.png) no-repeat center center;
+  background-size: contain;
+  background-position: 0 0;
+  height: 12px;
+  width: 12px;
+  margin-left: 10px;
+}
+
+.serverInName {
+  margin-left: 5px;
+  width: 100%;
+}
+
+.serverInBox:after {
+  content: '';
+  background: url(../../../public/im/serverin_bkg.png) no-repeat center center;
+  background-size: contain;
+  background-position: 0 0;
+  height: 22px;
+  width: 100%;
+  position: fixed;
+  margin-top: 5px;
+}
+
+.chatTextArea {
+  padding-top: 10px;
+  width: 100%;
+  height: 50%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overflow-x: hidden;
+  min-height: calc(100vh - 500px);
+}
+
+.chatMessageBox {
+  margin-left: 10px;
+  width: 100%;
+  height: auto;
+}
+
+.chatMessageUsernameBox {
+  display: flex;
+  align-items: center;
+}
+
+.chatMessageTime {
+  margin-left: 5px;
+  color: #777777;
+}
+
+.chatMessageUsername {
+  color: #3591d3;
+  font-size: 14px;
+}
+
+.chatMessageText {
+  margin-left: 10px;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.chatInputBox {
+  background: #fff;
+  width: 100%;
+  height: 125px;
+  position: relative;
+}
+
+.chatInputTopBar {
+  height: 30px;
+  width: 100%;
+  display: flex;
+  background: url(../../../public/tool_bkg.png) no-repeat center center;
+  background-size: 100%;
+  border-bottom: 1px solid #e0e0e4;
+  border-top: 1px solid #e0e0e4;
+  justify-content: space-between;
+}
+
+.chatInputTopBarLeft {
+  display: flex;
+  align-items: center;
+  margin-left: 5px;
+}
+
+.chatInputTopBarLeft .button {
+  background-position: 0 0;
+  height: 18px;
+  width: 18px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.chatInputTopBarFont {
+  background: url(../../../public/FontButton.png) no-repeat center center;
+}
+
+.chatInputTopBarEmoji {
+  background: url(../../../public/FaceButton.png) no-repeat center center;
+}
+
+.chatInputTopBarScreenShot {
+  background: url(../../../public/ScreenShot.png) no-repeat center center;
+}
+
+.chatInputTopBarNudge {
+  height: 16px;
+  width: 16px;
+  background: url(../../../public/im/Nudge.png) no-repeat center center;
+}
+
+.chatInputTopBarHistoryMessage {
+  height: 100%;
+  width: auto;
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+  cursor: pointer;
+}
+
+.chatInputTopBarHistoryMessage:before {
+  content: '';
+  background: url(../../../public/im/history.png) no-repeat center center;
+  background-position: 0 0;
+  height: 18px;
+  width: 18px;
+  display: block;
+  margin-right: 3px;
+}
+
+.chatInputTopBarInputArea {
+  height: 100%;
+  width: 100%;
+}
+
+.chatInputTopBarTextarea {
+  width: 80%;
+  display: block;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 8px;
+  resize: none;
+  height: 85px;
+  overflow: auto;
+  font-size: 15px;
+  margin: 5px;
+  padding-top: 0;
+}
+
+.chatInputTopBarInputEnterButton {
+  background: url(../../../public/im/icon_enter.png) no-repeat center center;
+  background-position: 0 0;
+  height: 31px;
+  width: 49px;
+  background-size: auto;
+  position: absolute;
+  bottom: 35px;
+  right: 20px;
+  cursor: pointer;
+}
+
+.chatInputTopBarInputEnterButton:hover {
+  background-position: -50px 0;
+}
+
+.chatInputTopBarInputEnterButton:active {
+  background-position: -100px 0;
+}
+
+.adSlogenArea {
+  height: 30px;
+  width: 100%;
+  display: flex;
+  background: url(../../../public/im/textad_bkg.png) no-repeat center center;
+  background-size: 100%;
+  border-bottom: 1px solid #e0e0e4;
+  border-top: 1px solid #e0e0e4;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translate(-5px, -5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translate(2px, 2px);
+  }
+}
+.shake {
+  animation: shake 0.4s ease-in-out;
+}

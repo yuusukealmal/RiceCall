@@ -2240,7 +2240,7 @@ export const PopupSize = {
   [PopupType.ADD_FRIEND]: { height: 220, width: 400 },
   [PopupType.ADD_FRIEND_GROUP]: { height: 220, width: 400 },
   [PopupType.EDIT_FRIEND_GROUP]: { height: 220, width: 400 },
-  [PopupType.DIRECT_MESSAGE]: { height: 200, width: 300 },
+  [PopupType.DIRECT_MESSAGE]: { height: 550, width: 650 },
   [PopupType.DIALOG_ALERT]: { height: 220, width: 400 },
   [PopupType.DIALOG_ALERT2]: { height: 220, width: 400 },
   [PopupType.DIALOG_SUCCESS]: { height: 220, width: 400 },
