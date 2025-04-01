@@ -63,21 +63,30 @@
 }
 
 .baseInfoBox {
-  width: 100%;
+  width: 120px;
   height: 52px;
   display: flex;
   right: 10px;
   flex-direction: column;
   justify-content: space-around;
+  position: relative;
   color: #515151;
-  margin-left: 0.25rem;
+  margin-left: 10px;
 }
 
 .baseInfoBox .container {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  left: 7px;
+  position: relative;
+}
+
+.verifyIcon {
+  width: 12px;
+  height: 12px;
+  background: url(../../public/icon_verify.png) no-repeat center center;
+  background-size: cover;
+  margin-right: 2px;
 }
 
 .name {
@@ -88,24 +97,32 @@
   overflow: hidden;
 }
 
-.idIcon {
-  background: url('../../public/channel/ID.png') no-repeat center center;
-  background-size: cover;
-  min-height: 12px;
-  min-width: 12px;
-}
-
-.memberIcon {
-  margin-left: 12px;
-  background: url('../../public/channel/member.png') no-repeat center center;
-  background-size: cover;
-  min-height: 12px;
-  min-width: 12px;
-}
-
 .idText,
 .memberText {
-  margin-left: 5px;
+  position: relative;
+  display: flex;
+  font-size: 13px;
+  justify-content: center;
+  align-items: center;
+}
+
+.idText:before {
+  content: '';
+  height: 12px;
+  width: 12px;
+  position: relative;
+  background: url('../../public/channel/ID.png') no-repeat center center;
+  margin-right: 5px;
+}
+
+.memberText:before {
+  margin-left: 20px;
+  content: '';
+  height: 12px;
+  width: 12px;
+  position: relative;
+  background: url('../../public/channel/member.png') no-repeat center center;
+  margin-right: 5px;
 }
 
 .optionBox {
@@ -766,6 +783,11 @@
   background-size: auto;
   min-height: 18px;
   min-width: 18px;
+}
+
+.navItem:first-child:hover::before,
+.navItem:last-child:hover::before {
+  background-position: -36px 0;
 }
 
 .navItem:last-child::before {

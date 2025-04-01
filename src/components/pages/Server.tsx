@@ -373,12 +373,11 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               </div>
               <div className={styles['baseInfoBox']}>
                 <div className={styles['container']}>
+                  <div className={styles['verifyIcon']}></div>
                   <div className={styles['name']}>{serverName} </div>
                 </div>
                 <div className={styles['container']}>
-                  <div className={styles['idIcon']} />
                   <div className={styles['idText']}>{serverDisplayId}</div>
-                  <div className={styles['memberIcon']} />
                   <div className={styles['memberText']}>
                     {serverUsers.length}
                   </div>
