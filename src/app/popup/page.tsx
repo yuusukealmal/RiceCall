@@ -89,6 +89,7 @@ Header.displayName = 'Header';
 const Popup = React.memo(() => {
   // Language
   const lang = useLanguage();
+  const params = new URLSearchParams(window.location.search);
 
   // States
   const [headerTitle, setHeaderTitle] = useState<string>('');
@@ -118,8 +119,6 @@ const Popup = React.memo(() => {
 
   useEffect(() => {
     if (!initialData) return;
-
-    const params = new URLSearchParams(window.location.search);
     const type = params.get('type') as PopupType;
     if (!type) return;
 
@@ -234,7 +233,11 @@ const Popup = React.memo(() => {
     <WebRTCProvider>
       <div className="wrapper">
         {/* Top Nevigation */}
-        <Header title={headerTitle} buttons={headerButtons} />
+        {(params.get('type') as PopupType) !== PopupType.DIRECT_MESSAGE ? (
+          <Header title={headerTitle} buttons={headerButtons} />
+        ) : (
+          ''
+        )}
         {/* Main Content */}
         {content}
       </div>

@@ -36,8 +36,8 @@ const LanguageProvider = ({ children }: LanguageProviderProps) => {
       [Permission.ChannelManager]: translation.channelManager, // 4
       [Permission.ServerAdmin]: translation.serverAdmin, // 5
       [Permission.ServerOwner]: translation.serverOwner, // 6
-      [Permission.EventStaff]: translation.eventStaff, // 7
-      [Permission.Official]: translation.official, // 8
+      [Permission.Official]: translation.official, // 7
+      [Permission.EventStaff]: translation.eventStaff, // 8
     };
     return permissionMap[permission] || translation.unknownUser;
   };

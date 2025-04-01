@@ -18,8 +18,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   // State
-  const [subMenu, setSubMenu] = useState<React.ReactNode>(null);
-  const [menuWidth, setMenuWidth] = useState(0);
+  const [showSubmenu, setShowSubmenu] = useState(false);
   const [menuX, setMenuX] = useState(x);
   const [menuY, setMenuY] = useState(y);
 
@@ -35,14 +34,13 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
       let newMenuY = y;
 
       if (x + menuWidth > windowWidth - 20) {
-        newMenuX = windowWidth - menuWidth - 20;
+        newMenuX = windowWidth - menuWidth - 50;
       }
 
       if (y + menuHeight > windowHeight - 20) {
         newMenuY = windowHeight - menuHeight - 20;
       }
 
-      setMenuWidth(menuWidth);
       setMenuX(newMenuX);
       setMenuY(newMenuY);
     }
@@ -63,30 +61,42 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
           return (
             <div
               key={item.id || index}
-              className={`${contextMenu['option']} ${
+              className={`${contextMenu['option']} ${contextMenu[item.id]} ${
                 item.hasSubmenu ? contextMenu['hasSubmenu'] : ''
-              } ${item.className}`}
-              style={item.style}
+              }`}
+              style={{
+                ...item.style,
+                position: 'relative',
+              }}
               data-type={item.icon || ''}
               onClick={() => {
                 item.onClick?.();
                 onClose();
               }}
-              onMouseEnter={(e) => {
-                if (!item.hasSubmenu) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                setSubMenu(
-                  <ContextMenu
-                    x={rect.left + menuWidth - 3}
-                    y={rect.top}
-                    items={item.submenuItems || []}
-                    onClose={onClose}
-                  />,
-                );
+              onMouseEnter={() => {
+                if (item.hasSubmenu) setShowSubmenu(true);
+              }}
+              onMouseLeave={() => {
+                if (item.hasSubmenu) setShowSubmenu(false);
               }}
             >
               {item.label}
-              {item.hasSubmenu && subMenu}
+              {item.hasSubmenu && showSubmenu && (
+                <div className={contextMenu['options']}>
+                  {item.submenuItems?.map((subItem, subIndex) => (
+                    <div
+                      key={subItem.id || subIndex}
+                      className={contextMenu['option']}
+                      onClick={() => {
+                        subItem.onClick?.();
+                        onClose();
+                      }}
+                    >
+                      {subItem.label}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
