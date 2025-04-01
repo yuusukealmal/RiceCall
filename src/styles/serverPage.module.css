@@ -66,18 +66,18 @@
   width: 120px;
   height: 52px;
   display: flex;
-  right: 10px;
+  right: 5px;
   flex-direction: column;
   justify-content: space-around;
   position: relative;
   color: #515151;
-  margin-left: 10px;
 }
 
 .baseInfoBox .container {
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  left: 7px;
   position: relative;
 }
 
@@ -136,6 +136,11 @@
   margin-left: auto;
   bottom: -20px;
   right: -5px;
+}
+
+.navItem:first-child:hover::before,
+.navItem:last-child:hover::before {
+  background-position: -36px 0;
 }
 
 .invitation {
@@ -260,8 +265,7 @@
   background-color: #d1d5da5c;
 }
 
-.channelList .channelTab::before {
-  content: '';
+.channelList .tabIcon {
   display: inline-block;
   background: url('../../public/channel/channelIcon.png') no-repeat center
     center;
@@ -270,31 +274,47 @@
   min-height: 14px;
 }
 
-.channelList .channelTab.public::before {
+.channelList .tabIcon.public {
   background-position: 0 0;
 }
 
-.channelList .channelTab.member::before {
+.channelList .channelTab:hover .tabIcon.public {
   background-position: 0 -14px;
 }
 
-.channelList .channelTab.private::before {
+.channelList .tabIcon.member {
+  background-position: 0 -14px;
+}
+
+.channelList .tabIcon.private {
   background-position: -28px 0;
 }
 
-.channelList .channelTab.readonly::before {
+.channelList .channelTab:hover .tabIcon.private {
+  background-position: -28px -14px;
+}
+
+.channelList .tabIcon.readonly {
   background-position: -42px 0;
 }
 
-.channelList .channelTab.lobby::before {
+.channelList .channelTab:hover .tabIcon.readonly {
+  background-position: -42px -14px;
+}
+
+.channelList .tabIcon.lobby {
   background-position: -56px 0;
 }
 
-.channelList .channelTab.public.expanded::before {
+.channelList .channelTab:hover .tabIcon.lobby {
+  background-position: -56px -14px;
+}
+
+.channelList .tabIcon.public.expanded {
   background-position: -14px 0;
 }
 
-.channelList .channelTab.member.expanded::before {
+.channelList .channelTab:hover .tabIcon.public.expanded {
   background-position: -14px -14px;
 }
 
@@ -783,11 +803,6 @@
   background-size: auto;
   min-height: 18px;
   min-width: 18px;
-}
-
-.navItem:first-child:hover::before,
-.navItem:last-child:hover::before {
-  background-position: -36px 0;
 }
 
 .navItem:last-child::before {

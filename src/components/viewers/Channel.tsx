@@ -132,11 +132,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
         {/* Category View */}
         <div
           key={categoryId}
-          className={`
-            ${styles['channelTab']} 
-            ${expanded[categoryId] ? styles['expanded'] : ''} 
-            ${styles[categoryVisibility]}
-          `}
+          className={`${styles['channelTab']} `}
           onClick={() =>
             setExpanded((prev) => ({
               ...prev,
@@ -167,6 +163,11 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
             ]);
           }}
         >
+          <div
+            className={`${styles['tabIcon']} ${
+              expanded[categoryId] ? styles['expanded'] : ''
+            } ${styles[categoryVisibility]}`}
+          ></div>
           <div className={styles['channelTabLable']}>{categoryName}</div>
           {!expanded[categoryId] && userInCategory && (
             <div className={styles['myLocationIcon']} />
@@ -318,11 +319,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
         {/* Channel View */}
         <div
           key={channelId}
-          className={`
-            ${styles['channelTab']} 
-            ${expanded[channelId] ? styles['expanded'] : ''} 
-            ${channelIsLobby ? styles['lobby'] : styles[channelVisibility]} 
-          `}
+          className={`${styles['channelTab']} `}
           onDoubleClick={() => {
             if (canJoin) handleJoinChannel(userId, channelId);
           }}
@@ -356,6 +353,11 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             ]);
           }}
         >
+          <div
+            className={`${styles['tabIcon']} 
+            ${expanded[channelId] ? styles['expanded'] : ''} 
+            ${channelIsLobby ? styles['lobby'] : styles[channelVisibility]} `}
+          ></div>
           <div className={styles['channelTabLable']}>{channelName}</div>
           {channelVisibility !== 'readonly' && (
             <div className={styles['channelTabCount']}>
