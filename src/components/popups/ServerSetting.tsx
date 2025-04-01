@@ -1040,7 +1040,6 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
             onClick={() => {
               handleUpdateServer(
                 {
-                  id: serverId,
                   name: serverName,
                   avatar: serverAvatar,
                   avatarUrl: serverAvatarUrl,
