@@ -39,7 +39,7 @@ const xpSystem = {
         const elapsedTime = xpSystem.elapsedTime.get(socket.userId) || 0;
         let newElapsedTime = elapsedTime + Date.now() - timeFlag;
         while (newElapsedTime >= XP_SYSTEM.INTERVAL_MS) {
-          xpSystem.obtainXp(socket);
+          await xpSystem.obtainXp(socket);
           newElapsedTime -= XP_SYSTEM.INTERVAL_MS;
         }
         xpSystem.elapsedTime.set(socket.userId, newElapsedTime);
@@ -65,7 +65,7 @@ const xpSystem = {
         const elapsedTime = xpSystem.elapsedTime.get(socket.userId) || 0;
         let newElapsedTime = elapsedTime + Date.now() - timeFlag;
         while (newElapsedTime >= XP_SYSTEM.INTERVAL_MS) {
-          xpSystem.obtainXp(socket);
+          await xpSystem.obtainXp(socket);
           newElapsedTime -= XP_SYSTEM.INTERVAL_MS;
         }
         xpSystem.elapsedTime.set(socket.userId, newElapsedTime);
