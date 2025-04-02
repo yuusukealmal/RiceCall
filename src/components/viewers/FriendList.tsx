@@ -198,7 +198,10 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
     });
   };
 
-  const handleDeleteFriend = (friendId: UserFriend['id']) => {
+  const handleDeleteFriend = (
+    friendUserId: User['id'],
+    friendTargetId: User['id'],
+  ) => {
     ipcService.popup.open(PopupType.DIALOG_ALERT);
     ipcService.initialData.onRequest(PopupType.DIALOG_ALERT, {
       iconType: 'warning',
@@ -207,7 +210,8 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
     });
     ipcService.popup.onSubmit(PopupType.DIALOG_ALERT, () => {
       socket.send.deleteFriend({
-        friendId,
+        friendUserId,
+        friendTargetId,
       });
     });
   };
@@ -242,7 +246,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
             {
               id: 'delete',
               label: lang.tr.deleteFriend,
-              onClick: () => handleDeleteFriend(friendId),
+              onClick: () => handleDeleteFriend(friendUserId, friendTargetId),
             },
           ]);
         }}
