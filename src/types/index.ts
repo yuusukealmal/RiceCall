@@ -1886,7 +1886,6 @@ export const translations: Record<LanguageKey, Translation> = {
   },
 };
 
-export type Visibility = 'public' | 'private' | 'readonly';
 export const enum Permission {
   Guest = 1,
   Member = 2,
@@ -1904,21 +1903,21 @@ export type User = {
   avatar: string;
   avatarUrl: string;
   signature: string;
+  country: string;
   level: number;
+  vip: number;
   xp: number;
   requiredXp: number;
   progress: number;
-  status: 'online' | 'dnd' | 'idle' | 'gn';
-  gender: 'Male' | 'Female';
   birthYear: number;
   birthMonth: number;
   birthDay: number;
-  country: string;
+  status: 'online' | 'dnd' | 'idle' | 'gn';
+  gender: 'Male' | 'Female';
   currentChannelId: string;
   currentServerId: string;
   lastActiveAt: number;
   createdAt: number;
-  vip: number;
   // THESE WERE NOT SAVE IN THE DATABASE
   badges?: Badge[];
   friends?: UserFriend[];
@@ -1930,50 +1929,25 @@ export type User = {
   favServers?: Server[];
 };
 
-export type Badge = {
-  id: string;
-  name: string;
-  description: string;
-  order: number;
-};
-
-export type FriendGroup = {
-  id: string;
-  name: string;
-  order: number;
-  userId: string;
-  createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  friends?: UserFriend[];
-};
-
-export type FriendApplication = User & {
-  description: string;
-  applicationStatus: 'pending' | 'accepted' | 'rejected';
-  senderId: string;
-  receiverId: string;
-  createdAt: number;
-};
-
 export type Server = {
   id: string;
   name: string;
   avatar: string;
   avatarUrl: string;
   announcement: string;
+  applyNotice: string;
   description: string;
   displayId: string;
   slogan: string;
   level: number;
   wealth: number;
+  receiveApply: boolean;
   allowDirectMessage: boolean;
   type: 'game' | 'entertainment' | 'other';
   visibility: 'public' | 'private' | 'invisible';
   lobbyId: string;
   ownerId: string;
   createdAt: number;
-  receiveApply: boolean;
-  applyNotice: string;
   // THESE WERE NOT SAVE IN THE DATABASE
   lobby?: Channel;
   owner?: ServerMember;
@@ -1983,21 +1957,25 @@ export type Server = {
   memberApplications?: MemberApplication[];
 };
 
-export type MemberApplication = User & {
-  description: string;
-  applicationStatus: 'pending' | 'accepted' | 'rejected';
-  userId: string;
-  serverId: string;
-  createdAt: number;
-};
-
 export type BaseChannel = {
   id: string;
   name: string;
   order: number;
+  bitrate: number;
+  userLimit: number;
+  guestTextGapTime: number;
+  guestTextWaitTime: number;
+  guestTextMaxLength: number;
   isRoot: boolean;
+  isLobby: boolean;
+  slowmode: boolean;
+  forbidText: boolean;
+  forbidGuestText: boolean;
+  forbidGuestUrl: boolean;
   type: 'category' | 'channel';
   visibility: 'public' | 'member' | 'private' | 'readonly';
+  voiceMode: 'free' | 'queue' | 'forbidden';
+  categoryId: string | null;
   serverId: string;
   createdAt: number;
 };
@@ -2008,47 +1986,9 @@ export type Category = BaseChannel & {
 
 export type Channel = BaseChannel & {
   type: 'channel';
-  bitrate: number;
-  userLimit: number;
-  guestTextGapTime: number;
-  guestTextWaitTime: number;
-  guestTextMaxLength: number;
-  isLobby: boolean;
-  slowmode: boolean;
-  forbidText: boolean;
-  forbidGuestText: boolean;
-  forbidGuestUrl: boolean;
-  voiceMode: 'free' | 'queue' | 'forbidden';
-  categoryId: string | null;
   // THESE WERE NOT SAVE IN THE DATABASE
   messages?: ChannelMessage[];
 };
-
-export type ChannelMessage = Message &
-  ServerMember & {
-    type: 'general';
-  };
-
-export type InfoMessage = Message & {
-  type: 'info';
-};
-
-export type Member = {
-  id: string;
-  isBlocked: boolean;
-  nickname: string | null;
-  contribution: number;
-  lastMessageTime: number;
-  lastJoinChannelTime: number;
-  permissionLevel: Permission;
-  userId: string;
-  serverId: string;
-  createdAt: number;
-};
-
-export type UserMember = Member & Server;
-
-export type ServerMember = Member & User;
 
 export type Friend = {
   id: string;
@@ -2061,22 +2001,81 @@ export type Friend = {
   directMessages?: DirectMessage[]; // Change to another sheet
 };
 
-export type DirectMessage = Message &
-  UserFriend & {
-    type: 'dm';
-  };
+export type FriendApplication = User & {
+  description: string;
+  applicationStatus: 'pending' | 'accepted' | 'rejected';
+  senderId: string;
+  receiverId: string;
+  createdAt: number;
+};
 
-export type UserFriend = Friend & User;
+export type FriendGroup = {
+  id: string;
+  name: string;
+  order: number;
+  userId: string;
+  createdAt: number;
+};
+
+export type Member = {
+  id: string;
+  nickname: string | null;
+  contribution: number;
+  lastMessageTime: number;
+  lastJoinChannelTime: number;
+  isBlocked: boolean;
+  permissionLevel: Permission;
+  userId: string;
+  serverId: string;
+  createdAt: number;
+};
+
+export type MemberApplication = User & {
+  description: string;
+  applicationStatus: 'pending' | 'accepted' | 'rejected';
+  userId: string;
+  serverId: string;
+  createdAt: number;
+};
 
 export type Message = {
   id: string;
   content: string;
-  type: 'general' | 'dm' | 'info';
-  senderId: string;
-  receiverId: string;
-  channelId: string;
+  type: 'general' | 'info';
   timestamp: number;
 };
+
+export type Badge = {
+  id: string;
+  name: string;
+  description: string;
+  order: number;
+};
+
+export type ChannelMessage = Message &
+  ServerMember & {
+    type: 'general';
+    senderId: string;
+    receiverId: string;
+    channelId: string;
+  };
+
+export type DirectMessage = Message &
+  UserFriend & {
+    type: 'dm';
+    userId: string;
+    targetId: string;
+  };
+
+export type InfoMessage = Message & {
+  type: 'info';
+};
+
+export type UserMember = Member & Server;
+
+export type ServerMember = Member & User;
+
+export type UserFriend = Friend & User;
 
 export type ContextMenuItem = {
   id: string;
