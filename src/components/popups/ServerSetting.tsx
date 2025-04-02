@@ -131,14 +131,13 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
     const [serverBlockMembers, setServerBlockMembers] = useState<
       ServerMember[]
     >(createDefault.server().members?.filter((mb) => mb.isBlocked) || []);
+    const [permissionLevel, setPermissionLevel] = useState<number>(0);
 
     const [activeTabIndex, setActiveTabIndex] = useState<number>(0);
     const [sortState, setSortState] = useState<1 | -1>(-1);
     const [sortField, setSortField] = useState<string>('');
 
-    const [memberSearchText, setMemberSearchText] = useState('');
-    const [applicationSearchText, setApplicationSearchText] = useState('');
-    const [blockMemberSearchText, setBlockMemberSearchText] = useState('');
+    const [searchText, setSearchText] = useState('');
 
     // Variables
     const { serverId, userId } = initialData;
@@ -206,6 +205,11 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
       setServerMembers(data.members || []);
       setServerApplications(data.memberApplications || []);
       setServerBlockMembers(data.members?.filter((mb) => mb.isBlocked) || []);
+    };
+
+    const handleMemberUpdate = (data: Member | null) => {
+      if (!data) data = createDefault.member();
+      setPermissionLevel(data.permissionLevel);
     };
 
     const handleBlockMemberSort = (field: keyof ServerMember) => {
@@ -311,7 +315,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
     };
 
     const filteredMembers = serverMembers.filter((member) => {
-      const searchLower = memberSearchText.toLowerCase();
+      const searchLower = searchText.toLowerCase();
       return (
         member.nickname?.toLowerCase().includes(searchLower) ||
         member.name.toLowerCase().includes(searchLower)
@@ -319,7 +323,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
     });
 
     const filteredApplications = serverApplications.filter((application) => {
-      const searchLower = applicationSearchText.toLowerCase();
+      const searchLower = searchText.toLowerCase();
       return (
         application.name.toLowerCase().includes(searchLower) ||
         application.description.toLowerCase().includes(searchLower)
@@ -327,7 +331,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
     });
 
     const filteredBlockMembers = serverBlockMembers.filter((member) => {
-      const searchLower = blockMemberSearchText.toLowerCase();
+      const searchLower = searchText.toLowerCase();
       return (
         member.nickname?.toLowerCase().includes(searchLower) ||
         member.name.toLowerCase().includes(searchLower)
@@ -343,12 +347,17 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
           refreshService.server({
             serverId: serverId,
           }),
-        ]).then(([server]) => {
+          refreshService.member({
+            serverId: serverId,
+            userId: userId,
+          }),
+        ]).then(([server, member]) => {
           handleServerUpdate(server);
+          handleMemberUpdate(member);
         });
       };
       refresh();
-    }, [serverId]);
+    }, [serverId, userId]);
 
     return (
       <div className={popup['popupContainer']}>
@@ -541,9 +550,9 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                         className={setting['searchInput']}
                         type="search"
                         placeholder={lang.tr.searchMemberPlaceholder}
-                        value={memberSearchText}
+                        value={searchText}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          setMemberSearchText(e.target.value)
+                          setSearchText(e.target.value)
                         }
                       />
                     </div>
@@ -586,6 +595,25 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                           serverId: memberServerId,
                           createdAt: memberJoinDate,
                         } = member;
+                        const isCurrentUser = memberUserId === userId;
+                        const canEditNickname =
+                          (isCurrentUser && permissionLevel > 1) ||
+                          permissionLevel > 4;
+                        const canManageMember =
+                          !isCurrentUser &&
+                          permissionLevel > memberPermissionLevel &&
+                          (memberPermissionLevel > 1 || permissionLevel > 5);
+                        const canChangeToGuest =
+                          permissionLevel > 5 && memberPermissionLevel !== 1;
+                        const canChangeToMember =
+                          permissionLevel > 2 && memberPermissionLevel !== 2;
+                        const canChangeToChannelAdmin =
+                          permissionLevel > 3 && memberPermissionLevel !== 3;
+                        const canChangeToCategoryAdmin =
+                          permissionLevel > 4 && memberPermissionLevel !== 4;
+                        const canChangeToAdmin =
+                          permissionLevel > 5 && memberPermissionLevel !== 5;
+
                         return (
                           <tr
                             key={memberId}
@@ -618,6 +646,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                 {
                                   id: 'edit-nickname',
                                   label: lang.tr.editNickname,
+                                  show: canEditNickname,
                                   onClick: () =>
                                     handleOpenEditMember(
                                       memberServerId,
@@ -663,18 +692,19 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                 {
                                   id: 'separator',
                                   label: '',
-                                  show: !isCurrentUser,
+                                  show: canManageMember,
                                 },
                                 {
                                   id: 'member-management',
                                   label: lang.tr.memberManagement,
-                                  show: !isCurrentUser,
+                                  show: canManageMember,
                                   icon: 'submenu',
                                   hasSubmenu: true,
                                   submenuItems: [
                                     {
                                       id: 'set-guest',
                                       label: lang.tr.setGuest,
+                                      show: canChangeToGuest,
                                       onClick: () =>
                                         handleUpdateMember(
                                           { permissionLevel: 1 },
@@ -685,6 +715,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                     {
                                       id: 'set-member',
                                       label: lang.tr.setMember,
+                                      show: canChangeToMember,
                                       onClick: () =>
                                         handleUpdateMember(
                                           { permissionLevel: 2 },
@@ -695,6 +726,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                     {
                                       id: 'set-channel-admin',
                                       label: lang.tr.setChannelAdmin,
+                                      show: canChangeToChannelAdmin,
                                       onClick: () =>
                                         handleUpdateMember(
                                           { permissionLevel: 3 },
@@ -705,6 +737,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                     {
                                       id: 'set-category-admin',
                                       label: lang.tr.setCategoryAdmin,
+                                      show: canChangeToCategoryAdmin,
                                       onClick: () =>
                                         handleUpdateMember(
                                           { permissionLevel: 4 },
@@ -715,6 +748,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                     {
                                       id: 'set-admin',
                                       label: lang.tr.setAdmin,
+                                      show: canChangeToAdmin,
                                       onClick: () =>
                                         handleUpdateMember(
                                           { permissionLevel: 5 },
@@ -848,9 +882,9 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                         className={setting['searchInput']}
                         type="search"
                         placeholder={lang.tr.searchMemberPlaceholder}
-                        value={applicationSearchText}
+                        value={searchText}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          setApplicationSearchText(e.target.value)
+                          setSearchText(e.target.value)
                         }
                       />
                     </div>
@@ -908,11 +942,6 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                       applicationUserId,
                                       applicationServerId,
                                     );
-                                    setServerApplications(
-                                      serverApplications.filter(
-                                        (app) => app.id !== applicationId,
-                                      ),
-                                    );
                                   },
                                 },
                                 {
@@ -922,11 +951,6 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                     handleDeleteMemberApplication(
                                       applicationUserId,
                                       applicationServerId,
-                                    );
-                                    setServerApplications(
-                                      serverApplications.filter(
-                                        (app) => app.id !== applicationId,
-                                      ),
                                     );
                                   },
                                 },
@@ -969,9 +993,9 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                         className={setting['searchInput']}
                         type="search"
                         placeholder={lang.tr.searchMemberPlaceholder}
-                        value={blockMemberSearchText}
+                        value={searchText}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          setBlockMemberSearchText(e.target.value)
+                          setSearchText(e.target.value)
                         }
                       />
                     </div>

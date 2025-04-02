@@ -116,6 +116,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       memberPermissionLevel === 1;
     const textMaxLength =
       memberPermissionLevel === 1 ? channelGuestTextMaxLength || 100 : 2000;
+    const canEditNickname = memberPermissionLevel > 1;
+    const canCreateInvitation = memberPermissionLevel > 1;
+    const canOpenServerSettings = memberPermissionLevel < 5;
 
     // Handlers
     const handleSendMessage = (
@@ -363,10 +366,10 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
             <div className={styles['sidebarHeader']}>
               <div
                 className={styles['avatarBox']}
-                onClick={() =>
-                  memberPermissionLevel >= 5 &&
-                  handleOpenServerSettings(userId, serverId)
-                }
+                onClick={() => {
+                  if (!canOpenServerSettings) return;
+                  handleOpenServerSettings(userId, serverId);
+                }}
               >
                 <div
                   className={styles['avatarPicture']}
@@ -403,7 +406,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         {
                           id: 'invitation',
                           label: lang.tr.invitation,
-                          show: memberPermissionLevel < 2,
+                          show: canCreateInvitation,
                           icon: 'memberapply',
                           onClick: () =>
                             handleOpenApplyMember(userId, serverId),
@@ -422,12 +425,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         {
                           id: 'separator',
                           label: '',
-                          show: memberPermissionLevel < 2,
+                          show: canCreateInvitation,
                         },
                         {
                           id: 'editNickname',
                           label: lang.tr.editNickname,
                           icon: 'editGroupcard',
+                          show: canEditNickname,
                           onClick: () => handleOpenEditMember(serverId, userId),
                         },
                         {
