@@ -14,12 +14,10 @@ const {
 
 const messageHandler = {
   sendMessage: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const channels = (await db.get('channels')) || {};
-
     try {
       // data = {
+      //   userId: string,
+      //   serverId: string,
       //   channelId: string,
       //   message: {
       //     ...
@@ -27,8 +25,8 @@ const messageHandler = {
       // };
 
       // Validate data
-      const { message: _newMessage, channelId } = data;
-      if (!_newMessage || !channelId) {
+      const { message: _newMessage, userId, serverId, channelId } = data;
+      if (!_newMessage || !userId || !serverId || !channelId) {
         throw new StandardizedError(
           '無效的資料',
           'SENDMESSAGE',
@@ -41,11 +39,23 @@ const messageHandler = {
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
 
-      // TODO: Add validation for operator
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const server = await Get.server(serverId);
       const channel = await Get.channel(channelId);
-      const operatorMember = await Get.member(operator.id, channel.serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
+
+      // Validate operation
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法傳送非自己的訊息',
+          'SENDMESSAGE',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
       if (channel.forbidGuestUrl && operatorMember.permissionLevel === 1) {
         newMessage.content = newMessage.content.replace(
           /https?:\/\/[^\s]+/g,
@@ -57,7 +67,8 @@ const messageHandler = {
       const messageId = uuidv4();
       await Set.message(messageId, {
         ...newMessage,
-        senderId: operator.id,
+        senderId: user.id,
+        receiverId: server.id,
         channelId: channel.id,
         timestamp: Date.now().valueOf(),
       });
@@ -79,7 +90,7 @@ const messageHandler = {
         ],
       });
 
-      new Logger('WebSocket').success(
+      new Logger('Message').success(
         `User(${operator.id}) sent ${newMessage.content} to channel(${channel.id})`,
       );
     } catch (error) {
@@ -93,31 +104,28 @@ const messageHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(
-        'Error sending message: ' + error.error_message,
+      new Logger('Message').error(
+        `Error sending message: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   sendDirectMessage: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const friends = (await db.get('friends')) || {};
-
     try {
       // data = {
-      //   friendId: string,
+      //   userId: string,
+      //   targetId: string,
       //   message: {
       //     ...
       //   }
       // };
 
       // Validate data
-      const { directMessage: _newDirectMessage, friendId } = data;
-      if (!_newDirectMessage || !friendId) {
+      const { directMessage: _newDirectMessage, userId, targetId } = data;
+      if (!_newDirectMessage || !userId || !targetId) {
         throw new StandardizedError(
           '無效的資料',
           'SENDDIRECTMESSAGE',
@@ -130,27 +138,55 @@ const messageHandler = {
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
 
-      // TODO: Add validation for operator
-      const friend = await Get.friend(friendId);
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const target = await Get.user(targetId);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
+      let targetSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === target.id) {
+          targetSocket = _socket;
+        }
+      });
+
+      // Validate operation
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法傳送非自己的私訊',
+          'SENDDIRECTMESSAGE',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
 
       // Create new message
       const directMessageId = uuidv4();
       await Set.directMessage(directMessageId, {
         ...newDirectMessage,
-        senderId: operator.id,
-        friendId: friend.id,
+        userId: user.id,
+        targetId: target.id,
         timestamp: Date.now().valueOf(),
       });
 
       // Emit updated data (to all users in the friend)
-      io.to(`friend_${friend.id}`).emit('friendUpdate', {
-        directMessages: await Get.friendDirectMessages(friend.id),
-      });
+      io.to(userSocket.id).emit(
+        'directMessage',
+        await Get.directMessages(user.id, target.id),
+      );
+      io.to(targetSocket.id).emit(
+        'directMessage',
+        await Get.directMessages(user.id, target.id),
+      );
 
-      new Logger('WebSocket').success(
-        `User(${operator.id}) sent ${newDirectMessage.content} to User(${friend.id})`,
+      new Logger('Message').success(
+        `User(${user.id}) sent ${newDirectMessage.content} to User(${target.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -163,11 +199,11 @@ const messageHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(
-        'Error sending direct message: ' + error.error_message,
+      new Logger('Message').error(
+        `Error sending direct message: ${error.error_message} (${socket.id})`,
       );
     }
   },

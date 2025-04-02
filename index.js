@@ -18,11 +18,13 @@ const {
   func: Func,
   jwt: JWT,
   clean: Clean,
+  xp: XP,
 } = utils;
 
 // Constants
 const {
   PORT,
+  SERVER_URL,
   CONTENT_TYPE_JSON,
   MIME_TYPES,
   UPLOADS_PATH,
@@ -34,7 +36,7 @@ const {
   BACKUP_DIR,
 } = require('./constant');
 
-const DB_PATH = path.join(__dirname, 'path/to/json.sqlite');
+const DB_PATH = path.join(__dirname, './json.sqlite');
 
 const backupDatabase = async () => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -217,9 +219,9 @@ const server = http.createServer((req, res) => {
         const accountPasswords = (await db.get(`accountPasswords`)) || {};
 
         // Validate data
-        const { account, password, username } = data;
+        const { account, confirmPassword, password, username } = data;
         Func.validate.account(account.trim());
-        Func.validate.password(password.trim());
+        Func.validate.password(confirmPassword.trim());
         Func.validate.nickname(username.trim());
 
         const exists = accountPasswords[account];
@@ -743,9 +745,7 @@ const server = http.createServer((req, res) => {
           message: 'success',
           data: {
             avatar: fileName,
-            avatarUrl: `${
-              process.env.SERVER_URL
-            }:${PORT}/images/${Path()}/${fullFileName}`,
+            avatarUrl: `${SERVER_URL}:${PORT}/images/${Path()}/${fullFileName}`,
           },
         });
       } catch (error) {
@@ -825,4 +825,5 @@ process.on('unhandledRejection', (error) => {
 server.listen(PORT, () => {
   new Logger('Server').success(`Server is running on port ${PORT}`);
   Clean.setup();
+  XP.setup();
 });

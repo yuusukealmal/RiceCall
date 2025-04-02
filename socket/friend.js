@@ -6,16 +6,13 @@ const utils = require('../utils');
 const {
   standardizedError: StandardizedError,
   logger: Logger,
+  get: Get,
   set: Set,
   func: Func,
-  get: Get,
 } = utils;
 
 const friendHandler = {
   createFriend: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-
     try {
       // data = {
       //   userId: string;
@@ -36,39 +33,77 @@ const friendHandler = {
           401,
         );
       }
-
       const newFriend = await Func.validate.friend(_newFriend);
 
-      // Validate operation
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const target = await Get.user(targetId);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
+      let targetSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === target.id) {
+          targetSocket = _socket;
+        }
+      });
+
+      // Validate operation
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法新增非自己的好友',
+          'ValidationError',
+          'CREATEFRIEND',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
+      if (user.id === target.id) {
+        throw new StandardizedError(
+          '無法將自己加入好友',
+          'ValidationError',
+          'CREATEFRIEND',
+          'SELF_OPERATION',
+          403,
+        );
+      }
 
       // Create friend
       const friendId = `fd_${userId}-${targetId}`;
       await Set.friend(friendId, {
         ...newFriend,
-        userId: userId,
-        targetId: targetId,
+        userId: user.id,
+        targetId: target.id,
         createdAt: Date.now(),
       });
 
       // Create reverse friend
-      const reverseFriendId = `fd_${targetId}-${userId}`;
-      await Set.friend(reverseFriendId, {
+      const friend_ = `fd_${targetId}-${userId}`;
+      await Set.friend(friend_, {
         ...newFriend,
         friendGroupId: '',
-        userId: targetId,
-        targetId: userId,
+        userId: target.id,
+        targetId: user.id,
         createdAt: Date.now(),
       });
 
-      // Emit data (only to the user)
-      io.to(socket.id).emit('userUpdate', {
-        friends: await Get.userFriends(userId),
+      // Emit data (to the user and target)
+      io.to(userSocket.id).emit('userUpdate', {
+        friends: await Get.userFriends(user.id),
+      });
+      io.to(targetSocket.id).emit('userUpdate', {
+        friends: await Get.userFriends(target.id),
       });
 
       new Logger('Friend').success(
-        `Friend(${friendId}) and Friend(${reverseFriendId}) of User(${userId}) and User(${targetId}) created by User(${operator.id})`,
+        `Friend(${friendId}) and Friend(${friend_}) of User(${user.id}) and User(${target.id}) created by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -81,20 +116,16 @@ const friendHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('Friend').error(
-        `Error creating friend: ${error.error_message}`,
+        `Error creating friend: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   updateFriend: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const friends = (await db.get('friends')) || {};
-
     try {
       // data = {
       //   userId: string
@@ -115,26 +146,55 @@ const friendHandler = {
           401,
         );
       }
-
       const editedFriend = await Func.validate.friend(_editedFriend);
-      const friendId = `fd_${userId}-${targetId}`;
-      const friend = await Func.validate.friend(friends[friendId]);
+
+      // Validate socket
+      const operatorId = await Func.validate.socket(socket);
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const target = await Get.user(targetId);
+      const friend = await Get.friend(userId, targetId);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
+      let targetSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === target.id) {
+          targetSocket = _socket;
+        }
+      });
 
       // Validate operation
-      const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法修改非自己的好友',
+          'ValidationError',
+          'UPDATEFRIEND',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
 
       // Update friend
       await Set.friend(friend.id, editedFriend);
 
-      // Emit data (only to the user)
-      io.to(socket.id).emit('friendUpdate', editedFriend);
-      io.to(socket.id).emit('userUpdate', {
+      // Emit data (to the user and target)
+      io.to(userSocket.id).emit('friendUpdate', editedFriend);
+      io.to(userSocket.id).emit('userUpdate', {
         friends: await Get.userFriends(userId),
+      });
+      io.to(targetSocket.id).emit('friendUpdate', editedFriend);
+      io.to(targetSocket.id).emit('userUpdate', {
+        friends: await Get.userFriends(targetId),
       });
 
       new Logger('Friend').success(
-        `Friend(${friend.id}) of User(${userId}) and User(${targetId}) updated by User(${operator.id})`,
+        `Friend(${friend.id}) of User(${user.id}) and User(${target.id}) updated by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -151,25 +211,20 @@ const friendHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('Friend').error(
-        `Error updating friend: ${error.error_message}`,
+        `Error updating friend: ${error.error_message} (${socket.id})`,
       );
     }
   },
   deleteFriend: async (io, socket, data) => {
-    // Get database
-    const friends = (await db.get('friends')) || {};
-
     try {
       // data = {
       //   userId: string
       //   targetId: string
       // }
 
-      // FIX: Change to userId and targetId
-
       // Validate data
-      const { friendId } = data;
-      if (!friendId) {
+      const { userId, targetId } = data;
+      if (!userId || !targetId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -179,20 +234,53 @@ const friendHandler = {
         );
       }
 
-      const friend = await Func.validate.friend(friends[friendId]);
-
-      // Validate operation
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
 
-      await db.delete(`friends.${`fd_${friend.userId}-${friend.targetId}`}`);
-      await db.delete(`friends.${`fd_${friend.targetId}-${friend.userId}`}`);
-
-      // Emit data (only to the user)
-      io.to(socket.id).emit('userUpdate', {
-        friends: await Get.userFriends(operatorId),
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const target = await Get.user(targetId);
+      const friend = await Get.friend(userId, targetId);
+      const friend_ = await Get.friend(targetId, userId);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
+      let targetSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === target.id) {
+          targetSocket = _socket;
+        }
       });
 
-      new Logger('Friend').success(`Friend(${friend.id}) deleted`);
+      // Validate operation
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法刪除非自己的好友',
+          'ValidationError',
+          'DELETEFRIEND',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
+
+      await db.delete(`friends.${`fd_${friend.userId}-${friend.targetId}`}`);
+      await db.delete(`friends.${`fd_${friend_.userId}-${friend_.targetId}`}`);
+
+      // Emit data (to the user and target)
+      io.to(userSocket.id).emit('userUpdate', {
+        friends: await Get.userFriends(userId),
+      });
+      io.to(targetSocket.id).emit('userUpdate', {
+        friends: await Get.userFriends(targetId),
+      });
+
+      new Logger('Friend').success(
+        `Friend(${friend.id}) and Friend(${friend_.id}) of User(${user.id}) and User(${target.id}) deleted by User(${operator.id})`,
+      );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
@@ -204,11 +292,11 @@ const friendHandler = {
         );
       }
 
-      // Emit data (only to the user)
+      // Emit data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('Friend').error(
-        `Error deleting friend: ${error.error_message}`,
+        `Error deleting friend: ${error.error_message} (${socket.id})`,
       );
     }
   },

@@ -14,9 +14,16 @@ const {
 const friendGroupHandler = {
   createFriendGroup: async (io, socket, data) => {
     try {
-      const { group: newGroup, userId } = data;
-      console.log(newGroup, userId);
-      if (!newGroup || !userId) {
+      // data = {
+      //   userId: string,
+      //   group: {
+      //     ...
+      //   },
+      // }
+
+      // Validate data
+      const { group: _newFriendGroup, userId } = data;
+      if (!_newFriendGroup || !userId) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -25,45 +32,80 @@ const friendGroupHandler = {
           401,
         );
       }
+      const newFriendGroup = await Func.validate.friendGroup(_newFriendGroup);
 
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
 
-      const friendGroupId = uuidv4();
-      await Set.friendGroup(friendGroupId, {
-        ...newGroup,
-        userId,
-        createdAt: new Date(),
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
       });
 
-      io.to(socket.id).emit('userUpdate', {
-        friendGroups: await Get.userFriendGroups(operatorId),
+      // Validate operation
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法新增非自己的好友群組',
+          'ValidationError',
+          'CREATEFRIENDGROUP',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
+
+      // Create friend group
+      const friendGroupId = uuidv4();
+      await Set.friendGroup(friendGroupId, {
+        ...newFriendGroup,
+        userId: user.id,
+        createdAt: Date.now(),
+      });
+
+      // Emit updated data (to the user)
+      io.to(userSocket.id).emit('userUpdate', {
+        friendGroups: await Get.userFriendGroups(user.id),
       });
 
       new Logger('FriendGroup').success(
-        `FriendGroup(${friendGroupId}) created`,
+        `FriendGroup(${friendGroupId}) of User(${user.id}) created by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `新增好友群組時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'CREATEFRIENDGROUP',
+          'EXCEPTION_ERROR',
+          500,
         );
       }
 
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('FriendGroup').error(
-        `Error creating friend group: ${error.error_message}`,
+        `Error creating friend group: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   updateFriendGroup: async (io, socket, data) => {
-    // Get database
-    const friendGroups = (await db.get('friendGroups')) || {};
-
     try {
-      const { friendGroupId, group } = data;
-      if (!friendGroupId || !group) {
+      // data = {
+      //   friendGroupId: string,
+      //   group: {
+      //     ...
+      //   },
+      // }
+
+      // Validate data
+      const { friendGroupId, group: _editedFriendGroup } = data;
+      if (!friendGroupId || !_editedFriendGroup) {
         throw new StandardizedError(
           '無效的資料',
           'ValidationError',
@@ -72,43 +114,73 @@ const friendGroupHandler = {
           401,
         );
       }
-
-      const operatorId = await Func.validate.socket(socket);
-      const friendGroup = await Func.validate.friendGroup(
-        friendGroups[friendGroupId],
+      const editedFriendGroup = await Func.validate.friendGroup(
+        _editedFriendGroup,
       );
 
-      await Set.friendGroup(friendGroup.id, {
-        ...group,
+      // Validate socket
+      const operatorId = await Func.validate.socket(socket);
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const friendGroup = await Get.friendGroup(friendGroupId);
+      const user = await Get.user(friendGroup.userId);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
       });
 
-      io.to(socket.id).emit('userUpdate', {
-        friendGroups: await Get.userFriendGroups(operatorId),
+      // Validate operation
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法修改非自己的好友群組',
+          'ValidationError',
+          'UPDATEFRIENDGROUP',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
+
+      // Update friend group
+      await Set.friendGroup(friendGroup.id, editedFriendGroup);
+
+      // Emit updated data (to the user)
+      io.to(userSocket.id).emit('userUpdate', {
+        friendGroups: await Get.userFriendGroups(user.id),
       });
 
       new Logger('FriendGroup').success(
-        `FriendGroup(${friendGroup.id}) updated`,
+        `FriendGroup(${friendGroup.id}) of User(${user.id}) updated by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `更新好友群組時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'UPDATEFRIENDGROUP',
+          'EXCEPTION_ERROR',
+          500,
         );
       }
 
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('FriendGroup').error(
-        `Error updating friend group: ${error.error_message}`,
+        `Error updating friend group: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   deleteFriendGroup: async (io, socket, data) => {
-    // Get database
-    const friendGroups = (await db.get('friendGroups')) || {};
-
     try {
+      // data = {
+      //   friendGroupId: string,
+      // }
+
+      // Validate data
       const { friendGroupId } = data;
       if (!friendGroupId) {
         throw new StandardizedError(
@@ -120,31 +192,58 @@ const friendGroupHandler = {
         );
       }
 
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
-      const friendGroup = await Func.validate.friendGroup(
-        friendGroups[friendGroupId],
-      );
 
+      // Get data
+      const operator = await Get.user(operatorId);
+      const friendGroup = await Get.friendGroup(friendGroupId);
+      const user = await Get.user(friendGroup.userId);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
+
+      // Validate operation
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法刪除非自己的好友群組',
+          'ValidationError',
+          'DELETEFRIENDGROUP',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
+
+      // Delete friend group
       await db.delete(`friendGroups.${friendGroup.id}`);
 
-      io.to(socket.id).emit('userUpdate', {
-        friendGroups: await Get.userFriendGroups(operatorId),
+      // Emit updated data (to the user)
+      io.to(userSocket.id).emit('userUpdate', {
+        friendGroups: await Get.userFriendGroups(user.id),
       });
 
       new Logger('FriendGroup').success(
-        `FriendGroup(${friendGroup.id}) deleted`,
+        `FriendGroup(${friendGroup.id}) of User(${user.id}) deleted by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `刪除好友群組時發生無法預期的錯誤: ${error.message}`,
+          'ServerError',
+          'DELETEFRIENDGROUP',
+          'EXCEPTION_ERROR',
+          500,
         );
       }
 
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('FriendGroup').error(
-        `Error deleting friend group: ${error.error_message}`,
+        `Error deleting friend group: ${error.error_message} (${socket.id})`,
       );
     }
   },

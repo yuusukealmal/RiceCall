@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { v4: uuidv4 } = require('uuid');
-const { QuickDB } = require('quick.db');
-const db = new QuickDB();
 // Utils
 const utils = require('../utils');
 const {
@@ -18,10 +16,6 @@ const messageHandler = require('./message');
 
 const channelHandler = {
   connectChannel: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const channels = (await db.get('channels')) || {};
-
     try {
       // data = {
       //   userId: string
@@ -36,52 +30,104 @@ const channelHandler = {
           'ValidationError',
           'CONNECTCHANNEL',
           'DATA_INVALID',
-          401,
+          400,
         );
       }
-      const user = await Func.validate.user(users[userId]);
-      const channel = await Func.validate.channel(channels[channelId]);
+
+      // Validate socket
+      const operatorId = await Func.validate.socket(socket);
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const channel = await Get.channel(channelId);
       const server = await Get.server(channel.serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
 
       // Validate operation
-      const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
-
-      // TODO: Add validation for operator
-      const operatorMember = await Get.member(operator.id, channel.serverId);
-
-      if (channel.visibility === 'readonly')
-        throw new StandardizedError(
-          '該頻道為唯獨頻道',
-          'ValidationError',
-          'CONNECTCHANNEL',
-          'CHANNEL_IS_READONLY',
-          403,
-        );
-      if (
-        !channel.isLobby &&
-        (server.visibility === 'member' || channel.visibility === 'member') &&
-        (!operatorMember || operatorMember.permissionLevel < 2)
-      )
-        throw new StandardizedError(
-          '您需要成為該群組的會員才能加入該頻道',
-          'ValidationError',
-          'CONNECTCHANNEL',
-          'SERVER_PRIVATE',
-          403,
-        );
-      if (
-        !channel.isLobby &&
-        channel.visibility === 'private' &&
-        (!operatorMember || operatorMember.permissionLevel < 3)
-      )
-        throw new StandardizedError(
-          '您需要成為該群組的管理員才能加入該頻道',
-          'ValidationError',
-          'CONNECTCHANNEL',
-          'SERVER_PRIVATE',
-          403,
-        );
+      if (operator.id === user.id) {
+        if (channel.visibility === 'readonly')
+          throw new StandardizedError(
+            '該頻道為唯獨頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'CHANNEL_IS_READONLY',
+            403,
+          );
+        if (
+          !channel.isLobby &&
+          (server.visibility === 'private' ||
+            channel.visibility === 'member') &&
+          operatorMember.permissionLevel < 2
+        )
+          throw new StandardizedError(
+            '你需要成為該群組的會員才能加入該頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'PERMISSION_DENIED',
+            403,
+          );
+        if (
+          !channel.isLobby &&
+          channel.visibility === 'private' &&
+          operatorMember.permissionLevel < 3
+        )
+          throw new StandardizedError(
+            '你需要成為該群組的管理員才能加入該頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'PERMISSION_DENIED',
+            403,
+          );
+      } else {
+        if (channel.visibility === 'readonly')
+          throw new StandardizedError(
+            '該頻道為唯獨頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'CHANNEL_IS_READONLY',
+            403,
+          );
+        if (operatorMember.permissionLevel < 5)
+          throw new StandardizedError(
+            '你沒有足夠的權限移動其他用戶到該頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'PERMISSION_DENIED',
+            403,
+          );
+        if (
+          !channel.isLobby &&
+          (server.visibility === 'private' ||
+            channel.visibility === 'member') &&
+          operatorMember.permissionLevel < 2
+        )
+          throw new StandardizedError(
+            '你沒有足夠的權限移動其他用戶到該頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'PERMISSION_DENIED',
+            403,
+          );
+        if (
+          !channel.isLobby &&
+          channel.visibility === 'private' &&
+          operatorMember.permissionLevel < 3
+        )
+          throw new StandardizedError(
+            '你沒有足夠的權限移動其他用戶到該頻道',
+            'ValidationError',
+            'CONNECTCHANNEL',
+            'PERMISSION_DENIED',
+            403,
+          );
+      }
 
       if (user.currentChannelId) {
         // Disconnect the user from the current channel
@@ -105,30 +151,29 @@ const channelHandler = {
       await Set.member(operatorMember.id, member_update);
 
       // Setup user interval for accumulate contribution
-      XP.setup(socket);
+      XP.create(userSocket);
 
       // Play sound
       io.to(`channel_${channel.id}`).emit('playSound', 'join');
 
-      // Join the channel
-      await rtcHandler.join(io, socket, { channelId: channel.id });
+      // Join RTC channel
+      rtcHandler.join(io, userSocket, { channelId: channel.id });
 
-      // Emit updated data (only to the user)
-      io.to(socket.id).emit('userUpdate', user_update);
-      io.to(socket.id).emit('memberUpdate', member_update);
-      io.to(socket.id).emit('channelUpdate', await Get.channel(channel.id));
+      // Emit updated data (to the user)
+      io.to(userSocket.id).emit('userUpdate', user_update);
+      io.to(userSocket.id).emit('memberUpdate', member_update);
+      io.to(userSocket.id).emit('channelUpdate', await Get.channel(channel.id));
 
       // Emit updated data (to all users in the server)
-      io.to(`server_${channel.serverId}`).emit('serverUpdate', {
-        members: await Get.serverMembers(channel.serverId),
-        users: await Get.serverUsers(channel.serverId),
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        members: await Get.serverMembers(server.id),
+        users: await Get.serverUsers(server.id),
       });
 
-      new Logger('WebSocket').success(
+      new Logger('Channel').success(
         `User(${user.id}) connected to channel(${channel.id}) by User(${operator.id})`,
       );
     } catch (error) {
-      // Emit error data (only to the user)
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `加入頻道時發生無法預期的錯誤: ${error.message}`,
@@ -139,21 +184,17 @@ const channelHandler = {
         );
       }
 
-      // Emit data (only to the user)
+      // Emit data (to the operator)
       io.to(socket.id).emit('error', error);
       io.to(socket.id).emit('channelUpdate', null);
 
-      new Logger('WebSocket').error(
-        `Error connecting to channel: ${error.error_message}`,
+      new Logger('Channel').error(
+        `Error connecting to channel: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   disconnectChannel: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const channels = (await db.get('channels')) || {};
-
     try {
       // data = {
       //   userId: string
@@ -168,15 +209,47 @@ const channelHandler = {
           'ValidationError',
           'DISCONNECTCHANNEL',
           'DATA_INVALID',
-          401,
+          400,
         );
       }
-      const user = await Func.validate.user(users[userId]);
-      const channel = await Func.validate.channel(channels[channelId]);
+      // Validate socket
+      const operatorId = await Func.validate.socket(socket);
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const channel = await Get.channel(channelId);
+      const server = await Get.server(channel.serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
+
+      if (!userSocket) {
+        throw new StandardizedError(
+          '無法找到使用者的 Socket',
+          'ValidationError',
+          'DISCONNECTCHANNEL',
+          'SOCKET_NOT_FOUND',
+          404,
+        );
+      }
 
       // Validate operation
-      const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
+      if (operator.id === user.id) {
+      } else {
+        if (operatorMember.permissionLevel < 5)
+          throw new StandardizedError(
+            '你沒有足夠的權限踢除其他用戶',
+            'ValidationError',
+            'DISCONNECTCHANNEL',
+            'PERMISSION_DENIED',
+            403,
+          );
+      }
 
       // Update user
       const user_update = {
@@ -186,28 +259,28 @@ const channelHandler = {
       await Set.user(userId, user_update);
 
       // Clear user contribution interval
-      XP.clear(socket);
+      XP.delete(userSocket);
 
-      // Leave the channel
-      await rtcHandler.leave(io, socket, { channelId: channel.id });
+      // Leave RTC channel
+      rtcHandler.leave(io, userSocket, { channelId: channel.id });
 
       // Play sound
       io.to(`channel_${channel.id}`).emit('playSound', 'leave');
 
-      // Emit updated data (only to the user)
-      io.to(socket.id).emit('userUpdate', user_update);
-      io.to(socket.id).emit('channelUpdate', null);
+      // Emit updated data (to the user)
+      io.to(userSocket.id).emit('userUpdate', user_update);
+      io.to(userSocket.id).emit('channelUpdate', null);
 
       // Emit updated data (to all users in the server)
-      io.to(`server_${channel.serverId}`).emit('serverUpdate', {
-        members: await Get.serverMembers(channel.serverId),
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        members: await Get.serverMembers(server.id),
+        users: await Get.serverUsers(server.id),
       });
 
-      new Logger('WebSocket').success(
+      new Logger('Channel').success(
         `User(${user.id}) disconnected from channel(${channel.id}) by User(${operator.id})`,
       );
     } catch (error) {
-      // Emit error data (only to the user)
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `離開頻道時發生無法預期的錯誤: ${error.message}`,
@@ -218,21 +291,17 @@ const channelHandler = {
         );
       }
 
-      // Emit data (only to the user)
+      // Emit data (to the operator)
       io.to(socket.id).emit('error', error);
       io.to(socket.id).emit('channelUpdate', null);
 
-      new Logger('WebSocket').error(
-        `Error disconnecting from channel: ${error.error_message}`,
+      new Logger('Channel').error(
+        `Error disconnecting from channel: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   createChannel: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const servers = (await db.get('servers')) || {};
-
     try {
       // data = {
       //   serverId: string
@@ -249,25 +318,26 @@ const channelHandler = {
           'ValidationError',
           'CREATECHANNEL',
           'DATA_INVALID',
-          401,
+          400,
         );
       }
-      const server = await Func.validate.server(servers[serverId]);
       const newChannel = await Func.validate.channel(_newChannel);
 
-      // Validate operation
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
 
-      // FIX: Check operator permission instead
-      const member = await Get.member(operator.id, server.id);
-      const permission = member.permissionLevel;
-      if (!permission || permission < 4) {
+      // Get data
+      const operator = await Get.user(operatorId);
+      const server = await Get.server(serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
+
+      // Validate permission
+      if (operatorMember.permissionLevel < 5) {
         throw new StandardizedError(
-          '無足夠的權限',
+          '你沒有足夠的權限創建頻道',
           'ValidationError',
           'CREATECHANNEL',
-          'USER_PERMISSION',
+          'PERMISSION_DENIED',
           403,
         );
       }
@@ -296,11 +366,10 @@ const channelHandler = {
         channels: await Get.serverChannels(server.id),
       });
 
-      new Logger('WebSocket').success(
+      new Logger('Channel').success(
         `Channel(${channel.id}) created in server(${server.id}) by User(${operator.id})`,
       );
     } catch (error) {
-      // Emit error data (only to the user)
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `新增頻道時發生無法預期的錯誤: ${error.message}`,
@@ -311,21 +380,16 @@ const channelHandler = {
         );
       }
 
-      // Emit data (only to the user)
+      // Emit data (to the operator)
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(
-        'Error creating channel: ' + error.error_message,
+      new Logger('Channel').error(
+        `Error creating channel: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   updateChannel: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const channels = (await db.get('channels')) || {};
-    const servers = (await db.get('servers')) || {};
-
     try {
       // data = {
       //   serverId: string
@@ -335,7 +399,7 @@ const channelHandler = {
       //   },
       // };
 
-      // Validate
+      // Validate data
       const { channel: _editedChannel, channelId, serverId } = data;
       if (!_editedChannel || !channelId || !serverId) {
         throw new StandardizedError(
@@ -343,25 +407,27 @@ const channelHandler = {
           'ValidationError',
           'UPDATECHANNEL',
           'DATA_INVALID',
-          401,
+          400,
         );
       }
-      const server = await Func.validate.server(servers[serverId]);
-      const channel = await Func.validate.channel(channels[channelId]);
       const editedChannel = await Func.validate.channel(_editedChannel);
 
-      // Validate operation
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
 
-      const member = await Get.member(operator.id, server.id);
-      const permission = member.permissionLevel;
-      if (!permission || permission < 3) {
+      // Get data
+      const operator = await Get.user(operatorId);
+      const server = await Get.server(serverId);
+      const channel = await Get.channel(channelId);
+      const operatorMember = await Get.member(operator.id, server.id);
+
+      // Validate operation
+      if (operatorMember.permissionLevel < 5) {
         throw new StandardizedError(
-          '無足夠的權限',
+          '你沒有足夠的權限編輯頻道',
           'ValidationError',
           'UPDATECHANNEL',
-          'USER_PERMISSION',
+          'PERMISSION_DENIED',
           403,
         );
       }
@@ -500,11 +566,10 @@ const channelHandler = {
         channels: await Get.serverChannels(server.id),
       });
 
-      new Logger('WebSocket').success(
+      new Logger('Channel').success(
         `Channel(${channel.id}) updated in server(${server.id}) by User(${operator.id})`,
       );
     } catch (error) {
-      // Emit error data (only to the user)
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `編輯頻道時發生無法預期的錯誤: ${error.message}`,
@@ -515,21 +580,16 @@ const channelHandler = {
         );
       }
 
-      // Emit data (only to the user)
+      // Emit data (to the operator)
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(
-        'Error updating channel: ' + error.error_message,
+      new Logger('Channel').error(
+        `Error updating channel: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   deleteChannel: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const channels = (await db.get('channels')) || {};
-    const servers = (await db.get('servers')) || {};
-
     try {
       // data = {
       //   serverId: string
@@ -541,27 +601,29 @@ const channelHandler = {
       if (!channelId || !serverId) {
         throw new StandardizedError(
           '無效的資料',
-          'DELETECHANNEL',
           'ValidationError',
+          'DELETECHANNEL',
           'DATA_INVALID',
-          401,
+          400,
         );
       }
-      const channel = await Func.validate.channel(channels[channelId]);
-      const server = await Func.validate.server(servers[serverId]);
+
+      // Validate socket
+      const operatorId = await Func.validate.socket(socket);
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const channel = await Get.channel(channelId);
+      const server = await Get.server(serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
 
       // Validate operation
-      const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
-
-      const member = await Get.member(operator.id, server.id);
-      const permission = member.permissionLevel;
-      if (!permission || permission < 4) {
+      if (operatorMember.permissionLevel < 5) {
         throw new StandardizedError(
-          '無足夠的權限',
+          '你沒有足夠的權限刪除頻道',
           'ValidationError',
           'DELETECHANNEL',
-          'USER_PERMISSION',
+          'PERMISSION_DENIED',
           403,
         );
       }
@@ -592,11 +654,10 @@ const channelHandler = {
         channels: await Get.serverChannels(server.id),
       });
 
-      new Logger('WebSocket').info(
+      new Logger('Channel').info(
         `Channel(${channel.id}) deleted in server(${server.id}) by User(${operator.id})`,
       );
     } catch (error) {
-      // Emit error data (only to the user)
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `刪除頻道時發生無法預期的錯誤: ${error.message}`,
@@ -607,11 +668,11 @@ const channelHandler = {
         );
       }
 
-      // Emit data (only to the user)
+      // Emit data (to the operator)
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(
-        'Error deleting channel: ' + error.error_message,
+      new Logger('Channel').error(
+        `Error deleting channel: ${error.error_message} (${socket.id})`,
       );
     }
   },

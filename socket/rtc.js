@@ -9,8 +9,6 @@ const {
 
 const rtcHandler = {
   offer: async (io, socket, data) => {
-    // Get database
-
     try {
       // data = {
       //   to:
@@ -31,9 +29,8 @@ const rtcHandler = {
         );
       }
 
-      // Validate operation
+      // Validate socket
       await Func.validate.socket(socket);
-      // TODO: Add validation for operator
 
       socket.to(to).emit('RTCOffer', {
         from: socket.id,
@@ -54,18 +51,16 @@ const rtcHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('RTC').error(
-        `Error sending RTC offer to user(socket-id: ${to}): ${error.error_message}`,
+        `Error sending RTC offer to user(socket-id: ${to}): ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   answer: async (io, socket, data) => {
-    // Get database
-
     try {
       // data = {
       //   to:
@@ -86,9 +81,8 @@ const rtcHandler = {
         );
       }
 
-      // Validate operation
+      // Validate socket
       await Func.validate.socket(socket);
-      // TODO: Add validation for operator
 
       socket.to(to).emit('RTCAnswer', {
         from: socket.id,
@@ -109,18 +103,16 @@ const rtcHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('RTC').error(
-        `Error sending RTC answer to user(socket-id: ${to}): ${error.error_message}`,
+        `Error sending RTC answer to user(socket-id: ${to}): ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   candidate: async (io, socket, data) => {
-    // Get database
-
     try {
       // data = {
       //   to:
@@ -141,9 +133,8 @@ const rtcHandler = {
         );
       }
 
-      // Validate operation
+      // Validate socket
       await Func.validate.socket(socket);
-      // TODO: Add validation for operator
 
       socket.to(to).emit('RTCIceCandidate', {
         from: socket.id,
@@ -164,18 +155,16 @@ const rtcHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('RTC').error(
-        `Error sending RTC ICE candidate user(socket-id: ${to}): ${error.error_message}`,
+        `Error sending RTC ICE candidate user(socket-id: ${to}): ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   join: async (io, socket, data) => {
-    // Get database
-
     try {
       // data = {
       //   channelId:
@@ -193,13 +182,12 @@ const rtcHandler = {
         );
       }
 
-      // Validate operation
+      // Validate socket
       await Func.validate.socket(socket);
-      // TODO: Add validation for operator
 
       socket.join(`channel_${channelId}`);
 
-      // Emit RTC join event (To all users)
+      // Emit RTC join event (to all users)
       socket.to(`channel_${channelId}`).emit('RTCJoin', socket.id);
 
       // new Logger('RTC').success(
@@ -216,18 +204,16 @@ const rtcHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('RTC').error(
-        `Error joining RTC channel(${channelId}): ${error.error_message}`,
+        `Error joining RTC channel(${channelId}): ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   leave: async (io, socket, data) => {
-    // Get database
-
     try {
       // data = {
       //   channelId:
@@ -245,13 +231,12 @@ const rtcHandler = {
         );
       }
 
-      // Validate operation
+      // Validate socket
       await Func.validate.socket(socket);
-      // TODO: Add validation for operator
 
       socket.leave(`channel_${channelId}`);
 
-      // Emit RTC leave event (To all users)
+      // Emit RTC leave event (to all users)
       socket.to(`channel_${channelId}`).emit('RTCLeave', socket.id);
 
       // new Logger('RTC').success(
@@ -268,11 +253,11 @@ const rtcHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('RTC').error(
-        `Error leaving RTC channel(${channelId}): ${error.error_message}`,
+        `Error leaving RTC channel(${channelId}): ${error.error_message} (${socket.id})`,
       );
     }
   },

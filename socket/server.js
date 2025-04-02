@@ -14,6 +14,7 @@ const {
 } = utils;
 // Handlers
 const channelHandler = require('./channel');
+const memberHandler = require('./member');
 
 const serverHandler = {
   searchServer: async (io, socket, data) => {
@@ -34,32 +35,31 @@ const serverHandler = {
         );
       }
 
-      // Validate operation
+      // Validate socket
       await Func.validate.socket(socket);
 
       io.to(socket.id).emit('serverSearch', await Get.searchServer(query));
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
-          `搜尋群組時發生錯誤: ${error.message}`,
+          `搜尋群組時發生無法預期的錯誤: ${error.message}`,
           'ServerError',
           'SEARCHSERVER',
           'EXCEPTION_ERROR',
           500,
         );
       }
+
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
-      new Logger('WebSocket').error(
-        `Error searching servers: ${error.error_message}`,
+
+      new Logger('Server').error(
+        `Error searching servers: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   connectServer: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const servers = (await db.get('servers')) || {};
-
     try {
       // data = {
       //   userId:
@@ -77,40 +77,56 @@ const serverHandler = {
           401,
         );
       }
-      const user = await Func.validate.user(users[userId]);
-      const server = await Func.validate.server(servers[serverId]);
+
+      // Validate socket
+      const operatorId = await Func.validate.socket(socket);
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const server = await Get.server(serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
 
       // Validate operation
-      const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
-      // TODO: Add validation for operator
-
-      // Create new membership if there isn't one
-      const member = await Get.member(user.id, server.id);
-      const specialPermissionLevel = specialUsers.getSpecialPermissionLevel(
-        user.id,
-      );
-      if (
-        !specialPermissionLevel &&
-        server.visibility == 'invisible' &&
-        (!member || member.permissionLevel < 2)
-      ) {
-        io.to(socket.id).emit('openPopup', {
-          popupType: 'applyMember',
-          initialData: {
-            serverId: server.id,
-            userId: user.id,
-          },
-        });
-        return;
+      if (operator.id !== user.id) {
+        throw new StandardizedError(
+          '無法移動其他用戶的群組',
+          'ValidationError',
+          'CONNECTSERVER',
+          'PERMISSION_DENIED',
+          403,
+        );
+      } else {
+        if (
+          server.visibility === 'invisible' &&
+          operatorMember.permissionLevel < 2
+        ) {
+          io.to(userSocket.id).emit('openPopup', {
+            popupType: 'applyMember',
+            initialData: {
+              serverId: server.id,
+              userId: user.id,
+            },
+          });
+          return;
+        }
       }
 
-      if (!member) {
-        await Set.member(`mb_${user.id}-${server.id}`, {
-          serverId: server.id,
+      // Create new membership if there isn't one
+      if (!operatorMember) {
+        await memberHandler.createMember(io, socket, {
           userId: user.id,
-          permissionLevel: specialPermissionLevel || 1,
-          createdAt: Date.now(),
+          serverId: server.id,
+          member: {
+            permissionLevel:
+              specialUsers.getSpecialPermissionLevel(user.id) || 1,
+          },
         });
       }
 
@@ -144,13 +160,13 @@ const serverHandler = {
       await Set.user(user.id, user_update);
 
       // Join the server
-      socket.join(`server_${server.id}`);
+      userSocket.join(`server_${server.id}`);
 
       // Emit data (only to the user)
-      io.to(socket.id).emit('userUpdate', user_update);
-      io.to(socket.id).emit('serverUpdate', await Get.server(server.id));
+      io.to(userSocket.id).emit('userUpdate', user_update);
+      io.to(userSocket.id).emit('serverUpdate', await Get.server(server.id));
 
-      new Logger('WebSocket').success(
+      new Logger('Server').success(
         `User(${user.id}) connected to server(${server.id}) by User(${operator.id})`,
       );
     } catch (error) {
@@ -164,21 +180,17 @@ const serverHandler = {
         );
       }
 
-      // Emit data (only to the user)
+      // Emit data (to the operator)
       io.to(socket.id).emit('serverUpdate', null);
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(
-        `Error connecting server: ${error.error_message}`,
+      new Logger('Server').error(
+        `Error connecting server: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   disconnectServer: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const servers = (await db.get('servers')) || {};
-
     try {
       // data = {
       //   userId:
@@ -196,13 +208,43 @@ const serverHandler = {
           401,
         );
       }
-      const user = await Func.validate.user(users[userId]);
-      const server = await Func.validate.server(servers[serverId]);
 
-      // Validate data
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
-      // TODO: Add validation for operator
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const server = await Get.server(serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
+      let userSocket;
+      io.sockets.sockets.forEach((_socket) => {
+        if (_socket.userId === user.id) {
+          userSocket = _socket;
+        }
+      });
+
+      // Validate operation
+      if (operator.id !== user.id) {
+        if (server.id !== user.currentServerId) {
+          throw new StandardizedError(
+            '無法踢出不在該群組的用戶',
+            'ValidationError',
+            'DISCONNECTSERVER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
+        if (operatorMember.permissionLevel < 5) {
+          throw new StandardizedError(
+            '你沒有足夠的權限踢出其他用戶',
+            'ValidationError',
+            'DISCONNECTSERVER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
+      }
 
       // Leave prev channel
       if (user.currentChannelId) {
@@ -220,13 +262,13 @@ const serverHandler = {
       await Set.user(user.id, user_update);
 
       // Leave the server
-      socket.leave(`server_${server.id}`);
+      userSocket.leave(`server_${server.id}`);
 
       // Emit data (only to the user)
-      io.to(socket.id).emit('userUpdate', user_update);
-      io.to(socket.id).emit('serverUpdate', null);
+      io.to(userSocket.id).emit('userUpdate', user_update);
+      io.to(userSocket.id).emit('serverUpdate', null);
 
-      new Logger('WebSocket').success(
+      new Logger('Server').success(
         `User(${user.id}) disconnected from server(${server.id}) by User(${operator.id})`,
       );
     } catch (error) {
@@ -240,20 +282,17 @@ const serverHandler = {
         );
       }
 
-      // Emit data (only to the user)
+      // Emit data (to the operator)
       io.to(socket.id).emit('serverUpdate', null);
       io.to(socket.id).emit('error', error);
 
-      new Logger('WebSocket').error(
-        `Error disconnecting from server: ${error.error_message}`,
+      new Logger('Server').error(
+        `Error disconnecting from server: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   createServer: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-
     try {
       // data = {
       //   server: {
@@ -274,22 +313,20 @@ const serverHandler = {
       }
       const newServer = await Func.validate.server(_newServer);
 
-      // Validate data
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
-      // TODO: Add validation for operator
 
-      const userOwnedServers = await Get.userOwnedServers(operator.id);
-      const userLevel = (await Get.user(operator.id)).level;
-      const MAX_GROUPS =
-        userLevel >= 16 ? 5 : userLevel >= 6 && userLevel < 16 ? 4 : 3;
+      // Get data
+      const operator = await Get.user(operatorId);
+      const MAX_GROUPS = Math.min(3 + operator.level / 5, 10);
 
-      if (userOwnedServers.length >= MAX_GROUPS) {
+      // Validate operation
+      if (operator.ownedServers.length >= MAX_GROUPS) {
         throw new StandardizedError(
-          '您已經創建了最大數量的群組',
+          '可擁有群組數量已達上限',
           'ValidationError',
           'CREATESERVER',
-          'SERVER_LIMIT',
+          'LIMIT_REACHED',
           403,
         );
       }
@@ -299,10 +336,10 @@ const serverHandler = {
       const channelId = uuidv4();
 
       // Create server
-      const server = await Set.server(serverId, {
+      await Set.server(serverId, {
         ...newServer,
         name: newServer.name.trim(),
-        description: newServer.description.trim(),
+        slogan: newServer.slogan.trim(),
         displayId: await Func.generateUniqueDisplayId(),
         lobbyId: channelId,
         ownerId: operator.id,
@@ -314,7 +351,7 @@ const serverHandler = {
         name: '大廳',
         isLobby: true,
         isRoot: true,
-        serverId: server.id,
+        serverId: serverId,
         createdAt: Date.now(),
       });
 
@@ -322,30 +359,31 @@ const serverHandler = {
       const specialPermissionLevel = specialUsers.getSpecialPermissionLevel(
         operator.id,
       );
-      await Set.member(`mb_${operator.id}-${server.id}`, {
-        permissionLevel: specialPermissionLevel || 6,
+      await memberHandler.createMember(io, socket, {
         userId: operator.id,
-        serverId: server.id,
-        createdAt: Date.now(),
+        serverId: serverId,
+        member: {
+          permissionLevel: specialPermissionLevel || 6,
+        },
       });
 
       // Create user-server
-      await Set.userServer(`us_${operator.id}-${server.id}`, {
+      await Set.userServer(`us_${operator.id}-${serverId}`, {
         recent: true,
         owned: true,
         userId: operator.id,
-        serverId: server.id,
+        serverId: serverId,
         timestamp: Date.now(),
       });
 
       // Join the server
       await serverHandler.connectServer(io, socket, {
-        serverId: server.id,
+        serverId: serverId,
         userId: operator.id,
       });
 
       new Logger('Server').success(
-        `Server(${server.id}) created by User(${operator.id})`,
+        `Server(${serverId}) created by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -358,20 +396,16 @@ const serverHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(
-        `Error creating server: ${error.error_message}`,
+        `Error creating server: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   updateServer: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const servers = (await db.get('servers')) || {};
-
     try {
       // data = {
       //   serverId:
@@ -391,22 +425,23 @@ const serverHandler = {
           401,
         );
       }
-      const server = await Func.validate.server(servers[serverId]);
       const editedServer = await Func.validate.server(_editedServer);
 
-      // Validate operation
+      // Validate socket
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
-      // TODO: Add validation for operator
 
-      const member = await Get.member(operator.id, server.id);
-      const permission = member.permissionLevel;
-      if (!permission || permission < 5) {
+      // Get data
+      const operator = await Get.user(operatorId);
+      const server = await Get.server(serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
+
+      // Validate operation
+      if (operatorMember.permissionLevel < 5) {
         throw new StandardizedError(
-          '您沒有權限更新群組',
+          '你沒有足夠的權限更新該群組',
           'ValidationError',
           'UPDATESERVER',
-          'USER_PERMISSION',
+          'PERMISSION_DENIED',
           403,
         );
       }
@@ -431,11 +466,11 @@ const serverHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(
-        `Error updating server: ${error.error_message}`,
+        `Error updating server: ${error.error_message} (${socket.id})`,
       );
     }
   },

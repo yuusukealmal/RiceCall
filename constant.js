@@ -5,10 +5,10 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const fs = require('fs').promises;
 
 const XP_SYSTEM = {
-  BASE_XP: 5, // Base XP required for level 2
-  GROWTH_RATE: 1.02, // XP requirement increases by 2% per level
-  XP_PER_HOUR: 1, // XP gained per hour in voice channel
-  INTERVAL_MS: 60 * 60 * 1000, // 1 hour in milliseconds
+  BASE_REQUIRE_XP: 25, // Base XP required for level up
+  BASE_XP: 1, // Base XP gained per update
+  GROWTH_RATE: 1.06, // XP requirement increases by 6% per level
+  INTERVAL_MS: 1 * 60 * 1000, // 1 minutes in milliseconds
 };
 
 const CLEANUP_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -22,6 +22,7 @@ const MIME_TYPES = {
 };
 
 const PORT = process.env.PORT || 4500;
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost';
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' };
 
 const UPLOADS_PATH = 'uploads';
@@ -45,6 +46,7 @@ module.exports = {
   XP_SYSTEM,
   CLEANUP_INTERVAL_MS,
   PORT,
+  SERVER_URL,
   MIME_TYPES,
   CONTENT_TYPE_JSON,
   UPLOADS_PATH,

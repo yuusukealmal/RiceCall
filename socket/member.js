@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { QuickDB } = require('quick.db');
-const db = new QuickDB();
 // Utils
 const utils = require('../utils');
 const {
@@ -13,9 +11,6 @@ const {
 
 const memberHandler = {
   createMember: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-
     try {
       // data = {
       //   userId: string;
@@ -40,24 +35,78 @@ const memberHandler = {
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
+
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const server = await Get.server(serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
+
+      if (operator.id === user.id) {
+        if (newMember.permissionLevel !== 1 && server.ownerId != operator.id) {
+          throw new StandardizedError(
+            '必須是遊客',
+            'ValidationError',
+            'CREATEMEMBER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
+        if (newMember.permissionLevel !== 6 && server.ownerId === operator.id) {
+          throw new StandardizedError(
+            '必須是群組創建者',
+            'ValidationError',
+            'CREATEMEMBER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
+      } else {
+        if (operatorMember.permissionLevel < 5) {
+          throw new StandardizedError(
+            '你沒有足夠的權限新增成員',
+            'ValidationError',
+            'CREATEMEMBER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
+        if (newMember.permissionLevel >= operatorMember.permissionLevel) {
+          throw new StandardizedError(
+            '無法新增權限高於自己的成員',
+            'ValidationError',
+            'CREATEMEMBER',
+            'PERMISSION_TOO_HIGH',
+            403,
+          );
+        }
+        if (newMember.permissionLevel > 5) {
+          throw new StandardizedError(
+            '權限等級過高',
+            'ValidationError',
+            'CREATEMEMBER',
+            'PERMISSION_TOO_HIGH',
+            403,
+          );
+        }
+      }
 
       // Create member
       const memberId = `mb_${userId}-${serverId}`;
       const member = await Set.member(memberId, {
         ...newMember,
-        userId: userId,
-        serverId: serverId,
+        userId: user.id,
+        serverId: server.id,
         createdAt: Date.now(),
       });
 
-      // Emit updated data to all users in the server
-      io.to(`server_${serverId}`).emit('serverUpdate', {
-        members: await Get.serverMembers(serverId),
+      // Emit updated data (to all users in the server)
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        members: await Get.serverMembers(server.id),
       });
 
-      new Logger('Server').success(
-        `Member(${member.id}) of server(${serverId}) created by User(${operator.id})`,
+      new Logger('Member').success(
+        `Member(${member.id}) of User(${user.id}) in Server(${server.id}) created by User(${operator.id})`,
       );
     } catch (error) {
       if (!(error instanceof StandardizedError)) {
@@ -70,20 +119,16 @@ const memberHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
-      new Logger('Server').error(
-        `Error creating member: ${error.error_message}`,
+      new Logger('Member').error(
+        `Error creating member: ${error.error_message} (${socket.id})`,
       );
     }
   },
 
   updateMember: async (io, socket, data) => {
-    // Get database
-    const users = (await db.get('users')) || {};
-    const members = (await db.get('members')) || {};
-
     try {
       // data = {
       //   userId: string;
@@ -104,24 +149,22 @@ const memberHandler = {
           401,
         );
       }
-
       const editedMember = await Func.validate.member(_editedMember);
-      const member = await Func.validate.member(
-        members[`mb_${userId}-${serverId}`],
-      );
 
       // Validate operation
       const operatorId = await Func.validate.socket(socket);
-      const operator = await Func.validate.user(users[operatorId]);
-      // TODO: Add validation for operator
 
-      const operatorMember = await Get.member(operatorId, serverId);
-      const operatorPermission = operatorMember.permissionLevel;
+      // Get data
+      const operator = await Get.user(operatorId);
+      const user = await Get.user(userId);
+      const server = await Get.server(serverId);
+      const member = await Get.member(userId, serverId);
+      const operatorMember = await Get.member(operator.id, server.id);
 
-      if (operatorId === userId) {
+      if (operator.id === user.id) {
         if (editedMember.permissionLevel) {
           throw new StandardizedError(
-            '你沒有權限更改自己的權限',
+            '無法更改自己的權限',
             'ValidationError',
             'UPDATEMEMBER',
             'PERMISSION_DENIED',
@@ -129,48 +172,73 @@ const memberHandler = {
           );
         }
       } else {
-        if (!operatorPermission || operatorPermission < 3) {
+        if (operatorMember.permissionLevel < 3) {
           throw new StandardizedError(
-            '無足夠的權限',
-            'ValidationError',
-            'UPDATEMEMBER',
-            'USER_PERMISSION',
-            403,
-          );
-        }
-        if (editedMember.nickname && operatorPermission < 5) {
-          throw new StandardizedError(
-            '你沒有權限更改其他成員的暱稱',
+            '你沒有足夠的權限更改其他成員',
             'ValidationError',
             'UPDATEMEMBER',
             'PERMISSION_DENIED',
             403,
           );
         }
-        if (operatorPermission < member.permissionLevel) {
+        if (member.permissionLevel > 5) {
           throw new StandardizedError(
-            '你沒有權限更改此成員的權限',
+            '無法更改群創建者的權限',
             'ValidationError',
             'UPDATEMEMBER',
             'PERMISSION_DENIED',
             403,
           );
         }
-        if (operatorPermission < editedMember.permissionLevel) {
+        if (
+          member.permissionLevel === 1 &&
+          editedMember.permissionLevel &&
+          !operatorMember.permissionLevel > 5
+        ) {
           throw new StandardizedError(
-            '你無法設置高於自己的權限',
+            '你沒有足夠的權限更改非會員使用者的權限',
+            'ValidationError',
+            'UPDATEMEMBER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
+        if (
+          editedMember.permissionLevel === 1 &&
+          !operatorMember.permissionLevel > 5
+        ) {
+          throw new StandardizedError(
+            '無法更改會員為非會員',
+            'ValidationError',
+            'UPDATEMEMBER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
+        if (editedMember.nickname && operatorMember.permissionLevel < 5) {
+          throw new StandardizedError(
+            '你沒有足夠的權限更改其他成員的暱稱',
+            'ValidationError',
+            'UPDATEMEMBER',
+            'PERMISSION_DENIED',
+            403,
+          );
+        }
+        if (editedMember.permissionLevel >= operatorMember.permissionLevel) {
+          throw new StandardizedError(
+            '無法設置高於自己的權限',
             'ValidationError',
             'UPDATEMEMBER',
             'PERMISSION_TOO_HIGH',
             403,
           );
         }
-        if (editedMember.permissionLevel && member.permissionLevel === 6) {
+        if (editedMember.permissionLevel > 5) {
           throw new StandardizedError(
-            '你無法更改群創建者的權限',
+            '權限等級過高',
             'ValidationError',
             'UPDATEMEMBER',
-            'PERMISSION_DENIED',
+            'PERMISSION_TOO_HIGH',
             403,
           );
         }
@@ -180,15 +248,14 @@ const memberHandler = {
       await Set.member(member.id, editedMember);
 
       // Emit updated data to all users in the server
-      io.to(`server_${serverId}`).emit('serverUpdate', {
-        members: await Get.serverMembers(serverId),
+      io.to(`server_${server.id}`).emit('serverUpdate', {
+        members: await Get.serverMembers(server.id),
       });
 
-      new Logger('Server').success(
-        `Member(${member.id}) of server(${serverId}) updated by User(${operator.id})`,
+      new Logger('Member').success(
+        `Member(${member.id}) of User(${user.id}) in Server(${server.id}) updated by User(${operator.id})`,
       );
     } catch (error) {
-      console.log(error);
       if (!(error instanceof StandardizedError)) {
         error = new StandardizedError(
           `更新成員時發生無法預期的錯誤: ${error.message}`,
@@ -199,11 +266,11 @@ const memberHandler = {
         );
       }
 
-      // Emit error data (only to the user)
+      // Emit error data (to the operator)
       io.to(socket.id).emit('error', error);
 
-      new Logger('Server').error(
-        `Error updating member: ${error.error_message}`,
+      new Logger('Member').error(
+        `Error updating member: ${error.error_message} (${socket.id})`,
       );
     }
   },
