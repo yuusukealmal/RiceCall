@@ -357,7 +357,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
                 [channelId]: !prev[channelId],
               }))
             }
-          ></div>
+          />
           <div className={styles['channelTabLable']}>{channelName}</div>
           {channelVisibility !== 'readonly' && (
             <div className={styles['channelTabCount']}>

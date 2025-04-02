@@ -194,8 +194,8 @@ const Popup = React.memo(() => {
         setContent(<EditFriendGroup {...initialData} />);
         break;
       case PopupType.DIRECT_MESSAGE:
-        setHeaderTitle(lang.tr.directMessage);
-        setHeaderButtons(['close']);
+        setHeaderTitle(initialData.targetName || lang.tr.directMessage);
+        setHeaderButtons(['close', 'minimize', 'maxsize']);
         setContent(<DirectMessageModal {...initialData} />);
         break;
       case PopupType.DIALOG_ALERT:
@@ -233,11 +233,7 @@ const Popup = React.memo(() => {
     <WebRTCProvider>
       <div className="wrapper">
         {/* Top Nevigation */}
-        {(params.get('type') as PopupType) !== PopupType.DIRECT_MESSAGE ? (
-          <Header title={headerTitle} buttons={headerButtons} />
-        ) : (
-          ''
-        )}
+        {<Header title={headerTitle} buttons={headerButtons} />}
         {/* Main Content */}
         {content}
       </div>

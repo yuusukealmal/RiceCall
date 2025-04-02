@@ -1,43 +1,25 @@
-.directBox {
-  height: 100%;
-  width: 100%;
-  background: url(../../../public/dialog_body_bg.png) no-repeat center center;
-  background-size: cover;
-}
-
-.headerBox {
-  display: flex;
-  justify-content: space-between;
-  background-color: #0073c6;
-  -webkit-app-region: drag;
-}
-
 .header {
-  height: 50px;
   display: flex;
-  align-items: center;
-  padding: 0 10px;
-  font-size: 16px;
-  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
   color: #fff;
+  width: 100%;
+  padding: 0 10px 5px 10px;
+  background-color: #0073c6;
+  border-left: 1px solid #858585;
+  border-right: 1px solid #858585;
 }
 
-.header:before {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  background: url(../../../public/im/chat.png) no-repeat center center;
-  vertical-align: middle;
-  background-size: contain;
+.userSignature {
+  min-height: 2rem;
+  margin-left: 23px;
 }
 
 .directOptionButtons {
   display: flex;
   justify-content: left;
-  background-color: #0073c6;
-  padding-bottom: 5px;
-  padding-top: 5px;
+  margin-left: 18px;
+  gap: 5px;
 }
 
 .directOptionFileShareButton,
@@ -47,98 +29,46 @@
 .directOptionReportButton {
   content: '';
   display: inline-block;
-  width: 30px;
-  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   vertical-align: middle;
   background-size: contain;
   cursor: pointer;
-  margin-left: 1rem;
 }
 
 .directOptionFileShareButton {
-  background: url(../../../public/im/Fileshare.png) no-repeat center center;
-  margin-left: 2rem;
+  background-image: url(../../../public/im/Fileshare.png);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .directOptionBlockUserButton {
-  background: url(../../../public/im/BlockUser.png) no-repeat center center;
+  background-image: url(../../../public/im/BlockUser.png);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .directOptionUnBlockUserButton {
-  background: url(../../../public/im/UnblockUser.PNG) no-repeat center center;
+  background-image: url(../../../public/im/UnblockUser.PNG);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .directOptionInviteTempGroupButton {
-  background: url(../../../public/im/InviteTempGroup.png) no-repeat center
-    center;
+  background-image: url(../../../public/im/InviteTempGroup.png);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .directOptionReportButton {
-  background: url(../../../public/im/report.png) no-repeat center center;
-}
-
-.targetUserInfo {
-  display: flex;
-  flex-direction: column;
-}
-
-.targetUserName {
-  margin-left: 5px;
-  font-size: 16px;
-  color: #000;
-  font-weight: bold;
-}
-
-.targetUserDescription {
-  margin-left: 5px;
-  font-size: 15px;
-  color: #000;
-}
-
-.actionButtons {
-  width: 110px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-evenly;
-  -webkit-app-region: no-drag;
-}
-
-.actionButton {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.minimizeButton {
-  background: url(../../../public/Button_Minsize.png) no-repeat center center;
-  background-position: 0 0;
-  background-size: cover;
-}
-
-.maxsizeButton {
-  background: url(../../../public/Button_Maxsize.png) no-repeat center center;
-  background-position: 0 0;
-  background-size: cover;
-}
-
-.closeButton {
-  background: url(../../../public/Button_Close.png) no-repeat center center;
-  background-position: 0 0;
-  background-size: cover;
-}
-
-.minimizeButton:hover,
-.closeButton:hover,
-.maxsizeButton:hover {
-  background-position: -20px 0;
-}
-
-.minimizeButton:active,
-.closeButton:active,
-.maxsizeButton:active {
-  background-position: -40px 0;
+  background-image: url(../../../public/im/report.png);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .bodyWrapper {
@@ -154,97 +84,83 @@
   flex-direction: row;
 }
 
-.disrectLeftItems {
+.sidebar {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   height: 100%;
-  width: 200px;
+  width: fit-content;
+  padding: 10px;
   flex-direction: column;
   border-right: 2px solid #e0e0e4;
-  align-items: center;
-  justify-content: space-between;
 }
 
-.disrectLeftHeader {
-  height: 30px;
-  width: 100%;
-  border-bottom: 1px solid #e0e0e4;
-  display: flex;
-  align-items: center;
-  background: #f4fbfe;
-  justify-content: space-between;
+.avatarPicture {
+  min-width: 100px;
+  min-height: 100px;
+  margin: 10px;
+  position: relative;
+  background-image: url(../../../public/im/IMLogo.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
-.disrectRightItems {
-  height: 100%;
-  width: 100%;
-}
-
-.disrectLeftTargetAvatarBorder,
-.disrectLeftSelfAvatarBorder {
+.avatarPicture::before {
   z-index: 2;
-  width: 120px;
-  height: 120px;
-  background: url(../../../public/im/logoframe.png) no-repeat center center;
-  background-position: 0 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  min-width: 120px;
+  min-height: 120px;
+  background-image: url(../../../public/im/logoframe.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
-.disrectLeftTargetAvatarImage,
-.disrectLeftSelfAvatarImage {
-  width: 100px;
-  height: 100px;
-  background: url(../../../public/im/IMLogo.png) no-repeat center center;
-  background-size: contain;
-  background-position: 0 0;
-}
-
-.disrectLeftTargetAvatarBorder {
-  top: 10px;
-  position: relative;
-}
-
-.disrectLeftSelfAvatarBorder {
-  bottom: 100px;
-  position: relative;
-}
-
-.disrectLeftTargetBox {
+.targetBox {
   display: flex;
   flex-direction: column;
+  gap: 5px;
 }
 
-.disrectTargetVIP {
-  height: 14px;
-  width: 55px;
-  margin-top: 20px;
-  margin-left: 5px;
-  cursor: pointer;
+.mainContent {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
 }
 
-.disrectTargetLevel {
-  margin-top: 10px;
-  margin-left: 7px;
-  cursor: pointer;
-}
-
-.serverInBox {
-  height: 30px;
+.serverInArea {
+  height: 22px;
   width: 100%;
   display: flex;
   align-items: center;
   cursor: pointer;
+}
+
+.serverInArea:after {
+  content: '';
+  position: absolute;
+  min-height: 22px;
+  min-width: 100%;
+  background-image: url(../../../public/im/serverin_bkg.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: 0 0;
 }
 
 .serverInIcon {
-  background: url(../../../public/im/server_in.png) no-repeat center center;
-  background-size: contain;
-  background-position: 0 0;
-  height: 12px;
-  width: 12px;
+  min-height: 12px;
+  min-width: 12px;
   margin-left: 10px;
+  background-image: url(../../../public/im/server_in.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: 0 0;
 }
 
 .serverInName {
@@ -252,106 +168,64 @@
   width: 100%;
 }
 
-.serverInBox:after {
-  content: '';
-  background: url(../../../public/im/serverin_bkg.png) no-repeat center center;
-  background-size: contain;
-  background-position: 0 0;
-  height: 22px;
-  width: 100%;
-  position: fixed;
-  margin-top: 5px;
+.messageArea {
+  display: flex;
+  flex: 5;
+  padding: 0.75rem;
+  overflow-y: auto;
 }
 
-.chatTextArea {
-  padding-top: 10px;
-  width: 100%;
-  height: 50%;
+.inputArea {
+  flex: 3;
   display: flex;
   flex-direction: column;
-  overflow: auto;
-  overflow-x: hidden;
-  min-height: calc(100vh - 500px);
-}
-
-.chatMessageBox {
-  margin-left: 10px;
   width: 100%;
-  height: auto;
 }
 
-.chatMessageUsernameBox {
+.inputArea .topBar {
+  min-height: 30px;
+  min-width: 100%;
   display: flex;
-  align-items: center;
-}
-
-.chatMessageTime {
-  margin-left: 5px;
-  color: #777777;
-}
-
-.chatMessageUsername {
-  color: #3591d3;
-  font-size: 14px;
-}
-
-.chatMessageText {
-  margin-left: 10px;
-  margin-top: 5px;
-  font-size: 13px;
-}
-
-.chatInputBox {
-  background: #fff;
-  width: 100%;
-  height: 125px;
-  position: relative;
-}
-
-.chatInputTopBar {
-  height: 30px;
-  width: 100%;
-  display: flex;
-  background: url(../../../public/tool_bkg.png) no-repeat center center;
+  background-image: url(../../../public/tool_bkg.png);
   background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
   border-bottom: 1px solid #e0e0e4;
   border-top: 1px solid #e0e0e4;
   justify-content: space-between;
 }
 
-.chatInputTopBarLeft {
+.inputArea .topBar .buttons {
   display: flex;
   align-items: center;
   margin-left: 5px;
 }
 
-.chatInputTopBarLeft .button {
+.inputArea .topBar .buttons .button {
   background-position: 0 0;
-  height: 18px;
-  width: 18px;
+  min-height: 18px;
+  min-width: 18px;
   margin-right: 10px;
   cursor: pointer;
 }
 
-.chatInputTopBarFont {
-  background: url(../../../public/FontButton.png) no-repeat center center;
+.inputArea .topBar .buttons .button.font {
+  background-image: url(../../../public/FontButton.png);
 }
 
-.chatInputTopBarEmoji {
-  background: url(../../../public/FaceButton.png) no-repeat center center;
+.inputArea .topBar .buttons .button.emoji {
+  background-image: url(../../../public/FaceButton.png);
 }
 
-.chatInputTopBarScreenShot {
-  background: url(../../../public/ScreenShot.png) no-repeat center center;
+.inputArea .topBar .buttons .button.screenShot {
+  background-image: url(../../../public/ScreenShot.png);
 }
 
-.chatInputTopBarNudge {
-  height: 16px;
-  width: 16px;
-  background: url(../../../public/im/Nudge.png) no-repeat center center;
+.inputArea .topBar .buttons .button.nudge {
+  background-image: url(../../../public/im/Nudge.png);
 }
 
-.chatInputTopBarHistoryMessage {
+.inputArea .topBar .historyMessage {
   height: 100%;
   width: auto;
   display: flex;
@@ -360,67 +234,26 @@
   cursor: pointer;
 }
 
-.chatInputTopBarHistoryMessage:before {
+.inputArea .topBar .historyMessage:before {
   content: '';
-  background: url(../../../public/im/history.png) no-repeat center center;
-  background-position: 0 0;
-  height: 18px;
-  width: 18px;
-  display: block;
+  min-height: 18px;
+  min-width: 18px;
   margin-right: 3px;
+  background-image: url(../../../public/im/history.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: 0 0;
 }
 
-.chatInputTopBarInputArea {
-  height: 100%;
-  width: 100%;
-}
-
-.chatInputTopBarTextarea {
-  width: 80%;
+.input {
+  flex: 1;
   display: block;
   border: none;
   outline: none;
-  background: transparent;
   padding: 8px;
   resize: none;
-  height: 85px;
   overflow: auto;
-  font-size: 15px;
-  margin: 5px;
-  padding-top: 0;
-}
-
-.chatInputTopBarInputEnterButton {
-  background: url(../../../public/im/icon_enter.png) no-repeat center center;
-  background-position: 0 0;
-  height: 31px;
-  width: 49px;
-  background-size: auto;
-  position: absolute;
-  bottom: 35px;
-  right: 20px;
-  cursor: pointer;
-}
-
-.chatInputTopBarInputEnterButton:hover {
-  background-position: -50px 0;
-}
-
-.chatInputTopBarInputEnterButton:active {
-  background-position: -100px 0;
-}
-
-.adSlogenArea {
-  height: 30px;
-  width: 100%;
-  display: flex;
-  background: url(../../../public/im/textad_bkg.png) no-repeat center center;
-  background-size: 100%;
-  border-bottom: 1px solid #e0e0e4;
-  border-top: 1px solid #e0e0e4;
-  justify-content: center;
-  display: flex;
-  align-items: center;
+  background: transparent;
 }
 
 @keyframes shake {

@@ -120,7 +120,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
               {/* Xp Section */}
               <div className={userInfoCard['xpWrapper']}>
                 <div className={userInfoCard['levelText']}>
-                  {`${lang.tr.level} ${memberLevel > 56 ? 56 : memberLevel} `}
+                  {`${lang.tr.level} ${memberGrade} `}
                 </div>
                 <div className={userInfoCard['xpBox']}>
                   <div
