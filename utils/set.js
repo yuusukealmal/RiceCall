@@ -39,7 +39,7 @@ const set = {
       avatarUrl: `${SERVER_URL}:${PORT}/images/userAvatars/`,
       signature: '',
       country: 'taiwan',
-      level: 0,
+      level: 1,
       vip: 0,
       xp: 0,
       requiredXp: XP_SYSTEM.BASE_REQUIRE_XP,
