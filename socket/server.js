@@ -248,7 +248,7 @@ const serverHandler = {
 
       // Leave prev channel
       if (user.currentChannelId) {
-        await channelHandler.disconnectChannel(io, socket, {
+        channelHandler.disconnectChannel(io, socket, {
           channelId: user.currentChannelId,
           userId: user.id,
         });

@@ -112,12 +112,12 @@ const userHandler = {
 
       // Disconnect server or channel
       if (operator.currentServerId) {
-        await serverHandler.disconnectServer(io, socket, {
+        serverHandler.disconnectServer(io, socket, {
           serverId: operator.currentServerId,
           userId: operator.id,
         });
       } else if (operator.currentChannelId) {
-        await channelHandler.disconnectChannel(io, socket, {
+        channelHandler.disconnectChannel(io, socket, {
           channelId: operator.currentChannelId,
           userId: operator.id,
         });
