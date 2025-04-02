@@ -19,7 +19,7 @@
     "scripts": {
       "start": "node index.js",
       "init": "node initial.js",
-      "test": "jest --silent --no-coverage",
+      "test": "jest --no-coverage",
       "test:detail": "jest --coverage",
       "test:watch": "jest --watch"
     }

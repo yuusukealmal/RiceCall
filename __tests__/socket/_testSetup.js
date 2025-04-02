@@ -35,21 +35,32 @@ module.exports = {
         },
         get: {
           searchUser: jest.fn(),
+          searchServer: jest.fn(),
           user: jest.fn(),
+          server: jest.fn(),
+          member: jest.fn(),
           serverMembers: jest.fn(),
           serverUsers: jest.fn(),
         },
         set: {
           user: jest.fn(),
+          server: jest.fn(),
+          channel: jest.fn(),
+          userServer: jest.fn(),
         },
         func: {
           validate: {
             socket: jest.fn(),
+            server: jest.fn(),
             user: jest.fn(),
           },
+          generateUniqueDisplayId: jest.fn(),
         },
         xp: {
           delete: jest.fn(),
+        },
+        specialUsers: {
+          getSpecialPermissionLevel: jest.fn(),
         },
       };
       
