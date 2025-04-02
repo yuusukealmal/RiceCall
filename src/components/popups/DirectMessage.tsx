@@ -10,10 +10,8 @@ import { useSocket } from '@/providers/Socket';
 
 // Components
 import MessageViewer from '@/components/viewers/Message';
-import MessageInputBox from '@/components/MessageInputBox';
 
 // Services
-import ipcService from '@/services/ipc.service';
 import refreshService from '@/services/refresh.service';
 
 // Utils
@@ -25,13 +23,13 @@ import directMessage from '@/styles/popups/directMessage.module.css';
 import vip from '@/styles/common/vip.module.css';
 import grade from '@/styles/common/grade.module.css';
 
-interface DirectMessageModalProps {
+interface DirectMessagePopupProps {
   userId: string;
   targetId: string;
 }
 
-const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
-  (initialData: DirectMessageModalProps) => {
+const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
+  (initialData: DirectMessagePopupProps) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -80,10 +78,6 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
     const handleUserUpdate = (data: User | null) => {
       if (!data) data = createDefault.user();
       setUserAvatarUrl(data.avatarUrl);
-    };
-
-    const handleClose = () => {
-      ipcService.window.close();
     };
 
     // Effects
@@ -137,92 +131,86 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
     }
 
     return (
-      <>
-        <div className={popup['popupContainer']}>
-          <div className={directMessage['header']}>
-            <div className={directMessage['userSignature']}>
-              {targetSignature}
-            </div>
-            <div className={directMessage['directOptionButtons']}>
-              <div
-                className={directMessage['directOptionFileShareButton']}
-              ></div>
-              <div
-                className={directMessage['directOptionBlockUserButton']}
-              ></div>
-              <div
-                className={directMessage['directOptionInviteTempGroupButton']}
-              ></div>
-              <div className={directMessage['directOptionReportButton']}></div>
-            </div>
+      <div className={popup['popupContainer']}>
+        <div className={directMessage['header']}>
+          <div className={directMessage['userSignature']}>
+            {targetSignature}
           </div>
-          <div className={popup['popupBody']}>
-            <div className={directMessage['sidebar']}>
-              <div className={directMessage['targetBox']}>
-                <div
-                  className={directMessage['avatarPicture']}
-                  style={{ backgroundImage: `url(${targetAvatarUrl})` }}
-                />
-                {targetVip > 0 && (
-                  <div
-                    className={`
-                  ${vip['vipIconBig']}
-                  ${vip[`vip-big-${targetVip}`]}`}
-                  />
-                )}
+          <div className={directMessage['directOptionButtons']}>
+            <div className={directMessage['directOptionFileShareButton']}></div>
+            <div className={directMessage['directOptionBlockUserButton']}></div>
+            <div
+              className={directMessage['directOptionInviteTempGroupButton']}
+            ></div>
+            <div className={directMessage['directOptionReportButton']}></div>
+          </div>
+        </div>
+        <div className={popup['popupBody']}>
+          <div className={directMessage['sidebar']}>
+            <div className={directMessage['targetBox']}>
+              <div
+                className={directMessage['avatarPicture']}
+                style={{ backgroundImage: `url(${targetAvatarUrl})` }}
+              />
+              {targetVip > 0 && (
                 <div
                   className={`
+                  ${vip['vipIconBig']}
+                  ${vip[`vip-big-${targetVip}`]}`}
+                />
+              )}
+              <div
+                className={`
                     ${grade['grade']}
                     ${grade[`lv-${targetGrade}`]}`}
-                />
-              </div>
-              <div className={directMessage['userBox']}>
-                <div
-                  className={directMessage['avatarPicture']}
-                  style={{ backgroundImage: `url(${userAvatarUrl})` }}
-                />
-              </div>
+              />
             </div>
-            <div className={directMessage['mainContent']}>
-              <div className={directMessage['serverInArea']}>
-                <div className={directMessage['serverInIcon']}></div>
-                <div className={directMessage['serverInName']}>測試</div>
-              </div>
-              <div className={directMessage['messageArea']}>
-                <MessageViewer messages={[]} />
-              </div>
-              <div className={directMessage['inputArea']}>
-                <div className={directMessage['topBar']}>
-                  <div className={directMessage['buttons']}>
-                    <div
-                      className={`${directMessage['button']} ${directMessage['font']}`}
-                    />
-                    <div
-                      className={`${directMessage['button']} ${directMessage['emoji']}`}
-                    />
-                    <div
-                      className={`${directMessage['button']} ${directMessage['screenShot']}`}
-                    />
-                    <div
-                      className={`${directMessage['button']} ${directMessage['nudge']}`}
-                    />
-                  </div>
-                  <div className={directMessage['buttons']}>
-                    <div className={directMessage['historyMessage']}>
-                      訊息紀錄
-                    </div>
+            <div className={directMessage['userBox']}>
+              <div
+                className={directMessage['avatarPicture']}
+                style={{ backgroundImage: `url(${userAvatarUrl})` }}
+              />
+            </div>
+          </div>
+          <div className={directMessage['mainContent']}>
+            <div className={directMessage['serverInArea']}>
+              <div className={directMessage['serverInIcon']} />
+              <div className={directMessage['serverInName']}>測試</div>
+            </div>
+            <div className={directMessage['messageArea']}>
+              <MessageViewer messages={[]} />
+            </div>
+            <div className={directMessage['inputArea']}>
+              <div className={directMessage['topBar']}>
+                <div className={directMessage['buttons']}>
+                  <div
+                    className={`${directMessage['button']} ${directMessage['font']}`}
+                  />
+                  <div
+                    className={`${directMessage['button']} ${directMessage['emoji']}`}
+                  />
+                  <div
+                    className={`${directMessage['button']} ${directMessage['screenShot']}`}
+                  />
+                  <div
+                    className={`${directMessage['button']} ${directMessage['nudge']}`}
+                  />
+                </div>
+                <div className={directMessage['buttons']}>
+                  <div className={directMessage['historyMessage']}>
+                    訊息紀錄
                   </div>
                 </div>
-                <textarea className={directMessage['input']} />
               </div>
+              <textarea className={directMessage['input']} />
             </div>
           </div>
         </div>
-      </>
+      </div>
     );
   },
 );
 
-DirectMessageModal.displayName = 'DirectMessageModal';
+DirectMessagePopup.displayName = 'DirectMessagePopup';
 
-export default DirectMessageModal;
+export default DirectMessagePopup;

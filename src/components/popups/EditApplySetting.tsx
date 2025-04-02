@@ -112,10 +112,7 @@ const EditApplySettingPopup: React.FC<EditApplySettingPopupProps> = React.memo(
             className={`${popup['button']}`}
             onClick={() => {
               handleUpdateServer(
-                {
-                  receiveApply: isReceiveApply,
-                  applyNotice: applyNotice,
-                },
+                { receiveApply: isReceiveApply, applyNotice: applyNotice },
                 serverId,
               );
               handleClose();

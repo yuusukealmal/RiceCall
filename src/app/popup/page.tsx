@@ -18,7 +18,7 @@ import ApplyMember from '@/components/popups/ApplyMember';
 import ChannelSetting from '@/components/popups/ChannelSetting';
 import CreateServer from '@/components/popups/CreateServer';
 import Dialog from '@/components/popups/Dialog';
-import DirectMessageModal from '@/components/popups/DirectMessage';
+import DirectMessage from '@/components/popups/DirectMessage';
 import EditApplySetting from '@/components/popups/EditApplySetting';
 import EditFriend from '@/components/popups/EditFriend';
 import EditFriendGroup from '@/components/popups/EditFriendGroup';
@@ -196,7 +196,7 @@ const Popup = React.memo(() => {
       case PopupType.DIRECT_MESSAGE:
         setHeaderTitle(initialData.targetName || lang.tr.directMessage);
         setHeaderButtons(['close', 'minimize', 'maxsize']);
-        setContent(<DirectMessageModal {...initialData} />);
+        setContent(<DirectMessage {...initialData} />);
         break;
       case PopupType.DIALOG_ALERT:
       case PopupType.DIALOG_ALERT2:

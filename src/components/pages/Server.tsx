@@ -120,10 +120,12 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     // Handlers
     const handleSendMessage = (
       message: Partial<Message>,
+      userId: User['id'],
+      serverId: Server['id'],
       channelId: Channel['id'],
     ): void => {
       if (!socket) return;
-      socket.send.message({ message, channelId });
+      socket.send.message({ message, channelId, serverId, userId });
     };
 
     const handleUpdateChannel = (
@@ -482,13 +484,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               <MessageInputBox
                 onSendMessage={(msg) => {
                   handleSendMessage(
-                    {
-                      id: '',
-                      type: 'general',
-                      content: msg,
-                      receiverId: serverId,
-                      timestamp: 0,
-                    },
+                    { type: 'general', content: msg },
+                    userId,
+                    serverId,
                     currentChannelId,
                   );
                 }}
