@@ -323,12 +323,6 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
           onDoubleClick={() => {
             if (canJoin) handleJoinChannel(userId, channelId);
           }}
-          onClick={() =>
-            setExpanded((prev) => ({
-              ...prev,
-              [channelId]: !prev[channelId],
-            }))
-          }
           onContextMenu={(e) => {
             contextMenu.showContextMenu(e.pageX, e.pageY, [
               {
@@ -357,6 +351,12 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
             className={`${styles['tabIcon']} 
             ${expanded[channelId] ? styles['expanded'] : ''} 
             ${channelIsLobby ? styles['lobby'] : styles[channelVisibility]} `}
+            onClick={() =>
+              setExpanded((prev) => ({
+                ...prev,
+                [channelId]: !prev[channelId],
+              }))
+            }
           ></div>
           <div className={styles['channelTabLable']}>{channelName}</div>
           {channelVisibility !== 'readonly' && (
