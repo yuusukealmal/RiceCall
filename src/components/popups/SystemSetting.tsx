@@ -342,9 +342,7 @@ const SystemSettingPopup: React.FC = React.memo(() => {
                           >
                             {dev.name}
                           </div>
-                          <span className={styles.developerRole}>
-                            {dev.role}
-                          </span>
+                          <div className={styles.developerRole}>{dev.role}</div>
                         </div>
                       ))}
                     </div>

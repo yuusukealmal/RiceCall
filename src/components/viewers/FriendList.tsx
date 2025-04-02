@@ -113,10 +113,10 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
               expanded ? styles['expanded'] : ''
             }`}
           />
-          <span className={styles['tabLable']}>{friendGroupName}</span>
-          <span
-            className={styles['tabCount']}
-          >{`(${friendsInServer}/${friendGroupFriends.length})`}</span>
+          <div className={styles['tabLable']}>{friendGroupName}</div>
+          <div className={styles['tabCount']}>
+            {`(${friendsInServer}/${friendGroupFriends.length})`}
+          </div>
         </div>
 
         {/* Expanded Sections */}

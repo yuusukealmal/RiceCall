@@ -42,8 +42,8 @@ const DirectMessageTab: React.FC<DirectMessageTabProps> = React.memo(
     return (
       <div className={styles['messageBox']}>
         <div className={styles['header']}>
-          <span className={styles['name']}>{senderName}</span>
-          <span className={styles['timestamp']}>{timestamp}</span>
+          <div className={styles['name']}>{senderName}</div>
+          <div className={styles['timestamp']}>{timestamp}</div>
         </div>
         {messageContents.map((content, index) => (
           <div key={index} className={styles['content']}>
@@ -96,10 +96,8 @@ const ChannelMessageTab: React.FC<ChannelMessageTabProps> = React.memo(
         />
         <div className={styles['messageBox']}>
           <div className={styles['header']}>
-            <span className={styles['name']}>
-              {senderNickname || senderName}
-            </span>
-            <span className={styles['timestamp']}>{timestamp}</span>
+            <div className={styles['name']}>{senderNickname || senderName}</div>
+            <div className={styles['timestamp']}>{timestamp}</div>
           </div>
           {messageContents.map((content, index) => (
             <div key={index} className={styles['content']}>
@@ -163,6 +161,7 @@ const InfoMessageTab: React.FC<InfoMessageTabProps> = React.memo(
 InfoMessageTab.displayName = 'InfoMessageTab';
 
 type MessageGroup = (DirectMessage | ChannelMessage | InfoMessage) & {
+  type: 'general' | 'info' | 'dm';
   contents: string[];
 };
 
@@ -182,8 +181,15 @@ const MessageViewer: React.FC<MessageViewerProps> = React.memo(
         const lastGroup = acc[acc.length - 1];
         const timeDiff = lastGroup && message.timestamp - lastGroup.timestamp;
         const nearTime = lastGroup && timeDiff <= 5 * 60 * 1000;
-        const sameSender = lastGroup && message.senderId === lastGroup.senderId;
         const sameType = lastGroup && message.type === lastGroup.type;
+        const sameSender =
+          (lastGroup &&
+            message.type === 'general' &&
+            lastGroup.type === 'general' &&
+            message.senderId === lastGroup.senderId) ||
+          (message.type === 'dm' &&
+            lastGroup.type === 'dm' &&
+            message.userId === lastGroup.userId);
         const isInfo = message.type === 'info';
 
         if (sameSender && nearTime && sameType && !isInfo) {

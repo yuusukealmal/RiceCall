@@ -61,7 +61,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ title, buttons }) => {
   return (
     <div className={header['header']}>
       <div className={header['titleBox']}>
-        <span className={header['title']}>{title}</span>
+        <div className={header['title']}>{title}</div>
       </div>
       <div className={header['buttons']}>
         {buttons.includes('minimize') && (

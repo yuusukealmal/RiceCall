@@ -2041,7 +2041,7 @@ export type MemberApplication = User & {
 export type Message = {
   id: string;
   content: string;
-  type: 'general' | 'info';
+  type: 'general' | 'info' | 'dm';
   timestamp: number;
 };
 
