@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useEffect, useState, ReactNode } from 'react';
+import React, { useEffect, useState, ReactNode, useRef } from 'react';
 
 // CSS
 import header from '@/styles/common/header.module.css';
@@ -90,6 +90,9 @@ const Popup = React.memo(() => {
   // Language
   const lang = useLanguage();
   const params = new URLSearchParams(window.location.search);
+
+  // Refs
+  const windowRef = useRef<HTMLDivElement>(null);
 
   // States
   const [headerTitle, setHeaderTitle] = useState<string>('');
@@ -196,7 +199,7 @@ const Popup = React.memo(() => {
       case PopupType.DIRECT_MESSAGE:
         setHeaderTitle(initialData.targetName || lang.tr.directMessage);
         setHeaderButtons(['close', 'minimize', 'maxsize']);
-        setContent(<DirectMessage {...initialData} />);
+        setContent(<DirectMessage {...{ ...initialData, windowRef }} />);
         break;
       case PopupType.DIALOG_ALERT:
       case PopupType.DIALOG_ALERT2:
@@ -231,7 +234,7 @@ const Popup = React.memo(() => {
 
   return (
     <WebRTCProvider>
-      <div className="wrapper">
+      <div className="wrapper" ref={windowRef}>
         {/* Top Nevigation */}
         {<Header title={headerTitle} buttons={headerButtons} />}
         {/* Main Content */}

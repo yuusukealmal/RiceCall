@@ -26,6 +26,7 @@ import grade from '@/styles/common/grade.module.css';
 interface DirectMessagePopupProps {
   userId: string;
   targetId: string;
+  windowRef: React.RefObject<HTMLDivElement>;
 }
 
 const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
@@ -80,6 +81,28 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
       setUserAvatarUrl(data.avatarUrl);
     };
 
+    const shakeWindow = (duration = 500) => {
+      const el = initialData.windowRef.current;
+      if (!el) return;
+
+      const start = performance.now();
+
+      const shake = (time: number) => {
+        const elapsed = time - start;
+        if (elapsed > duration) {
+          el.style.transform = 'translate(0, 0)';
+          return;
+        }
+
+        const x = Math.round((Math.random() - 0.5) * 10);
+        const y = Math.round((Math.random() - 0.5) * 10);
+        el.style.transform = `translate(${x}px, ${y}px)`;
+
+        requestAnimationFrame(shake);
+      };
+      requestAnimationFrame(shake);
+    };
+
     // Effects
     useEffect(() => {
       if (!userId || !targetId || refreshRef.current) return;
@@ -100,36 +123,6 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
       refresh();
     }, [userId, targetId]);
 
-    const handleNudgeEvent = () => {};
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const btn = document.createElement('button');
-      btn.onclick = () => shakeWindow('chatWindow');
-      document.body.appendChild(btn);
-    });
-
-    function shakeWindow(targetId: string, duration = 500) {
-      const windowEl = document.getElementById(targetId);
-      if (!windowEl) return;
-
-      const start = Date.now();
-      const shake = () => {
-        const elapsed = Date.now() - start;
-        if (elapsed > duration) {
-          windowEl.style.transform = 'translate(0, 0)';
-          return;
-        }
-
-        const x = (Math.random() - 0.5) * 30; // 範圍 -5~5px
-        const y = (Math.random() - 0.5) * 30;
-        windowEl.style.transform = `translate(${x}px, ${y}px)`;
-
-        requestAnimationFrame(shake);
-      };
-
-      shake();
-    }
-
     return (
       <div className={popup['popupContainer']}>
         <div className={directMessage['header']}>
@@ -137,12 +130,11 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
             {targetSignature}
           </div>
           <div className={directMessage['directOptionButtons']}>
-            <div className={directMessage['directOptionFileShareButton']}></div>
-            <div className={directMessage['directOptionBlockUserButton']}></div>
-            <div
-              className={directMessage['directOptionInviteTempGroupButton']}
-            ></div>
-            <div className={directMessage['directOptionReportButton']}></div>
+            <div className={directMessage['fileShare']} />
+            <div className={directMessage['blockUser']} />
+            <div className={directMessage['unBlockUser']} />
+            <div className={directMessage['inviteTempGroup']} />
+            <div className={directMessage['report']} />
           </div>
         </div>
         <div className={popup['popupBody']}>
@@ -194,6 +186,7 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
                   />
                   <div
                     className={`${directMessage['button']} ${directMessage['nudge']}`}
+                    onClick={() => shakeWindow()}
                   />
                 </div>
                 <div className={directMessage['buttons']}>
