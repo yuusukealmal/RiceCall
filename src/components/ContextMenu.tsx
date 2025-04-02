@@ -11,14 +11,21 @@ interface ContextMenuProps {
   y: number;
   items: ContextMenuItem[];
   onClose: () => void;
+  side?: 'left' | 'right';
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({
+  x,
+  y,
+  items,
+  side = 'right',
+  onClose,
+}) => {
   // Ref
   const menuRef = useRef<HTMLDivElement>(null);
 
   // State
-  const [showSubmenu, setShowSubmenu] = useState(false);
+  const [subMenu, setSubMenu] = useState<React.ReactNode>(null);
   const [menuX, setMenuX] = useState(x);
   const [menuY, setMenuY] = useState(y);
 
@@ -33,18 +40,34 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
       let newMenuX = x;
       let newMenuY = y;
 
-      if (x + menuWidth > windowWidth - 20) {
-        newMenuX = windowWidth - menuWidth - 50;
-      }
+      if (side === 'left') {
+        newMenuX = x - menuWidth;
+        newMenuY = y;
 
-      if (y + menuHeight > windowHeight - 20) {
-        newMenuY = windowHeight - menuHeight - 20;
+        if (x < 20 + menuWidth) {
+          newMenuX = 20;
+        }
+
+        if (y > windowHeight - menuHeight - 20) {
+          newMenuY = windowHeight - menuHeight - 20;
+        }
+      } else {
+        newMenuX = x;
+        newMenuY = y;
+
+        if (x + menuWidth > windowWidth - 20) {
+          newMenuX = windowWidth - menuWidth - 20;
+        }
+
+        if (y > windowHeight - menuHeight - 20) {
+          newMenuY = windowHeight - menuHeight - 20;
+        }
       }
 
       setMenuX(newMenuX);
       setMenuY(newMenuY);
     }
-  }, [x, y, menuRef]);
+  }, [x, y, side, menuRef]);
 
   return (
     <div
@@ -61,42 +84,34 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
           return (
             <div
               key={item.id || index}
-              className={`${contextMenu['option']} ${contextMenu[item.id]} ${
-                item.hasSubmenu ? contextMenu['hasSubmenu'] : ''
-              }`}
-              style={{
-                ...item.style,
-                position: 'relative',
-              }}
+              className={`
+                ${contextMenu['option']} 
+                ${item.hasSubmenu ? contextMenu['hasSubmenu'] : ''}
+              `}
               data-type={item.icon || ''}
               onClick={() => {
                 item.onClick?.();
                 onClose();
               }}
-              onMouseEnter={() => {
-                if (item.hasSubmenu) setShowSubmenu(true);
+              onMouseEnter={(e) => {
+                if (!item.hasSubmenu) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                setSubMenu(
+                  <ContextMenu
+                    x={rect.left}
+                    y={rect.top}
+                    items={item.submenuItems || []}
+                    onClose={onClose}
+                    side={'left'}
+                  />,
+                );
               }}
               onMouseLeave={() => {
-                if (item.hasSubmenu) setShowSubmenu(false);
+                if (item.hasSubmenu) setSubMenu(null);
               }}
             >
               {item.label}
-              {item.hasSubmenu && showSubmenu && (
-                <div className={contextMenu['options']}>
-                  {item.submenuItems?.map((subItem, subIndex) => (
-                    <div
-                      key={subItem.id || subIndex}
-                      className={contextMenu['option']}
-                      onClick={() => {
-                        subItem.onClick?.();
-                        onClose();
-                      }}
-                    >
-                      {subItem.label}
-                    </div>
-                  ))}
-                </div>
-              )}
+              {item.hasSubmenu && subMenu}
             </div>
           );
         })}

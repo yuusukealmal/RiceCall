@@ -1,14 +1,12 @@
 .contextMenu {
   position: fixed;
-  border-radius: 5px;
   z-index: 1000;
-  height: fit-content;
   display: flex;
-  flex-flow: column wrap;
+  flex-direction: column;
   justify-content: space-around;
   background: #fff;
   border: 1px solid #ccc;
-  padding: 5px;
+  border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -23,35 +21,26 @@
   margin: 3px 0;
   background-image: url('../../public/ctrl/menu_spliter.png');
   background-repeat: no-repeat;
-  background-size: auto;
+  background-size: 100% 100%;
 }
 
 .contextMenu .options {
-  position: absolute;
-  top: 0;
-  right: 100%;
+  z-index: 1000;
+  padding: 5px;
   background: #fff;
   border: 1px solid #ccc;
-  padding: 5px;
-  z-index: 1000;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  white-space: nowrap;
-  min-width: 105px;
 }
 
 .contextMenu .option {
-  font-size: 13px;
-  color: #333;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  padding-bottom: 10px;
-  padding-top: 10px;
-  padding-left: 5px;
-  padding-right: 5px;
-  cursor: pointer;
   position: relative;
+  display: flex;
   justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #333;
 }
 
 .language-select .option {
@@ -62,12 +51,10 @@
   content: '';
   min-width: 16px;
   min-height: 16px;
-  margin-right: 8px;
   background-size: auto;
   background-repeat: no-repeat;
   background-position: center center;
-  margin-right: 10px;
-  left: 3px;
+  margin-right: 5px;
 }
 
 .contextMenu .option[data-type='setting']::before {
@@ -121,7 +108,6 @@
 
 .contextMenu .option.hasSubmenu .contextMenu {
   display: none;
-  min-width: 100px;
 }
 
 .contextMenu .option.hasSubmenu:hover .contextMenu {
