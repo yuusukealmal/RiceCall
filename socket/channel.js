@@ -153,11 +153,14 @@ const channelHandler = {
       // Setup user interval for accumulate contribution
       XP.create(userSocket);
 
+      // Join RTC channel
+      rtcHandler.join(io, userSocket, { channelId: channel.id });
+
       // Play sound
       io.to(`channel_${channel.id}`).emit('playSound', 'join');
 
-      // Join RTC channel
-      rtcHandler.join(io, userSocket, { channelId: channel.id });
+      // Join channel
+      userSocket.join(`channel_${channel.id}`);
 
       // Emit updated data (to the user)
       io.to(userSocket.id).emit('userUpdate', user_update);
@@ -262,7 +265,10 @@ const channelHandler = {
       XP.delete(userSocket);
 
       // Leave RTC channel
-      rtcHandler.leave(io, userSocket, { channelId: channel.id });
+      await rtcHandler.leave(io, userSocket, { channelId: channel.id });
+
+      // Leave channel
+      userSocket.leave(`channel_${channel.id}`);
 
       // Play sound
       io.to(`channel_${channel.id}`).emit('playSound', 'leave');

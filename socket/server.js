@@ -54,7 +54,7 @@ const serverHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(
-        `Error searching servers: ${error.error_message} (${socket.id})`,
+        `Error searching servers: ${error.error_message}`,
       );
     }
   },
@@ -185,7 +185,7 @@ const serverHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(
-        `Error connecting server: ${error.error_message} (${socket.id})`,
+        `Error connecting server: ${error.error_message}`,
       );
     }
   },
@@ -248,7 +248,7 @@ const serverHandler = {
 
       // Leave prev channel
       if (user.currentChannelId) {
-        channelHandler.disconnectChannel(io, socket, {
+        await channelHandler.disconnectChannel(io, socket, {
           channelId: user.currentChannelId,
           userId: user.id,
         });
@@ -287,7 +287,7 @@ const serverHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(
-        `Error disconnecting from server: ${error.error_message} (${socket.id})`,
+        `Error disconnecting from server: ${error.error_message}`,
       );
     }
   },
@@ -400,7 +400,7 @@ const serverHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(
-        `Error creating server: ${error.error_message} (${socket.id})`,
+        `Error creating server: ${error.error_message}`,
       );
     }
   },
@@ -470,7 +470,7 @@ const serverHandler = {
       io.to(socket.id).emit('error', error);
 
       new Logger('Server').error(
-        `Error updating server: ${error.error_message} (${socket.id})`,
+        `Error updating server: ${error.error_message}`,
       );
     }
   },

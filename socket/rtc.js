@@ -185,8 +185,6 @@ const rtcHandler = {
       // Validate socket
       await Func.validate.socket(socket);
 
-      socket.join(`channel_${channelId}`);
-
       // Emit RTC join event (to all users)
       socket.to(`channel_${channelId}`).emit('RTCJoin', socket.id);
 
@@ -233,8 +231,6 @@ const rtcHandler = {
 
       // Validate socket
       await Func.validate.socket(socket);
-
-      socket.leave(`channel_${channelId}`);
 
       // Emit RTC leave event (to all users)
       socket.to(`channel_${channelId}`).emit('RTCLeave', socket.id);

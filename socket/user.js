@@ -8,10 +8,10 @@ const {
   get: Get,
   set: Set,
   func: Func,
+  xp: XP,
 } = utils;
 // Handlers
-const serverHandler = require('./server');
-const channelHandler = require('./channel');
+const rtcHandler = require('./rtc');
 
 const userHandler = {
   searchUser: async (io, socket, data) => {
@@ -111,15 +111,46 @@ const userHandler = {
       const operator = await Get.user(operatorId);
 
       // Disconnect server or channel
-      if (operator.currentServerId) {
-        serverHandler.disconnectServer(io, socket, {
-          serverId: operator.currentServerId,
-          userId: operator.id,
+      const serverId = operator.currentServerId;
+      if (serverId) {
+        // Update user
+        const user_update = {
+          currentServerId: null,
+          lastActiveAt: Date.now(),
+        };
+        await Set.user(user.id, user_update);
+
+        // Leave the server
+        socket.leave(`server_${serverId}`);
+      }
+
+      const channelId = operator.currentChannelId;
+      if (channelId) {
+        // Update user
+        const user_update = {
+          currentChannelId: null,
+          lastActiveAt: Date.now(),
+        };
+        await Set.user(userId, user_update);
+
+        // Clear user contribution interval
+        XP.delete(socket);
+
+        // Leave RTC channel
+        await rtcHandler.leave(io, socket, {
+          channelId: channelId,
         });
-      } else if (operator.currentChannelId) {
-        channelHandler.disconnectChannel(io, socket, {
-          channelId: operator.currentChannelId,
-          userId: operator.id,
+
+        // Leave channel
+        socket.leave(`channel_${channelId}`);
+
+        // Play sound
+        io.to(`channel_${channelId}`).emit('playSound', 'leave');
+
+        // Emit updated data (to all users in the server)
+        io.to(`server_${serverId}`).emit('serverUpdate', {
+          members: await Get.serverMembers(serverId),
+          users: await Get.serverUsers(serverId),
         });
       }
 
