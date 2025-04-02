@@ -118,7 +118,7 @@ const userHandler = {
           currentServerId: null,
           lastActiveAt: Date.now(),
         };
-        await Set.user(user.id, user_update);
+        await Set.user(operatorId, user_update);
 
         // Leave the server
         socket.leave(`server_${serverId}`);
@@ -131,7 +131,7 @@ const userHandler = {
           currentChannelId: null,
           lastActiveAt: Date.now(),
         };
-        await Set.user(userId, user_update);
+        await Set.user(operatorId, user_update);
 
         // Clear user contribution interval
         XP.delete(socket);
