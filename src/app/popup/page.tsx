@@ -10,22 +10,22 @@ import header from '@/styles/common/header.module.css';
 import { PopupType } from '@/types';
 
 // Components
-import AddChannel from '@/components/popups/AddChannel';
-import AddFriend from '@/components/popups/AddFriend';
-import AddFriendGroup from '@/components/popups/AddFriendGroup';
+import UserSetting from '@/components/popups/UserSetting';
+import ServerSetting from '@/components/popups/ServerSetting';
+import ChannelSetting from '@/components/popups/ChannelSetting';
+import SystemSetting from '@/components/popups/SystemSetting';
+import MemberApplySetting from '@/components/popups/MemberApplySetting';
+import CreateServer from '@/components/popups/CreateServer';
+import CreateChannel from '@/components/popups/CreateChannel';
+import CreateFriendGroup from '@/components/popups/CreateFriendGroup';
+import EditNickname from '@/components/popups/EditNickname';
+import EditFriendGroup from '@/components/popups/EditFriendGroup';
+import EditFriend from '@/components/popups/EditFriend';
 import ApplyFriend from '@/components/popups/ApplyFriend';
 import ApplyMember from '@/components/popups/ApplyMember';
-import ChannelSetting from '@/components/popups/ChannelSetting';
-import CreateServer from '@/components/popups/CreateServer';
-import Dialog from '@/components/popups/Dialog';
 import DirectMessage from '@/components/popups/DirectMessage';
-import EditApplySetting from '@/components/popups/EditApplySetting';
-import EditFriend from '@/components/popups/EditFriend';
-import EditFriendGroup from '@/components/popups/EditFriendGroup';
-import EditMember from '@/components/popups/EditNickname';
-import EditServer from '@/components/popups/ServerSetting';
-import SystemSetting from '@/components/popups/SystemSetting';
-import UserSetting from '@/components/popups/UserSetting';
+import SearchUser from '@/components/popups/SearchUser';
+import Dialog from '@/components/popups/Dialog';
 
 // Services
 import ipcService from '@/services/ipc.service';
@@ -134,17 +134,17 @@ const Popup = React.memo(() => {
       case PopupType.SERVER_SETTING:
         setHeaderTitle(lang.tr.editServer);
         setHeaderButtons(['close']);
-        setContent(<EditServer {...initialData} />);
+        setContent(<ServerSetting {...initialData} />);
         break;
       case PopupType.CHANNEL_SETTING:
         setHeaderTitle(lang.tr.editChannel);
         setHeaderButtons(['close']);
         setContent(<ChannelSetting {...initialData} />);
         break;
-      case PopupType.APPLY_SETTING:
+      case PopupType.MEMBERAPPLY_SETTING:
         setHeaderTitle(lang.tr.editApplySettings);
         setHeaderButtons(['close']);
-        setContent(<EditApplySetting {...initialData} />);
+        setContent(<MemberApplySetting {...initialData} />);
         break;
       case PopupType.SYSTEM_SETTING:
         setHeaderTitle(lang.tr.systemSetting);
@@ -159,17 +159,17 @@ const Popup = React.memo(() => {
       case PopupType.CREATE_CHANNEL:
         setHeaderTitle(lang.tr.createChannel);
         setHeaderButtons(['close']);
-        setContent(<AddChannel {...initialData} />);
+        setContent(<CreateChannel {...initialData} />);
         break;
       case PopupType.CREATE_FRIENDGROUP:
         setHeaderTitle(lang.tr.addFriendGroup);
         setHeaderButtons(['close']);
-        setContent(<AddFriendGroup {...initialData} />);
+        setContent(<CreateFriendGroup {...initialData} />);
         break;
       case PopupType.EDIT_NICKNAME:
         setHeaderTitle(lang.tr.editMemberCard);
         setHeaderButtons(['close']);
-        setContent(<EditMember {...initialData} />);
+        setContent(<EditNickname {...initialData} />);
         break;
       case PopupType.EDIT_FRIENDGROUP:
         setHeaderTitle(lang.tr.editFriendGroup);
@@ -194,7 +194,7 @@ const Popup = React.memo(() => {
       case PopupType.SEARCH_USER:
         setHeaderTitle(lang.tr.addFriend);
         setHeaderButtons(['close']);
-        setContent(<AddFriend {...initialData} />);
+        setContent(<SearchUser {...initialData} />);
         break;
       case PopupType.DIRECT_MESSAGE:
         setHeaderTitle(initialData.targetName || lang.tr.directMessage);

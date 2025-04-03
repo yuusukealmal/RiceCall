@@ -14,12 +14,12 @@ import setting from '@/styles/popups/editServer.module.css';
 // Services
 import ipcService from '@/services/ipc.service';
 
-interface AddFriendGroupPopupProps {
+interface CreateFriendGroupPopupProps {
   userId: string;
 }
 
-const AddFriendGroupPopup: React.FC<AddFriendGroupPopupProps> = React.memo(
-  (initialData: AddFriendGroupPopupProps) => {
+const CreateFriendGroupPopup: React.FC<CreateFriendGroupPopupProps> =
+  React.memo((initialData: CreateFriendGroupPopupProps) => {
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
@@ -147,9 +147,8 @@ const AddFriendGroupPopup: React.FC<AddFriendGroupPopupProps> = React.memo(
         </div>
       </div>
     );
-  },
-);
+  });
 
-AddFriendGroupPopup.displayName = 'AddFriendGroupPopup';
+CreateFriendGroupPopup.displayName = 'CreateFriendGroupPopup';
 
-export default AddFriendGroupPopup;
+export default CreateFriendGroupPopup;

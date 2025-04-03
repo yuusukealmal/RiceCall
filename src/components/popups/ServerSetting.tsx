@@ -277,9 +277,9 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
     //   });
     // };
 
-    const handleOpenApplySetting = () => {
-      ipcService.popup.open(PopupType.APPLY_SETTING);
-      ipcService.initialData.onRequest(PopupType.APPLY_SETTING, {
+    const handleOpenMemberApplySetting = () => {
+      ipcService.popup.open(PopupType.MEMBERAPPLY_SETTING);
+      ipcService.initialData.onRequest(PopupType.MEMBERAPPLY_SETTING, {
         serverId,
       });
     };
@@ -869,9 +869,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                   <button
                     style={{ marginLeft: 'auto' }}
                     className={popup['button']}
-                    onClick={() => {
-                      handleOpenApplySetting();
-                    }}
+                    onClick={() => handleOpenMemberApplySetting()}
                   >
                     {lang.tr.editApply}
                   </button>
