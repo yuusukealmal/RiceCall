@@ -146,7 +146,7 @@ const Popup = React.memo(() => {
         setHeaderButtons(['close']);
         setContent(<EditMember {...initialData} />);
         break;
-      case PopupType.EDIT_USER:
+      case PopupType.USER_SETTINGS:
         setHeaderTitle(lang.tr.editUser);
         setHeaderButtons(['close']);
         setContent(<UserSetting {...initialData} />);

@@ -277,9 +277,9 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
     //   });
     // };
 
-    const handleOpenApplySettings = () => {
-      ipcService.popup.open(PopupType.EDIT_APPLY);
-      ipcService.initialData.onRequest(PopupType.EDIT_APPLY, {
+    const handleOpenApplySetting = () => {
+      ipcService.popup.open(PopupType.APPLY_SETTING);
+      ipcService.initialData.onRequest(PopupType.APPLY_SETTING, {
         serverId,
       });
     };
@@ -295,12 +295,12 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
       });
     };
 
-    const handleOpenEditMember = (
+    const handleOpenEditNickname = (
       serverId: Server['id'],
       userId: User['id'],
     ) => {
-      ipcService.popup.open(PopupType.EDIT_MEMBER);
-      ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
+      ipcService.popup.open(PopupType.EDIT_NICKNAME);
+      ipcService.initialData.onRequest(PopupType.EDIT_NICKNAME, {
         serverId,
         userId,
       });
@@ -648,7 +648,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                                   label: lang.tr.editNickname,
                                   show: canEditNickname,
                                   onClick: () =>
-                                    handleOpenEditMember(
+                                    handleOpenEditNickname(
                                       memberServerId,
                                       memberUserId,
                                     ),
@@ -870,7 +870,7 @@ const ServerSettingPopup: React.FC<ServerSettingPopupProps> = React.memo(
                     style={{ marginLeft: 'auto' }}
                     className={popup['button']}
                     onClick={() => {
-                      handleOpenApplySettings();
+                      handleOpenApplySetting();
                     }}
                   >
                     {lang.tr.editApply}

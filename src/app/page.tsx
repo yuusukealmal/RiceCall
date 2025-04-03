@@ -106,9 +106,9 @@ const Header: React.FC<HeaderProps> = React.memo(
       localStorage.setItem('language', language);
     };
 
-    const handleShowEditUser = (userId: User['id']) => {
-      ipcService.popup.open(PopupType.EDIT_USER);
-      ipcService.initialData.onRequest(PopupType.EDIT_USER, {
+    const handleOpenUserSetting = (userId: User['id']) => {
+      ipcService.popup.open(PopupType.USER_SETTING);
+      ipcService.initialData.onRequest(PopupType.USER_SETTING, {
         userId,
       });
     };
@@ -126,7 +126,7 @@ const Header: React.FC<HeaderProps> = React.memo(
         <div className={header['userStatus']}>
           <div
             className={header['nameDisplay']}
-            onClick={() => handleShowEditUser(userId)}
+            onClick={() => handleOpenUserSetting(userId)}
           >
             {userName}
           </div>

@@ -118,7 +118,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       memberPermissionLevel === 1 ? channelGuestTextMaxLength || 100 : 2000;
     const canEditNickname = memberPermissionLevel > 1;
     const canApplyMember = memberPermissionLevel < 2;
-    const canOpenServerSettings = memberPermissionLevel < 5;
+    const canOpenServerSettings = memberPermissionLevel > 4;
 
     // Handlers
     const handleSendMessage = (
@@ -163,12 +163,12 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       setMember((prev) => ({ ...prev, ...data }));
     };
 
-    const handleOpenServerSettings = (
+    const handleOpenServerSetting = (
       userId: User['id'],
       serverId: Server['id'],
     ) => {
-      ipcService.popup.open(PopupType.EDIT_SERVER);
-      ipcService.initialData.onRequest(PopupType.EDIT_SERVER, {
+      ipcService.popup.open(PopupType.SERVER_SETTING);
+      ipcService.initialData.onRequest(PopupType.SERVER_SETTING, {
         serverId,
         userId,
       });
@@ -185,7 +185,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
         });
         return;
       }
-
       ipcService.popup.open(PopupType.APPLY_MEMBER);
       ipcService.initialData.onRequest(PopupType.APPLY_MEMBER, {
         userId,
@@ -193,12 +192,12 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       });
     };
 
-    const handleOpenEditMember = (
+    const handleOpenEditNickname = (
       serverId: Server['id'],
       userId: User['id'],
     ) => {
-      ipcService.popup.open(PopupType.EDIT_MEMBER);
-      ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
+      ipcService.popup.open(PopupType.EDIT_NICKNAME);
+      ipcService.initialData.onRequest(PopupType.EDIT_NICKNAME, {
         serverId,
         userId,
       });
@@ -368,7 +367,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 className={styles['avatarBox']}
                 onClick={() => {
                   if (!canOpenServerSettings) return;
-                  handleOpenServerSettings(userId, serverId);
+                  handleOpenServerSetting(userId, serverId);
                 }}
               >
                 <div
@@ -432,7 +431,8 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           label: lang.tr.editNickname,
                           icon: 'editGroupcard',
                           show: canEditNickname,
-                          onClick: () => handleOpenEditMember(serverId, userId),
+                          onClick: () =>
+                            handleOpenEditNickname(serverId, userId),
                         },
                         {
                           id: 'locateMe',
