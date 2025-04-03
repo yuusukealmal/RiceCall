@@ -33,6 +33,12 @@ module.exports = {
         map: {
           deleteUserIdSessionIdMap: jest.fn(),
           deleteUserIdSocketIdMap: jest.fn(),
+          createUserIdSessionIdMap: jest.fn(),
+          createUserIdSocketIdMap: jest.fn(),
+        },
+        jwt: {
+          verifyToken: jest.fn(),
+          generateToken: jest.fn(),
         },
         get: {
           searchUser: jest.fn(),
