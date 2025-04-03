@@ -117,7 +117,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const textMaxLength =
       memberPermissionLevel === 1 ? channelGuestTextMaxLength || 100 : 2000;
     const canEditNickname = memberPermissionLevel > 1;
-    const canApplyMember = memberPermissionLevel < 1;
+    const canApplyMember = memberPermissionLevel < 2;
     const canOpenServerSettings = memberPermissionLevel < 5;
 
     // Handlers

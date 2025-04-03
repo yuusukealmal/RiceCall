@@ -640,7 +640,7 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
     const { permissionLevel: memberPermission } = member;
     const { name: currentChannelName, voiceMode: currentChannelVoiceMode } =
       currentChannel;
-    const canEdit = memberPermission >= 5;
+    const canEdit = memberPermission > 4;
 
     // Handlers
     const handleCreateRootChannel = () => {
