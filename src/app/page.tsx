@@ -202,22 +202,18 @@ const Header: React.FC<HeaderProps> = React.memo(
                   icon: 'setting',
                   onClick: () => handleOpenSystemSetting(),
                 },
-                {
-                  id: 'message-history',
-                  label: lang.tr.messageHistory,
-                  icon: 'message',
-                  onClick: () => {
-                    // TODO: Implement
-                  },
-                },
-                {
-                  id: 'change-theme',
-                  label: lang.tr.changeTheme,
-                  icon: 'skin',
-                  onClick: () => {
-                    // TODO: Implement
-                  },
-                },
+                // {
+                //   id: 'message-history',
+                //   label: lang.tr.messageHistory,
+                //   icon: 'message',
+                //   onClick: () => {},
+                // },
+                // {
+                //   id: 'change-theme',
+                //   label: lang.tr.changeTheme,
+                //   icon: 'skin',
+                //   onClick: () => {},
+                // },
                 {
                   id: 'feedback',
                   label: lang.tr.feedback,
