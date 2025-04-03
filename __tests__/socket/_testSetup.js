@@ -47,6 +47,8 @@ module.exports = {
           channelMessages: jest.fn(),
           channelInfoMessages: jest.fn(),
           directMessages: jest.fn(),
+          memberApplication: jest.fn(),
+          serverApplications: jest.fn(),
         },
         set: {
           user: jest.fn(),
@@ -56,6 +58,8 @@ module.exports = {
           directMessage: jest.fn(),
           message: jest.fn(),
           member: jest.fn(),
+          memberApplication: jest.fn(),
+          serverApplication: jest.fn(),
         },
         func: {
           validate: {
@@ -63,7 +67,7 @@ module.exports = {
             server: jest.fn(),
             user: jest.fn(),
             message: jest.fn(),
-            
+            memberApplication: jest.fn(),
           },
           generateUniqueDisplayId: jest.fn(),
         },
