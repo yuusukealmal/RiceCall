@@ -48,21 +48,25 @@ const clean = async () => {
   }
   console.log('All users cleaned!');
 
-  for (const badge of Object.values(badges)) {
+  for (const userServer of Object.values(userServers)) {
     const ALLOWED_FIELDS = [
       'id',
-      'name',
-      'description',
-      'imageUrl',
-      'createdAt',
+      'recent',
+      'owned',
+      'favorite',
+      'userId',
+      'serverId',
+      'timestamp',
     ];
     const filteredData = Object.fromEntries(
-      Object.entries(badge).filter(([key]) => ALLOWED_FIELDS.includes(key)),
+      Object.entries(userServer).filter(([key]) =>
+        ALLOWED_FIELDS.includes(key),
+      ),
     );
-    await db.set(`badges.${badge.id}`, filteredData);
-    console.log(`Cleaned badge ${badge.id}`);
+    await db.set(`userServers.${userServer.id}`, filteredData);
+    console.log(`Cleaned userServer ${userServer.id}`);
   }
-  console.log('All badges cleaned!');
+  console.log('All userServers cleaned!');
 
   for (const userBadge of Object.values(userBadges)) {
     const ALLOWED_FIELDS = ['id', 'userId', 'badgeId', 'createdAt'];
@@ -74,24 +78,25 @@ const clean = async () => {
   }
   console.log('All userBadges cleaned!');
 
-  for (const userServer of Object.values(userServers)) {
-    const ALLOWED_FIELDS = ['id', 'userId', 'serverId', 'createdAt'];
-    const filteredData = Object.fromEntries(
-      Object.entries(userServer).filter(([key]) =>
-        ALLOWED_FIELDS.includes(key),
-      ),
-    );
-    await db.set(`userServers.${userServer.id}`, filteredData);
-    console.log(`Cleaned userServer ${userServer.id}`);
-  }
-  console.log('All userServers cleaned!');
-
   for (const server of Object.values(servers)) {
     const ALLOWED_FIELDS = [
       'id',
       'name',
+      'avatar',
+      'avatarUrl',
+      'announcement',
+      'applyNotice',
       'description',
-      'imageUrl',
+      'displayId',
+      'slogan',
+      'level',
+      'wealth',
+      'receiveApply',
+      'allowDirectMessage',
+      'type',
+      'visibility',
+      'lobbyId',
+      'ownerId',
       'createdAt',
     ];
     const filteredData = Object.fromEntries(
@@ -106,8 +111,23 @@ const clean = async () => {
     const ALLOWED_FIELDS = [
       'id',
       'name',
-      'description',
-      'imageUrl',
+      'order',
+      'bitrate',
+      'userLimit',
+      'guestTextGapTime',
+      'guestTextWaitTime',
+      'guestTextMaxLength',
+      'isRoot',
+      'isLobby',
+      'slowmode',
+      'forbidText',
+      'forbidGuestText',
+      'forbidGuestUrl',
+      'type',
+      'visibility',
+      'voiceMode',
+      'categoryId',
+      'serverId',
       'createdAt',
     ];
     const filteredData = Object.fromEntries(
@@ -118,26 +138,44 @@ const clean = async () => {
   }
   console.log('All channels cleaned!');
 
-  for (const channelRelation of Object.values(channelRelations)) {
-    const ALLOWED_FIELDS = ['id', 'channelId', 'serverId', 'createdAt'];
+  for (const friend of Object.values(friends)) {
+    const ALLOWED_FIELDS = [
+      'id',
+      'isBlocked',
+      'friendGroupId',
+      'userId',
+      'targetId',
+      'createdAt',
+    ];
     const filteredData = Object.fromEntries(
-      Object.entries(channelRelation).filter(([key]) =>
+      Object.entries(friend).filter(([key]) => ALLOWED_FIELDS.includes(key)),
+    );
+    await db.set(`friends.${friend.id}`, filteredData);
+    console.log(`Cleaned friend ${friend.id}`);
+  }
+  console.log('All friends cleaned!');
+
+  for (const friendApplication of Object.values(friendApplications)) {
+    const ALLOWED_FIELDS = [
+      'id',
+      'description',
+      'applicationStatus',
+      'senderId',
+      'receiverId',
+      'createdAt',
+    ];
+    const filteredData = Object.fromEntries(
+      Object.entries(friendApplication).filter(([key]) =>
         ALLOWED_FIELDS.includes(key),
       ),
     );
-    await db.set(`channelRelations.${channelRelation.id}`, filteredData);
-    console.log(`Cleaned channelRelation ${channelRelation.id}`);
+    await db.set(`friendApplications.${friendApplication.id}`, filteredData);
+    console.log(`Cleaned friendApplication ${friendApplication.id}`);
   }
-  console.log('All channelRelations cleaned!');
+  console.log('All friendApplications cleaned!');
 
   for (const friendGroup of Object.values(friendGroups)) {
-    const ALLOWED_FIELDS = [
-      'id',
-      'name',
-      'description',
-      'imageUrl',
-      'createdAt',
-    ];
+    const ALLOWED_FIELDS = ['id', 'name', 'order', 'userId', 'createdAt'];
     const filteredData = Object.fromEntries(
       Object.entries(friendGroup).filter(([key]) =>
         ALLOWED_FIELDS.includes(key),
@@ -149,7 +187,17 @@ const clean = async () => {
   console.log('All friendGroups cleaned!');
 
   for (const member of Object.values(members)) {
-    const ALLOWED_FIELDS = ['id', 'userId', 'serverId', 'createdAt'];
+    const ALLOWED_FIELDS = [
+      'id',
+      'nickname',
+      'contribution',
+      'lastMessageTime',
+      'isBlocked',
+      'permissionLevel',
+      'userId',
+      'serverId',
+      'createdAt',
+    ];
     const filteredData = Object.fromEntries(
       Object.entries(member).filter(([key]) => ALLOWED_FIELDS.includes(key)),
     );
@@ -159,7 +207,14 @@ const clean = async () => {
   console.log('All members cleaned!');
 
   for (const memberApplication of Object.values(memberApplications)) {
-    const ALLOWED_FIELDS = ['id', 'userId', 'serverId', 'createdAt'];
+    const ALLOWED_FIELDS = [
+      'id',
+      'description',
+      'applicationStatus',
+      'userId',
+      'serverId',
+      'createdAt',
+    ];
     const filteredData = Object.fromEntries(
       Object.entries(memberApplication).filter(([key]) =>
         ALLOWED_FIELDS.includes(key),
@@ -170,28 +225,6 @@ const clean = async () => {
   }
   console.log('All memberApplications cleaned!');
 
-  for (const friend of Object.values(friends)) {
-    const ALLOWED_FIELDS = ['id', 'userId', 'friendId', 'createdAt'];
-    const filteredData = Object.fromEntries(
-      Object.entries(friend).filter(([key]) => ALLOWED_FIELDS.includes(key)),
-    );
-    await db.set(`friends.${friend.id}`, filteredData);
-    console.log(`Cleaned friend ${friend.id}`);
-  }
-  console.log('All friends cleaned!');
-
-  for (const friendApplication of Object.values(friendApplications)) {
-    const ALLOWED_FIELDS = ['id', 'userId', 'friendId', 'createdAt'];
-    const filteredData = Object.fromEntries(
-      Object.entries(friendApplication).filter(([key]) =>
-        ALLOWED_FIELDS.includes(key),
-      ),
-    );
-    await db.set(`friendApplications.${friendApplication.id}`, filteredData);
-    console.log(`Cleaned friendApplication ${friendApplication.id}`);
-  }
-  console.log('All friendApplications cleaned!');
-
   for (const message of Object.values(messages)) {
     const ALLOWED_FIELDS = [
       'id',
@@ -200,7 +233,7 @@ const clean = async () => {
       'senderId',
       'receiverId',
       'channelId',
-      'createdAt',
+      'timestamp',
     ];
     const filteredData = Object.fromEntries(
       Object.entries(message).filter(([key]) => ALLOWED_FIELDS.includes(key)),
@@ -211,14 +244,7 @@ const clean = async () => {
   console.log('All messages cleaned!');
 
   for (const directMessage of Object.values(directMessages)) {
-    const ALLOWED_FIELDS = [
-      'id',
-      'content',
-      'type',
-      'senderId',
-      'receiverId',
-      'createdAt',
-    ];
+    const ALLOWED_FIELDS = ['id', 'content', 'userId', 'targetId', 'timestamp'];
     const filteredData = Object.fromEntries(
       Object.entries(directMessage).filter(([key]) =>
         ALLOWED_FIELDS.includes(key),
@@ -228,6 +254,34 @@ const clean = async () => {
     console.log(`Cleaned directMessage ${directMessage.id}`);
   }
   console.log('All directMessages cleaned!');
+
+  for (const badge of Object.values(badges)) {
+    const ALLOWED_FIELDS = [
+      'id',
+      'name',
+      'imageUrl',
+      'description',
+      'createdAt',
+    ];
+    const filteredData = Object.fromEntries(
+      Object.entries(badge).filter(([key]) => ALLOWED_FIELDS.includes(key)),
+    );
+    await db.set(`badges.${badge.id}`, filteredData);
+    console.log(`Cleaned badge ${badge.id}`);
+  }
+  console.log('All badges cleaned!');
+
+  // for (const channelRelation of Object.values(channelRelations)) {
+  //   const ALLOWED_FIELDS = ['id', 'channelId', 'serverId', 'createdAt'];
+  //   const filteredData = Object.fromEntries(
+  //     Object.entries(channelRelation).filter(([key]) =>
+  //       ALLOWED_FIELDS.includes(key),
+  //     ),
+  //   );
+  //   await db.set(`channelRelations.${channelRelation.id}`, filteredData);
+  //   console.log(`Cleaned channelRelation ${channelRelation.id}`);
+  // }
+  // console.log('All channelRelations cleaned!');
 };
 
 clean();
