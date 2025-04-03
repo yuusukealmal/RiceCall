@@ -117,7 +117,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const textMaxLength =
       memberPermissionLevel === 1 ? channelGuestTextMaxLength || 100 : 2000;
     const canEditNickname = memberPermissionLevel > 1;
-    const canCreateInvitation = memberPermissionLevel > 1;
+    const canApplyMember = memberPermissionLevel < 1;
     const canOpenServerSettings = memberPermissionLevel < 5;
 
     // Handlers
@@ -406,7 +406,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         {
                           id: 'invitation',
                           label: lang.tr.invitation,
-                          show: canCreateInvitation,
+                          show: canApplyMember,
                           icon: 'memberapply',
                           onClick: () =>
                             handleOpenApplyMember(userId, serverId),
@@ -425,7 +425,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         {
                           id: 'separator',
                           label: '',
-                          show: canCreateInvitation,
+                          show: canApplyMember,
                         },
                         {
                           id: 'editNickname',
