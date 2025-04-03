@@ -9,6 +9,7 @@
  * - 當 Socket 流程所使用的外部依賴有變更時，需要更新
  */
 
+
 // 模擬 utils 依賴
 // __tests__/socket/testSetup.js
 module.exports = {
@@ -39,20 +40,30 @@ module.exports = {
           user: jest.fn(),
           server: jest.fn(),
           member: jest.fn(),
+          message: jest.fn(),
           serverMembers: jest.fn(),
           serverUsers: jest.fn(),
+          channel: jest.fn(),
+          channelMessages: jest.fn(),
+          channelInfoMessages: jest.fn(),
+          directMessages: jest.fn(),
         },
         set: {
           user: jest.fn(),
           server: jest.fn(),
           channel: jest.fn(),
           userServer: jest.fn(),
+          directMessage: jest.fn(),
+          message: jest.fn(),
+          member: jest.fn(),
         },
         func: {
           validate: {
             socket: jest.fn(),
             server: jest.fn(),
             user: jest.fn(),
+            message: jest.fn(),
+            
           },
           generateUniqueDisplayId: jest.fn(),
         },
