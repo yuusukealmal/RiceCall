@@ -53,6 +53,8 @@ module.exports = {
           userFriendGroups: jest.fn(),
           friend: jest.fn(),
           userFriends: jest.fn(),
+          friendApplication: jest.fn(),
+          userFriendApplications: jest.fn(),
           serverChannels: jest.fn(),
         },
         set: {
@@ -67,6 +69,7 @@ module.exports = {
           serverApplication: jest.fn(),
           friendGroup: jest.fn(),
           friend: jest.fn(),
+          friendApplication: jest.fn(),
         },
         func: {
           validate: {
@@ -79,6 +82,7 @@ module.exports = {
             friendGroup: jest.fn(),
             friend: jest.fn(),
             channel: jest.fn(),
+            friendApplication: jest.fn(),
           },
           generateUniqueDisplayId: jest.fn(),
         },

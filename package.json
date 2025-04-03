@@ -21,7 +21,8 @@
       "init": "node initial.js",
       "test": "jest --no-coverage",
       "test:detail": "jest --coverage",
-      "test:watch": "jest --watch"
+      "test:watch": "jest --watch",
+      "test:socket-coverage": "jest --coverage --collectCoverageFrom=\"socket/**/*.js\""
     }
   }
   
