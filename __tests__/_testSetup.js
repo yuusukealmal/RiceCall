@@ -49,6 +49,11 @@ module.exports = {
           directMessages: jest.fn(),
           memberApplication: jest.fn(),
           serverApplications: jest.fn(),
+          friendGroup: jest.fn(),
+          userFriendGroups: jest.fn(),
+          friend: jest.fn(),
+          userFriends: jest.fn(),
+          serverChannels: jest.fn(),
         },
         set: {
           user: jest.fn(),
@@ -60,6 +65,8 @@ module.exports = {
           member: jest.fn(),
           memberApplication: jest.fn(),
           serverApplication: jest.fn(),
+          friendGroup: jest.fn(),
+          friend: jest.fn(),
         },
         func: {
           validate: {
@@ -68,11 +75,16 @@ module.exports = {
             user: jest.fn(),
             message: jest.fn(),
             memberApplication: jest.fn(),
+            member: jest.fn(),
+            friendGroup: jest.fn(),
+            friend: jest.fn(),
+            channel: jest.fn(),
           },
           generateUniqueDisplayId: jest.fn(),
         },
         xp: {
           delete: jest.fn(),
+          create: jest.fn(),
         },
         specialUsers: {
           getSpecialPermissionLevel: jest.fn(),

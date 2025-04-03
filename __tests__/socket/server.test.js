@@ -21,7 +21,7 @@
 
 // __tests__/socket/server.test.js
 // 讀取共用 mock 物件
-const { createMocks } = require('./_testSetup');
+const { createMocks } = require('../_testSetup');
 const { mockUtils } = createMocks();
 
 // 在當前 jest 環境中 mock 相關依賴
