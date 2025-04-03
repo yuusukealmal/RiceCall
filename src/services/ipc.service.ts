@@ -38,7 +38,9 @@ const ipcService = {
       | 'connect_error'
       | 'reconnect'
       | 'reconnect_error'
-      | 'disconnect',
+      | 'disconnect'
+      | 'error'
+      | 'openPopup',
     callback: (data: any) => void,
   ) => {
     if (isElectron) {

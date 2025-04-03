@@ -24,7 +24,6 @@ import ServerPage from '@/components/pages/Server';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // Utils
-import { errorHandler, StandardizedError } from '@/utils/errorHandler';
 import { createDefault } from '@/utils/createDefault';
 
 // Providers
@@ -303,10 +302,6 @@ const Home = () => {
   >('home');
 
   // Handlers
-  const handleError = (error: StandardizedError) => {
-    new errorHandler(error).show();
-  };
-
   const handleUserUpdate = (data: Partial<User> | null) => {
     if (!data) data = createDefault.user();
     setUser((prev) => ({ ...prev, ...data }));
@@ -319,12 +314,6 @@ const Home = () => {
     setServer((prev) => ({ ...prev, ...data }));
   };
 
-  const handleOpenPopup = (data: any) => {
-    const { popupType, initialData } = data;
-    ipcService.popup.open(popupType);
-    ipcService.initialData.onRequest(popupType, initialData);
-  };
-
   // Effects
   useEffect(() => {
     if (!socket) return;
@@ -332,8 +321,6 @@ const Home = () => {
     const eventHandlers = {
       [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
       [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
-      [SocketServerEvent.OPEN_POPUP]: handleOpenPopup,
-      [SocketServerEvent.ERROR]: handleError,
     };
     const unsubscribe: (() => void)[] = [];
 
