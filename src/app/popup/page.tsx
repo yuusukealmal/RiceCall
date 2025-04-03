@@ -126,50 +126,60 @@ const Popup = React.memo(() => {
     if (!type) return;
 
     switch (type) {
-      case PopupType.EDIT_FRIEND:
-        setHeaderTitle('編輯好友');
+      case PopupType.USER_SETTING:
+        setHeaderTitle(lang.tr.editUser);
         setHeaderButtons(['close']);
-        setContent(<EditFriend {...initialData} />);
+        setContent(<UserSetting {...initialData} />);
+        break;
+      case PopupType.SERVER_SETTING:
+        setHeaderTitle(lang.tr.editServer);
+        setHeaderButtons(['close']);
+        setContent(<EditServer {...initialData} />);
+        break;
+      case PopupType.CHANNEL_SETTING:
+        setHeaderTitle(lang.tr.editChannel);
+        setHeaderButtons(['close']);
+        setContent(<ChannelSetting {...initialData} />);
+        break;
+      case PopupType.APPLY_SETTING:
+        setHeaderTitle(lang.tr.editApplySettings);
+        setHeaderButtons(['close']);
+        setContent(<EditApplySetting {...initialData} />);
         break;
       case PopupType.SYSTEM_SETTING:
         setHeaderTitle(lang.tr.systemSetting);
         setHeaderButtons(['close']);
         setContent(<SystemSetting {...initialData} />);
         break;
-      case PopupType.EDIT_APPLY:
-        setHeaderTitle(lang.tr.editApplySettings);
-        setHeaderButtons(['close']);
-        setContent(<EditApplySetting {...initialData} />);
-        break;
-      case PopupType.EDIT_MEMBER:
-        setHeaderTitle(lang.tr.editMemberCard);
-        setHeaderButtons(['close']);
-        setContent(<EditMember {...initialData} />);
-        break;
-      case PopupType.USER_SETTINGS:
-        setHeaderTitle(lang.tr.editUser);
-        setHeaderButtons(['close']);
-        setContent(<UserSetting {...initialData} />);
-        break;
       case PopupType.CREATE_SERVER:
         setHeaderTitle(lang.tr.createServer);
         setHeaderButtons(['close']);
         setContent(<CreateServer {...initialData} />);
-        break;
-      case PopupType.EDIT_SERVER:
-        setHeaderTitle(lang.tr.editServer);
-        setHeaderButtons(['close']);
-        setContent(<EditServer {...initialData} />);
         break;
       case PopupType.CREATE_CHANNEL:
         setHeaderTitle(lang.tr.createChannel);
         setHeaderButtons(['close']);
         setContent(<AddChannel {...initialData} />);
         break;
-      case PopupType.EDIT_CHANNEL:
-        setHeaderTitle(lang.tr.editChannel);
+      case PopupType.CREATE_FRIENDGROUP:
+        setHeaderTitle(lang.tr.addFriendGroup);
         setHeaderButtons(['close']);
-        setContent(<ChannelSetting {...initialData} />);
+        setContent(<AddFriendGroup {...initialData} />);
+        break;
+      case PopupType.EDIT_NICKNAME:
+        setHeaderTitle(lang.tr.editMemberCard);
+        setHeaderButtons(['close']);
+        setContent(<EditMember {...initialData} />);
+        break;
+      case PopupType.EDIT_FRIENDGROUP:
+        setHeaderTitle(lang.tr.editFriendGroup);
+        setHeaderButtons(['close']);
+        setContent(<EditFriendGroup {...initialData} />);
+        break;
+      case PopupType.EDIT_FRIEND:
+        setHeaderTitle('編輯好友');
+        setHeaderButtons(['close']);
+        setContent(<EditFriend {...initialData} />);
         break;
       case PopupType.APPLY_MEMBER:
         setHeaderTitle(lang.tr.applyMember);
@@ -181,20 +191,10 @@ const Popup = React.memo(() => {
         setHeaderButtons(['close']);
         setContent(<ApplyFriend {...initialData} />);
         break;
-      case PopupType.ADD_FRIEND:
+      case PopupType.SEARCH_USER:
         setHeaderTitle(lang.tr.addFriend);
         setHeaderButtons(['close']);
         setContent(<AddFriend {...initialData} />);
-        break;
-      case PopupType.ADD_FRIEND_GROUP:
-        setHeaderTitle(lang.tr.addFriendGroup);
-        setHeaderButtons(['close']);
-        setContent(<AddFriendGroup {...initialData} />);
-        break;
-      case PopupType.EDIT_FRIEND_GROUP:
-        setHeaderTitle(lang.tr.editFriendGroup);
-        setHeaderButtons(['close']);
-        setContent(<EditFriendGroup {...initialData} />);
         break;
       case PopupType.DIRECT_MESSAGE:
         setHeaderTitle(initialData.targetName || lang.tr.directMessage);
