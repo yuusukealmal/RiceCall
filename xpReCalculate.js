@@ -19,7 +19,7 @@ function getRequiredXP(level) {
 const reCalculate = async () => {
   const users = await db.get('users');
   for (const user of Object.values(users)) {
-    let totalXp = user.xp;
+    let totalXp = totalXP(user.level) + user.xp;
     let level = 1;
     let requiredXp = 0;
     while (true) {
@@ -34,6 +34,13 @@ const reCalculate = async () => {
       requiredXp: requiredXp,
       progress: totalXp / requiredXp,
     });
+    console.log(
+      `Update ${
+        user.id
+      } level to ${level}, xp to ${totalXp}, requiredXp to ${requiredXp}, progress to ${
+        totalXp / requiredXp
+      }`,
+    );
   }
 };
 
