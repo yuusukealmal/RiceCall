@@ -199,7 +199,7 @@ const get = {
     const members = (await db.get('members')) || {};
     const users = (await db.get('users')) || {};
     return Object.values(members)
-      .filter((mb) => mb.serverId === serverId)
+      .filter((mb) => mb.serverId === serverId && mb.permissionLevel > 1)
       .map((mb) => {
         // Concat user data with member data
         const user = users[mb.userId];
