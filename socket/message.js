@@ -178,12 +178,12 @@ const messageHandler = {
 
       // Emit updated data (to user and target (if online))
       io.to(userSocket.id).emit(
-        'directMessage',
+        'directMessageUpdate',
         await Get.directMessages(user.id, target.id),
       );
       if (targetSocket) {
         io.to(targetSocket.id).emit(
-          'directMessage',
+          'directMessageUpdate',
           await Get.directMessages(user.id, target.id),
         );
       }
