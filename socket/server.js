@@ -105,6 +105,7 @@ const serverHandler = {
       } else {
         if (
           server.visibility === 'invisible' &&
+          operatorMember &&
           operatorMember.permissionLevel < 2
         ) {
           io.to(userSocket.id).emit('openPopup', {
