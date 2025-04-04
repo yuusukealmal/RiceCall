@@ -118,7 +118,7 @@ const messageHandler = {
       // data = {
       //   userId: string,
       //   targetId: string,
-      //   message: {
+      //   directMessage: {
       //     ...
       //   }
       // };
@@ -176,15 +176,17 @@ const messageHandler = {
         timestamp: Date.now().valueOf(),
       });
 
-      // Emit updated data (to all users in the friend)
+      // Emit updated data (to user and target (if online))
       io.to(userSocket.id).emit(
         'directMessage',
         await Get.directMessages(user.id, target.id),
       );
-      io.to(targetSocket.id).emit(
-        'directMessage',
-        await Get.directMessages(user.id, target.id),
-      );
+      if (targetSocket) {
+        io.to(targetSocket.id).emit(
+          'directMessage',
+          await Get.directMessages(user.id, target.id),
+        );
+      }
 
       new Logger('Message').success(
         `User(${user.id}) sent ${newDirectMessage.content} to User(${target.id})`,
