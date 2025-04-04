@@ -1886,7 +1886,6 @@ export const translations: Record<LanguageKey, Translation> = {
   },
 };
 
-export type Visibility = 'public' | 'private' | 'readonly';
 export const enum Permission {
   Guest = 1,
   Member = 2,
@@ -1894,8 +1893,8 @@ export const enum Permission {
   ChannelManager = 4,
   ServerAdmin = 5,
   ServerOwner = 6,
-  EventStaff = 7,
-  Official = 8,
+  Official = 7,
+  EventStaff = 8,
 }
 
 export type User = {
@@ -1904,21 +1903,21 @@ export type User = {
   avatar: string;
   avatarUrl: string;
   signature: string;
+  country: string;
   level: number;
+  vip: number;
   xp: number;
   requiredXp: number;
   progress: number;
-  status: 'online' | 'dnd' | 'idle' | 'gn';
-  gender: 'Male' | 'Female';
   birthYear: number;
   birthMonth: number;
   birthDay: number;
-  country: string;
+  status: 'online' | 'dnd' | 'idle' | 'gn';
+  gender: 'Male' | 'Female';
   currentChannelId: string;
   currentServerId: string;
   lastActiveAt: number;
   createdAt: number;
-  vip: number;
   // THESE WERE NOT SAVE IN THE DATABASE
   badges?: Badge[];
   friends?: UserFriend[];
@@ -1930,50 +1929,25 @@ export type User = {
   favServers?: Server[];
 };
 
-export type Badge = {
-  id: string;
-  name: string;
-  description: string;
-  order: number;
-};
-
-export type FriendGroup = {
-  id: string;
-  name: string;
-  order: number;
-  userId: string;
-  createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  friends?: UserFriend[];
-};
-
-export type FriendApplication = User & {
-  description: string;
-  applicationStatus: 'pending' | 'accepted' | 'rejected';
-  senderId: string;
-  receiverId: string;
-  createdAt: number;
-};
-
 export type Server = {
   id: string;
   name: string;
   avatar: string;
   avatarUrl: string;
   announcement: string;
+  applyNotice: string;
   description: string;
   displayId: string;
   slogan: string;
   level: number;
   wealth: number;
+  receiveApply: boolean;
   allowDirectMessage: boolean;
   type: 'game' | 'entertainment' | 'other';
   visibility: 'public' | 'private' | 'invisible';
   lobbyId: string;
   ownerId: string;
   createdAt: number;
-  receiveApply: boolean;
-  applyNotice: string;
   // THESE WERE NOT SAVE IN THE DATABASE
   lobby?: Channel;
   owner?: ServerMember;
@@ -1983,21 +1957,25 @@ export type Server = {
   memberApplications?: MemberApplication[];
 };
 
-export type MemberApplication = User & {
-  description: string;
-  applicationStatus: 'pending' | 'accepted' | 'rejected';
-  userId: string;
-  serverId: string;
-  createdAt: number;
-};
-
 export type BaseChannel = {
   id: string;
   name: string;
   order: number;
+  bitrate: number;
+  userLimit: number;
+  guestTextGapTime: number;
+  guestTextWaitTime: number;
+  guestTextMaxLength: number;
   isRoot: boolean;
+  isLobby: boolean;
+  slowmode: boolean;
+  forbidText: boolean;
+  forbidGuestText: boolean;
+  forbidGuestUrl: boolean;
   type: 'category' | 'channel';
   visibility: 'public' | 'member' | 'private' | 'readonly';
+  voiceMode: 'free' | 'queue' | 'forbidden';
+  categoryId: string | null;
   serverId: string;
   createdAt: number;
 };
@@ -2008,47 +1986,9 @@ export type Category = BaseChannel & {
 
 export type Channel = BaseChannel & {
   type: 'channel';
-  bitrate: number;
-  userLimit: number;
-  guestTextGapTime: number;
-  guestTextWaitTime: number;
-  guestTextMaxLength: number;
-  isLobby: boolean;
-  slowmode: boolean;
-  forbidText: boolean;
-  forbidGuestText: boolean;
-  forbidGuestUrl: boolean;
-  voiceMode: 'free' | 'queue' | 'forbidden';
-  categoryId: string | null;
   // THESE WERE NOT SAVE IN THE DATABASE
   messages?: ChannelMessage[];
 };
-
-export type ChannelMessage = Message &
-  ServerMember & {
-    type: 'general';
-  };
-
-export type InfoMessage = Message & {
-  type: 'info';
-};
-
-export type Member = {
-  id: string;
-  isBlocked: boolean;
-  nickname: string | null;
-  contribution: number;
-  lastMessageTime: number;
-  lastJoinChannelTime: number;
-  permissionLevel: Permission;
-  userId: string;
-  serverId: string;
-  createdAt: number;
-};
-
-export type UserMember = Member & Server;
-
-export type ServerMember = Member & User;
 
 export type Friend = {
   id: string;
@@ -2061,22 +2001,82 @@ export type Friend = {
   directMessages?: DirectMessage[]; // Change to another sheet
 };
 
-export type DirectMessage = Message &
-  UserFriend & {
-    type: 'dm';
-  };
+export type FriendApplication = User & {
+  description: string;
+  applicationStatus: 'pending' | 'accepted' | 'rejected';
+  senderId: string;
+  receiverId: string;
+  createdAt: number;
+};
 
-export type UserFriend = Friend & User;
+export type FriendGroup = {
+  id: string;
+  name: string;
+  order: number;
+  userId: string;
+  createdAt: number;
+};
+
+export type Member = {
+  id: string;
+  nickname: string | null;
+  contribution: number;
+  lastMessageTime: number;
+  lastJoinChannelTime: number;
+  isBlocked: boolean;
+  permissionLevel: Permission;
+  userId: string;
+  serverId: string;
+  createdAt: number;
+};
+
+export type MemberApplication = User & {
+  description: string;
+  applicationStatus: 'pending' | 'accepted' | 'rejected';
+  userId: string;
+  serverId: string;
+  createdAt: number;
+};
+
+export type Badge = {
+  id: string;
+  name: string;
+  description: string;
+  order: number;
+};
 
 export type Message = {
   id: string;
   content: string;
-  type: 'general' | 'dm' | 'info';
-  senderId: string;
-  receiverId: string;
-  channelId: string;
+  type: 'general' | 'info' | 'dm';
   timestamp: number;
 };
+
+export type ChannelMessage = Message &
+  ServerMember & {
+    type: 'general';
+    senderId: string;
+    receiverId: string;
+    channelId: string;
+  };
+
+export type DirectMessage = Message &
+  UserFriend & {
+    type: 'dm';
+    senderId: string;
+    userId1: string;
+    userId2: string;
+  };
+
+export type InfoMessage = Message & {
+  type: 'info';
+};
+
+export type UserMember = Member & Server;
+
+export type ServerMember = Member & User;
+
+export type UserFriend = Friend & User;
 
 export type ContextMenuItem = {
   id: string;
@@ -2190,32 +2190,31 @@ export enum SocketServerEvent {
   FRIEND_UPDATE = 'friendUpdate',
   // Friend Application
   FRIEND_APPLICATION_UPDATE = 'friendApplicationUpdate',
-  // Popup
-  OPEN_POPUP = 'openPopup',
+  // Direct Message
+  DIRECT_MESSAGE_UPDATE = 'directMessageUpdate',
   // RTC
   RTC_OFFER = 'RTCOffer',
   RTC_ANSWER = 'RTCAnswer',
   RTC_ICE_CANDIDATE = 'RTCIceCandidate',
   RTC_JOIN = 'RTCJoin',
   RTC_LEAVE = 'RTCLeave',
-  // Error
-  ERROR = 'error',
 }
 
 export enum PopupType {
-  EDIT_FRIEND = 'editFriend',
-  EDIT_USER = 'editUser',
+  USER_SETTING = 'userSetting',
+  CHANNEL_SETTING = 'channelSetting',
+  SERVER_SETTING = 'serverSetting',
+  SYSTEM_SETTING = 'systemSetting',
+  MEMBERAPPLY_SETTING = 'memberApplySetting',
   CREATE_SERVER = 'createServer',
-  EDIT_SERVER = 'editServer',
   CREATE_CHANNEL = 'createChannel',
-  EDIT_CHANNEL = 'editChannel',
-  EDIT_MEMBER = 'editMember',
-  EDIT_APPLY = 'editApply',
+  CREATE_FRIENDGROUP = 'createFriendGroup',
+  EDIT_NICKNAME = 'editNickname',
+  EDIT_FRIENDGROUP = 'editFriendGroup',
+  EDIT_FRIEND = 'editFriend',
   APPLY_MEMBER = 'applyMember',
   APPLY_FRIEND = 'applyFriend',
-  ADD_FRIEND = 'addFriend',
-  ADD_FRIEND_GROUP = 'addFriendGroup',
-  EDIT_FRIEND_GROUP = 'editFriendGroup',
+  SEARCH_USER = 'searchUser',
   DIRECT_MESSAGE = 'directMessage',
   DIALOG_ALERT = 'dialogAlert',
   DIALOG_ALERT2 = 'dialogAlert2',
@@ -2223,31 +2222,30 @@ export enum PopupType {
   DIALOG_WARNING = 'dialogWarning',
   DIALOG_ERROR = 'dialogError',
   DIALOG_INFO = 'dialogInfo',
-  SYSTEM_SETTING = 'systemSetting',
 }
 
 export const PopupSize = {
-  [PopupType.EDIT_FRIEND]: { height: 220, width: 400 },
-  [PopupType.EDIT_APPLY]: { height: 220, width: 400 },
-  [PopupType.EDIT_MEMBER]: { height: 220, width: 400 },
-  [PopupType.EDIT_USER]: { height: 650, width: 500 },
+  [PopupType.USER_SETTING]: { height: 650, width: 500 },
+  [PopupType.CHANNEL_SETTING]: { height: 450, width: 600 },
+  [PopupType.SERVER_SETTING]: { height: 450, width: 600 },
+  [PopupType.SYSTEM_SETTING]: { height: 450, width: 600 },
+  [PopupType.MEMBERAPPLY_SETTING]: { height: 320, width: 500 },
   [PopupType.CREATE_SERVER]: { height: 460, width: 520 },
-  [PopupType.EDIT_SERVER]: { height: 450, width: 600 },
   [PopupType.CREATE_CHANNEL]: { height: 220, width: 400 },
-  [PopupType.EDIT_CHANNEL]: { height: 450, width: 600 },
+  [PopupType.CREATE_FRIENDGROUP]: { height: 220, width: 400 },
+  [PopupType.EDIT_NICKNAME]: { height: 220, width: 400 },
+  [PopupType.EDIT_FRIENDGROUP]: { height: 220, width: 400 },
+  [PopupType.EDIT_FRIEND]: { height: 220, width: 400 },
   [PopupType.APPLY_FRIEND]: { height: 320, width: 500 },
   [PopupType.APPLY_MEMBER]: { height: 320, width: 500 },
-  [PopupType.ADD_FRIEND]: { height: 220, width: 400 },
-  [PopupType.ADD_FRIEND_GROUP]: { height: 220, width: 400 },
-  [PopupType.EDIT_FRIEND_GROUP]: { height: 220, width: 400 },
-  [PopupType.DIRECT_MESSAGE]: { height: 200, width: 300 },
+  [PopupType.SEARCH_USER]: { height: 220, width: 400 },
+  [PopupType.DIRECT_MESSAGE]: { height: 550, width: 650 },
   [PopupType.DIALOG_ALERT]: { height: 220, width: 400 },
   [PopupType.DIALOG_ALERT2]: { height: 220, width: 400 },
   [PopupType.DIALOG_SUCCESS]: { height: 220, width: 400 },
   [PopupType.DIALOG_WARNING]: { height: 220, width: 400 },
   [PopupType.DIALOG_ERROR]: { height: 220, width: 400 },
   [PopupType.DIALOG_INFO]: { height: 220, width: 400 },
-  [PopupType.SYSTEM_SETTING]: { height: 450, width: 600 },
   Settings: { height: 450, width: 600 },
   Apply: { height: 320, width: 500 },
   Small: { height: 220, width: 400 },

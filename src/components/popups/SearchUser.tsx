@@ -14,12 +14,12 @@ import setting from '@/styles/popups/editServer.module.css';
 // Services
 import ipcService from '@/services/ipc.service';
 
-interface AddFriendPopupProps {
+interface SearchUserPopupProps {
   userId: string;
 }
 
-const AddFriendPopup: React.FC<AddFriendPopupProps> = React.memo(
-  (initialData: AddFriendPopupProps) => {
+const SearchUserPopup: React.FC<SearchUserPopupProps> = React.memo(
+  (initialData: SearchUserPopupProps) => {
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
@@ -113,6 +113,6 @@ const AddFriendPopup: React.FC<AddFriendPopupProps> = React.memo(
   },
 );
 
-AddFriendPopup.displayName = 'AddFriendPopup';
+SearchUserPopup.displayName = 'SearchUserPopup';
 
-export default AddFriendPopup;
+export default SearchUserPopup;

@@ -38,7 +38,9 @@ const ipcService = {
       | 'connect_error'
       | 'reconnect'
       | 'reconnect_error'
-      | 'disconnect',
+      | 'disconnect'
+      | 'error'
+      | 'openPopup',
     callback: (data: any) => void,
   ) => {
     if (isElectron) {
@@ -220,24 +222,32 @@ const ipcService = {
   audio: {
     set: (deviceId: string, type: 'input' | 'output') => {
       if (isElectron) {
-        ipcRenderer.send('set-audio-device', { deviceId, type });
+        ipcRenderer.send('set-audio-device', deviceId, type);
       }
     },
     get: (
-      callback: (devices: {
-        input: string | null;
-        output: string | null;
-      }) => void,
+      type: 'input' | 'output',
+      callback: (deviceId: string | null) => void,
     ) => {
       if (isElectron) {
-        ipcRenderer.send('get-audio-device');
+        ipcRenderer.send('get-audio-device', type);
         ipcRenderer.once(
           'audio-device-status',
-          (
-            _: any,
-            devices: { input: string | null; output: string | null },
-          ) => {
-            callback(devices);
+          (_: any, _type: string, _deviceId: string | null) => {
+            if (_type === type) callback(_deviceId);
+          },
+        );
+      }
+    },
+    update: (
+      type: 'input' | 'output',
+      callback: (deviceId: string | null) => void,
+    ) => {
+      if (isElectron) {
+        ipcRenderer.on(
+          'audio-device-status',
+          (_: any, _type: string, _deviceId: string | null) => {
+            if (_type === type) callback(_deviceId);
           },
         );
       }

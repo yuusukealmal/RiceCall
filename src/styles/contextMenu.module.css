@@ -1,14 +1,13 @@
 .contextMenu {
   position: fixed;
-  background-color: #fff;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  background: #fff;
   border: 1px solid #ccc;
   border-radius: 5px;
-  box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
-  z-index: 1000;
-  height: fit-content;
-  display: flex;
-  flex-flow: column wrap;
-  justify-content: space-around;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .contextMenu.hidden {
@@ -22,131 +21,81 @@
   margin: 3px 0;
   background-image: url('../../public/ctrl/menu_spliter.png');
   background-repeat: no-repeat;
-  background-size: auto;
+  background-size: 100% 100%;
+}
+
+.contextMenu .options {
+  z-index: 1000;
+  padding: 5px;
+  background: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .contextMenu .option {
-  color: #333;
-  cursor: pointer;
+  position: relative;
   display: flex;
+  justify-content: flex-start;
   align-items: center;
-  justify-content: center;
-  padding: 3px 30px;
-  min-width: max-content;
+  width: 100%;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #333;
 }
 
-.contextMenu .option:not([data-type=''])::before {
-  position: absolute;
+.language-select .option {
+  justify-content: center;
+}
+
+.contextMenu .option:not([data-type=''], .language-select .option)::before {
+  content: '';
+  min-width: 16px;
+  min-height: 16px;
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center center;
+  margin-right: 5px;
 }
 
 .contextMenu .option[data-type='setting']::before {
-  left: 3px;
-  content: '';
-  min-width: 16px;
-  min-height: 16px;
   background-image: url('../../public/set.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option[data-type='message']::before {
-  left: 3px;
-  content: '';
-  min-width: 16px;
-  min-height: 16px;
   background-image: url('../../public/message.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option[data-type='skin']::before {
-  left: 3px;
-  content: '';
-  min-width: 16px;
-  min-height: 16px;
   background-image: url('../../public/skin.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option[data-type='exit']::before {
-  left: 3px;
-  content: '';
-  min-width: 16px;
-  min-height: 16px;
   background-image: url('../../public/exit.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option[data-type='submenu']::before {
-  right: 3px;
-  content: '';
-  min-width: 16px;
-  min-height: 16px;
   background-image: url('../../public/ctrl/icon_submenu.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
+  transform: rotate(180deg);
 }
 
 .contextMenu .option[data-type='memberapply']::before {
-  left: 3px;
-  content: '';
-  min-width: 20px;
-  min-height: 16px;
   background-image: url('../../public/channel/icon_memberapply.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option[data-type='editGroupcard']::before {
-  left: 3px;
-  content: '';
-  min-width: 20px;
-  min-height: 16px;
   background-image: url('../../public/channel/icon_editGroupcard.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option[data-type='locateme']::before {
-  left: 3px;
-  content: '';
-  min-width: 20px;
-  min-height: 16px;
   background-image: url('../../public/channel/icon_locateme.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option[data-type='uncollect']::before {
-  left: 3px;
-  content: '';
-  min-width: 20px;
-  min-height: 16px;
   background-image: url('../../public/channel/icon_uncollect.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option[data-type='collect']::before {
-  left: 3px;
-  content: '';
-  min-width: 20px;
-  min-height: 16px;
   background-image: url('../../public/channel/icon_collect.png');
-  background-size: auto;
-  background-repeat: no-repeat;
-  background-position: center center;
 }
 
 .contextMenu .option:hover {

@@ -47,6 +47,12 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     const currentDay = today.getDate();
 
     // User states
+    const [userAvatar, setUserAvatar] = useState<User['avatar']>(
+      createDefault.user().avatar,
+    );
+    const [userAvatarUrl, setUserAvatarUrl] = useState<User['avatarUrl']>(
+      createDefault.user().avatarUrl,
+    );
     const [userName, setUserName] = useState<User['name']>(
       createDefault.user().name,
     );
@@ -74,16 +80,10 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
     const [userCountry, setUserCountry] = useState<User['country']>(
       createDefault.user().country,
     );
-    const [userAvatar, setUserAvatar] = useState<User['avatar']>(
-      createDefault.user().avatar,
-    );
-    const [userAvatarUrl, setUserAvatarUrl] = useState<User['avatarUrl']>(
-      createDefault.user().avatarUrl,
-    );
 
     // Computed values
     const { userId } = initialData;
-    const userGrade = Math.min(56, Math.ceil(userLevel / 5));
+    const userGrade = Math.min(56, userLevel);
 
     const getDaysInMonth = useCallback((year: number, month: number) => {
       return new Date(year, month, 0).getDate();
@@ -517,7 +517,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
           <div
             className={`${popup['button']} ${
               !userName ||
-              userName.length < 2 ||
               !userGender ||
               !userCountry ||
               !userBirthYear ||
@@ -537,8 +536,6 @@ const UserSettingPopup: React.FC<UserSettingPopupProps> = React.memo(
                 birthMonth: userBirthMonth,
                 birthDay: userBirthDay,
                 signature: userSignature,
-                level: userLevel,
-                vip: userVip,
               });
               handleClose();
             }}

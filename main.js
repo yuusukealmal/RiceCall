@@ -88,6 +88,8 @@ const SocketServerEvent = {
   FRIEND_UPDATE: 'friendUpdate',
   // Friend Application
   FRIEND_APPLICATION_UPDATE: 'friendApplicationUpdate',
+  // Direct Message
+  DIRECT_MESSAGE_UPDATE: 'directMessageUpdate',
   // Popup
   OPEN_POPUP: 'openPopup',
   // RTC
@@ -218,8 +220,8 @@ async function createMainWindow() {
   }
 
   mainWindow = new BrowserWindow({
-    minWidth: 1400,
-    minHeight: 800,
+    minWidth: 950,
+    minHeight: 700,
     frame: false,
     transparent: true,
     resizable: true,
@@ -279,7 +281,7 @@ async function createAuthWindow() {
   }
 
   authWindow = new BrowserWindow({
-    width: 610,
+    width: 600,
     height: 450,
     resizable: false,
     frame: false,
@@ -669,18 +671,22 @@ app.on('ready', async () => {
   });
 
   // Audio device handlers
-  ipcMain.on('set-audio-device', (_, { deviceId, type }) => {
+  ipcMain.on('set-audio-device', (_, deviceId, type) => {
     if (type === 'input') {
       store.set('audioInputDevice', deviceId);
     } else if (type === 'output') {
       store.set('audioOutputDevice', deviceId);
     }
-  });
-  ipcMain.on('get-audio-device', (event) => {
-    event.reply('audio-device-status', {
-      input: store.get('audioInputDevice'),
-      output: store.get('audioOutputDevice'),
+    BrowserWindow.getAllWindows().forEach((window) => {
+      window.webContents.send('audio-device-status', type, deviceId);
     });
+  });
+  ipcMain.on('get-audio-device', (event, type) => {
+    if (type === 'input') {
+      event.reply('audio-device-status', type, store.get('audioInputDevice'));
+    } else if (type === 'output') {
+      event.reply('audio-device-status', type, store.get('audioOutputDevice'));
+    }
   });
 
   // Open external url handlers

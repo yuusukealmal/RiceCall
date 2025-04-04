@@ -18,14 +18,14 @@ import refreshService from '@/services/refresh.service';
 // Utils
 import { createDefault } from '@/utils/createDefault';
 
-interface AddChannelPopupProps {
+interface CreateChannelPopupProps {
   userId: string;
   categoryId: string | null;
   serverId: string;
 }
 
-const AddChannelPopup: React.FC<AddChannelPopupProps> = React.memo(
-  (initialData: AddChannelPopupProps) => {
+const CreateChannelPopup: React.FC<CreateChannelPopupProps> = React.memo(
+  (initialData: CreateChannelPopupProps) => {
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
@@ -131,6 +131,6 @@ const AddChannelPopup: React.FC<AddChannelPopupProps> = React.memo(
   },
 );
 
-AddChannelPopup.displayName = 'AddChannelPopup';
+CreateChannelPopup.displayName = 'CreateChannelPopup';
 
-export default AddChannelPopup;
+export default CreateChannelPopup;

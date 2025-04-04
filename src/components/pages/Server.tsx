@@ -67,10 +67,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const [member, setMember] = useState<Member>(createDefault.member());
     const [showMicVolume, setShowMicVolume] = useState(false);
     const [showSpeakerVolume, setShowSpeakerVolume] = useState(false);
-    const [micVolume, setMicVolume] = useState(webRTC.micVolume || 100);
-    const [speakerVolume, setSpeakerVolume] = useState(
-      webRTC.speakerVolume || 100,
-    );
     const [currentTime, setCurrentTime] = useState<number>(Date.now());
 
     // Variables
@@ -116,14 +112,19 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       memberPermissionLevel === 1;
     const textMaxLength =
       memberPermissionLevel === 1 ? channelGuestTextMaxLength || 100 : 2000;
+    const canEditNickname = memberPermissionLevel > 1;
+    const canApplyMember = memberPermissionLevel < 2;
+    const canOpenServerSettings = memberPermissionLevel > 4;
 
     // Handlers
     const handleSendMessage = (
       message: Partial<Message>,
+      userId: User['id'],
+      serverId: Server['id'],
       channelId: Channel['id'],
     ): void => {
       if (!socket) return;
-      socket.send.message({ message, channelId });
+      socket.send.message({ message, channelId, serverId, userId });
     };
 
     const handleUpdateChannel = (
@@ -158,12 +159,12 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       setMember((prev) => ({ ...prev, ...data }));
     };
 
-    const handleOpenServerSettings = (
+    const handleOpenServerSetting = (
       userId: User['id'],
       serverId: Server['id'],
     ) => {
-      ipcService.popup.open(PopupType.EDIT_SERVER);
-      ipcService.initialData.onRequest(PopupType.EDIT_SERVER, {
+      ipcService.popup.open(PopupType.SERVER_SETTING);
+      ipcService.initialData.onRequest(PopupType.SERVER_SETTING, {
         serverId,
         userId,
       });
@@ -180,7 +181,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
         });
         return;
       }
-
       ipcService.popup.open(PopupType.APPLY_MEMBER);
       ipcService.initialData.onRequest(PopupType.APPLY_MEMBER, {
         userId,
@@ -188,12 +188,12 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       });
     };
 
-    const handleOpenEditMember = (
+    const handleOpenEditNickname = (
       serverId: Server['id'],
       userId: User['id'],
     ) => {
-      ipcService.popup.open(PopupType.EDIT_MEMBER);
-      ipcService.initialData.onRequest(PopupType.EDIT_MEMBER, {
+      ipcService.popup.open(PopupType.EDIT_NICKNAME);
+      ipcService.initialData.onRequest(PopupType.EDIT_NICKNAME, {
         serverId,
         userId,
       });
@@ -223,20 +223,6 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       },
       [isResizing],
     );
-
-    const handleMicVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseInt(e.target.value);
-      setMicVolume(value);
-      webRTC.updateMicVolume?.(value);
-    };
-
-    const handleSpeakerVolumeChange = (
-      e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-      const value = parseInt(e.target.value);
-      setSpeakerVolume(value);
-      webRTC.updateSpeakerVolume?.(value);
-    };
 
     const handleClickOutside = useCallback((e: MouseEvent) => {
       const micContainer = document.querySelector(
@@ -361,10 +347,10 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
             <div className={styles['sidebarHeader']}>
               <div
                 className={styles['avatarBox']}
-                onClick={() =>
-                  memberPermissionLevel >= 5 &&
-                  handleOpenServerSettings(userId, serverId)
-                }
+                onClick={() => {
+                  if (!canOpenServerSettings) return;
+                  handleOpenServerSetting(userId, serverId);
+                }}
               >
                 <div
                   className={styles['avatarPicture']}
@@ -373,12 +359,11 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               </div>
               <div className={styles['baseInfoBox']}>
                 <div className={styles['container']}>
+                  <div className={styles['verifyIcon']}></div>
                   <div className={styles['name']}>{serverName} </div>
                 </div>
                 <div className={styles['container']}>
-                  <div className={styles['idIcon']} />
                   <div className={styles['idText']}>{serverDisplayId}</div>
-                  <div className={styles['memberIcon']} />
                   <div className={styles['memberText']}>
                     {serverUsers.length}
                   </div>
@@ -402,7 +387,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         {
                           id: 'invitation',
                           label: lang.tr.invitation,
-                          show: memberPermissionLevel < 2,
+                          show: canApplyMember,
                           icon: 'memberapply',
                           onClick: () =>
                             handleOpenApplyMember(userId, serverId),
@@ -421,13 +406,15 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         {
                           id: 'separator',
                           label: '',
-                          show: memberPermissionLevel < 2,
+                          show: canApplyMember,
                         },
                         {
                           id: 'editNickname',
                           label: lang.tr.editNickname,
                           icon: 'editGroupcard',
-                          onClick: () => handleOpenEditMember(serverId, userId),
+                          show: canEditNickname,
+                          onClick: () =>
+                            handleOpenEditNickname(serverId, userId),
                         },
                         {
                           id: 'locateMe',
@@ -483,13 +470,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               <MessageInputBox
                 onSendMessage={(msg) => {
                   handleSendMessage(
-                    {
-                      id: '',
-                      type: 'general',
-                      content: msg,
-                      receiverId: serverId,
-                      timestamp: 0,
-                    },
+                    { type: 'general', content: msg },
+                    userId,
+                    serverId,
                     currentChannelId,
                   );
                 }}
@@ -603,7 +586,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 <div className={styles['micVolumeContainer']}>
                   <div
                     className={`${styles['micModeButton']} ${
-                      webRTC.isMute || micVolume === 0
+                      webRTC.isMute || webRTC.micVolume === 0
                         ? styles['muted']
                         : styles['active']
                     }`}
@@ -619,8 +602,10 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         type="range"
                         min="0"
                         max="200"
-                        value={micVolume}
-                        onChange={handleMicVolumeChange}
+                        value={webRTC.micVolume}
+                        onChange={(e) => {
+                          webRTC.updateMicVolume?.(parseInt(e.target.value));
+                        }}
                         className={styles['slider']}
                       />
                     </div>
@@ -629,7 +614,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 <div className={styles['speakerVolumeContainer']}>
                   <div
                     className={`${styles['speakerButton']} ${
-                      speakerVolume === 0 ? styles['muted'] : ''
+                      webRTC.speakerVolume === 0 ? styles['muted'] : ''
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -643,8 +628,12 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         type="range"
                         min="0"
                         max="100"
-                        value={speakerVolume}
-                        onChange={handleSpeakerVolumeChange}
+                        value={webRTC.speakerVolume}
+                        onChange={(e) => {
+                          webRTC.updateSpeakerVolume?.(
+                            parseInt(e.target.value),
+                          );
+                        }}
                         className={styles['slider']}
                       />
                     </div>

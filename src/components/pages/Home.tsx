@@ -284,16 +284,16 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
           {showDropdown && hasResults && (
             <div className={homePage['searchDropdown']}>
               {exactMatch && (
-                <span className={homePage['dropdownHeaderText']}>
+                <div className={homePage['dropdownHeaderText']}>
                   {lang.tr.quickEnterServer}
                   {exactMatch.displayId}
-                </span>
+                </div>
               )}
 
               {personalResults.length > 0 && (
                 <>
                   <div className={homePage['dropdownHeader']}>
-                    <span>{lang.tr.personalExclusive}</span>
+                    <div>{lang.tr.personalExclusive}</div>
                   </div>
                   {personalResults.map((server) => (
                     <SearchResultItem
@@ -308,7 +308,7 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
               {relatedResults.length > 0 && (
                 <>
                   <div className={homePage['dropdownHeader']}>
-                    <span>{lang.tr.relatedSearch}</span>
+                    <div>{lang.tr.relatedSearch}</div>
                   </div>
                   {relatedResults.map((server) => (
                     <SearchResultItem

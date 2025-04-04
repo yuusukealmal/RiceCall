@@ -18,12 +18,12 @@ import ipcService from '@/services/ipc.service';
 // Utils
 import { createDefault } from '@/utils/createDefault';
 
-interface EditApplySettingPopupProps {
+interface MemberApplySettingPopupProps {
   serverId: string;
 }
 
-const EditApplySettingPopup: React.FC<EditApplySettingPopupProps> = React.memo(
-  (initialData: EditApplySettingPopupProps) => {
+const MemberApplySettingPopup: React.FC<MemberApplySettingPopupProps> =
+  React.memo((initialData: MemberApplySettingPopupProps) => {
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
@@ -112,10 +112,7 @@ const EditApplySettingPopup: React.FC<EditApplySettingPopupProps> = React.memo(
             className={`${popup['button']}`}
             onClick={() => {
               handleUpdateServer(
-                {
-                  receiveApply: isReceiveApply,
-                  applyNotice: applyNotice,
-                },
+                { receiveApply: isReceiveApply, applyNotice: applyNotice },
                 serverId,
               );
               handleClose();
@@ -129,9 +126,8 @@ const EditApplySettingPopup: React.FC<EditApplySettingPopupProps> = React.memo(
         </div>
       </div>
     );
-  },
-);
+  });
 
-EditApplySettingPopup.displayName = 'EditApplySettingPopup';
+MemberApplySettingPopup.displayName = 'MemberApplySettingPopup';
 
-export default EditApplySettingPopup;
+export default MemberApplySettingPopup;

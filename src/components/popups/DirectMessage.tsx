@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { User, DirectMessage } from '@/types';
+import { User, DirectMessage, SocketServerEvent } from '@/types';
 
 // Providers
 import { useLanguage } from '@/providers/Language';
@@ -10,22 +10,27 @@ import { useSocket } from '@/providers/Socket';
 
 // Components
 import MessageViewer from '@/components/viewers/Message';
-import MessageInputBox from '@/components/MessageInputBox';
 
 // Services
-import ipcService from '@/services/ipc.service';
 import refreshService from '@/services/refresh.service';
 
 // Utils
 import { createDefault } from '@/utils/createDefault';
 
-interface DirectMessageModalProps {
-  friendId: string;
+// CSS
+import popup from '@/styles/common/popup.module.css';
+import directMessage from '@/styles/popups/directMessage.module.css';
+import vip from '@/styles/common/vip.module.css';
+import grade from '@/styles/common/grade.module.css';
+
+interface DirectMessagePopupProps {
   userId: string;
+  targetId: string;
+  windowRef: React.RefObject<HTMLDivElement>;
 }
 
-const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
-  (initialData: DirectMessageModalProps) => {
+const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
+  (initialData: DirectMessagePopupProps) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -34,94 +39,243 @@ const DirectMessageModal: React.FC<DirectMessageModalProps> = React.memo(
     const refreshRef = useRef(false);
 
     // States
-    const [friendAvatar, setFriendAvatar] = useState<User['avatar']>(
+    const [userAvatarUrl, setUserAvatarUrl] = useState<User['avatar']>(
       createDefault.user().avatar,
     );
-    const [friendName, setFriendName] = useState<User['name']>(
-      createDefault.user().name,
+    const [targetAvatarUrl, setTargetAvatarUrl] = useState<User['avatar']>(
+      createDefault.user().avatar,
     );
-    const [friendLevel, setFriendLevel] = useState<User['level']>(
+    const [targetLevel, setTargetLevel] = useState<User['level']>(
       createDefault.user().level,
     );
+    const [targetSignature, setTargetSignature] = useState<User['signature']>(
+      createDefault.user().signature,
+    );
+    const [targetVip, setTargetVip] = useState<User['vip']>(
+      createDefault.user().vip,
+    );
+    const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
+    const [messageInput, setMessageInput] = useState<string>('');
+    const [isComposing, setIsComposing] = useState<boolean>(false);
+    const [isDisabled, setIsDisabled] = useState<boolean>(false);
+    const [isWarning, setIsWarning] = useState<boolean>(false);
 
     // Variables
-    const { friendId, userId } = initialData;
-    const friendGrade = Math.min(56, Math.ceil(friendLevel / 5)); // 56 is max level
+    const { targetId, userId } = initialData;
+    const targetGrade = Math.min(56, targetLevel); // 56 is max level
 
     // Handlers
     const handleSendMessage = (
       directMessage: Partial<DirectMessage>,
-      friendId: User['id'],
+      userId: User['id'],
+      targetId: User['id'],
     ) => {
       if (!socket) return;
-      socket.send.directMessage({ directMessage, friendId });
+      socket.send.directMessage({ directMessage, userId, targetId });
     };
 
-    const handleFriendUpdate = (data: User | null) => {
+    const handleTargetUpdate = (data: User | null) => {
       if (!data) data = createDefault.user();
-      setFriendAvatar(data.avatar);
-      setFriendName(data.name);
-      setFriendLevel(data.level);
+      setTargetAvatarUrl(data.avatarUrl);
+      setTargetLevel(data.level);
+      setTargetSignature(data.signature);
+      setTargetVip(data.vip);
     };
 
-    const handleClose = () => {
-      ipcService.window.close();
+    const handleUserUpdate = (data: User | null) => {
+      if (!data) data = createDefault.user();
+      setUserAvatarUrl(data.avatarUrl);
+    };
+
+    const handleDirectMessageUpdate = (data: DirectMessage[] | null) => {
+      console.log('handleDirectMessageUpdate', data);
+      if (!data) data = [];
+      setDirectMessages(data);
+    };
+
+    const shakeWindow = (duration = 500) => {
+      const el = initialData.windowRef.current;
+      if (!el) return;
+
+      const start = performance.now();
+
+      const shake = (time: number) => {
+        const elapsed = time - start;
+        if (elapsed > duration) {
+          el.style.transform = 'translate(0, 0)';
+          return;
+        }
+
+        const x = Math.round((Math.random() - 0.5) * 10);
+        const y = Math.round((Math.random() - 0.5) * 10);
+        el.style.transform = `translate(${x}px, ${y}px)`;
+
+        requestAnimationFrame(shake);
+      };
+      requestAnimationFrame(shake);
     };
 
     // Effects
     useEffect(() => {
-      if (!userId || !friendId || refreshRef.current) return;
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.DIRECT_MESSAGE_UPDATE]: handleDirectMessageUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
+      if (!userId || !targetId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
         Promise.all([
           refreshService.user({
-            userId: friendId,
+            userId: targetId,
           }),
-        ]).then(([friend]) => {
-          handleFriendUpdate(friend);
+          refreshService.user({
+            userId: userId,
+          }),
+          refreshService.directMessage({
+            userId: userId,
+            targetId: targetId,
+          }),
+        ]).then(([target, user, directMessage]) => {
+          handleTargetUpdate(target);
+          handleUserUpdate(user);
+          handleDirectMessageUpdate(directMessage);
         });
       };
       refresh();
-    }, [userId, friendId]);
+    }, [userId, targetId]);
 
-    return null;
-    // <Modal title={friendName} onClose={onClose} width="600px" height="600px">
-    //   <div className="flex h-full">
-    //     {/* Side Menu */}
-    //     <div className="flex flex-col p-4 w-40 bg-blue-50 text-sm">
-    //       {/* <img src={friendAvatar} className="w-24 h-24" /> */}
-    //       <div className="flex items-center gap-2">
-    //         <div className="">{`${lang.tr.level}: ${friendLevel}`}</div>
-    //         {/* <img src={friendGradeUrl} className="select-none" /> */}
-    //       </div>
-    //     </div>
-    //     {/* Main Content */}
-    //     <div className="flex flex-col flex-1 overflow-y-auto">
-    //       {/* Messages Area */}
-    //       <div className="flex flex-[5] p-3">
-    //         <MessageViewer messages={friendDirectMessages} />
-    //       </div>
-    //       {/* Input Area */}
-    //       <div className="flex flex-[1] p-3">
-    //         <MessageInputBox
-    //           onSendMessage={(msg) => {
-    //             handleSendMessage({
-    //               id: '',
-    //               type: 'general',
-    //               content: msg,
-    //               senderId: userId,
-    //               friendId: friendId,
-    //               timestamp: 0,
-    //             });
-    //           }}
-    //         />
-    //       </div>
-    //     </div>
-    //   </div>
-    // </Modal>
+    return (
+      <div className={popup['popupContainer']}>
+        <div className={directMessage['header']}>
+          <div className={directMessage['userSignature']}>
+            {targetSignature}
+          </div>
+          <div className={directMessage['directOptionButtons']}>
+            <div className={directMessage['fileShare']} />
+            <div className={directMessage['blockUser']} />
+            <div className={directMessage['unBlockUser']} />
+            <div className={directMessage['inviteTempGroup']} />
+            <div className={directMessage['report']} />
+          </div>
+        </div>
+        <div className={popup['popupBody']}>
+          <div className={directMessage['sidebar']}>
+            <div className={directMessage['targetBox']}>
+              <div
+                className={directMessage['avatarPicture']}
+                style={{ backgroundImage: `url(${targetAvatarUrl})` }}
+              />
+              {targetVip > 0 && (
+                <div
+                  className={`
+                  ${vip['vipIconBig']}
+                  ${vip[`vip-big-${targetVip}`]}`}
+                />
+              )}
+              <div
+                className={`
+                    ${grade['grade']}
+                    ${grade[`lv-${targetGrade}`]}`}
+              />
+            </div>
+            <div className={directMessage['userBox']}>
+              <div
+                className={directMessage['avatarPicture']}
+                style={{ backgroundImage: `url(${userAvatarUrl})` }}
+              />
+            </div>
+          </div>
+          <div className={directMessage['mainContent']}>
+            <div className={directMessage['serverInArea']}>
+              <div className={directMessage['serverInIcon']} />
+              <div className={directMessage['serverInName']}>測試</div>
+            </div>
+            <div className={directMessage['messageArea']}>
+              <MessageViewer messages={directMessages} />
+            </div>
+            <div className={directMessage['inputArea']}>
+              <div className={directMessage['topBar']}>
+                <div className={directMessage['buttons']}>
+                  <div
+                    className={`${directMessage['button']} ${directMessage['font']}`}
+                  />
+                  <div
+                    className={`${directMessage['button']} ${directMessage['emoji']}`}
+                  />
+                  <div
+                    className={`${directMessage['button']} ${directMessage['screenShot']}`}
+                  />
+                  <div
+                    className={`${directMessage['button']} ${directMessage['nudge']}`}
+                    onClick={() => shakeWindow()}
+                  />
+                </div>
+                <div className={directMessage['buttons']}>
+                  <div className={directMessage['historyMessage']}>
+                    訊息紀錄
+                  </div>
+                </div>
+              </div>
+              <textarea
+                className={directMessage['input']}
+                value={messageInput}
+                onChange={(e) => {
+                  if (isDisabled) return;
+                  e.preventDefault();
+                  setMessageInput(e.target.value);
+                }}
+                onPaste={(e) => {
+                  if (isDisabled) return;
+                  e.preventDefault();
+                  setMessageInput(
+                    (prev) => prev + e.clipboardData.getData('text'),
+                  );
+                }}
+                onKeyDown={(e) => {
+                  if (
+                    e.shiftKey ||
+                    e.key !== 'Enter' ||
+                    !messageInput.trim() ||
+                    messageInput.length > 2000 ||
+                    isComposing ||
+                    isDisabled ||
+                    isWarning
+                  )
+                    return;
+                  e.preventDefault();
+                  handleSendMessage(
+                    { content: messageInput },
+                    userId,
+                    targetId,
+                  );
+                  setMessageInput('');
+                }}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
+                maxLength={2000}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   },
 );
 
-DirectMessageModal.displayName = 'DirectMessageModal';
+DirectMessagePopup.displayName = 'DirectMessagePopup';
 
-export default DirectMessageModal;
+export default DirectMessagePopup;

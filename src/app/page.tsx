@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -24,7 +23,6 @@ import ServerPage from '@/components/pages/Server';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // Utils
-import { errorHandler, StandardizedError } from '@/utils/errorHandler';
 import { createDefault } from '@/utils/createDefault';
 
 // Providers
@@ -107,9 +105,9 @@ const Header: React.FC<HeaderProps> = React.memo(
       localStorage.setItem('language', language);
     };
 
-    const handleShowEditUser = (userId: User['id']) => {
-      ipcService.popup.open(PopupType.EDIT_USER);
-      ipcService.initialData.onRequest(PopupType.EDIT_USER, {
+    const handleOpenUserSetting = (userId: User['id']) => {
+      ipcService.popup.open(PopupType.USER_SETTING);
+      ipcService.initialData.onRequest(PopupType.USER_SETTING, {
         userId,
       });
     };
@@ -127,7 +125,7 @@ const Header: React.FC<HeaderProps> = React.memo(
         <div className={header['userStatus']}>
           <div
             className={header['nameDisplay']}
-            onClick={() => handleShowEditUser(userId)}
+            onClick={() => handleOpenUserSetting(userId)}
           >
             {userName}
           </div>
@@ -203,22 +201,18 @@ const Header: React.FC<HeaderProps> = React.memo(
                   icon: 'setting',
                   onClick: () => handleOpenSystemSetting(),
                 },
-                {
-                  id: 'message-history',
-                  label: lang.tr.messageHistory,
-                  icon: 'message',
-                  onClick: () => {
-                    // TODO: Implement
-                  },
-                },
-                {
-                  id: 'change-theme',
-                  label: lang.tr.changeTheme,
-                  icon: 'skin',
-                  onClick: () => {
-                    // TODO: Implement
-                  },
-                },
+                // {
+                //   id: 'message-history',
+                //   label: lang.tr.messageHistory,
+                //   icon: 'message',
+                //   onClick: () => {},
+                // },
+                // {
+                //   id: 'change-theme',
+                //   label: lang.tr.changeTheme,
+                //   icon: 'skin',
+                //   onClick: () => {},
+                // },
                 {
                   id: 'feedback',
                   label: lang.tr.feedback,
@@ -303,10 +297,6 @@ const Home = () => {
   >('home');
 
   // Handlers
-  const handleError = (error: StandardizedError) => {
-    new errorHandler(error).show();
-  };
-
   const handleUserUpdate = (data: Partial<User> | null) => {
     if (!data) data = createDefault.user();
     setUser((prev) => ({ ...prev, ...data }));
@@ -319,12 +309,6 @@ const Home = () => {
     setServer((prev) => ({ ...prev, ...data }));
   };
 
-  const handleOpenPopup = (data: any) => {
-    const { popupType, initialData } = data;
-    ipcService.popup.open(popupType);
-    ipcService.initialData.onRequest(popupType, initialData);
-  };
-
   // Effects
   useEffect(() => {
     if (!socket) return;
@@ -332,8 +316,6 @@ const Home = () => {
     const eventHandlers = {
       [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
       [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
-      [SocketServerEvent.OPEN_POPUP]: handleOpenPopup,
-      [SocketServerEvent.ERROR]: handleError,
     };
     const unsubscribe: (() => void)[] = [];
 

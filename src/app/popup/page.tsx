@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useEffect, useState, ReactNode } from 'react';
+import React, { useEffect, useState, ReactNode, useRef } from 'react';
 
 // CSS
 import header from '@/styles/common/header.module.css';
@@ -10,29 +10,28 @@ import header from '@/styles/common/header.module.css';
 import { PopupType } from '@/types';
 
 // Components
-import AddChannel from '@/components/popups/AddChannel';
-import AddFriend from '@/components/popups/AddFriend';
-import AddFriendGroup from '@/components/popups/AddFriendGroup';
+import UserSetting from '@/components/popups/UserSetting';
+import ServerSetting from '@/components/popups/ServerSetting';
+import ChannelSetting from '@/components/popups/ChannelSetting';
+import SystemSetting from '@/components/popups/SystemSetting';
+import MemberApplySetting from '@/components/popups/MemberApplySetting';
+import CreateServer from '@/components/popups/CreateServer';
+import CreateChannel from '@/components/popups/CreateChannel';
+import CreateFriendGroup from '@/components/popups/CreateFriendGroup';
+import EditNickname from '@/components/popups/EditNickname';
+import EditFriendGroup from '@/components/popups/EditFriendGroup';
+import EditFriend from '@/components/popups/EditFriend';
 import ApplyFriend from '@/components/popups/ApplyFriend';
 import ApplyMember from '@/components/popups/ApplyMember';
-import ChannelSetting from '@/components/popups/ChannelSetting';
-import CreateServer from '@/components/popups/CreateServer';
+import DirectMessage from '@/components/popups/DirectMessage';
+import SearchUser from '@/components/popups/SearchUser';
 import Dialog from '@/components/popups/Dialog';
-import DirectMessageModal from '@/components/popups/DirectMessage';
-import EditApplySetting from '@/components/popups/EditApplySetting';
-import EditFriend from '@/components/popups/EditFriend';
-import EditFriendGroup from '@/components/popups/EditFriendGroup';
-import EditMember from '@/components/popups/EditNickname';
-import EditServer from '@/components/popups/ServerSetting';
-import SystemSetting from '@/components/popups/SystemSetting';
-import UserSetting from '@/components/popups/UserSetting';
 
 // Services
 import ipcService from '@/services/ipc.service';
 
 // Providers
 import { useLanguage } from '@/providers/Language';
-import WebRTCProvider from '@/providers/WebRTC';
 
 interface HeaderProps {
   title: string;
@@ -61,7 +60,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ title, buttons }) => {
   return (
     <div className={header['header']}>
       <div className={header['titleBox']}>
-        <span className={header['title']}>{title}</span>
+        <div className={header['title']}>{title}</div>
       </div>
       <div className={header['buttons']}>
         {buttons.includes('minimize') && (
@@ -90,7 +89,11 @@ const Popup = React.memo(() => {
   // Language
   const lang = useLanguage();
 
+  // Refs
+  const windowRef = useRef<HTMLDivElement>(null);
+
   // States
+  const [type, setType] = useState<PopupType | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>('');
   const [headerButtons, setHeaderButtons] = useState<
     ('minimize' | 'maxsize' | 'close')[]
@@ -103,71 +106,75 @@ const Popup = React.memo(() => {
     if (window.location.search) {
       const params = new URLSearchParams(window.location.search);
       const type = params.get('type') as PopupType;
-      if (!type) return;
-      if (type === PopupType.SYSTEM_SETTING) {
-        ipcService.autoLaunch.get((enabled) => {
-          setInitialData({ autoLaunch: enabled });
-        });
-      } else {
-        ipcService.initialData.request(type, (data) => {
-          setInitialData(data);
-        });
-      }
+      setType(type || null);
     }
   }, []);
 
   useEffect(() => {
-    if (!initialData) return;
-
-    const params = new URLSearchParams(window.location.search);
-    const type = params.get('type') as PopupType;
     if (!type) return;
+    ipcService.initialData.request(type, (data) => {
+      setInitialData(data);
+    });
+  }, [type]);
+
+  useEffect(() => {
+    if (!initialData || !type) return;
 
     switch (type) {
-      case PopupType.EDIT_FRIEND:
-        setHeaderTitle('編輯好友');
+      case PopupType.USER_SETTING:
+        setHeaderTitle(lang.tr.editUser);
         setHeaderButtons(['close']);
-        setContent(<EditFriend {...initialData} />);
+        setContent(<UserSetting {...initialData} />);
+        break;
+      case PopupType.SERVER_SETTING:
+        setHeaderTitle(lang.tr.editServer);
+        setHeaderButtons(['close']);
+        setContent(<ServerSetting {...initialData} />);
+        break;
+      case PopupType.CHANNEL_SETTING:
+        setHeaderTitle(lang.tr.editChannel);
+        setHeaderButtons(['close']);
+        setContent(<ChannelSetting {...initialData} />);
+        break;
+      case PopupType.MEMBERAPPLY_SETTING:
+        setHeaderTitle(lang.tr.editApplySettings);
+        setHeaderButtons(['close']);
+        setContent(<MemberApplySetting {...initialData} />);
         break;
       case PopupType.SYSTEM_SETTING:
         setHeaderTitle(lang.tr.systemSetting);
         setHeaderButtons(['close']);
         setContent(<SystemSetting {...initialData} />);
         break;
-      case PopupType.EDIT_APPLY:
-        setHeaderTitle(lang.tr.editApplySettings);
-        setHeaderButtons(['close']);
-        setContent(<EditApplySetting {...initialData} />);
-        break;
-      case PopupType.EDIT_MEMBER:
-        setHeaderTitle(lang.tr.editMemberCard);
-        setHeaderButtons(['close']);
-        setContent(<EditMember {...initialData} />);
-        break;
-      case PopupType.EDIT_USER:
-        setHeaderTitle(lang.tr.editUser);
-        setHeaderButtons(['close']);
-        setContent(<UserSetting {...initialData} />);
-        break;
       case PopupType.CREATE_SERVER:
         setHeaderTitle(lang.tr.createServer);
         setHeaderButtons(['close']);
         setContent(<CreateServer {...initialData} />);
         break;
-      case PopupType.EDIT_SERVER:
-        setHeaderTitle(lang.tr.editServer);
-        setHeaderButtons(['close']);
-        setContent(<EditServer {...initialData} />);
-        break;
       case PopupType.CREATE_CHANNEL:
         setHeaderTitle(lang.tr.createChannel);
         setHeaderButtons(['close']);
-        setContent(<AddChannel {...initialData} />);
+        setContent(<CreateChannel {...initialData} />);
         break;
-      case PopupType.EDIT_CHANNEL:
-        setHeaderTitle(lang.tr.editChannel);
+      case PopupType.CREATE_FRIENDGROUP:
+        setHeaderTitle(lang.tr.addFriendGroup);
         setHeaderButtons(['close']);
-        setContent(<ChannelSetting {...initialData} />);
+        setContent(<CreateFriendGroup {...initialData} />);
+        break;
+      case PopupType.EDIT_NICKNAME:
+        setHeaderTitle(lang.tr.editMemberCard);
+        setHeaderButtons(['close']);
+        setContent(<EditNickname {...initialData} />);
+        break;
+      case PopupType.EDIT_FRIENDGROUP:
+        setHeaderTitle(lang.tr.editFriendGroup);
+        setHeaderButtons(['close']);
+        setContent(<EditFriendGroup {...initialData} />);
+        break;
+      case PopupType.EDIT_FRIEND:
+        setHeaderTitle('編輯好友');
+        setHeaderButtons(['close']);
+        setContent(<EditFriend {...initialData} />);
         break;
       case PopupType.APPLY_MEMBER:
         setHeaderTitle(lang.tr.applyMember);
@@ -179,25 +186,15 @@ const Popup = React.memo(() => {
         setHeaderButtons(['close']);
         setContent(<ApplyFriend {...initialData} />);
         break;
-      case PopupType.ADD_FRIEND:
+      case PopupType.SEARCH_USER:
         setHeaderTitle(lang.tr.addFriend);
         setHeaderButtons(['close']);
-        setContent(<AddFriend {...initialData} />);
-        break;
-      case PopupType.ADD_FRIEND_GROUP:
-        setHeaderTitle(lang.tr.addFriendGroup);
-        setHeaderButtons(['close']);
-        setContent(<AddFriendGroup {...initialData} />);
-        break;
-      case PopupType.EDIT_FRIEND_GROUP:
-        setHeaderTitle(lang.tr.editFriendGroup);
-        setHeaderButtons(['close']);
-        setContent(<EditFriendGroup {...initialData} />);
+        setContent(<SearchUser {...initialData} />);
         break;
       case PopupType.DIRECT_MESSAGE:
-        setHeaderTitle(lang.tr.directMessage);
-        setHeaderButtons(['close']);
-        setContent(<DirectMessageModal {...initialData} />);
+        setHeaderTitle(initialData.targetName || lang.tr.directMessage);
+        setHeaderButtons(['close', 'minimize', 'maxsize']);
+        setContent(<DirectMessage {...{ ...initialData, windowRef }} />);
         break;
       case PopupType.DIALOG_ALERT:
       case PopupType.DIALOG_ALERT2:
@@ -228,17 +225,15 @@ const Popup = React.memo(() => {
       default:
         break;
     }
-  }, [lang, initialData]);
+  }, [lang, initialData, type]);
 
   return (
-    <WebRTCProvider>
-      <div className="wrapper">
-        {/* Top Nevigation */}
-        <Header title={headerTitle} buttons={headerButtons} />
-        {/* Main Content */}
-        {content}
-      </div>
-    </WebRTCProvider>
+    <div className="wrapper" ref={windowRef}>
+      {/* Top Nevigation */}
+      {<Header title={headerTitle} buttons={headerButtons} />}
+      {/* Main Content */}
+      {content}
+    </div>
   );
 });
 

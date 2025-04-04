@@ -8,6 +8,8 @@ import { SocketServerEvent, SocketClientEvent } from '@/types';
 
 // Services
 import ipcService from '@/services/ipc.service';
+import { errorHandler } from '@/utils/errorHandler';
+import { StandardizedError } from '@/utils/errorHandler';
 
 type SocketContextType = {
   send: Record<SocketClientEvent, (data: any) => () => void>;
@@ -86,6 +88,18 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
     setIsConnected(false);
   };
 
+  const handleError = (error: StandardizedError) => {
+    console.log('Socket error', error);
+    new errorHandler(error).show();
+  };
+
+  const handleOpenPopup = (data: any) => {
+    console.log('Socket open popup', data);
+    const { popupType, initialData } = data;
+    ipcService.popup.open(popupType);
+    ipcService.initialData.onRequest(popupType, initialData);
+  };
+
   // Effects
   useEffect(() => {
     console.log('SocketProvider initialization');
@@ -115,6 +129,8 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
     ipcService.onSocketEvent('reconnect', handleReconnect);
     ipcService.onSocketEvent('reconnect_error', handleReconnectError);
     ipcService.onSocketEvent('disconnect', handleDisconnect);
+    ipcService.onSocketEvent('error', handleError);
+    ipcService.onSocketEvent('openPopup', handleOpenPopup);
 
     return () => {
       console.log('SocketProvider cleanup');

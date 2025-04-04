@@ -136,10 +136,7 @@ const EditFriendGroupPopup: React.FC<EditFriendGroupPopupProps> = React.memo(
             }
             onClick={() => {
               handleUpdateFriendGroup(
-                {
-                  name: groupName,
-                  order: groupOrder,
-                },
+                { name: groupName, order: groupOrder },
                 friendGroupId,
               );
               handleClose();

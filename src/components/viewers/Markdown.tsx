@@ -96,7 +96,7 @@ const Markdown: React.FC<MarkdownProps> = React.memo(
       ),
       a: ({ node, href, ...props }: any) => {
         if (isGuest && forbidGuestUrl) {
-          return <span className="text-gray-400" {...props} />;
+          return <div className="text-gray-400" {...props} />;
         }
         return (
           <a

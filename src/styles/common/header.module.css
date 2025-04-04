@@ -4,6 +4,12 @@
   -webkit-app-region: drag;
   justify-content: space-between;
   min-height: 30px;
+  border-top: 1px solid #858585;
+  border-right: 1px solid #858585;
+  border-left: 1px solid #858585;
+  border-bottom: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .appIcon {
@@ -350,7 +356,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 220px;
+  max-width: 120px;
   padding: 3px;
 }
 
