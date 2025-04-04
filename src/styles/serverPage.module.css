@@ -335,7 +335,8 @@
   padding-left: 25px;
 }
 
-.lobby {
+.lobby,
+.userInHere {
   color: red;
 }
 
