@@ -32,7 +32,6 @@ import ipcService from '@/services/ipc.service';
 
 // Providers
 import { useLanguage } from '@/providers/Language';
-import WebRTCProvider from '@/providers/WebRTC';
 
 interface HeaderProps {
   title: string;
@@ -89,7 +88,7 @@ Header.displayName = 'Header';
 const Popup = React.memo(() => {
   // Language
   const lang = useLanguage();
-  const params = new URLSearchParams(window.location.search);
+  // const params = new URLSearchParams(window.location.search);
 
   // Refs
   const windowRef = useRef<HTMLDivElement>(null);
@@ -108,20 +107,15 @@ const Popup = React.memo(() => {
       const params = new URLSearchParams(window.location.search);
       const type = params.get('type') as PopupType;
       if (!type) return;
-      if (type === PopupType.SYSTEM_SETTING) {
-        ipcService.autoLaunch.get((enabled) => {
-          setInitialData({ autoLaunch: enabled });
-        });
-      } else {
-        ipcService.initialData.request(type, (data) => {
-          setInitialData(data);
-        });
-      }
+      ipcService.initialData.request(type, (data) => {
+        setInitialData(data);
+      });
     }
   }, []);
 
   useEffect(() => {
     if (!initialData) return;
+    const params = new URLSearchParams(window.location.search);
     const type = params.get('type') as PopupType;
     if (!type) return;
 
@@ -233,14 +227,12 @@ const Popup = React.memo(() => {
   }, [lang, initialData]);
 
   return (
-    <WebRTCProvider>
-      <div className="wrapper" ref={windowRef}>
-        {/* Top Nevigation */}
-        {<Header title={headerTitle} buttons={headerButtons} />}
-        {/* Main Content */}
-        {content}
-      </div>
-    </WebRTCProvider>
+    <div className="wrapper" ref={windowRef}>
+      {/* Top Nevigation */}
+      {<Header title={headerTitle} buttons={headerButtons} />}
+      {/* Main Content */}
+      {content}
+    </div>
   );
 });
 
