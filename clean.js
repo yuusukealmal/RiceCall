@@ -289,6 +289,34 @@ const clean = async () => {
   //   console.log(`Cleaned channelRelation ${channelRelation.id}`);
   // }
   // console.log('All channelRelations cleaned!');
+
+  // const users = await db.get('users');
+
+  // Constants
+  const { SERVER_URL } = require('./constant');
+
+  if (!users) {
+    console.log('No users found in the database.');
+    return;
+  }
+
+  for (const userId in users) {
+    const user = users[userId];
+    if (user && user.avatarUrl && !user.avatarUrl.startsWith(SERVER_URL)) {
+      console.log(`Original avatarUrl for ${userId}: ${user.avatarUrl}`);
+
+      // 提取原始 URL 中的路徑部分
+      const urlParts = new URL(user.avatarUrl);
+      const originalPath = urlParts.pathname + urlParts.search; // 包括查詢參數
+
+      // 構建新的 avatarUrl
+      user.avatarUrl = SERVER_URL + originalPath;
+
+      console.log(`Updated avatarUrl for ${userId}: ${user.avatarUrl}`);
+
+      await db.set(`users.${user.id}`, user);
+    }
+  }
 };
 
 clean();
