@@ -254,7 +254,7 @@ const get = {
       .filter((msg) => msg.channelId === channelId && msg.type === 'general')
       .map((msg) => {
         // Concat user and member data with message data
-        const member = members[`mb_${msg.senderId}-${msg.receiverId}`];
+        const member = members[`mb_${msg.senderId}-${msg.serverId}`];
         const user = users[msg.senderId];
         return { ...user, ...member, ...msg };
       })
@@ -307,24 +307,7 @@ const get = {
     if (!friend) return null;
     return {
       ...friend,
-      directMessages: await get.friendDirectMessages(friend.id),
     };
-  },
-  friendDirectMessages: async (friendId) => {
-    const messages = (await db.get('messages')) || {};
-    const friends = (await db.get('friends')) || {};
-    const users = (await db.get('users')) || {};
-    return Object.values(messages)
-      .filter((dm) => dm.channelId === friendId && dm.type === 'dm')
-      .map((dm) => {
-        // Concat user data with direct message data
-        const friend =
-          friends[`fd_${dm.senderId}-${dm.receiverId}`] ||
-          friends[`fd_${dm.receiverId}-${dm.senderId}`];
-        const user = users[dm.senderId];
-        return { ...user, ...friend, ...dm };
-      })
-      .filter((dm) => dm);
   },
 
   // Friend Application
@@ -347,14 +330,16 @@ const get = {
     };
   },
 
-  // DirectMessage
-  directMessages: async (directMessageId) => {
+  directMessages: async (userId, targetId) => {
     const directMessages = (await db.get('directMessages')) || {};
-    const directMessage = directMessages[directMessageId];
-    if (!directMessage) return null;
-    return {
-      ...directMessage,
-    };
+    const userId1 = userId.localeCompare(targetId) < 0 ? userId : targetId;
+    const userId2 = userId.localeCompare(targetId) < 0 ? targetId : userId;
+    return Object.values(directMessages)
+      .filter((dm) => dm.userId1 === userId1 && dm.userId2 === userId2)
+      .map((dm) => {
+        return { ...dm };
+      })
+      .filter((dm) => dm);
   },
 };
 

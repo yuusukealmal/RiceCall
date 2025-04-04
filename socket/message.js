@@ -68,7 +68,7 @@ const messageHandler = {
       await Set.message(messageId, {
         ...newMessage,
         senderId: user.id,
-        receiverId: server.id,
+        serverId: server.id,
         channelId: channel.id,
         timestamp: Date.now().valueOf(),
       });
@@ -170,8 +170,9 @@ const messageHandler = {
       const directMessageId = uuidv4();
       await Set.directMessage(directMessageId, {
         ...newDirectMessage,
-        userId: user.id,
-        targetId: target.id,
+        senderId: user.id,
+        userId1: user.id.localeCompare(target.id) < 0 ? user.id : target.id,
+        userId2: user.id.localeCompare(target.id) < 0 ? target.id : user.id,
         timestamp: Date.now().valueOf(),
       });
 

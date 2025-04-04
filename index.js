@@ -273,11 +273,11 @@ const server = http.createServer((req, res) => {
 
   // Refresh
   if (req.method == 'POST' && req.url.startsWith('/refresh')) {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
     if (req.url == '/refresh/user') {
-      let body = '';
-      req.on('data', (chunk) => {
-        body += chunk.toString();
-      });
       req.on('end', async () => {
         try {
           const data = JSON.parse(body);
@@ -312,10 +312,6 @@ const server = http.createServer((req, res) => {
     }
 
     if (req.url == '/refresh/server') {
-      let body = '';
-      req.on('data', (chunk) => {
-        body += chunk.toString();
-      });
       req.on('end', async () => {
         try {
           const data = JSON.parse(body);
@@ -350,10 +346,6 @@ const server = http.createServer((req, res) => {
     }
 
     if (req.url == '/refresh/channel') {
-      let body = '';
-      req.on('data', (chunk) => {
-        body += chunk.toString();
-      });
       req.on('end', async () => {
         try {
           const data = JSON.parse(body);
@@ -388,10 +380,6 @@ const server = http.createServer((req, res) => {
     }
 
     if (req.url == '/refresh/member') {
-      let body = '';
-      req.on('data', (chunk) => {
-        body += chunk.toString();
-      });
       req.on('end', async () => {
         try {
           const data = JSON.parse(body);
@@ -426,10 +414,6 @@ const server = http.createServer((req, res) => {
     }
 
     if (req.url == '/refresh/memberApplication') {
-      let body = '';
-      req.on('data', (chunk) => {
-        body += chunk.toString();
-      });
       req.on('end', async () => {
         try {
           const data = JSON.parse(body);
@@ -464,10 +448,6 @@ const server = http.createServer((req, res) => {
     }
 
     if (req.url == '/refresh/friend') {
-      let body = '';
-      req.on('data', (chunk) => {
-        body += chunk.toString();
-      });
       req.on('end', async () => {
         try {
           const data = JSON.parse(body);
@@ -502,10 +482,6 @@ const server = http.createServer((req, res) => {
     }
 
     if (req.url == '/refresh/friendApplication') {
-      let body = '';
-      req.on('data', (chunk) => {
-        body += chunk.toString();
-      });
       req.on('end', async () => {
         try {
           const data = JSON.parse(body);
@@ -537,6 +513,39 @@ const server = http.createServer((req, res) => {
         }
       });
       return;
+    }
+
+    if (req.url == '/refresh/directMessage') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { userId, targetId } = data;
+          if (!userId || !targetId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHDIRECTMESSAGE',
+              'DATA_INVALID',
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.directMessages(userId, targetId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHDIRECTMESSAGE',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
     }
     return;
   }

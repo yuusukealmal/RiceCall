@@ -231,7 +231,7 @@ const clean = async () => {
       'content',
       'type',
       'senderId',
-      'receiverId',
+      'serverId',
       'channelId',
       'timestamp',
     ];
@@ -244,7 +244,14 @@ const clean = async () => {
   console.log('All messages cleaned!');
 
   for (const directMessage of Object.values(directMessages)) {
-    const ALLOWED_FIELDS = ['id', 'content', 'userId', 'targetId', 'timestamp'];
+    const ALLOWED_FIELDS = [
+      'id',
+      'content',
+      'senderId',
+      'userId1',
+      'userId2',
+      'timestamp',
+    ];
     const filteredData = Object.fromEntries(
       Object.entries(directMessage).filter(([key]) =>
         ALLOWED_FIELDS.includes(key),

@@ -353,7 +353,7 @@ const set = {
       'content',
       'type',
       'senderId',
-      'receiverId',
+      'serverId',
       'channelId',
       'timestamp',
     ];
@@ -361,10 +361,10 @@ const set = {
       Object.entries(data).filter(([key]) => ALLOWED_FIELDS.includes(key)),
     );
     messages[id] = {
-      type: 'general',
       content: '',
+      type: 'general',
       senderId: '',
-      receiverId: '',
+      serverId: '',
       channelId: '',
       timestamp: 0,
       ...messages[id],
@@ -377,15 +377,22 @@ const set = {
 
   directMessage: async (id, data) => {
     const directMessages = await db.get('directMessages');
-    const ALLOWED_FIELDS = ['content', 'userId', 'targetId', 'timestamp'];
+    const ALLOWED_FIELDS = [
+      'content',
+      'senderId',
+      'userId1',
+      'userId2',
+      'timestamp',
+    ];
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(([key]) => ALLOWED_FIELDS.includes(key)),
     );
     directMessages[id] = {
       type: 'dm',
       content: '',
-      userId: '',
-      targetId: '',
+      senderId: '',
+      userId1: '',
+      userId2: '',
       timestamp: 0,
       ...directMessages[id],
       ...filteredData,
