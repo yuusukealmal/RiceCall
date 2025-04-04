@@ -332,12 +332,14 @@ const get = {
 
   directMessages: async (userId, targetId) => {
     const directMessages = (await db.get('directMessages')) || {};
+    const users = (await db.get('users')) || {};
     const userId1 = userId.localeCompare(targetId) < 0 ? userId : targetId;
     const userId2 = userId.localeCompare(targetId) < 0 ? targetId : userId;
     return Object.values(directMessages)
       .filter((dm) => dm.userId1 === userId1 && dm.userId2 === userId2)
       .map((dm) => {
-        return { ...dm };
+        const user = users[dm.userId1];
+        return { ...user, ...dm };
       })
       .filter((dm) => dm);
   },
