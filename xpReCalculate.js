@@ -2,7 +2,7 @@ const { QuickDB } = require('quick.db');
 const db = new QuickDB();
 const { XP_SYSTEM } = require('./constant.js');
 const Set = require('./utils/set.js');
-
+const fs = require('fs');
 function totalXP(level, baseXP = 5, growthRate = 1.02) {
   if (level < 1) return 0;
   let totalXP = 0;
@@ -19,9 +19,18 @@ function getRequiredXP(level) {
 }
 
 const reCalculate = async () => {
-  const users = await db.get('users');
-  for (const user of Object.values(users)) {
-    let totalXp = totalXP(user.level) + user.xp;
+  // 讀取檔案並轉為字串
+  const data = fs.readFileSync('xpInfo.txt', 'utf-8');
+
+  // 按行拆分並解析 JSON
+  const userXpInfos = data
+    .split('\n') // 拆分每一行
+    .filter((line) => line.trim() !== '') // 過濾空行
+    .map((line) => JSON.parse(line)); // 解析 JSON
+
+  // const users = await db.get('users');
+  for (const userXpInfo of userXpInfos) {
+    let totalXp = totalXP(userXpInfo.level) + userXpInfo.xp;
     let level = 1;
     let requiredXp = 0;
     while (true) {
@@ -30,7 +39,7 @@ const reCalculate = async () => {
       level += 1;
       totalXp -= requiredXp;
     }
-    await Set.user(user.id, {
+    await Set.user(userXpInfo.id, {
       level: level,
       xp: totalXp,
       requiredXp: requiredXp,
@@ -38,7 +47,7 @@ const reCalculate = async () => {
     });
     console.log(
       `Update ${
-        user.id
+        userXpInfo.id
       } level to ${level}, xp to ${totalXp}, requiredXp to ${requiredXp}, progress to ${
         totalXp / requiredXp
       }`,
