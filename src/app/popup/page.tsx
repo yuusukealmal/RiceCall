@@ -88,12 +88,12 @@ Header.displayName = 'Header';
 const Popup = React.memo(() => {
   // Language
   const lang = useLanguage();
-  // const params = new URLSearchParams(window.location.search);
 
   // Refs
   const windowRef = useRef<HTMLDivElement>(null);
 
   // States
+  const [type, setType] = useState<PopupType | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>('');
   const [headerButtons, setHeaderButtons] = useState<
     ('minimize' | 'maxsize' | 'close')[]
@@ -106,18 +106,19 @@ const Popup = React.memo(() => {
     if (window.location.search) {
       const params = new URLSearchParams(window.location.search);
       const type = params.get('type') as PopupType;
-      if (!type) return;
-      ipcService.initialData.request(type, (data) => {
-        setInitialData(data);
-      });
+      setType(type || null);
     }
   }, []);
 
   useEffect(() => {
-    if (!initialData) return;
-    const params = new URLSearchParams(window.location.search);
-    const type = params.get('type') as PopupType;
     if (!type) return;
+    ipcService.initialData.request(type, (data) => {
+      setInitialData(data);
+    });
+  }, [type]);
+
+  useEffect(() => {
+    if (!initialData || !type) return;
 
     switch (type) {
       case PopupType.USER_SETTING:
@@ -224,7 +225,7 @@ const Popup = React.memo(() => {
       default:
         break;
     }
-  }, [lang, initialData]);
+  }, [lang, initialData, type]);
 
   return (
     <div className="wrapper" ref={windowRef}>
