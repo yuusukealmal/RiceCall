@@ -289,6 +289,23 @@ const clean = async () => {
   //   console.log(`Cleaned channelRelation ${channelRelation.id}`);
   // }
   // console.log('All channelRelations cleaned!');
+
+  // const users = await db.get('users');
+
+  // Constants
+const { SERVER_URL } = require('./constant');
+
+  if (!users) {
+    console.log('No users found in the database.');
+    return;
+  }
+
+  for (const userId in users) {
+    const user = users[userId];
+    if (user && user.avatarUrl && user.avatarUrl.startsWith(SERVER_URL)) {
+      console.log(user.avatarUrl);
+    }
+  }
 };
 
 clean();
