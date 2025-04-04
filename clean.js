@@ -312,11 +312,12 @@ const clean = async () => {
       // 構建新的 avatarUrl
       user.avatarUrl = SERVER_URL + originalPath;
 
-      console.log(`Updated avatarUrl for ${userId}: ${user.avatarUrl}`);
-
       await db.set(`users.${user.id}`, user);
+
+      console.log(`Updated avatarUrl for ${userId}: ${user.avatarUrl}`);
     }
   }
+  console.log('All avatarUrls Updated!');
 };
 
 clean();
