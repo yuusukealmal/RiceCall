@@ -338,7 +338,7 @@ const get = {
     return Object.values(directMessages)
       .filter((dm) => dm.userId1 === userId1 && dm.userId2 === userId2)
       .map((dm) => {
-        const user = users[dm.userId1];
+        const user = users[dm.senderId];
         return { ...user, ...dm };
       })
       .filter((dm) => dm);
