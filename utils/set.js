@@ -3,7 +3,7 @@ const { QuickDB } = require('quick.db');
 const db = new QuickDB();
 
 // Constants
-const { PORT, SERVER_URL, XP_SYSTEM } = require('../constant');
+const { SERVER_URL, XP_SYSTEM } = require('../constant');
 
 const set = {
   user: async (id, data) => {
@@ -36,7 +36,7 @@ const set = {
     users[id] = {
       name: '',
       avatar: '',
-      avatarUrl: `${SERVER_URL}:${PORT}/images/userAvatars/`,
+      avatarUrl: `${SERVER_URL}/images/userAvatars/`,
       signature: '',
       country: 'taiwan',
       level: 1,
@@ -136,7 +136,7 @@ const set = {
     servers[id] = {
       name: '',
       avatar: '',
-      avatarUrl: `${SERVER_URL}:${PORT}/images/serverAvatars/`,
+      avatarUrl: `${SERVER_URL}/images/serverAvatars/`,
       announcement: '',
       applyNotice: '',
       description: '',
