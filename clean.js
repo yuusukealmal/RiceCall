@@ -313,6 +313,8 @@ const clean = async () => {
       user.avatarUrl = SERVER_URL + originalPath;
 
       console.log(`Updated avatarUrl for ${userId}: ${user.avatarUrl}`);
+
+      await db.set(`users.${user.id}`, user);
     }
   }
 };
