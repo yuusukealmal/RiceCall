@@ -613,7 +613,9 @@ const UserTab: React.FC<UserTabProps> = React.memo(
         <div
           className={`
             ${styles['userTabName']} 
-            ${channelMemberNickname ? styles['member'] : ''}
+            ${channelMemberNickname ? styles['member'] : ''} ${
+            channelMemberVip > 0 ? styles['isVIP'] : ''
+          }
           `}
         >
           {channelMemberNickname || channelMemberName}
