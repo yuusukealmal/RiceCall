@@ -173,13 +173,7 @@ const CategoryTab: React.FC<CategoryTabProps> = React.memo(
               }))
             }
           />
-          <div
-            className={`${styles['channelTabLable']} ${
-              userInCategory ? styles['userInHere'] : ''
-            }`}
-          >
-            {categoryName}
-          </div>
+          <div className={styles['channelTabLable']}>{categoryName}</div>
           {!expanded[categoryId] && userInCategory && (
             <div className={styles['myLocationIcon']} />
           )}
@@ -376,7 +370,7 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
           />
           <div
             className={`${styles['channelTabLable']} ${
-              userInChannel ? styles['userInHere'] : ''
+              channelIsLobby ? styles['isLobby'] : ''
             }`}
           >
             {channelName}
