@@ -227,6 +227,33 @@ const userHandler = {
           403,
         );
       }
+      if (editedUser.vip) {
+        throw new StandardizedError(
+          '無法更新自己的 VIP 資料',
+          'ValidationError',
+          'UPDATEUSER',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
+      if (editedUser.level > 1) {
+        throw new StandardizedError(
+          '無法更新自己的等級資料',
+          'ValidationError',
+          'UPDATEUSER',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
+      if (editedUser.xp) {
+        throw new StandardizedError(
+          '無法更新自己的經驗值資料',
+          'ValidationError',
+          'UPDATEUSER',
+          'PERMISSION_DENIED',
+          403,
+        );
+      }
 
       // Update user data
       await Set.user(user.id, editedUser);
