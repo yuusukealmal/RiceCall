@@ -23,7 +23,7 @@ const xpSystem = {
   setup: () => {
     try {
       // Set up XP interval
-      setInterval(async () => xpSystem.refreshAllUsers(), 60000);
+      setInterval(async () => xpSystem.refreshAllUsers(), 600000);
 
       new Logger('XPSystem').info(`XP system setup complete`);
     } catch (error) {
