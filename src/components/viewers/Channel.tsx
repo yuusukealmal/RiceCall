@@ -363,7 +363,13 @@ const ChannelTab: React.FC<ChannelTabProps> = React.memo(
               }))
             }
           />
-          <div className={styles['channelTabLable']}>{channelName}</div>
+          <div
+            className={`${channelIsLobby ? styles['isLobby'] : ''} ${
+              styles['channelTabLable']
+            }`}
+          >
+            {channelName}
+          </div>
           {channelVisibility !== 'readonly' && (
             <div className={styles['channelTabCount']}>
               {`(${channelMembers.length}${
@@ -602,6 +608,7 @@ const UserTab: React.FC<UserTabProps> = React.memo(
           className={`
             ${styles['userTabName']} 
             ${channelMemberNickname ? styles['member'] : ''}
+            ${channelMemberVip > 0 ? styles['isVIP'] : ''}
           `}
         >
           {channelMemberNickname || channelMemberName}

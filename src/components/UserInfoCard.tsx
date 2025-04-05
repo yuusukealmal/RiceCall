@@ -139,11 +139,11 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
           {/* Bottom Section */}
           <div className={userInfoCard['bottom']}>
             {/* Nickname Row */}
-            {memberNickname && (
-              <div className={userInfoCard['nicknameRow']}>
+            <div className={userInfoCard['nicknameRow']}>
+              {memberNickname && (
                 <div className={userInfoCard['nickname']}>{memberNickname}</div>
-              </div>
-            )}
+              )}
+            </div>
             {/* Info Row */}
             <div className={userInfoCard['infoRow']}>
               {/* Permission */}

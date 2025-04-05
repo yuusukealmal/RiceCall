@@ -88,7 +88,7 @@
   align-items: center;
 }
 
-.nicknameRow::before {
+.nicknameRow:not(:empty)::before {
   content: '';
   display: block;
   background: url('../../public/channel/groupcard.png') no-repeat center center;
@@ -98,6 +98,10 @@
   background-position: 0 0;
   background-size: contain;
   margin-right: 5px;
+}
+
+.nickname {
+  color: #1e667c;
 }
 
 .infoRow {
