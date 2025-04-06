@@ -60,6 +60,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const [showMicVolume, setShowMicVolume] = useState(false);
     const [showSpeakerVolume, setShowSpeakerVolume] = useState(false);
     const [currentTime, setCurrentTime] = useState<number>(Date.now());
+    const [displayChannelMessages, setDisplayChannelMessages] = useState<ChannelMessage[]>([]);
 
     // Variables
     const { id: userId, currentChannelId: userCurrentChannelId } = user;
@@ -80,6 +81,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       guestTextWaitTime: channelGuestTextWaitTime,
       guestTextGapTime: channelGuestTextGapTime,
     } = currentChannel;
+
+    const [channelLastVisitTimes, setChannelLastVisitTimes] = useState<
+      Record<string, number>
+    >({
+      [userCurrentChannelId]: Date.now(),
+    });
+
     const {
       permissionLevel: memberPermissionLevel,
       lastMessageTime: memberLastMessageTime,
@@ -126,6 +134,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     const handleChannelUpdate = (data: Partial<Channel> | null): void => {
       if (!data) data = createDefault.channel();
       setCurrentChannel((prev) => ({ ...prev, ...data }));
+      const channelId = data.id;
+      // Make sure the visit time is set for the new channel when switching channels
+      channelId &&
+        setChannelLastVisitTimes((prev) => ({
+          ...prev,
+          [channelId]: Date.now(),
+        }));
     };
 
     const handleMemberUpdate = (data: Partial<Member> | null): void => {
@@ -263,6 +278,34 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       return () => clearInterval(timer);
     }, []);
 
+    useEffect(() => {
+      // Double check the visit time is set for the new channel
+      if (currentChannel.id) {
+        setChannelLastVisitTimes((prev) => ({
+          ...prev,
+          [currentChannel.id]: Date.now(),
+        }));
+      }
+    }, [currentChannel.id]);
+
+    useEffect(() => {
+      if (channelMessages && channelMessages.length > 0) {
+        setDisplayChannelMessages((prevMessages) => {
+          const lastVisitTime =
+            channelLastVisitTimes[currentChannel.id] || Date.now();
+
+          const currentChannelMessages = channelMessages.filter(
+            (msg) => msg.timestamp >= lastVisitTime,
+          );
+
+          return [...prevMessages, ...currentChannelMessages].filter(
+            (msg, index, self) =>
+              index === self.findIndex((m) => m.id === msg.id),
+          );
+        });
+      }
+    }, [channelMessages, currentChannel.id, channelLastVisitTimes]);
+
     return (
       <div className={styles['serverWrapper']}>
         {/* Main Content */}
@@ -291,7 +334,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
               <MarkdownViewer markdownText={serverAnnouncement} />
             </div>
             <div className={styles['messageArea']}>
-              <MessageViewer messages={channelMessages} />
+              <MessageViewer
+                messages={displayChannelMessages}
+              />
             </div>
             <div className={styles['inputArea']}>
               <MessageInputBox
