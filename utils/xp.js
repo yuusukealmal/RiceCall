@@ -61,7 +61,7 @@ const xpSystem = {
   refreshUser: async (socket) => {
     try {
       const timeFlag = xpSystem.timeFlag.get(socket);
-      if (!timeFlag) {
+      if (timeFlag) {
         const elapsedTime = xpSystem.elapsedTime.get(socket.userId) || 0;
         let newElapsedTime = elapsedTime + Date.now() - timeFlag;
         while (newElapsedTime >= XP_SYSTEM.INTERVAL_MS) {
@@ -133,7 +133,7 @@ const xpSystem = {
 
       // Update member contribution if in a server
       const memberUpdate = {
-        contribution: member.contribution + XP_SYSTEM.BASE_XP * vipBoost,
+        contribution: member.contribution + XP_SYSTEM.BASE_XP,
       };
       await Set.member(member.id, memberUpdate);
 
@@ -166,108 +166,6 @@ const xpSystem = {
       );
     }
   },
-
-  // contributionInterval: new Map(),
-  // elapsedTime: new Map(),
-  // timeFlag: new Map(),
-
-  // createMap: (socketId, intervalId) => {
-  //   xpSystem.contributionInterval.set(socketId, intervalId);
-  // },
-
-  // deleteMap: (socketId = null) => {
-  //   if (!socketId) return;
-  //   if (!xpSystem.contributionInterval.has(socketId)) return;
-  //   xpSystem.contributionInterval.delete(socketId);
-  // },
-
-  // setElapseTime: (userId) => {
-  //   if (!userId) return 0;
-  //   const elapsedTime = xpSystem.elapsedTime.get(userId) || 0;
-  //   const joinTime = xpSystem.timeFlag.get(userId) || Date.now();
-  //   const leftTime = Date.now();
-  //   const newElapsedTime =
-  //     (elapsedTime + leftTime - joinTime) % XP_SYSTEM.INTERVAL_MS;
-  //   xpSystem.elapsedTime.set(userId, newElapsedTime);
-  //   return newElapsedTime;
-  // },
-
-  // getElapseTime: (userId) => {
-  //   if (!userId) return 0;
-  //   const elapsedTime = xpSystem.elapsedTime.get(userId) || 0;
-  //   const joinTime = Date.now();
-  //   xpSystem.timeFlag.set(userId, joinTime);
-  //   return elapsedTime;
-  // },
-
-  // setup: async (socket) => {
-  //   try {
-  //     // Validate inputs
-  //     if (!socket) {
-  //       throw new Error('Socket not provided');
-  //     }
-  //     const userId = MapModule.socketToUser.get(socket.id);
-  //     if (!userId) {
-  //       throw new Error(`UserId not found for socket(${socket.id})`);
-  //     }
-
-  //     // Restore elapsed time than calculate left time
-  //     const elapsedTime = xpSystem.getElapseTime(userId);
-  //     const leftTime = XP_SYSTEM.INTERVAL_MS - elapsedTime;
-
-  //     // Run interval every XP_SYSTEM.INTERVAL_MS
-  //     const timeout = setTimeout(async () => {
-  //       await xpSystem.obtainXp(socket, userId);
-  //       xpSystem.deleteMap(socket.id);
-  //       xpSystem.setup(socket);
-  //     }, leftTime);
-
-  //     // Create map
-  //     xpSystem.createMap(socket.id, timeout);
-
-  //     new Logger('XPSystem').info(
-  //       `Obtain XP interval set up for user(${userId}) with left time: ${leftTime}`,
-  //     );
-  //   } catch (error) {
-  //     new Logger('XPSystem').error(
-  //       `Error setting up contribution interval: ${error.message}`,
-  //     );
-  //   }
-  // },
-
-  // clear: (socket) => {
-  //   try {
-  //     if (!socket) {
-  //       throw new Error('Socket not provided');
-  //     }
-  //     const userId = MapModule.socketToUser.get(socket.id);
-  //     if (!userId) {
-  //       throw new Error(`UserId not found for socket(${socket.id})`);
-  //     }
-  //     const interval = xpSystem.contributionInterval.get(socket.id);
-  //     if (!interval) {
-  //       throw new Error(`Interval not found for socket(${socket.id})`);
-  //     }
-
-  //     // Set elapsed time to map
-  //     const elapsedTime = xpSystem.setElapseTime(userId);
-
-  //     // Clear interval
-  //     clearTimeout(interval);
-
-  //     // Delete map
-  //     xpSystem.deleteMap(socket.id);
-
-  //     new Logger('XPSystem').info(
-  //       `Obtain XP interval cleared for user(${userId}) with elapsed time: ${elapsedTime}`,
-  //     );
-  //   } catch (error) {
-  //     new Logger('XPSystem').error(
-  //       `Error clearing contribution interval: ${error.message}`,
-  //     );
-  //   }
-  // },
-  // },
 };
 
 module.exports = { ...xpSystem };
