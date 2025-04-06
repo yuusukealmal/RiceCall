@@ -718,20 +718,6 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
     const canApplyMember = memberPermission < 2;
     const canOpenServerSettings = memberPermission > 4;
 
-    // Handlers
-    // FIXME: logic is wrong
-    // const handleAddFavoriteServer = (serverId: Server['id']) => {
-    //   if (!socket) return;
-    //   socket.send.updateUser({
-    //     userId,
-    //     user: {
-    //       ...user,
-    //       favoriteServerId: serverId,
-    //     },
-    //   });
-    //   setIsFavorite(!isFavorite);
-    // };
-
     const handleCreateRootChannel = () => {
       ipcService.popup.open(PopupType.CREATE_CHANNEL);
       ipcService.initialData.onRequest(PopupType.CREATE_CHANNEL, {
@@ -874,10 +860,10 @@ const ChannelViewer: React.FC<ChannelViewerProps> = React.memo(
                       icon: 'locateme',
                       onClick: () => handleLocateUser(),
                     },
-                    {
-                      id: 'separator',
-                      label: '',
-                    },
+                    // {
+                    //   id: 'separator',
+                    //   label: '',
+                    // },
                     // {
                     //   id: 'report',
                     //   label: '舉報',
