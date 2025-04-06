@@ -47,8 +47,8 @@ const init = async () => {
 const deleteExtraUploads = async () => {
   const serverAvatarDir = path.join(__dirname, 'uploads', 'serverAvatars');
   const userAvatarDir = path.join(__dirname, 'uploads', 'userAvatars');
-  const defaultServerAvatar = 'uploads/serverAvatars/__default.png';
-  const defaultUserAvatar = 'uploads/userAvatars/__default.png';
+  const defaultServerAvatar = path.join('uploads', 'serverAvatars', '__default.png');
+  const defaultUserAvatar = path.join('uploads', 'userAvatars', '__default.png');
 
   try {
     const serverAvatarFiles = await fs.readdir(serverAvatarDir);
