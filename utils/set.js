@@ -321,7 +321,7 @@ const set = {
   },
 
   // `ma_${userId}-${serverId}`
-  memberApplications: async (id, data) => {
+  memberApplication: async (id, data) => {
     const applications = await db.get('memberApplications');
     const ALLOWED_FIELDS = [
       'description',

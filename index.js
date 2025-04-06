@@ -311,6 +311,145 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    if (req.url == '/refresh/userFriends') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { userId } = data;
+          if (!userId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHUSERFRIENDS',
+              'DATA_INVALID',
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.userFriends(userId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHUSERFRIENDS',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
+    if (req.url == '/refresh/userFriendGroups') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { userId } = data;
+          if (!userId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHUSERFRIENDGROUPS',
+              'DATA_INVALID',
+              400,
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.userFriendGroups(userId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHUSERFRIENDGROUPS',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
+    if (req.url == '/refresh/userFriendApplications') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { userId } = data;
+          if (!userId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHUSERFRIENDAPPLICATIONS',
+              'DATA_INVALID',
+              400,
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.userFriendApplications(userId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHUSERFRIENDAPPLICATIONS',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
+    if (req.url == '/refresh/userServers  ') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { userId } = data;
+          if (!userId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHUSERSERVERS',
+              'DATA_INVALID',
+              400,
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.userServers(userId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHUSERSERVERS',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
     if (req.url == '/refresh/server') {
       req.on('end', async () => {
         try {
@@ -345,6 +484,146 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    if (req.url == '/refresh/serverChannels') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { serverId } = data;
+          if (!serverId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHSERVERCHANNELS',
+              'DATA_INVALID',
+              400,
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.serverChannels(serverId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHSERVERCHANNELS',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
+    if (req.url == '/refresh/serverActiveMembers') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { serverId } = data;
+          if (!serverId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHSERVERACTIVEMEMBERS',
+              'DATA_INVALID',
+              400,
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.serverUsers(serverId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHSERVERACTIVEMEMBERS',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
+    if (req.url == '/refresh/serverMembers') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { serverId } = data;
+          if (!serverId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHSERVERMEMBERS',
+              'DATA_INVALID',
+              400,
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.serverMembers(serverId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHSERVERMEMBERS',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
+    if (req.url == '/refresh/serverMemberApplications') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { serverId } = data;
+          if (!serverId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHSERVERMEMBERAPPLICATIONS',
+              'DATA_INVALID',
+              400,
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.serverMemberApplications(serverId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHSERVERMEMBERAPPLICATIONS',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
     if (req.url == '/refresh/channel') {
       req.on('end', async () => {
         try {
@@ -368,6 +647,41 @@ const server = http.createServer((req, res) => {
               `刷新資料時發生預期外的錯誤: ${error.message}`,
               'ServerError',
               'REFRESHCHANNEL',
+              'EXCEPTION_ERROR',
+              500,
+            );
+          }
+          sendError(res, error.status_code, error.error_message);
+          new Logger('Server').error(`Refresh error: ${error.error_message}`);
+        }
+      });
+      return;
+    }
+
+    if (req.url == '/refresh/channelMessages') {
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body);
+          const { channelId } = data;
+          if (!channelId) {
+            throw new StandardizedError(
+              '無效的資料',
+              'ValidationError',
+              'REFRESHCHANNELMESSAGES',
+              'DATA_INVALID',
+              400,
+            );
+          }
+          sendSuccess(res, {
+            message: 'success',
+            data: await Get.channelMessages(channelId),
+          });
+        } catch (error) {
+          if (!(error instanceof StandardizedError)) {
+            error = new StandardizedError(
+              `刷新資料時發生預期外的錯誤: ${error.message}`,
+              'ServerError',
+              'REFRESHCHANNELMESSAGES',
               'EXCEPTION_ERROR',
               500,
             );

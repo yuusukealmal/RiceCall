@@ -52,6 +52,19 @@ const get = {
       .sort((a, b) => b.order - a.order)
       .filter((b) => b);
   },
+  userServers: async (userId) => {
+    const userServers = (await db.get('userServers')) || {};
+    const servers = (await db.get('servers')) || {};
+    return Object.values(userServers)
+      .filter((us) => us.userId === userId)
+      .map((us) => {
+        // Concat server data with user server data
+        const server = servers[us.serverId];
+        return { ...server, ...us };
+      })
+      .filter((s) => s);
+  },
+  // Will be deprecated
   userJoinedServers: async (userId) => {
     const members = (await db.get('members')) || {};
     const servers = (await db.get('servers')) || {};
@@ -61,6 +74,7 @@ const get = {
       .sort((a, b) => b.name.localeCompare(a.name))
       .filter((s) => s);
   },
+  // Will be deprecated
   userRecentServers: async (userId) => {
     const userServers = (await db.get('userServers')) || {};
     const servers = (await db.get('servers')) || {};
@@ -71,6 +85,7 @@ const get = {
       .filter((s) => s)
       .slice(0, 10);
   },
+  // Will be deprecated
   userOwnedServers: async (userId) => {
     const userServers = (await db.get('userServers')) || {};
     const servers = (await db.get('servers')) || {};
@@ -80,6 +95,7 @@ const get = {
       .sort((a, b) => b.name.localeCompare(a.name))
       .filter((s) => s);
   },
+  // Will be deprecated
   userFavServers: async (userId) => {
     const userServers = (await db.get('userServers')) || {};
     const servers = (await db.get('servers')) || {};
@@ -158,34 +174,24 @@ const get = {
     if (!server) return null;
     return {
       ...server,
-      lobby: await get.serverChannel(serverId, server.lobbyId),
-      owner: await get.serverUser(serverId, server.ownerId),
-      users: await get.serverUsers(serverId),
       channels: await get.serverChannels(serverId),
       members: await get.serverMembers(serverId),
-      memberApplications: await get.serverApplications(serverId),
+      users: await get.serverUsers(serverId),
+      memberApplications: await get.serverMemberApplications(serverId),
     };
   },
-  serverUser: async (serverId, userId) => {
-    const users = (await db.get('users')) || {};
-    return Object.values(users)
-      .filter((u) => u.currentServerId === serverId && u.id === userId)
-      .sort((a, b) => b.lastActiveAt - a.lastActiveAt)
-      .filter((u) => u);
-  },
+  // Change name to serverActiveMembers
   serverUsers: async (serverId) => {
+    const members = (await db.get('members')) || {};
     const users = (await db.get('users')) || {};
-    return Object.values(users)
-      .filter((u) => u.currentServerId === serverId)
-      .sort((a, b) => b.lastActiveAt - a.lastActiveAt)
-      .filter((u) => u);
-  },
-  serverChannel: async (serverId, channelId) => {
-    const channels = (await db.get('channels')) || {};
-    const categories = (await db.get('categories')) || {};
-    return Object.values({ ...channels, ...categories })
-      .filter((ch) => ch.serverId === serverId && ch.id === channelId)
-      .filter((ch) => ch);
+    return Object.values(members)
+      .filter((mb) => mb.currentServerId === serverId)
+      .map((mb) => {
+        // Concat user data with member data
+        const user = users[mb.userId];
+        return { ...user, ...mb };
+      })
+      .filter((mb) => mb);
   },
   serverChannels: async (serverId) => {
     const channels = (await db.get('channels')) || {};
@@ -207,7 +213,7 @@ const get = {
       })
       .filter((mb) => mb);
   },
-  serverApplications: async (serverId) => {
+  serverMemberApplications: async (serverId) => {
     const applications = (await db.get('memberApplications')) || {};
     const users = (await db.get('users')) || {};
     return Object.values(applications)

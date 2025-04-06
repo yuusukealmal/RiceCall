@@ -58,7 +58,7 @@ const memberApplicationHandler = {
 
       // Create member application
       const applicationId = `ma_${user.id}-${server.id}`;
-      await Set.memberApplications(applicationId, {
+      await Set.memberApplication(applicationId, {
         ...memberApplication,
         userId: user.id,
         serverId: server.id,
@@ -67,7 +67,7 @@ const memberApplicationHandler = {
 
       // Emit updated data to all users in the server
       io.to(`server_${server.id}`).emit('serverUpdate', {
-        memberApplications: await Get.serverApplications(server.id),
+        memberApplications: await Get.serverMemberApplications(server.id),
       });
 
       new Logger('MemberApplication').success(
@@ -161,11 +161,11 @@ const memberApplicationHandler = {
       }
 
       // Update member application
-      await Set.memberApplications(application.id, editedApplication);
+      await Set.memberApplication(application.id, editedApplication);
 
       // Emit updated data to all users in the server
       io.to(`server_${server.id}`).emit('serverUpdate', {
-        memberApplications: await Get.serverApplications(server.id),
+        memberApplications: await Get.serverMemberApplications(server.id),
       });
 
       new Logger('MemberApplication').success(
@@ -257,7 +257,7 @@ const memberApplicationHandler = {
 
       // Emit updated data to all users in the server
       io.to(`server_${server.id}`).emit('serverUpdate', {
-        memberApplications: await Get.serverApplications(server.id),
+        memberApplications: await Get.serverMemberApplications(server.id),
       });
 
       new Logger('MemberApplication').success(
