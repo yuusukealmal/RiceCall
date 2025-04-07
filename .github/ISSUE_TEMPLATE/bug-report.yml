@@ -60,7 +60,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: **版本**：
+      label: "**版本**："
       description: |
         包含作業系統、Node.js、npm/yarn、App 本身等版本資訊
       placeholder: 例如：Windows 11 / Node 18 / npm 9 / v0.1.3
