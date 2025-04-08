@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useRef, useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 // Types
 import { User, DirectMessage, SocketServerEvent } from '@/types';
@@ -54,6 +55,10 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
     const [targetVip, setTargetVip] = useState<User['vip']>(
       createDefault.user().vip,
     );
+    const [targetCurrentServerName, setTargetCurrentServerName] =
+      useState<string>();
+    const [targetCurrentServerId, setTargetCurrentServerId] =
+      useState<string>();
     const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
     const [messageInput, setMessageInput] = useState<string>('');
     const [isComposing, setIsComposing] = useState<boolean>(false);
@@ -80,6 +85,7 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
       setTargetLevel(data.level);
       setTargetSignature(data.signature);
       setTargetVip(data.vip);
+      setTargetCurrentServerId(data.currentServerId);
     };
 
     const handleUserUpdate = (data: User | null) => {
@@ -88,9 +94,19 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
     };
 
     const handleDirectMessageUpdate = (data: DirectMessage[] | null) => {
-      console.log('handleDirectMessageUpdate', data);
       if (!data) data = [];
-      setDirectMessages(data);
+      if (data.length > 0) {
+        // !! THIS IS IMPORTANT !!
+        const userId1 = userId.localeCompare(targetId) < 0 ? userId : targetId;
+        const userId2 = userId.localeCompare(targetId) < 0 ? targetId : userId;
+
+        // check if the message array is between the current users
+        const isCurrentMessage =
+          data.find((msg) => msg.userId1 === userId1) &&
+          data.find((msg) => msg.userId2 === userId2);
+
+        if (isCurrentMessage) setDirectMessages(data);
+      }
     };
 
     const shakeWindow = (duration = 500) => {
@@ -158,6 +174,17 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
       refresh();
     }, [userId, targetId]);
 
+    useEffect(() => {
+      if (!targetCurrentServerId) return;
+      Promise.all([
+        refreshService.server({
+          serverId: targetCurrentServerId,
+        }),
+      ]).then(([server]) => {
+        setTargetCurrentServerName(server?.name);
+      });
+    }, [targetCurrentServerId]);
+
     return (
       <div className={popup['popupContainer']}>
         <div className={directMessage['header']}>
@@ -202,7 +229,9 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
           <div className={directMessage['mainContent']}>
             <div className={directMessage['serverInArea']}>
               <div className={directMessage['serverInIcon']} />
-              <div className={directMessage['serverInName']}>測試</div>
+              <div className={directMessage['serverInName']}>
+                {targetCurrentServerName || ''}
+              </div>
             </div>
             <div className={directMessage['messageArea']}>
               <MessageViewer messages={directMessages} />

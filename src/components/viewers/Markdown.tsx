@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
@@ -40,9 +41,23 @@ const PURIFY_CONFIG: PurifyConfig = {
     'em',
     'code',
     'pre',
+    'video',
+    'source',
+    'audio',
+    'iframe',
   ],
-  ALLOWED_ATTR: ['src', 'alt', 'class', 'href'],
-  ALLOWED_URI_REGEXP: /^\/smiles\//,
+  ALLOWED_ATTR: [
+    'src',
+    'alt',
+    'class',
+    'href',
+    'controls',
+    'width',
+    'height',
+    'allowfullscreen',
+    'type',
+  ],
+  ALLOWED_URI_REGEXP: /^(https?:\/\/)|^\/smiles\//,
 };
 
 interface MarkdownProps {
@@ -68,29 +83,29 @@ const Markdown: React.FC<MarkdownProps> = React.memo(
     const sanitized = DOMPurify.sanitize(withEmojis, PURIFY_CONFIG);
     const components: Components = {
       h1: ({ node, ...props }: any) => (
-        <h1 className="text-2xl font-bold mb-2 text-gray-900" {...props} />
+        <h1 className="text-2xl font-bold mb-2" {...props} />
       ),
       h2: ({ node, ...props }: any) => (
-        <h2 className="text-xl font-bold mb-1 text-gray-800" {...props} />
+        <h2 className="text-xl font-bold mb-1" {...props} />
       ),
       h3: ({ node, ...props }: any) => (
-        <h3 className="text-lg font-bold text-gray-700" {...props} />
+        <h3 className="text-lg font-bold" {...props} />
       ),
       p: ({ node, ...props }: any) => (
-        <div className="leading-relaxed text-gray-600" {...props} />
+        <div className="leading-relaxed" {...props} />
       ),
       ul: ({ node, ...props }: any) => (
-        <ul className="list-disc list-inside text-gray-600" {...props} />
+        <ul className="list-disc list-inside" {...props} />
       ),
       li: ({ node, ...props }: any) => (
         <li className="leading-normal" {...props} />
       ),
       ol: ({ node, ...props }: any) => (
-        <ol className="list-decimal list-inside text-gray-600" {...props} />
+        <ol className="list-decimal list-inside" {...props} />
       ),
       blockquote: ({ node, ...props }: any) => (
         <blockquote
-          className="border-l-4 border-gray-300 pl-4 italic text-gray-600 overflow-x-auto"
+          className="border-l-4 border-gray-300 pl-4 italic overflow-x-auto"
           {...props}
         />
       ),
@@ -130,6 +145,44 @@ const Markdown: React.FC<MarkdownProps> = React.memo(
       hr: ({ node, ...props }: any) => (
         <hr className="my-6 border-t border-gray-200" {...props} />
       ),
+      video: ({ node, ...props }: any) => <video {...props} />,
+      source: ({ node, ...props }: any) => <source {...props} />,
+      audio: ({ node, ...props }: any) => <audio {...props} />,
+      iframe: ({ node, ...props }: any) => (
+        <iframe
+          className="w-full h-64 border border-gray-200 rounded-lg"
+          {...props}
+        />
+      ),
+      img: ({ node, src, alt, ...props }: any) => {
+        if (isGuest && forbidGuestUrl) {
+          return <div className="text-gray-400" {...props} />;
+        }
+        return (
+          <img
+            className="max-w-full h-auto rounded-lg"
+            src={src}
+            alt={alt}
+            {...props}
+          />
+        );
+      },
+      code: ({ node, ...props }: any) => (
+        <code className="bg-gray-100 text-gray-800 rounded px-1" {...props} />
+      ),
+      pre: ({ node, ...props }: any) => (
+        <pre
+          className="bg-gray-100 text-gray-800 rounded p-2 overflow-x-auto"
+          {...props}
+        />
+      ),
+      strong: ({ node, ...props }: any) => (
+        <strong className="font-semibold text-gray-800" {...props} />
+      ),
+      em: ({ node, ...props }: any) => (
+        <em className="italic text-gray-600" {...props} />
+      ),
+      br: ({ node, ...props }: any) => <br className="my-2" {...props} />,
     };
 
     return (
