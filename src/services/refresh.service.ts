@@ -15,11 +15,14 @@ import {
   FriendGroup,
   ServerMember,
   UserServer,
-  ChannelMessage,
 } from '@/types';
 
 export const refreshService = {
-  user: async ({ userId }: { userId: User['id'] }): Promise<User | null> => {
+  user: async ({
+    userId,
+  }: {
+    userId: User['userId'];
+  }): Promise<User | null> => {
     const user = await apiService.post('/refresh/user', { userId });
     return user;
   },
@@ -27,7 +30,7 @@ export const refreshService = {
   userFriends: async ({
     userId,
   }: {
-    userId: User['id'];
+    userId: User['userId'];
   }): Promise<UserFriend[] | null> => {
     const userFriends = await apiService.post('/refresh/userFriends', {
       userId,
@@ -38,7 +41,7 @@ export const refreshService = {
   userFriendGroups: async ({
     userId,
   }: {
-    userId: User['id'];
+    userId: User['userId'];
   }): Promise<FriendGroup[] | null> => {
     const userFriendGroups = await apiService.post(
       '/refresh/userFriendGroups',
@@ -50,7 +53,7 @@ export const refreshService = {
   userFriendApplications: async ({
     userId,
   }: {
-    userId: User['id'];
+    userId: User['userId'];
   }): Promise<FriendApplication[] | null> => {
     const userFriendApplications = await apiService.post(
       '/refresh/userFriendApplications',
@@ -62,7 +65,7 @@ export const refreshService = {
   userServers: async ({
     userId,
   }: {
-    userId: User['id'];
+    userId: User['userId'];
   }): Promise<UserServer[] | null> => {
     const userServers = await apiService.post('/refresh/userServers', {
       userId,
@@ -73,7 +76,7 @@ export const refreshService = {
   server: async ({
     serverId,
   }: {
-    serverId: Server['id'];
+    serverId: Server['serverId'];
   }): Promise<Server | null> => {
     const server = await apiService.post('/refresh/server', { serverId });
     return server;
@@ -82,7 +85,7 @@ export const refreshService = {
   serverChannels: async ({
     serverId,
   }: {
-    serverId: Server['id'];
+    serverId: Server['serverId'];
   }): Promise<Channel[] | null> => {
     const serverChannels = await apiService.post('/refresh/serverChannels', {
       serverId,
@@ -93,7 +96,7 @@ export const refreshService = {
   serverActiveMembers: async ({
     serverId,
   }: {
-    serverId: Server['id'];
+    serverId: Server['serverId'];
   }): Promise<ServerMember[] | null> => {
     const serverActiveMembers = await apiService.post(
       '/refresh/serverActiveMembers',
@@ -105,7 +108,7 @@ export const refreshService = {
   serverMembers: async ({
     serverId,
   }: {
-    serverId: Server['id'];
+    serverId: Server['serverId'];
   }): Promise<ServerMember[] | null> => {
     const serverMembers = await apiService.post('/refresh/serverMembers', {
       serverId,
@@ -116,7 +119,7 @@ export const refreshService = {
   serverMemberApplications: async ({
     serverId,
   }: {
-    serverId: Server['id'];
+    serverId: Server['serverId'];
   }): Promise<MemberApplication[] | null> => {
     const serverMemberApplications = await apiService.post(
       '/refresh/serverMemberApplications',
@@ -128,29 +131,29 @@ export const refreshService = {
   channel: async ({
     channelId,
   }: {
-    channelId: Channel['id'];
+    channelId: Channel['channelId'];
   }): Promise<Channel | null> => {
     const channel = await apiService.post('/refresh/channel', { channelId });
     return channel;
   },
 
-  channelMessages: async ({
-    channelId,
+  friendGroup: async ({
+    friendGroupId,
   }: {
-    channelId: Channel['id'];
-  }): Promise<ChannelMessage[] | null> => {
-    const channelMessages = await apiService.post('/refresh/channelMessages', {
-      channelId,
+    friendGroupId: FriendGroup['friendGroupId'];
+  }): Promise<FriendGroup | null> => {
+    const friendGroup = await apiService.post('/refresh/friendGroup', {
+      friendGroupId,
     });
-    return channelMessages;
+    return friendGroup;
   },
 
   friendApplication: async ({
     senderId,
     receiverId,
   }: {
-    senderId: User['id'];
-    receiverId: User['id'];
+    senderId: User['userId'];
+    receiverId: User['userId'];
   }): Promise<FriendApplication | null> => {
     const friendApplication = await apiService.post(
       '/refresh/friendApplication',
@@ -163,8 +166,8 @@ export const refreshService = {
     userId,
     targetId,
   }: {
-    userId: User['id'];
-    targetId: User['id'];
+    userId: User['userId'];
+    targetId: User['userId'];
   }): Promise<Friend | null> => {
     const friend = await apiService.post('/refresh/friend', {
       userId,
@@ -177,8 +180,8 @@ export const refreshService = {
     userId,
     serverId,
   }: {
-    userId: User['id'];
-    serverId: Server['id'];
+    userId: User['userId'];
+    serverId: Server['serverId'];
   }): Promise<MemberApplication | null> => {
     const memberApplication = await apiService.post(
       '/refresh/memberApplication',
@@ -191,8 +194,8 @@ export const refreshService = {
     userId,
     serverId,
   }: {
-    userId: User['id'];
-    serverId: Server['id'];
+    userId: User['userId'];
+    serverId: Server['serverId'];
   }): Promise<Member | null> => {
     const member = await apiService.post('/refresh/member', {
       userId,
@@ -205,8 +208,8 @@ export const refreshService = {
     userId,
     targetId,
   }: {
-    userId: User['id'];
-    targetId: User['id'];
+    userId: User['userId'];
+    targetId: User['userId'];
   }): Promise<DirectMessage[] | null> => {
     const directMessage = await apiService.post('/refresh/directMessage', {
       userId,

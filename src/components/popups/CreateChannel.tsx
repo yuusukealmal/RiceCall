@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { Channel, Server } from '@/types';
+import { Category, Channel, Server, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/Socket';
@@ -19,9 +19,9 @@ import refreshService from '@/services/refresh.service';
 import { createDefault } from '@/utils/createDefault';
 
 interface CreateChannelPopupProps {
-  userId: string;
-  categoryId: string | null;
-  serverId: string;
+  userId: User['userId'];
+  categoryId: Category['categoryId'] | null;
+  serverId: Server['serverId'];
 }
 
 const CreateChannelPopup: React.FC<CreateChannelPopupProps> = React.memo(
@@ -43,12 +43,11 @@ const CreateChannelPopup: React.FC<CreateChannelPopupProps> = React.memo(
 
     // Variables
     const { categoryId, serverId } = initialData;
-    const isRoot = !categoryId;
 
     // Handlers
     const handleCreateChannel = (
       channel: Partial<Channel>,
-      serverId: Server['id'],
+      serverId: Server['serverId'],
     ) => {
       if (!socket) return;
       socket.send.createChannel({ channel, serverId });
@@ -80,7 +79,7 @@ const CreateChannelPopup: React.FC<CreateChannelPopupProps> = React.memo(
     }, [categoryId]);
 
     return (
-      <div className={popup['popupContainer']}>
+      <form className={popup['popupContainer']}>
         <div className={popup['popupBody']}>
           <div className={setting['body']}>
             <div className={popup['inputGroup']}>
@@ -112,7 +111,6 @@ const CreateChannelPopup: React.FC<CreateChannelPopupProps> = React.memo(
               handleCreateChannel(
                 {
                   name: channelName,
-                  isRoot: isRoot,
                   categoryId: categoryId,
                 },
                 serverId,
@@ -126,7 +124,7 @@ const CreateChannelPopup: React.FC<CreateChannelPopupProps> = React.memo(
             {lang.tr.cancel}
           </button>
         </div>
-      </div>
+      </form>
     );
   },
 );

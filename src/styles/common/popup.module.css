@@ -7,6 +7,11 @@
   background-size: cover;
 }
 
+.popupContainer:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .popupTab {
   background: #f0f0f0;
   height: 40px;
@@ -164,6 +169,8 @@
   display: inline-block;
   width: 100%;
   height: 2rem;
+  outline: none;
+  box-shadow: none;
 }
 
 .inputBox table {

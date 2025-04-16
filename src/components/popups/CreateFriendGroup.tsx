@@ -15,7 +15,7 @@ import setting from '@/styles/popups/editServer.module.css';
 import ipcService from '@/services/ipc.service';
 
 interface CreateFriendGroupPopupProps {
-  userId: string;
+  userId: User['userId'];
 }
 
 const CreateFriendGroupPopup: React.FC<CreateFriendGroupPopupProps> =
@@ -34,7 +34,7 @@ const CreateFriendGroupPopup: React.FC<CreateFriendGroupPopupProps> =
     // Handlers
     const handleAddSubGroups = (
       group: Partial<FriendGroup>,
-      userId: User['id'],
+      userId: User['userId'],
     ) => {
       if (!socket) return;
       socket.send.createFriendGroup({ group, userId });
@@ -72,7 +72,7 @@ const CreateFriendGroupPopup: React.FC<CreateFriendGroupPopupProps> =
     }, [socket, handleUserSearch]);
 
     return (
-      <div className={popup['popupContainer']}>
+      <form className={popup['popupContainer']}>
         <div className={popup['popupBody']}>
           <div className={setting['body']}>
             <div className={popup['inputGroup']}>
@@ -145,7 +145,7 @@ const CreateFriendGroupPopup: React.FC<CreateFriendGroupPopupProps> =
             {lang.tr.cancel}
           </button>
         </div>
-      </div>
+      </form>
     );
   });
 

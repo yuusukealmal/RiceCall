@@ -20,8 +20,8 @@ import { createDefault } from '@/utils/createDefault';
 import refreshService from '@/services/refresh.service';
 
 interface ApplyMemberPopupProps {
-  serverId: string;
-  userId: string;
+  serverId: Server['serverId'];
+  userId: User['userId'];
 }
 
 const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
@@ -56,8 +56,8 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
 
     const handleCreatMemberApplication = (
       memberApplication: Partial<MemberApplication>,
-      userId: User['id'],
-      serverId: Server['id'],
+      userId: User['userId'],
+      serverId: Server['serverId'],
     ) => {
       if (!socket) return;
       socket.send.createMemberApplication({

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { FriendGroup } from '@/types';
+import { FriendGroup, SocketServerEvent, User } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/Socket';
@@ -13,11 +13,14 @@ import setting from '@/styles/popups/editServer.module.css';
 
 // Services
 import ipcService from '@/services/ipc.service';
+import refreshService from '@/services/refresh.service';
+
+// Utils
+import { createDefault } from '@/utils/createDefault';
 
 interface EditFriendGroupPopupProps {
-  friendGroupId: string;
-  friendGroupName: string;
-  friendGroupOrder: number;
+  userId: User['userId'];
+  friendGroupId: FriendGroup['friendGroupId'];
 }
 
 const EditFriendGroupPopup: React.FC<EditFriendGroupPopupProps> = React.memo(
@@ -26,28 +29,76 @@ const EditFriendGroupPopup: React.FC<EditFriendGroupPopupProps> = React.memo(
     const socket = useSocket();
     const lang = useLanguage();
 
+    // Refs
+    const refreshRef = useRef(false);
+
     // Variables
-    const { friendGroupId, friendGroupName, friendGroupOrder } = initialData;
+    const { userId, friendGroupId } = initialData;
 
     // States
-    const [groupName, setGroupName] = useState<string>(friendGroupName);
-    const [groupOrder, setGroupOrder] = useState<number>(friendGroupOrder);
+    const [groupName, setGroupName] = useState<string>(
+      createDefault.friendGroup().name,
+    );
+    const [groupOrder, setGroupOrder] = useState<number>(
+      createDefault.friendGroup().order,
+    );
 
     // Handlers
     const handleUpdateFriendGroup = (
       group: Partial<FriendGroup>,
-      friendGroupId: FriendGroup['id'],
+      friendGroupId: FriendGroup['friendGroupId'],
+      userId: User['userId'],
     ) => {
       if (!socket) return;
-      socket.send.updateFriendGroup({ group, friendGroupId });
+      socket.send.updateFriendGroup({ group, friendGroupId, userId });
+    };
+
+    const handleFriendGroupUpdate = (data: FriendGroup | null) => {
+      if (!data) data = createDefault.friendGroup();
+      setGroupName(data.name);
+      setGroupOrder(data.order);
     };
 
     const handleClose = () => {
       ipcService.window.close();
     };
 
+    // FIXME: Add refresh
+    useEffect(() => {
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.USER_FRIEND_GROUPS_UPDATE]: handleFriendGroupUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
+      if (!friendGroupId || refreshRef.current) return;
+      const refresh = async () => {
+        refreshRef.current = true;
+        Promise.all([
+          refreshService.friendGroup({
+            friendGroupId: friendGroupId,
+          }),
+        ]).then(([friendGroup]) => {
+          handleFriendGroupUpdate(friendGroup);
+        });
+      };
+      refresh();
+    }, [friendGroupId]);
+
     return (
-      <div className={popup['popupContainer']}>
+      <form className={popup['popupContainer']}>
         <div className={popup['popupBody']}>
           <div className={setting['body']}>
             <div className={popup['inputGroup']}>
@@ -103,14 +154,12 @@ const EditFriendGroupPopup: React.FC<EditFriendGroupPopupProps> = React.memo(
             className={`${popup['button']} ${
               !groupName.trim() ? popup['disabled'] : ''
             }`}
-            disabled={
-              !groupName.trim() ||
-              (groupName === friendGroupName && groupOrder === friendGroupOrder)
-            }
+            disabled={!groupName.trim()}
             onClick={() => {
               handleUpdateFriendGroup(
                 { name: groupName, order: groupOrder },
                 friendGroupId,
+                userId,
               );
               handleClose();
             }}
@@ -121,7 +170,7 @@ const EditFriendGroupPopup: React.FC<EditFriendGroupPopupProps> = React.memo(
             {lang.tr.cancel}
           </button>
         </div>
-      </div>
+      </form>
     );
   },
 );

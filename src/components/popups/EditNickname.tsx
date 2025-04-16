@@ -19,8 +19,8 @@ import ipcService from '@/services/ipc.service';
 import { createDefault } from '@/utils/createDefault';
 
 interface EditNicknamePopupProps {
-  userId: string;
-  serverId: string;
+  userId: User['userId'];
+  serverId: Server['serverId'];
 }
 
 const EditNicknamePopup: React.FC<EditNicknamePopupProps> = React.memo(
@@ -48,8 +48,8 @@ const EditNicknamePopup: React.FC<EditNicknamePopupProps> = React.memo(
 
     const handleUpdateMember = (
       member: Partial<Member>,
-      userId: User['id'],
-      serverId: Server['id'],
+      userId: User['userId'],
+      serverId: Server['serverId'],
     ) => {
       if (!socket) return;
       socket.send.updateMember({ member, userId, serverId });
@@ -87,7 +87,7 @@ const EditNicknamePopup: React.FC<EditNicknamePopupProps> = React.memo(
     }, [userId, serverId]);
 
     return (
-      <div className={popup['popupContainer']}>
+      <form className={popup['popupContainer']}>
         <div className={popup['popupBody']}>
           <div className={setting['body']}>
             <div className={popup['inputGroup']}>
@@ -126,6 +126,14 @@ const EditNicknamePopup: React.FC<EditNicknamePopupProps> = React.memo(
             {lang.tr.confirm}
           </button>
           <button
+            type="button"
+            className={popup['button']}
+            onClick={() => handleClose()}
+          >
+            {lang.tr.cancel}
+          </button>
+          <button
+            type="button"
             className={`${popup['button']}`}
             onClick={() => {
               handleUpdateMember(
@@ -137,11 +145,8 @@ const EditNicknamePopup: React.FC<EditNicknamePopupProps> = React.memo(
           >
             {lang.tr.set}
           </button>
-          <button className={popup['button']} onClick={() => handleClose()}>
-            {lang.tr.cancel}
-          </button>
         </div>
-      </div>
+      </form>
     );
   },
 );

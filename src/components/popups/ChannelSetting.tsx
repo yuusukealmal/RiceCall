@@ -19,8 +19,8 @@ import refreshService from '@/services/refresh.service';
 import { createDefault } from '@/utils/createDefault';
 
 interface ChannelSettingPopupProps {
-  serverId: string;
-  channelId: string;
+  serverId: Server['serverId'];
+  channelId: Channel['channelId'];
 }
 
 const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
@@ -80,8 +80,8 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
     // Handlers
     const handleUpdateChannel = (
       channel: Partial<Channel>,
-      channelId: Channel['id'],
-      serverId: Server['id'],
+      channelId: Channel['channelId'],
+      serverId: Server['serverId'],
     ) => {
       if (!socket) return;
       socket.send.updateChannel({ channel, channelId, serverId });
@@ -183,27 +183,6 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
                             ),
                           )
                         }
-                      />
-                    </div>
-
-                    <div className={`${popup['inputBox']} ${popup['col']}`}>
-                      <div className={popup['label']}>
-                        {lang.tr.channelOrder}
-                      </div>
-                      <input
-                        type="number"
-                        value={channelOrder || 0}
-                        min="-999"
-                        max="999"
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (!value || isNaN(parseInt(value)))
-                            setChannelOrder(0);
-                          else
-                            setChannelOrder(
-                              Math.max(-999, Math.min(999, parseInt(value))),
-                            );
-                        }}
                       />
                     </div>
                   </div>
@@ -350,24 +329,23 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
                   <div
                     className={`${popup['inputBox']} ${
                       channelIsLobby ? popup['disabled'] : ''
-                    } ${popup['col']}`}
+                    } ${popup['row']}`}
                   >
-                    <div className={popup['row']}>
-                      <input
-                        type="radio"
-                        name="voiceQuality"
-                        checked={channelVisibility === 'private'}
-                        onChange={() => {
-                          setChannelVisibility('private');
-                        }}
-                      />
-                      <div>
-                        <label className={popup['label']}>
-                          {lang.tr.channelPrivate}
-                        </label>
-                      </div>
-                    </div>
-                    {channelVisibility === 'private' && (
+                    <input
+                      type="radio"
+                      name="voiceQuality"
+                      checked={channelVisibility === 'private'}
+                      onChange={() => {
+                        setChannelVisibility('private');
+                      }}
+                    />
+                    <label className={popup['label']}>
+                      {lang.tr.channelPrivate}
+                    </label>
+                  </div>
+
+                  {channelVisibility === 'private' && (
+                    <div className={popup['inputBox']}>
                       <input
                         className={popup['input']}
                         type="text"
@@ -379,8 +357,8 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
                           else setChannelPassword(value);
                         }}
                       />
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : activeTabIndex === 3 ? (

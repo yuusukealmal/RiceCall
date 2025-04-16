@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import dynamic from 'next/dynamic';
@@ -28,6 +28,8 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // Utils
 import { createDefault } from '@/utils/createDefault';
+import { StandardizedError } from '@/utils/errorHandler';
+import { errorHandler } from '@/utils/errorHandler';
 
 // Providers
 import WebRTCProvider from '@/providers/WebRTC';
@@ -42,10 +44,10 @@ import ipcService from '@/services/ipc.service';
 import authService from '@/services/auth.service';
 
 interface HeaderProps {
-  userId: User['id'];
+  userId: User['userId'];
   userName: User['name'];
   userStatus: User['status'];
-  serverId: Server['id'];
+  serverId: Server['serverId'];
   serverName: Server['name'];
 }
 
@@ -61,10 +63,6 @@ const Header: React.FC<HeaderProps> = React.memo(
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
-    // Variables
-    // const { id: serverId } = server;
-    // const { id: userId, name: userName, status: userStatus } = user;
-
     // Constants
     const MAIN_TABS = [
       { id: 'home', label: lang.tr.home },
@@ -79,12 +77,18 @@ const Header: React.FC<HeaderProps> = React.memo(
     ];
 
     // Handlers
-    const handleLeaveServer = (userId: User['id'], serverId: Server['id']) => {
+    const handleLeaveServer = (
+      userId: User['userId'],
+      serverId: Server['serverId'],
+    ) => {
       if (!socket) return;
       socket.send.disconnectServer({ userId, serverId });
     };
 
-    const handleUpdateStatus = (status: User['status'], userId: User['id']) => {
+    const handleUpdateStatus = (
+      status: User['status'],
+      userId: User['userId'],
+    ) => {
       if (!socket) return;
       socket.send.updateUser({ user: { status }, userId });
     };
@@ -112,7 +116,7 @@ const Header: React.FC<HeaderProps> = React.memo(
       localStorage.setItem('language', language);
     };
 
-    const handleOpenUserSetting = (userId: User['id']) => {
+    const handleOpenUserSetting = (userId: User['userId']) => {
       ipcService.popup.open(PopupType.USER_SETTING);
       ipcService.initialData.onRequest(PopupType.USER_SETTING, {
         userId,
@@ -319,8 +323,8 @@ const RootPageComponent = () => {
   const [channel, setChannel] = useState<Channel>(createDefault.channel());
 
   // Variables
-  const { id: userId, name: userName, status: userStatus } = user;
-  const { id: serverId, name: serverName } = server;
+  const { userId, name: userName, status: userStatus } = user;
+  const { serverId, name: serverName } = server;
 
   // Handlers
   const handleUserUpdate = (data: Partial<User> | null) => {
@@ -330,7 +334,7 @@ const RootPageComponent = () => {
 
   const handleServerUpdate = (data: Partial<Server> | null) => {
     if (data != null) {
-      if (data.id) mainTab.setSelectedTabId('server');
+      if (data.serverId) mainTab.setSelectedTabId('server');
     } else {
       mainTab.setSelectedTabId('home');
     }
@@ -357,6 +361,22 @@ const RootPageComponent = () => {
     }
   };
 
+  const handleError = (error: StandardizedError) => {
+    new errorHandler(error).show();
+  };
+
+  const handleOpenPopup = (data: { type: PopupType; initialData: any }) => {
+    console.log('Socket open popup', data);
+    ipcService.initialData.onRequest(data.type, data.initialData);
+    ipcService.popup.onSubmit(data.type, () => {
+      switch (data.type) {
+        case PopupType.DIALOG_ALERT:
+          ipcService.auth.logout();
+          break;
+      }
+    });
+  };
+
   // Effects
   useEffect(() => {
     if (!socket) return;
@@ -366,6 +386,8 @@ const RootPageComponent = () => {
       [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
       [SocketServerEvent.CHANNEL_UPDATE]: handleCurrentChannelUpdate,
       [SocketServerEvent.PLAY_SOUND]: handlePlaySound,
+      [SocketServerEvent.ERROR]: handleError,
+      [SocketServerEvent.OPEN_POPUP]: handleOpenPopup,
     };
     const unsubscribe: (() => void)[] = [];
 
@@ -398,18 +420,24 @@ const RootPageComponent = () => {
 
   const getMainContent = () => {
     if (!socket.isConnected) return <LoadingSpinner />;
-    switch (mainTab.selectedTabId) {
-      case 'home':
-        return <HomePage user={user} />;
-      case 'friends':
-        return <FriendPage user={user} />;
-      case 'server':
-        return (
-          <ExpandedProvider>
-            <ServerPage user={user} server={server} channel={channel} />
-          </ExpandedProvider>
-        );
-    }
+    return (
+      <>
+        <HomePage
+          user={user}
+          server={server}
+          display={mainTab.selectedTabId === 'home'}
+        />
+        <FriendPage user={user} display={mainTab.selectedTabId === 'friends'} />
+        <ExpandedProvider>
+          <ServerPage
+            user={user}
+            server={server}
+            channel={channel}
+            display={mainTab.selectedTabId === 'server'}
+          />
+        </ExpandedProvider>
+      </>
+    );
   };
 
   return (

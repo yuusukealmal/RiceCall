@@ -27,8 +27,8 @@ import refreshService from '@/services/refresh.service';
 import { createDefault } from '@/utils/createDefault';
 
 interface ApplyFriendPopupProps {
-  userId: string;
-  targetId: string;
+  userId: User['userId'];
+  targetId: User['userId'];
 }
 
 const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
@@ -42,9 +42,7 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
 
     // State
     const [section, setSection] = useState<number>(0);
-    const [userFriendGroups, setUserFriendGroups] = useState<FriendGroup[]>(
-      createDefault.user().friendGroups || [],
-    );
+    const [userFriendGroups, setUserFriendGroups] = useState<FriendGroup[]>([]);
     const [targetName, setTargetName] = useState<User['name']>(
       createDefault.user().name,
     );
@@ -52,14 +50,15 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
       createDefault.user().avatar,
     );
     const [applicationSenderId, setApplicationSenderId] =
-      useState<User['id']>('');
+      useState<User['userId']>('');
     const [applicationReceiverId, setApplicationReceiverId] =
-      useState<User['id']>('');
+      useState<User['userId']>('');
     const [applicationDescription, setApplicationDescription] = useState<
       FriendApplication['description']
     >(createDefault.friendApplication().description);
-    const [selectedFriendGroupId, setSelectedFriendGroupId] =
-      useState<FriendGroup['id']>('');
+    const [selectedFriendGroupId, setSelectedFriendGroupId] = useState<
+      FriendGroup['friendGroupId'] | null
+    >(null);
 
     // Variables
     const { userId, targetId } = initialData;
@@ -67,8 +66,8 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
     // Handlers
     const handleCreateFriendApplication = (
       friendApplication: Partial<FriendApplication>,
-      senderId: User['id'],
-      receiverId: User['id'],
+      senderId: User['userId'],
+      receiverId: User['userId'],
     ) => {
       if (!socket) return;
       socket.send.createFriendApplication({
@@ -79,8 +78,8 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
     };
 
     const handleDeleteFriendApplication = (
-      senderId: User['id'],
-      receiverId: User['id'],
+      senderId: User['userId'],
+      receiverId: User['userId'],
     ) => {
       if (!socket) return;
       socket.send.deleteFriendApplication({ senderId, receiverId });
@@ -88,8 +87,8 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
 
     const handleCreateFriend = (
       friend: Partial<Friend>,
-      userId: User['id'],
-      targetId: User['id'],
+      userId: User['userId'],
+      targetId: User['userId'],
     ) => {
       if (!socket) return;
       socket.send.createFriend({ friend, userId, targetId });
@@ -131,7 +130,7 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
         submitTo: PopupType.DIALOG_SUCCESS,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
-        setSection(1);
+        handleClose();
       });
     };
 
@@ -325,14 +324,17 @@ const ApplyFriendPopup: React.FC<ApplyFriendPopupProps> = React.memo(
                       <div className={popup['selectBox']}>
                         <select
                           className={popup['select']}
-                          value={selectedFriendGroupId}
+                          value={selectedFriendGroupId || ''}
                           onChange={(e) =>
                             setSelectedFriendGroupId(e.target.value)
                           }
                         >
                           <option value={''}>{lang.tr.none}</option>
                           {userFriendGroups.map((group) => (
-                            <option key={group.id} value={group.id}>
+                            <option
+                              key={group.friendGroupId}
+                              value={group.friendGroupId}
+                            >
                               {group.name}
                             </option>
                           ))}

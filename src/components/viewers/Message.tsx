@@ -70,8 +70,6 @@ const ChannelMessageTab: React.FC<ChannelMessageTabProps> = React.memo(
     // Hooks
     const lang = useLanguage();
 
-    console.log(messageGroup);
-
     // Variables
     const {
       gender: senderGender,
@@ -83,7 +81,6 @@ const ChannelMessageTab: React.FC<ChannelMessageTabProps> = React.memo(
       timestamp: messageTimestamp,
     } = messageGroup;
     const timestamp = lang.getFormatTimestamp(messageTimestamp);
-    console.log(timestamp, messageTimestamp);
 
     const processContent = (content: string) => {
       return content.replace(
@@ -233,9 +230,9 @@ const MessageViewer: React.FC<MessageViewerProps> = React.memo(
 
     return (
       <div className={styles['messageViewerWrapper']}>
-        {messageGroups.map((messageGroup) => {
+        {messageGroups.map((messageGroup, index) => {
           return (
-            <div key={messageGroup.id} className={styles['messageWrapper']}>
+            <div key={index} className={styles['messageWrapper']}>
               {messageGroup.type === 'info' ? (
                 <InfoMessageTab
                   messageGroup={messageGroup}

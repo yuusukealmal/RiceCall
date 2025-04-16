@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Types
 import { User, DirectMessage, SocketServerEvent } from '@/types';
@@ -25,8 +25,8 @@ import vip from '@/styles/common/vip.module.css';
 import grade from '@/styles/common/grade.module.css';
 
 interface DirectMessagePopupProps {
-  userId: string;
-  targetId: string;
+  userId: User['userId'];
+  targetId: User['userId'];
   windowRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -72,8 +72,8 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
     // Handlers
     const handleSendMessage = (
       directMessage: Partial<DirectMessage>,
-      userId: User['id'],
-      targetId: User['id'],
+      userId: User['userId'],
+      targetId: User['userId'],
     ) => {
       if (!socket) return;
       socket.send.directMessage({ directMessage, userId, targetId });
@@ -93,20 +93,17 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
       setUserAvatarUrl(data.avatarUrl);
     };
 
-    const handleDirectMessageUpdate = (data: DirectMessage[] | null) => {
-      if (!data) data = [];
-      if (data.length > 0) {
-        // !! THIS IS IMPORTANT !!
-        const userId1 = userId.localeCompare(targetId) < 0 ? userId : targetId;
-        const userId2 = userId.localeCompare(targetId) < 0 ? targetId : userId;
+    const handleOnDirectMessage = (data: DirectMessage) => {
+      if (!data) return;
+      // !! THIS IS IMPORTANT !!
+      const user1Id = userId.localeCompare(targetId) < 0 ? userId : targetId;
+      const user2Id = userId.localeCompare(targetId) < 0 ? targetId : userId;
 
-        // check if the message array is between the current users
-        const isCurrentMessage =
-          data.find((msg) => msg.userId1 === userId1) &&
-          data.find((msg) => msg.userId2 === userId2);
+      // check if the message array is between the current users
+      const isCurrentMessage =
+        data.user1Id === user1Id && data.user2Id === user2Id;
 
-        if (isCurrentMessage) setDirectMessages(data);
-      }
+      if (isCurrentMessage) setDirectMessages((prev) => [...prev, data]);
     };
 
     const shakeWindow = (duration = 500) => {
@@ -136,7 +133,7 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
       if (!socket) return;
 
       const eventHandlers = {
-        [SocketServerEvent.DIRECT_MESSAGE_UPDATE]: handleDirectMessageUpdate,
+        [SocketServerEvent.ON_DIRECT_MESSAGE]: handleOnDirectMessage,
       };
       const unsubscribe: (() => void)[] = [];
 
@@ -161,14 +158,9 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
           refreshService.user({
             userId: userId,
           }),
-          refreshService.directMessage({
-            userId: userId,
-            targetId: targetId,
-          }),
-        ]).then(([target, user, directMessage]) => {
+        ]).then(([target, user]) => {
           handleTargetUpdate(target);
           handleUserUpdate(user);
-          handleDirectMessageUpdate(directMessage);
         });
       };
       refresh();
@@ -275,19 +267,16 @@ const DirectMessagePopup: React.FC<DirectMessagePopupProps> = React.memo(
                   );
                 }}
                 onKeyDown={(e) => {
-                  if (
-                    e.shiftKey ||
-                    e.key !== 'Enter' ||
-                    !messageInput.trim() ||
-                    messageInput.length > 2000 ||
-                    isComposing ||
-                    isDisabled ||
-                    isWarning
-                  )
-                    return;
-                  e.preventDefault();
+                  if (e.shiftKey) return;
+                  if (e.key !== 'Enter') return;
+                  else e.preventDefault();
+                  if (!messageInput.trim()) return;
+                  if (messageInput.length > 2000) return;
+                  if (isComposing) return;
+                  if (isDisabled) return;
+                  if (isWarning) return;
                   handleSendMessage(
-                    { content: messageInput },
+                    { type: 'dm', content: messageInput },
                     userId,
                     targetId,
                   );

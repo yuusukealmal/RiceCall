@@ -19,7 +19,7 @@ import ipcService from '@/services/ipc.service';
 import { createDefault } from '@/utils/createDefault';
 
 interface MemberApplySettingPopupProps {
-  serverId: string;
+  serverId: Server['serverId'];
 }
 
 const MemberApplySettingPopup: React.FC<MemberApplySettingPopupProps> =
@@ -49,7 +49,7 @@ const MemberApplySettingPopup: React.FC<MemberApplySettingPopupProps> =
 
     const handleUpdateServer = (
       server: Partial<Server>,
-      serverId: Server['id'],
+      serverId: Server['serverId'],
     ) => {
       if (!socket) return;
       socket.send.updateServer({ server, serverId });
@@ -78,7 +78,7 @@ const MemberApplySettingPopup: React.FC<MemberApplySettingPopupProps> =
     }, [serverId]);
 
     return (
-      <div className={popup['popupContainer']}>
+      <form className={popup['popupContainer']}>
         <div className={popup['popupBody']}>
           <div className={setting['body']}>
             <div className={popup['inputGroup']}>
@@ -124,7 +124,7 @@ const MemberApplySettingPopup: React.FC<MemberApplySettingPopupProps> =
             {lang.tr.cancel}
           </button>
         </div>
-      </div>
+      </form>
     );
   });
 
