@@ -13,7 +13,7 @@ import {
   Server,
   SocketServerEvent,
   User,
-  ServerListSectionProps,
+  UserServer,
 } from '@/types';
 
 // Providers
@@ -24,27 +24,38 @@ import { useLanguage } from '@/providers/Language';
 import ipcService from '@/services/ipc.service';
 import refreshService from '@/services/refresh.service';
 
-interface HomePageProps {
-  user: User;
-  handleUserUpdate: (data: Partial<User> | null) => void;
+export interface ServerListSectionProps {
+  title: string;
+  servers: Server[];
+  userId: string;
+  onServerClick?: (server: Server) => void;
 }
 
 const ServerListSection: React.FC<ServerListSectionProps> = ({
   title,
+  userId,
   servers,
-  user,
+  onServerClick,
 }) => {
+  // Hooks
   const lang = useLanguage();
 
+  // States
   const [expanded, setExpanded] = useState(false);
 
+  // Variables
   const displayedServers = expanded ? servers : servers.slice(0, 6);
-  const hasMore = servers.length > 6;
+  const canExpand = servers.length > 6;
+
   return (
-    <div className={homePage['myGroupsItem']}>
-      <div className={homePage['myGroupsTitle']}>{title}</div>
-      <ServerListViewer user={user} servers={displayedServers} />
-      {hasMore && (
+    <div className={homePage['serverList']}>
+      <div className={homePage['serverListTitle']}>{title}</div>
+      <ServerListViewer
+        userId={userId}
+        servers={displayedServers}
+        onServerClick={onServerClick}
+      />
+      {canExpand && (
         <button
           className={`
             ${homePage['viewMoreBtn']} 
@@ -59,30 +70,35 @@ const ServerListSection: React.FC<ServerListSectionProps> = ({
   );
 };
 
-// 新增搜尋結果項目組件
 const SearchResultItem: React.FC<{
   server: Server;
   onClick: () => void;
 }> = ({ server, onClick }) => (
   <div className={homePage['dropdownItem']} onClick={onClick}>
     <div
-      className={homePage['serverAvatar']}
+      className={homePage['serverAvatarPicture']}
       style={{
         backgroundImage: `url(${server.avatarUrl})`,
       }}
     />
-    <div className={homePage['serverInfo']}>
-      <div className={homePage['serverName']}>{server.name}</div>
+    <div className={homePage['serverInfoText']}>
+      <div className={homePage['serverNameText']}>{server.name}</div>
       <div className={homePage['serverIdBox']}>
         <div className={homePage['idIcon']} />
-        <div className={homePage['serverId']}>{server.displayId}</div>
+        <div className={homePage['serverIdText']}>{server.displayId}</div>
       </div>
     </div>
   </div>
 );
 
+interface HomePageProps {
+  user: User;
+  server: Server;
+  display: boolean;
+}
+
 const HomePageComponent: React.FC<HomePageProps> = React.memo(
-  ({ user, handleUserUpdate }) => {
+  ({ user, server, display }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
@@ -91,23 +107,30 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
     const refreshed = useRef(false);
 
     // States
+    const [userServers, setUserServers] = useState<UserServer[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const searchRef = useRef<HTMLDivElement>(null);
     const [exactMatch, setExactMatch] = useState<Server | null>(null);
     const [personalResults, setPersonalResults] = useState<Server[]>([]);
     const [relatedResults, setRelatedResults] = useState<Server[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingGroupID, setLoadingGroupID] = useState<string>();
 
     // Variables
-    const {
-      id: userId,
-      name: userName,
-      ownedServers: userOwnedServers = [],
-      recentServers: userRecentServers = [],
-      favServers: userFavServers = [],
-    } = user;
+    const { userId, name: userName } = user;
+    const hasResults =
+      exactMatch || personalResults.length > 0 || relatedResults.length > 0;
+    const recentServers = userServers.filter((s) => s.recent);
+    const favoriteServers = userServers.filter((s) => s.favorite);
+    const ownedServers = userServers.filter((s) => s.owned);
 
     // Handlers
+    const handleUserServersUpdate = (data: UserServer[] | null) => {
+      if (!data) data = [];
+      setUserServers(data);
+    };
+
     const handleSearchServer = (query: string) => {
       if (!socket || query.trim() === '') {
         setExactMatch(null);
@@ -117,6 +140,21 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
       }
       socket.send.searchServer({ query });
       setSearchQuery(query);
+    };
+
+    const handleConnectServer = (
+      serverId: Server['serverId'],
+      serverDisplayId: Server['displayId'],
+    ) => {
+      if (!socket) return;
+      socket.send.connectServer({
+        serverId,
+        userId: userId,
+      });
+      setShowDropdown(false);
+      setSearchQuery('');
+      setIsLoading(true);
+      setLoadingGroupID(serverDisplayId);
     };
 
     const handleServerSearch = useCallback(
@@ -150,9 +188,13 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
 
         const personal = sortedServers.filter(
           (server) =>
-            userRecentServers.some((recent) => recent.id === server.id) ||
-            userFavServers.some((fav) => fav.id === server.id) ||
-            userOwnedServers.some((owned) => owned.id === server.id),
+            userServers.some(
+              (s) => s.recent && s.serverId === server.serverId,
+            ) ||
+            userServers.some(
+              (s) => s.favorite && s.serverId === server.serverId,
+            ) ||
+            userServers.some((s) => s.owned && s.serverId === server.serverId),
         );
         setPersonalResults(personal);
 
@@ -161,28 +203,36 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
           .filter((server) => server.visibility !== 'invisible');
         setRelatedResults(related);
       },
-      [
-        userRecentServers,
-        userFavServers,
-        userOwnedServers,
-        setExactMatch,
-        setPersonalResults,
-        setRelatedResults,
-      ],
+      [userServers, setExactMatch, setPersonalResults, setRelatedResults],
     );
 
-    const handleOpenCreateServer = (userId: User['id']) => {
+    const handleOpenCreateServer = (userId: User['userId']) => {
       ipcService.popup.open(PopupType.CREATE_SERVER);
       ipcService.initialData.onRequest(PopupType.CREATE_SERVER, { userId });
     };
 
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
     // Effects
+    useEffect(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.addEventListener('mousedown', handleClickOutside);
+    }, []);
+
     useEffect(() => {
       if (!socket) return;
 
       const eventHandlers = {
         [SocketServerEvent.SERVER_SEARCH]: (servers: Server[]) =>
           handleServerSearch(servers, searchQuery),
+        [SocketServerEvent.USER_SERVERS_UPDATE]: handleUserServersUpdate,
       };
       const unsubscribe: (() => void)[] = [];
 
@@ -201,15 +251,21 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
       const refresh = async () => {
         refreshed.current = true;
         Promise.all([
-          refreshService.user({
+          refreshService.userServers({
             userId: userId,
           }),
-        ]).then(([user]) => {
-          handleUserUpdate(user);
+        ]).then(([userServers]) => {
+          handleUserServersUpdate(userServers);
         });
       };
       refresh();
-    }, [userId, handleUserUpdate]);
+    }, [userId]);
+
+    useEffect(() => {
+      if (!server) return;
+      setIsLoading(false);
+      setLoadingGroupID('');
+    }, [server, isLoading]);
 
     useEffect(() => {
       if (!lang) return;
@@ -230,109 +286,90 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
       });
     }, [lang, userName]);
 
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          searchRef.current &&
-          !searchRef.current.contains(event.target as Node)
-        ) {
-          setShowDropdown(false);
-        }
-      };
-
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.addEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    // 優化後的 renderSearchBar
-    const renderSearchBar = () => {
-      const handleServerConnect = (serverId: string) => {
-        if (socket) {
-          socket.send.connectServer({
-            serverId,
-            userId: user.id,
-          });
-        }
-        setShowDropdown(false);
-        setSearchQuery('');
-      };
-
-      const hasResults =
-        exactMatch || personalResults.length > 0 || relatedResults.length > 0;
-
-      return (
-        <div className={homePage['searchBar']} ref={searchRef}>
-          <input
-            type="search"
-            placeholder={lang.tr.searchPlaceholder}
-            className={homePage['searchInput']}
-            value={searchQuery}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSearchQuery(value);
-              handleSearchServer(value);
-              setShowDropdown(true);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && exactMatch) {
-                handleServerConnect(exactMatch.id);
-              }
-            }}
-            onFocus={() => setShowDropdown(true)}
-          />
-
-          {showDropdown && hasResults && (
-            <div className={homePage['searchDropdown']}>
-              {exactMatch && (
-                <div className={homePage['dropdownHeaderText']}>
-                  {lang.tr.quickEnterServer}
-                  {exactMatch.displayId}
-                </div>
-              )}
-
-              {personalResults.length > 0 && (
-                <>
-                  <div className={homePage['dropdownHeader']}>
-                    <div>{lang.tr.personalExclusive}</div>
-                  </div>
-                  {personalResults.map((server) => (
-                    <SearchResultItem
-                      key={server.id}
-                      server={server}
-                      onClick={() => handleServerConnect(server.id)}
-                    />
-                  ))}
-                </>
-              )}
-
-              {relatedResults.length > 0 && (
-                <>
-                  <div className={homePage['dropdownHeader']}>
-                    <div>{lang.tr.relatedSearch}</div>
-                  </div>
-                  {relatedResults.map((server) => (
-                    <SearchResultItem
-                      key={server.id}
-                      server={server}
-                      onClick={() => handleServerConnect(server.id)}
-                    />
-                  ))}
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      );
-    };
-
     return (
-      <div className={homePage['homeWrapper']}>
+      <div
+        className={homePage['homeWrapper']}
+        style={{ display: display ? 'flex' : 'none' }}
+      >
         {/* Header */}
         <header className={homePage['homeHeader']}>
           <div className={homePage['left']}>
             <div className={homePage['backBtn']} />
             <div className={homePage['forwardBtn']} />
-            {renderSearchBar()}
+            <div className={homePage['searchBar']} ref={searchRef}>
+              <input
+                type="search"
+                placeholder={lang.tr.searchPlaceholder}
+                className={homePage['searchInput']}
+                value={searchQuery}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchQuery(value);
+                  handleSearchServer(value);
+                  setShowDropdown(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && exactMatch) {
+                    handleConnectServer(
+                      exactMatch.serverId,
+                      exactMatch.displayId,
+                    );
+                  }
+                }}
+                onFocus={() => setShowDropdown(true)}
+              />
+
+              {showDropdown && hasResults && (
+                <div className={homePage['searchDropdown']}>
+                  {exactMatch && (
+                    <div className={homePage['dropdownHeaderText']}>
+                      {lang.tr.quickEnterServer}
+                      {exactMatch.displayId}
+                    </div>
+                  )}
+
+                  {personalResults.length > 0 && (
+                    <>
+                      <div className={homePage['dropdownHeader']}>
+                        <div>{lang.tr.personalExclusive}</div>
+                      </div>
+                      {personalResults.map((server) => (
+                        <SearchResultItem
+                          key={server.serverId}
+                          server={server}
+                          onClick={() =>
+                            handleConnectServer(
+                              server.serverId,
+                              server.displayId,
+                            )
+                          }
+                        />
+                      ))}
+                    </>
+                  )}
+
+                  {relatedResults.length > 0 && (
+                    <>
+                      <div className={homePage['dropdownHeader']}>
+                        <div>{lang.tr.relatedSearch}</div>
+                      </div>
+                      {relatedResults.map((server) => (
+                        <SearchResultItem
+                          key={server.serverId}
+                          server={server}
+                          onClick={() =>
+                            handleConnectServer(
+                              server.serverId,
+                              server.displayId,
+                            )
+                          }
+                        />
+                      ))}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div className={homePage['mid']}>
             <button
@@ -361,28 +398,56 @@ const HomePageComponent: React.FC<HomePageProps> = React.memo(
             </button>
           </div>
         </header>
+
         {/* Main Content */}
-        <main className={homePage['myGroupsWrapper']}>
-          <div className={homePage['myGroupsContain']}>
-            <div className={homePage['myGroupsView']}>
-              <ServerListSection
-                title={lang.tr.recentVisits}
-                servers={userRecentServers}
-                user={user}
-              />
-              <ServerListSection
-                title={lang.tr.myGroups}
-                servers={userOwnedServers}
-                user={user}
-              />
-              <ServerListSection
-                title={lang.tr.favoriteGroups}
-                servers={userFavServers}
-                user={user}
+        <main className={homePage['homeContent']}>
+          <ServerListSection
+            title={lang.tr.recentVisits}
+            servers={recentServers}
+            userId={userId}
+            onServerClick={(server) => {
+              setIsLoading(true);
+              setLoadingGroupID(server.displayId);
+            }}
+          />
+          <ServerListSection
+            title={lang.tr.myGroups}
+            servers={ownedServers}
+            userId={userId}
+            onServerClick={(server) => {
+              setIsLoading(true);
+              setLoadingGroupID(server.displayId);
+            }}
+          />
+          <ServerListSection
+            title={lang.tr.favoriteGroups}
+            servers={favoriteServers}
+            userId={userId}
+            onServerClick={(server) => {
+              setIsLoading(true);
+              setLoadingGroupID(server.displayId);
+            }}
+          />
+        </main>
+
+        {/* Loading */}
+        {isLoading && (
+          <div className={homePage['loadingWrapper']}>
+            <div className={homePage['loadingBox']}>
+              <div className={homePage['loadingTitleContain']}>
+                <div>{lang.tr.connectingServer}</div>
+                <div className={homePage['loadingGroupID']}>
+                  {loadingGroupID}
+                </div>
+              </div>
+              <div className={homePage['loadingGif']}></div>
+              <div
+                className={homePage['loadingCloseBtn']}
+                onClick={() => setIsLoading(false)}
               />
             </div>
           </div>
-        </main>
+        )}
       </div>
     );
   },

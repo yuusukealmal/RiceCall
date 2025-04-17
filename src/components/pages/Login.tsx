@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
 import styles from '@/styles/loginPage.module.css';
@@ -43,6 +43,24 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [accountSelectBox, setAccountSelectBox] = useState<boolean>(false);
+  const [accountList, setAccountList] = useState<string[]>();
+
+  const comboRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const existing = localStorage.getItem('login-accounts');
+    if (existing) {
+      setAccountList(existing.split(','));
+    }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (comboRef.current && !comboRef.current.contains(e.target as Node)) {
+        setAccountSelectBox(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // Handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,8 +87,21 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
   };
 
   const handleSubmit = async () => {
+    if (!formData.account || !formData.password) return;
     setIsLoading(true);
-    if (await authService.login(formData)) setSection('login');
+    if (await authService.login(formData)) {
+      const key = 'login-accounts';
+      const existing = localStorage.getItem(key);
+      const list = existing ? existing.split(',') : [];
+      if (!list.includes(formData.account)) {
+        list.push(formData.account);
+      }
+      if (formData.rememberAccount) {
+        localStorage.setItem(key, list.join(','));
+        setAccountList(list);
+      }
+      setSection('login');
+    }
     setIsLoading(false);
   };
 
@@ -79,7 +110,13 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
       {/* Main Content */}
       <div className={styles['loginContent']}>
         <div className={styles['appLogo']} />
-        <div className={styles['formWrapper']}>
+        <form
+          className={styles['formWrapper']}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
           {isLoading && (
             <>
               <div className={styles['loadingIndicator']}>
@@ -95,34 +132,81 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
               )}
               <div className={styles['inputBox']}>
                 <label className={styles['label']}>{lang.tr.account}</label>
-                <input
-                  type="text"
-                  name="account"
-                  value={formData.account}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  placeholder={lang.tr.pleaseInputAccount}
-                  className={styles['input']}
-                  style={{
-                    borderColor: errors.account ? '#f87171' : '#d1d5db',
-                  }}
-                />
+                <div className={styles['loginAccountBox']} ref={comboRef}>
+                  <input
+                    type="text"
+                    name="account"
+                    value={formData.account}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    placeholder={lang.tr.pleaseInputAccount}
+                    className={styles['input']}
+                  />
+                  <div
+                    className={styles['comboArrow']}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAccountSelectBox((prev) => !prev);
+                    }}
+                  ></div>
+                </div>
+                <div
+                  className={`${styles['accountSelectBox']} ${
+                    accountSelectBox ? styles['showAccountSelectBox'] : ''
+                  }`}
+                >
+                  {accountList?.map((account) => (
+                    <div
+                      key={account}
+                      className={styles['accountSelectOptionBox']}
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, account }));
+                        setAccountSelectBox(false);
+                      }}
+                    >
+                      {account}
+                      <div
+                        className={styles['accountSelectCloseBtn']}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const updated = accountList.filter(
+                            (a) => a !== account,
+                          );
+                          localStorage.setItem(
+                            'login-accounts',
+                            updated.join(','),
+                          );
+                          setAccountList(updated);
+                          setFormData((prev) => ({
+                            ...prev,
+                            account:
+                              prev.account === account ? '' : prev.account,
+                          }));
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className={styles['inputBox']}>
                 <label className={styles['label']}>{lang.tr.password}</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  onBlur={handleBlur}
-                  placeholder={lang.tr.pleaseInputPassword}
-                  className={styles['input']}
-                  style={{
-                    borderColor: errors.password ? '#f87171' : '#d1d5db',
-                  }}
-                />
+                <div className={styles['loginAccountBox']}>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    placeholder={lang.tr.pleaseInputPassword}
+                    className={styles['input']}
+                  />
+                </div>
               </div>
+              {errors && (
+                <div className={styles['warningMessage']}>
+                  {errors.account || errors.password || ''}
+                </div>
+              )}
               <div className={styles['checkWrapper']}>
                 <label className={styles['checkBox']}>
                   <input
@@ -131,6 +215,7 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
                     checked={formData.rememberAccount}
                     onChange={handleInputChange}
                     className={styles['check']}
+                    tabIndex={-1}
                   />
                   {lang.tr.rememberAccount}
                 </label>
@@ -141,16 +226,21 @@ const LoginPage: React.FC<LoginPageProps> = React.memo(({ setSection }) => {
                     checked={formData.autoLogin}
                     onChange={handleInputChange}
                     className={styles['check']}
+                    tabIndex={-1}
                   />
                   {lang.tr.autoLogin}
                 </label>
               </div>
-              <button className={styles['button']} onClick={handleSubmit}>
+              <button
+                className={styles['button']}
+                onClick={handleSubmit}
+                tabIndex={-1}
+              >
                 {lang.tr.login}
               </button>
             </>
           )}
-        </div>
+        </form>
       </div>
       {/* Footer */}
       <div className={styles['loginFooter']}>

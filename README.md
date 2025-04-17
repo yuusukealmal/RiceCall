@@ -2,35 +2,33 @@
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/74f23cae-f3aa-4deb-bbd1-72290d9193f3" width="200px" align="center">
+  <div height="20px">　</div>
+  <div>
+    <img src="https://img.shields.io/badge/Join-Discord-blue?logo=discord&link=https%3A%2F%2Fdiscord.gg%2FadCWzv6wwS"/>
+    <img src="https://img.shields.io/badge/Latest-v0.1.5-green"/>
+  </div>
 </div>
 
-<img src="https://img.shields.io/badge/Join-Discord-blue?logo=discord&link=https%3A%2F%2Fdiscord.gg%2FadCWzv6wwS"/> <img src="https://img.shields.io/badge/Latest-v0.1.3-green"/>
+## v0.1.5 更新日誌 (Change Log)
 
-RiceCall，RaidCall 的非官方復刻版，使用 react 框架開發，electron 建置
+- **將資料庫從 SQLite 轉為 MySQL，提高穩定性**
+- 新增頻道排序小窗
+- 新增記住帳號功能
+- 修復 Markdown 語法顯示問題
+- 修復語音圖標未正常顯示
+- 修復自動獲取歷史訊息
+- 修復多裝置登入不會登出
+- 優化訊息輸入框輸入邏輯
+- 優化延遲偵測邏輯
+- 優化頁面載入邏輯
+- 使用者群卡面顯示當前經驗
+- 介面改良
 
-## - 功能 (Feature)
-
-- 高度還原 RaidCall 介面和功能
-- 重溫曾經的情懷
-
-## - v0.1.3 更新日誌 (Change Log)
-
-- 重新設計 XP 計算系統
-- 改善 WebRTC 邏輯，使其更穩定
-- 新增私訊介面
-- 增強權限驗證，防止利用漏洞竄改資料
-- 增強資料庫資料驗證，防止資料注入
-- 修復靜音模式下新使用者進入仍會發出聲音
-- 修復所有圖片無法顯示
-- 修復使用者卡片顯示超出畫面及顯示當前等級
-- 調整最小視窗大小
-- 調整右鍵選單風格並移除未實裝功能選項
-
-## - 安裝方法
+## 安裝方法
 
 請至 [下載點](https://github.com/NerdyHomeReOpen/RiceCall/releases/latest)，先閱讀過說明文件後再開始下載
 
-## - 常見問題 (FAQ)
+## 常見問題 (FAQ)
 
 ### :question: Q: 我卡在轉圈圈畫面怎麼辦
 
@@ -52,37 +50,22 @@ RiceCall，RaidCall 的非官方復刻版，使用 react 框架開發，electron
 
 :white_check_mark: A: 請加入我們的 [Discord](https://discord.gg/adCWzv6wwS) 伺服器或至 [Issues](https://github.com/NerdyHomeReOpen/RiceCall/issues) 頁面詳細描述你所遇到的問題
 
-## - 技術架構 (Tech Stack)
+## 技術架構 (Tech Stack)
 
 - **前端 (Client):** React, Electron
 - **後端 (Server):** Node.js
 - **資料庫 (Database):** SQLite
 - **通訊協定 (Protocol):** WebRTC / WebSocket
 
-## - 如何貢獻 (Contributing)
+## 如何貢獻 (Contributing)
 
 我們歡迎所有開發者參與 RiceCall 的開發！你可以透過以下方式貢獻：
 
-1. Fork 此專案，進行修改後提交 [Pull Request](https://github.com/NerdyHomeReOpen/RiceCall/pulls)
-2. 回報 Bug 或提出新功能建議，請到 [Issues](https://github.com/NerdyHomeReOpen/RiceCall/issues) 頁面
-3. 幫助改善文件 (如 ReadMe 或開發指南)
+- 至[此表單](https://forms.gle/ZowwAS22dGpKkGcZ8)填寫幫助意願 (記得先加入我們的 [Discord](https://discord.gg/adCWzv6wwS)，若我們需要你的幫忙會給予你身份組)
+- Fork 此專案，進行修改後提交 [Pull Request](https://github.com/NerdyHomeReOpen/RiceCall/pulls)
+- 回報 Bug 或提出新功能建議，請到 [Issues](https://github.com/NerdyHomeReOpen/RiceCall/issues) 頁面
 
-### 代辦事項 (TODO List)
-
-- [ ] 更改後端語言 (e.g. Rust, C++, Python)
-- [ ] 優化資料庫 (NoSQL)
-- [ ] 改進 WebRTC (SFU)
-- [ ] 新增雜音抑制
-- [ ] 混音功能
-
-## - 專案倉庫 (Repository)
-
-| Repo                                                                                          | Role     |
-| --------------------------------------------------------------------------------------------- | -------- |
-| [/NerdyHomeReOpen/RiceCall](https://github.com/NerdyHomeReOpen/RiceCall)                      | frontend |
-| [/NerdyHomeReOpen/RiceCallServer](https://github.com/NerdyHomeReOpen/RiceCall/tree/Websocket) | backend  |
-
-## - 專案架構 (Framework)
+## 專案架構 (Framework)
 
 ```bash
 RiceCall
@@ -92,8 +75,10 @@ RiceCall
 │   ├── app/                  # Next.js 頁面
 │   ├── components/           # React/Electron 元件
 │   ├── providers/            # React Providers
-│   ├── styles/               # CSS
 │   ├── services/             # API 呼叫、資料處理
+│   ├── styles/               # CSS
+│   ├── types/                # 類型定義
+│   ├── utils/                # 功能檔案
 ├── main.js                   # Electron 入口文件
 ├── .env.example              # 環境變數範例
 ├── .gitignore                # Git 忽略清單
@@ -110,39 +95,30 @@ RiceCall
 ├── yarn.lock                 # Yarn 鎖定依賴版本
 ```
 
-## - 建置本地環境 (Build)
+## 建置本地環境 (Build)
 
 1. 安裝 Modules
 
 ```bash
 yarn install
 ```
+2. 建立 .env 或複製 .env.example 後更名為 .env，以下為環境變數範例
 
-2. 啟動 Client
+```env
+NEXT_PUBLIC_SERVER_URL=你的伺服器公開網址
+```
+
+3. 啟動 Client (Development)
 
 ```bash
 yarn electron-dev
 ```
 
-3. 啟動 Server (前端開發用)
-
-```bash
-node ./index.js
-``` 
-
-4. 建置 Database
-
-```bash
-node ./initial.js
-```
-
-客戶端及伺服器即會運行於本地電腦上
+客戶端即會運行於本地電腦上
 
 > [客戶端](localhost:3000) (localhost:3000)
-> 
-> [伺服器端](localhost:4500) (localhost:4500)
 
-## - 免責聲明 (Disclaimer)
+## 免責聲明 (Disclaimer)
 
 **RiceCall** 是一個**獨立開發**的專案，與 RaidCall 的原開發團隊、伺服器或任何官方組織 **沒有任何關聯**。本專案**並非** RaidCall 的延續或官方授權版本，亦**不涉及恢復過去的 RaidCall 服務或其伺服器**。
 

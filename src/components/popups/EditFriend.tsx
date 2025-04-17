@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // Types
-import { User, Friend, FriendGroup } from '@/types';
+import { User, Friend, FriendGroup, SocketServerEvent } from '@/types';
 
 // Providers
 import { useSocket } from '@/providers/Socket';
@@ -19,8 +19,8 @@ import ipcService from '@/services/ipc.service';
 import { createDefault } from '@/utils/createDefault';
 
 interface EditFriendPopupProps {
-  userId: string;
-  targetId: string;
+  userId: User['userId'];
+  targetId: User['userId'];
 }
 
 const EditFriendPopup: React.FC<EditFriendPopupProps> = React.memo(
@@ -36,9 +36,7 @@ const EditFriendPopup: React.FC<EditFriendPopupProps> = React.memo(
     const { userId, targetId } = initialData;
 
     // States
-    const [userFriendGroups, setUserFriendGroups] = useState<FriendGroup[]>(
-      createDefault.user().friendGroups || [],
-    );
+    const [userFriendGroups, setUserFriendGroups] = useState<FriendGroup[]>([]);
     const [friendGroup, setFriendGroup] = useState<Friend['friendGroupId']>(
       createDefault.friend().friendGroupId,
     );
@@ -50,16 +48,16 @@ const EditFriendPopup: React.FC<EditFriendPopupProps> = React.memo(
 
     const handleUpdateFriend = (
       friend: Partial<Friend>,
-      userId: User['id'],
-      targetId: User['id'],
+      userId: User['userId'],
+      targetId: User['userId'],
     ) => {
       if (!socket) return;
       socket.send.updateFriend({ friend, userId, targetId });
     };
 
-    const handleUserUpdate = (data: User | null) => {
-      if (!data) data = createDefault.user();
-      setUserFriendGroups(data.friendGroups || []);
+    const handleUserFriendGroupsUpdate = (data: FriendGroup[] | null) => {
+      if (!data) data = [];
+      setUserFriendGroups(data);
     };
 
     const handleFriendUpdate = (data: Friend | null) => {
@@ -69,19 +67,38 @@ const EditFriendPopup: React.FC<EditFriendPopupProps> = React.memo(
 
     // Effects
     useEffect(() => {
+      if (!socket) return;
+
+      const eventHandlers = {
+        [SocketServerEvent.USER_FRIEND_GROUPS_UPDATE]:
+          handleUserFriendGroupsUpdate,
+      };
+      const unsubscribe: (() => void)[] = [];
+
+      Object.entries(eventHandlers).map(([event, handler]) => {
+        const unsub = socket.on[event as SocketServerEvent](handler);
+        unsubscribe.push(unsub);
+      });
+
+      return () => {
+        unsubscribe.forEach((unsub) => unsub());
+      };
+    }, [socket]);
+
+    useEffect(() => {
       if (!userId || !targetId || refreshRef.current) return;
       const refresh = async () => {
         refreshRef.current = true;
         Promise.all([
-          refreshService.user({
+          refreshService.userFriendGroups({
             userId: userId,
           }),
           refreshService.friend({
             userId: userId,
             targetId: targetId,
           }),
-        ]).then(([user, friend]) => {
-          handleUserUpdate(user);
+        ]).then(([userFriendGroups, friend]) => {
+          handleUserFriendGroupsUpdate(userFriendGroups);
           handleFriendUpdate(friend);
         });
       };
@@ -100,14 +117,17 @@ const EditFriendPopup: React.FC<EditFriendPopupProps> = React.memo(
                 <div className={popup['selectBox']}>
                   <select
                     className={popup['input']}
-                    value={friendGroup}
+                    value={friendGroup || ''}
                     onChange={(e) => {
                       setFriendGroup(e.target.value);
                     }}
                   >
                     <option value={''}>{lang.tr.none}</option>
                     {userFriendGroups.map((group) => (
-                      <option key={group.id} value={group.id}>
+                      <option
+                        key={group.friendGroupId}
+                        value={group.friendGroupId}
+                      >
                         {group.name}
                       </option>
                     ))}

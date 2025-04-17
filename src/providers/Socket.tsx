@@ -8,8 +8,6 @@ import { SocketServerEvent, SocketClientEvent } from '@/types';
 
 // Services
 import ipcService from '@/services/ipc.service';
-import { errorHandler } from '@/utils/errorHandler';
-import { StandardizedError } from '@/utils/errorHandler';
 
 type SocketContextType = {
   send: Record<SocketClientEvent, (data: any) => () => void>;
@@ -52,57 +50,56 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
   );
 
   // Refs
-  const cleanupRef = useRef<(() => void)[]>(
-    Object.values(SocketServerEvent).reduce((acc, event) => {
-      acc.push(() => ipcService.removeListener(event));
-      return acc;
-    }, [] as (() => void)[]),
-  );
+  const cleanupRef = useRef<(() => void)[]>([]);
 
   // States
   const [isConnected, setIsConnected] = useState(false);
 
   // Handlers
   const handleConnect = () => {
-    console.log('Socket connected');
+    console.info('Socket connected');
     setIsConnected(true);
   };
 
   const handleDisconnect = () => {
-    console.log('Socket disconnected');
+    console.info('Socket disconnected');
     setIsConnected(false);
   };
 
   const handleConnectError = (error: any) => {
-    console.log('Socket connection error', error);
+    console.error('Socket connection error', error);
     setIsConnected(false);
   };
 
   const handleReconnect = (attemptNumber: number) => {
-    console.log('Socket reconnected', attemptNumber);
+    console.info('Socket reconnected', attemptNumber);
     setIsConnected(true);
   };
 
   const handleReconnectError = (error: any) => {
-    console.log('Socket reconnected error', error);
+    console.error('Socket reconnected error', error);
     setIsConnected(false);
-  };
-
-  const handleError = (error: StandardizedError) => {
-    console.log('Socket error', error);
-    new errorHandler(error).show();
-  };
-
-  const handleOpenPopup = (data: any) => {
-    console.log('Socket open popup', data);
-    const { popupType, initialData } = data;
-    ipcService.popup.open(popupType);
-    ipcService.initialData.onRequest(popupType, initialData);
   };
 
   // Effects
   useEffect(() => {
-    console.log('SocketProvider initialization');
+    console.info('SocketProvider initialization');
+
+    cleanupRef.current = Object.values(SocketServerEvent).reduce(
+      (acc, event) => {
+        acc.push(() => ipcService.removeListener(event));
+        return acc;
+      },
+      [] as (() => void)[],
+    );
+
+    cleanupRef.current.push(() => {
+      ipcService.removeListener('connect');
+      ipcService.removeListener('connect_error');
+      ipcService.removeListener('reconnect');
+      ipcService.removeListener('reconnect_error');
+      ipcService.removeListener('disconnect');
+    });
 
     setOn(
       Object.values(SocketServerEvent).reduce((acc, event) => {
@@ -129,11 +126,9 @@ const SocketProvider = ({ children }: SocketProviderProps) => {
     ipcService.onSocketEvent('reconnect', handleReconnect);
     ipcService.onSocketEvent('reconnect_error', handleReconnectError);
     ipcService.onSocketEvent('disconnect', handleDisconnect);
-    ipcService.onSocketEvent('error', handleError);
-    ipcService.onSocketEvent('openPopup', handleOpenPopup);
 
     return () => {
-      console.log('SocketProvider cleanup');
+      console.info('SocketProvider cleanup');
       cleanupRef.current.forEach((cleanup) => cleanup());
       cleanupRef.current = [];
     };

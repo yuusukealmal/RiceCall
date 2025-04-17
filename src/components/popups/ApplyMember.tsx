@@ -20,8 +20,8 @@ import { createDefault } from '@/utils/createDefault';
 import refreshService from '@/services/refresh.service';
 
 interface ApplyMemberPopupProps {
-  serverId: string;
-  userId: string;
+  serverId: Server['serverId'];
+  userId: User['userId'];
 }
 
 const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
@@ -56,8 +56,8 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
 
     const handleCreatMemberApplication = (
       memberApplication: Partial<MemberApplication>,
-      userId: User['id'],
-      serverId: Server['id'],
+      userId: User['userId'],
+      serverId: Server['serverId'],
     ) => {
       if (!socket) return;
       socket.send.createMemberApplication({
@@ -68,7 +68,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
     };
 
     const handleServerUpdate = (data: Server | null) => {
-      if (!data) return;
+      if (!data) data = createDefault.server();
       setServerName(data.name);
       setServerDisplayId(data.displayId);
       setServerAvatarUrl(data.avatarUrl);
@@ -88,7 +88,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
         submitTo: PopupType.DIALOG_SUCCESS,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_SUCCESS, () => {
-        setSection(1);
+        handleClose();
       });
     };
 
@@ -97,6 +97,7 @@ const ApplyMemberPopup: React.FC<ApplyMemberPopupProps> = React.memo(
     };
 
     // UseEffect
+
     useEffect(() => {
       if (!serverId || !userId || refreshRef.current) return;
       const refresh = async () => {

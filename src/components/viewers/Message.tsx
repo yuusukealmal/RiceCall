@@ -3,6 +3,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 // CSS
 import styles from '@/styles/messageViewer.module.css';
 import permission from '@/styles/common/permission.module.css';
+import vip from '@/styles/common/vip.module.css';
 
 // Components
 import MarkdownViewer from '@/components/viewers/Markdown';
@@ -42,7 +43,7 @@ const DirectMessageTab: React.FC<DirectMessageTabProps> = React.memo(
     return (
       <div className={styles['messageBox']}>
         <div className={styles['header']}>
-          <div className={styles['name']}>{senderName}</div>
+          <div className={styles['username']}>{senderName}</div>
           <div className={styles['timestamp']}>{timestamp}</div>
         </div>
         {messageContents.map((content, index) => (
@@ -73,6 +74,7 @@ const ChannelMessageTab: React.FC<ChannelMessageTabProps> = React.memo(
     const {
       gender: senderGender,
       name: senderName,
+      vip: senderVip,
       nickname: senderNickname,
       permissionLevel: messagePermission,
       contents: messageContents,
@@ -96,7 +98,14 @@ const ChannelMessageTab: React.FC<ChannelMessageTabProps> = React.memo(
         />
         <div className={styles['messageBox']}>
           <div className={styles['header']}>
-            <div className={styles['name']}>{senderNickname || senderName}</div>
+            {senderVip > 0 && (
+              <div
+                className={`${vip['vipIcon']} ${vip[`vip-small-${senderVip}`]}`}
+              ></div>
+            )}
+            <div className={styles['username']}>
+              {senderNickname || senderName}
+            </div>
             <div className={styles['timestamp']}>{timestamp}</div>
           </div>
           {messageContents.map((content, index) => (
@@ -221,9 +230,9 @@ const MessageViewer: React.FC<MessageViewerProps> = React.memo(
 
     return (
       <div className={styles['messageViewerWrapper']}>
-        {messageGroups.map((messageGroup) => {
+        {messageGroups.map((messageGroup, index) => {
           return (
-            <div key={messageGroup.id} className={styles['messageWrapper']}>
+            <div key={index} className={styles['messageWrapper']}>
               {messageGroup.type === 'info' ? (
                 <InfoMessageTab
                   messageGroup={messageGroup}

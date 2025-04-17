@@ -62,7 +62,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
       avatarUrl: memberAvatarUrl,
       gender: memberGender,
       level: memberLevel,
-      progress: memberXpProgress,
+      xp: memberXp,
       requiredXp: memberRequiredXp,
       badges: memberBadges = [],
       permissionLevel: memberPermission,
@@ -125,11 +125,11 @@ const UserInfoCard: React.FC<UserInfoCardProps> = React.memo(
                 <div className={userInfoCard['xpBox']}>
                   <div
                     className={userInfoCard['xpProgress']}
-                    style={{ width: `${memberXpProgress * 100}%` }}
+                    style={{ width: `${(memberXp / memberRequiredXp) * 100}%` }}
                   />
                 </div>
                 <div className={userInfoCard['xpText']}>
-                  <div>0</div>
+                  <div>{memberXp}</div>
                   <div>{memberRequiredXp}</div>
                 </div>
               </div>

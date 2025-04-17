@@ -82,6 +82,7 @@ export interface Translation {
   memberApplicationManagement: string;
   blacklistManagement: string;
   confirm: string;
+  set: string;
   save: string;
   modify: string;
   cancel: string;
@@ -108,6 +109,7 @@ export interface Translation {
   dialogWarning: string;
   dialogError: string;
   dialogInfo: string;
+  anotherDeviceLogin: string;
   none: string;
   parentChannel: string;
   channelName: string;
@@ -197,15 +199,17 @@ export interface Translation {
   setGuest: string;
   setMember: string;
   setAdmin: string;
+  removeAdmin: string;
   setChannelAdmin: string;
+  removeChannelAdmin: string;
   setCategoryAdmin: string;
+  removeCategoryAdmin: string;
   deleteFriend: string;
   searchFriend: string;
   guest: string;
   member: string;
   channelAdmin: string;
   channelManager: string;
-  channelOrder: string;
   serverAdmin: string;
   serverOwner: string;
   eventStaff: string;
@@ -361,6 +365,15 @@ export interface Translation {
   myFriends: string;
   acceptApplication: string;
   denyApplication: string;
+  pleaseEnterTheChannelPassword: string;
+  setChannelPassword: string;
+  setChannelPasswordDescription: string;
+  editFriend: string;
+  connectingServer: string;
+  mute: string;
+  unmute: string;
+  editChannelOrder: string;
+  editChannelName: string;
 }
 
 export type LanguageKey = 'tw' | 'cn' | 'en' | 'jp';
@@ -452,6 +465,7 @@ export const translations: Record<LanguageKey, Translation> = {
     memberApplicationManagement: '會員申請管理',
     blacklistManagement: '黑名單管理',
     confirm: '確定',
+    set: '套用',
     save: '保存',
     modify: '修改',
     cancel: '取消',
@@ -472,12 +486,13 @@ export const translations: Record<LanguageKey, Translation> = {
     deleteChannel: '刪除頻道',
     applyMember: '申請會員',
     applyFriend: '好友請求',
-    directMessage: '私訊',
+    directMessage: '傳送即時訊息',
     dialogAlert: '警告',
     dialogSuccess: '成功',
     dialogWarning: '警告',
     dialogError: '錯誤',
     dialogInfo: '資訊',
+    anotherDeviceLogin: '帳號在別處登入，您被迫下線，您的帳號可能存在異常。',
     none: '無',
     parentChannel: '上級頻道',
     channelName: '頻道名稱',
@@ -508,10 +523,10 @@ export const translations: Record<LanguageKey, Translation> = {
     channel: '頻道',
     category: '類別',
     channelPermission: '頻道權限',
-    channelPublic: '任何人都可以訪問',
-    channelMember: '成為會員才可以訪問',
-    channelPrivate: '管理員才可訪問',
-    channelReadonly: '唯讀',
+    channelPublic: '任何人可以訪問',
+    channelMember: '禁止遊客訪問',
+    channelPrivate: '訪問時輸入密碼',
+    channelReadonly: '該頻道只用於訊息顯示',
     serverApply: '申請已送出，請等待管理員審核',
     serverApplyNotice: '申請須知',
     serverApplyDescription: '申請說明',
@@ -541,11 +556,11 @@ export const translations: Record<LanguageKey, Translation> = {
     queue: '排麥',
     forbiddenQueue: '禁止排麥',
     controlQueue: '控麥',
-    textChangeToFreeSpeech: '該頻道聊天室已被設為自由發言',
-    textChangeToForbiddenSpeech: '該頻道聊天室已被設為僅管理員發言',
-    voiceChangeToFreeSpeech: '該頻道語音已被設為自由發言',
-    voiceChangeToForbiddenSpeech: '該頻道語音已被設為僅管理員發言',
-    voiceChangeToQueue: '頻道被設為排麥才能發言，請點擊"拿麥發言"等候發言',
+    textChangeToFreeSpeech: '此頻道聊天室已被設為自由發言',
+    textChangeToForbiddenSpeech: '此頻道聊天室已被設為僅管理員發言',
+    voiceChangeToFreeSpeech: '此頻道被設為自由發言',
+    voiceChangeToForbiddenSpeech: '此頻道被設為只有管理員可以拿麥發言',
+    voiceChangeToQueue: '此頻道被設為排麥才能發言，請點擊“拿麥發言”等候發言',
     voiceChangeToForbiddenQueue: '排麥模式已變更為禁止',
     voiceChangeToControlQueue: '排麥模式已變更為控麥',
     takeMic: '拿麥發言',
@@ -553,12 +568,12 @@ export const translations: Record<LanguageKey, Translation> = {
     mixing: '混音',
     in: '在',
     chatWithMembers: '與 {0} 位成員聊天',
-    warningDeleteChannel: '確定要刪除此頻道嗎？',
+    warningDeleteChannel: '您確定要刪除頻道：{0}嗎？',
     add: '新增',
     delete: '刪除',
     kick: '踢出',
-    addFriend: '新增好友',
-    addChannel: '新增頻道',
+    addFriend: '添加好友',
+    addChannel: '創建頻道',
     unknownChannel: '未知頻道',
     micOrder: '麥序',
     allChannel: '所有頻道',
@@ -568,15 +583,17 @@ export const translations: Record<LanguageKey, Translation> = {
     setGuest: '設為遊客',
     setMember: '設為會員',
     setAdmin: '設為群管理員',
+    removeAdmin: '移除群管理員',
     setChannelAdmin: '設為頻道管理員',
+    removeChannelAdmin: '移除頻道管理員',
     setCategoryAdmin: '設為類別管理員',
+    removeCategoryAdmin: '移除類別管理員',
     deleteFriend: '刪除好友',
     searchFriend: '搜尋好友',
     guest: '遊客',
     member: '會員',
     channelAdmin: '二級頻道管理員',
     channelManager: '頻道管理員',
-    channelOrder: '頻道位置',
     serverAdmin: '群管理員',
     serverOwner: '群創建者',
     eventStaff: '官方客服',
@@ -735,6 +752,15 @@ export const translations: Record<LanguageKey, Translation> = {
     myFriends: '我的好友',
     acceptApplication: '接受申請',
     denyApplication: '拒絕申請',
+    pleaseEnterTheChannelPassword: '請輸入頻道密碼',
+    setChannelPassword: '設定頻道密碼',
+    setChannelPasswordDescription: '請輸入頻道密碼 (限1-4位數字)',
+    editFriend: '編輯好友',
+    connectingServer: '正在連接',
+    mute: '拒聽此人語音',
+    unmute: '接受此人語音',
+    editChannelOrder: '修改頻道排序',
+    editChannelName: '修改頻道名',
   },
   cn: {
     RPCHomePage: '正在浏览主页',
@@ -822,6 +848,7 @@ export const translations: Record<LanguageKey, Translation> = {
     memberApplicationManagement: '会员申请管理',
     blacklistManagement: '黑名单管理',
     confirm: '确定',
+    set: '套用',
     save: '保存',
     modify: '修改',
     cancel: '取消',
@@ -848,6 +875,7 @@ export const translations: Record<LanguageKey, Translation> = {
     dialogWarning: '警告',
     dialogError: '错误',
     dialogInfo: '信息',
+    anotherDeviceLogin: '帐号在别处登入，您被迫下线，您的帐号可能存在异常。',
     none: '无',
     parentChannel: '上级频道',
     channelName: '频道名称',
@@ -878,13 +906,13 @@ export const translations: Record<LanguageKey, Translation> = {
     channel: '频道',
     category: '类别',
     channelPermission: '频道权限',
-    channelPublic: '任何人都可以访问',
-    channelMember: '成为会员才可以访问',
-    channelPrivate: '管理员才可访问',
-    channelReadonly: '只读',
-    serverApply: '申请已送出，请等待管理员审核',
-    serverApplyNotice: '申请须知',
-    serverApplyDescription: '申请说明',
+    channelPublic: '任何人可以访问',
+    channelMember: '禁止游客访问',
+    channelPrivate: '访问时输入密码',
+    channelReadonly: '该频道只用於訊息顯示',
+    serverApply: '申請已送出，請等待管理員審核',
+    serverApplyNotice: '申請須知',
+    serverApplyDescription: '申請說明',
     submit: '送出',
     unknownError: '未知错误',
     onLogin: '登录中...',
@@ -911,11 +939,11 @@ export const translations: Record<LanguageKey, Translation> = {
     queue: '排麦',
     forbiddenQueue: '禁止排麦',
     controlQueue: '控麦',
-    textChangeToFreeSpeech: '该频道聊天室已被设为自由发言',
-    textChangeToForbiddenSpeech: '该频道聊天室已被设为仅管理员发言',
-    voiceChangeToFreeSpeech: '该频道语音已被设为自由发言',
-    voiceChangeToForbiddenSpeech: '该频道语音已被设为仅管理员发言',
-    voiceChangeToQueue: '频道被设为排麦才能发言，请点击"拿麦发言"等候发言',
+    textChangeToFreeSpeech: '此频道聊天室已被设为自由发言',
+    textChangeToForbiddenSpeech: '此频道聊天室已被设为仅管理员发言',
+    voiceChangeToFreeSpeech: '此频道被设为自由发言',
+    voiceChangeToForbiddenSpeech: '此频道被设为只有管理员可以拿麦发言',
+    voiceChangeToQueue: '此频道被设为排麦才能发言，请点击“拿麦发言”等候发言',
     voiceChangeToForbiddenQueue: '排麦模式已变更为禁止',
     voiceChangeToControlQueue: '排麦模式已变更为控麦',
     takeMic: '拿麦发言',
@@ -938,15 +966,17 @@ export const translations: Record<LanguageKey, Translation> = {
     setGuest: '设为游客',
     setMember: '设为会员',
     setAdmin: '设为管理员',
+    removeAdmin: '移除管理员',
     setChannelAdmin: '设为频道管理员',
+    removeChannelAdmin: '移除频道管理员',
     setCategoryAdmin: '设为类别管理员',
+    removeCategoryAdmin: '移除类别管理员',
     deleteFriend: '删除好友',
     searchFriend: '搜索好友',
     guest: '游客',
     member: '会员',
     channelAdmin: '二级频道管理员',
     channelManager: '频道管理员',
-    channelOrder: '频道位置',
     serverAdmin: '群管理员',
     serverOwner: '群创建者',
     eventStaff: '官方客服',
@@ -1104,6 +1134,15 @@ export const translations: Record<LanguageKey, Translation> = {
     myFriends: '我的好友',
     acceptApplication: '接受申请',
     denyApplication: '拒绝申请',
+    pleaseEnterTheChannelPassword: '请输入频道密码',
+    setChannelPassword: '设置频道密码',
+    setChannelPasswordDescription: '请输入频道密码 (限1-4位数字)',
+    editFriend: '编辑好友',
+    connectingServer: '正向连接',
+    mute: '拒听此人语音',
+    unmute: '接受此人语音',
+    editChannelOrder: '修改頻道排序',
+    editChannelName: '修改頻道名',
   },
   en: {
     RPCHomePage: 'Browsing Homepage',
@@ -1192,6 +1231,7 @@ export const translations: Record<LanguageKey, Translation> = {
     memberApplicationManagement: 'Member Application Management',
     blacklistManagement: 'Blacklist Management',
     confirm: 'Confirm',
+    set: 'Set',
     save: 'Save',
     modify: 'Modify',
     cancel: 'Cancel',
@@ -1218,6 +1258,8 @@ export const translations: Record<LanguageKey, Translation> = {
     dialogWarning: 'Warning',
     dialogError: 'Error',
     dialogInfo: 'Info',
+    anotherDeviceLogin:
+      'Your account is logged in somewhere else and you are forced to go offline, there may be an anomaly with your account',
     none: 'None',
     parentChannel: 'Parent Channel',
     channelName: 'Channel Name',
@@ -1251,8 +1293,8 @@ export const translations: Record<LanguageKey, Translation> = {
     channelPermission: 'Channel permission',
     channelPublic: 'Anyone can access',
     channelMember: 'Only members can access',
-    channelPrivate: 'Only admins can access',
-    channelReadonly: 'Read-only',
+    channelPrivate: 'Enter password to access',
+    channelReadonly: 'This channel is only for message display',
     serverApply: 'Application submitted, please wait for admin review',
     serverApplyNotice: 'Application notice',
     serverApplyDescription: 'Application description',
@@ -1312,15 +1354,17 @@ export const translations: Record<LanguageKey, Translation> = {
     setGuest: 'Set as guest',
     setMember: 'Set as member',
     setAdmin: 'Set as admin',
+    removeAdmin: 'Remove as admin',
     setChannelAdmin: 'Set as channel admin',
+    removeChannelAdmin: 'Remove as channel admin',
     setCategoryAdmin: 'Set as category admin',
+    removeCategoryAdmin: 'Remove as category admin',
     deleteFriend: 'Delete friend',
     searchFriend: 'Search friend',
     guest: 'Guest',
     member: 'Member',
     channelAdmin: 'Channel admin',
     channelManager: 'Channel manager',
-    channelOrder: 'Channel order',
     serverAdmin: 'Server admin',
     serverOwner: 'Server owner',
     eventStaff: 'Event staff',
@@ -1496,6 +1540,16 @@ export const translations: Record<LanguageKey, Translation> = {
     myFriends: 'My Friends',
     acceptApplication: 'Accept application',
     denyApplication: 'Deny application',
+    pleaseEnterTheChannelPassword: 'Please enter the channel password',
+    setChannelPassword: 'Set channel password',
+    setChannelPasswordDescription:
+      'Please enter the channel password (1-4 digits)',
+    editFriend: 'Edit friend',
+    connectingServer: 'Connecting',
+    mute: 'Mute this user',
+    unmute: 'Unmute this user',
+    editChannelOrder: 'Change channel order',
+    editChannelName: 'Change channel name',
   },
   jp: {
     RPCHomePage: 'ホームページを閲覧中',
@@ -1583,6 +1637,7 @@ export const translations: Record<LanguageKey, Translation> = {
     memberApplicationManagement: 'メンバーアプリケーション管理',
     blacklistManagement: 'ブラックリスト管理',
     confirm: '確認',
+    set: '適用',
     save: '保存',
     modify: '変更',
     cancel: 'キャンセル',
@@ -1609,6 +1664,8 @@ export const translations: Record<LanguageKey, Translation> = {
     dialogWarning: '警告',
     dialogError: 'エラー',
     dialogInfo: '情報',
+    anotherDeviceLogin:
+      'あなたのアカウントが他の場所にログインしているのに、強制的にオフラインにされた場合、あなたのアカウントに異常が発生している可能性があります。',
     none: 'なし',
     parentChannel: '親チャンネル',
     channelName: 'チャンネル名',
@@ -1641,7 +1698,7 @@ export const translations: Record<LanguageKey, Translation> = {
     channelPermission: 'チャンネルの権限',
     channelPublic: '誰でもアクセス可能',
     channelMember: 'メンバーのみがアクセス可能',
-    channelPrivate: '管理者のみがアクセス可能',
+    channelPrivate: 'アクセス時にパスワードを入力してください',
     channelReadonly: '読み取り専用',
     serverApply: '申請が送信されました。管理者のレビューをお待ちください',
     serverApplyNotice: '申請通知',
@@ -1703,15 +1760,17 @@ export const translations: Record<LanguageKey, Translation> = {
     setGuest: 'ゲストに設定',
     setMember: 'メンバーに設定',
     setAdmin: '管理者に設定',
+    removeAdmin: '管理者に削除',
     setChannelAdmin: 'チャンネル管理者に設定',
+    removeChannelAdmin: 'チャンネル管理者に削除',
     setCategoryAdmin: 'カテゴリ管理者に設定',
+    removeCategoryAdmin: 'カテゴリ管理者に削除',
     deleteFriend: 'フレンドを削除',
     searchFriend: 'フレンドを検索',
     guest: 'ゲスト',
     member: 'メンバー',
     channelAdmin: 'チャンネル管理者',
     channelManager: 'チャンネルマネージャー',
-    channelOrder: 'チャンネル位置',
     serverAdmin: 'サーバー管理者',
     serverOwner: 'グループ作成者',
     eventStaff: '公式カスタマーサービス',
@@ -1883,6 +1942,16 @@ export const translations: Record<LanguageKey, Translation> = {
     myFriends: '友達',
     acceptApplication: '申請を承認',
     denyApplication: '申請を拒否',
+    pleaseEnterTheChannelPassword: 'チャンネルパスワードを入力してください',
+    setChannelPassword: 'チャンネルパスワードを設定',
+    setChannelPasswordDescription:
+      'チャンネルパスワードを入力してください (1-4位数字)',
+    editFriend: '編輯友達',
+    connectingServer: '接続中',
+    mute: 'このユーザーの音声を拒聴',
+    unmute: 'このユーザーの音声を受聴',
+    editChannelOrder: '変更チャンネル順序',
+    editChannelName: 'チャンネル名の変更',
   },
 };
 
@@ -1898,7 +1967,7 @@ export const enum Permission {
 }
 
 export type User = {
-  id: string;
+  userId: string;
   name: string;
   avatar: string;
   avatarUrl: string;
@@ -1908,7 +1977,6 @@ export type User = {
   vip: number;
   xp: number;
   requiredXp: number;
-  progress: number;
   birthYear: number;
   birthMonth: number;
   birthDay: number;
@@ -1920,17 +1988,17 @@ export type User = {
   createdAt: number;
   // THESE WERE NOT SAVE IN THE DATABASE
   badges?: Badge[];
-  friends?: UserFriend[];
-  friendGroups?: FriendGroup[];
-  friendApplications?: FriendApplication[];
-  joinedServers?: Server[];
-  recentServers?: Server[];
-  ownedServers?: Server[];
-  favServers?: Server[];
+};
+
+export type UserServer = Server & {
+  recent: boolean;
+  owned: boolean;
+  favorite: boolean;
+  timestamp: number;
 };
 
 export type Server = {
-  id: string;
+  serverId: string;
   name: string;
   avatar: string;
   avatarUrl: string;
@@ -1948,17 +2016,10 @@ export type Server = {
   lobbyId: string;
   ownerId: string;
   createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  lobby?: Channel;
-  owner?: ServerMember;
-  channels?: (Channel | Category)[];
-  members?: ServerMember[];
-  users?: ServerMember[];
-  memberApplications?: MemberApplication[];
 };
 
 export type BaseChannel = {
-  id: string;
+  channelId: string;
   name: string;
   order: number;
   bitrate: number;
@@ -1966,7 +2027,7 @@ export type BaseChannel = {
   guestTextGapTime: number;
   guestTextWaitTime: number;
   guestTextMaxLength: number;
-  isRoot: boolean;
+  // isRoot: boolean;
   isLobby: boolean;
   slowmode: boolean;
   forbidText: boolean;
@@ -1975,6 +2036,7 @@ export type BaseChannel = {
   type: 'category' | 'channel';
   visibility: 'public' | 'member' | 'private' | 'readonly';
   voiceMode: 'free' | 'queue' | 'forbidden';
+  password: string | null;
   categoryId: string | null;
   serverId: string;
   createdAt: number;
@@ -1986,67 +2048,62 @@ export type Category = BaseChannel & {
 
 export type Channel = BaseChannel & {
   type: 'channel';
-  // THESE WERE NOT SAVE IN THE DATABASE
-  messages?: ChannelMessage[];
 };
 
 export type Friend = {
-  id: string;
-  isBlocked: boolean;
-  friendGroupId: string;
   userId: string;
   targetId: string;
+  isBlocked: boolean;
+  friendGroupId: string | null;
   createdAt: number;
-  // THESE WERE NOT SAVE IN THE DATABASE
-  directMessages?: DirectMessage[]; // Change to another sheet
 };
 
 export type FriendApplication = User & {
-  description: string;
-  applicationStatus: 'pending' | 'accepted' | 'rejected';
   senderId: string;
   receiverId: string;
+  description: string;
+  applicationStatus: 'pending' | 'accepted' | 'rejected';
   createdAt: number;
 };
 
 export type FriendGroup = {
-  id: string;
+  friendGroupId: string;
+  userId: string;
   name: string;
   order: number;
-  userId: string;
   createdAt: number;
 };
 
 export type Member = {
-  id: string;
+  userId: string;
+  serverId: string;
   nickname: string | null;
   contribution: number;
   lastMessageTime: number;
   lastJoinChannelTime: number;
   isBlocked: boolean;
   permissionLevel: Permission;
-  userId: string;
-  serverId: string;
   createdAt: number;
 };
 
 export type MemberApplication = User & {
-  description: string;
-  applicationStatus: 'pending' | 'accepted' | 'rejected';
   userId: string;
   serverId: string;
+  description: string;
+  applicationStatus: 'pending' | 'accepted' | 'rejected';
   createdAt: number;
 };
 
 export type Badge = {
-  id: string;
+  badgeId: string;
   name: string;
   description: string;
   order: number;
+  createdAt: number;
 };
 
 export type Message = {
-  id: string;
+  messageId: string;
   content: string;
   type: 'general' | 'info' | 'dm';
   timestamp: number;
@@ -2054,18 +2111,18 @@ export type Message = {
 
 export type ChannelMessage = Message &
   ServerMember & {
-    type: 'general';
     senderId: string;
     receiverId: string;
     channelId: string;
+    type: 'general';
   };
 
 export type DirectMessage = Message &
   UserFriend & {
-    type: 'dm';
     senderId: string;
-    userId1: string;
-    userId2: string;
+    user1Id: string;
+    user2Id: string;
+    type: 'dm';
   };
 
 export type InfoMessage = Message & {
@@ -2089,12 +2146,6 @@ export type ContextMenuItem = {
   className?: string;
   style?: React.CSSProperties;
   onClick?: () => void;
-};
-
-export type ServerListSectionProps = {
-  title: string;
-  servers: Server[];
-  user: User;
 };
 
 export type Emoji = {
@@ -2137,6 +2188,7 @@ export enum SocketClientEvent {
   DISCONNECT_CHANNEL = 'disconnectChannel',
   CREATE_CHANNEL = 'createChannel',
   UPDATE_CHANNEL = 'updateChannel',
+  UPDATE_CHANNELS = 'updateChannels',
   DELETE_CHANNEL = 'deleteChannel',
   // Friend Group
   CREATE_FRIEND_GROUP = 'createFriendGroup',
@@ -2165,6 +2217,8 @@ export enum SocketClientEvent {
   RTC_OFFER = 'RTCOffer',
   RTC_ANSWER = 'RTCAnswer',
   RTC_ICE_CANDIDATE = 'RTCIceCandidate',
+  // Echo
+  PING = 'ping',
 }
 
 export enum SocketServerEvent {
@@ -2173,9 +2227,17 @@ export enum SocketServerEvent {
   // User
   USER_SEARCH = 'userSearch',
   USER_UPDATE = 'userUpdate',
+  USER_FRIENDS_UPDATE = 'userFriendsUpdate',
+  USER_FRIEND_GROUPS_UPDATE = 'userFriendGroupsUpdate',
+  USER_FRIEND_APPLICATIONS_UPDATE = 'userFriendApplicationsUpdate',
+  USER_SERVERS_UPDATE = 'userServersUpdate',
   // Server
   SERVER_SEARCH = 'serverSearch',
   SERVER_UPDATE = 'serverUpdate',
+  SERVER_CHANNELS_UPDATE = 'serverChannelsUpdate',
+  SERVER_MEMBERS_UPDATE = 'serverMembersUpdate',
+  SERVER_ACTIVE_MEMBERS_UPDATE = 'serverActiveMembersUpdate',
+  SERVER_MEMBER_APPLICATIONS_UPDATE = 'serverMemberApplicationsUpdate',
   // Channel
   CHANNEL_UPDATE = 'channelUpdate',
   // Category
@@ -2190,25 +2252,37 @@ export enum SocketServerEvent {
   FRIEND_UPDATE = 'friendUpdate',
   // Friend Application
   FRIEND_APPLICATION_UPDATE = 'friendApplicationUpdate',
-  // Direct Message
-  DIRECT_MESSAGE_UPDATE = 'directMessageUpdate',
+  // Message
+  ON_MESSAGE = 'onMessage',
+  ON_DIRECT_MESSAGE = 'onDirectMessage',
   // RTC
   RTC_OFFER = 'RTCOffer',
   RTC_ANSWER = 'RTCAnswer',
   RTC_ICE_CANDIDATE = 'RTCIceCandidate',
   RTC_JOIN = 'RTCJoin',
   RTC_LEAVE = 'RTCLeave',
+  // Play
+  PLAY_SOUND = 'playSound',
+  // Echo
+  PONG = 'pong',
+  // Error
+  ERROR = 'error',
+  // Popup
+  OPEN_POPUP = 'openPopup',
 }
 
 export enum PopupType {
   USER_SETTING = 'userSetting',
   CHANNEL_SETTING = 'channelSetting',
+  CHANNEL_PASSWORD = 'channelPassword',
   SERVER_SETTING = 'serverSetting',
   SYSTEM_SETTING = 'systemSetting',
   MEMBERAPPLY_SETTING = 'memberApplySetting',
   CREATE_SERVER = 'createServer',
   CREATE_CHANNEL = 'createChannel',
   CREATE_FRIENDGROUP = 'createFriendGroup',
+  EDIT_CHANNEL_ORDER = 'editChannelOrder',
+  EDIT_CHANNEL_NAME = 'editChannelName',
   EDIT_NICKNAME = 'editNickname',
   EDIT_FRIENDGROUP = 'editFriendGroup',
   EDIT_FRIEND = 'editFriend',
@@ -2222,17 +2296,21 @@ export enum PopupType {
   DIALOG_WARNING = 'dialogWarning',
   DIALOG_ERROR = 'dialogError',
   DIALOG_INFO = 'dialogInfo',
+  ANTHOR_DEVICE_LOGIN = 'anotherDeviceLogin',
 }
 
 export const PopupSize = {
   [PopupType.USER_SETTING]: { height: 650, width: 500 },
-  [PopupType.CHANNEL_SETTING]: { height: 450, width: 600 },
-  [PopupType.SERVER_SETTING]: { height: 450, width: 600 },
-  [PopupType.SYSTEM_SETTING]: { height: 450, width: 600 },
+  [PopupType.CHANNEL_SETTING]: { height: 520, width: 600 },
+  [PopupType.CHANNEL_PASSWORD]: { height: 220, width: 400 },
+  [PopupType.SERVER_SETTING]: { height: 520, width: 600 },
+  [PopupType.SYSTEM_SETTING]: { height: 520, width: 600 },
   [PopupType.MEMBERAPPLY_SETTING]: { height: 320, width: 500 },
   [PopupType.CREATE_SERVER]: { height: 460, width: 520 },
   [PopupType.CREATE_CHANNEL]: { height: 220, width: 400 },
   [PopupType.CREATE_FRIENDGROUP]: { height: 220, width: 400 },
+  [PopupType.EDIT_CHANNEL_ORDER]: { height: 550, width: 500 },
+  [PopupType.EDIT_CHANNEL_NAME]: { height: 220, width: 400 },
   [PopupType.EDIT_NICKNAME]: { height: 220, width: 400 },
   [PopupType.EDIT_FRIENDGROUP]: { height: 220, width: 400 },
   [PopupType.EDIT_FRIEND]: { height: 220, width: 400 },
@@ -2246,7 +2324,8 @@ export const PopupSize = {
   [PopupType.DIALOG_WARNING]: { height: 220, width: 400 },
   [PopupType.DIALOG_ERROR]: { height: 220, width: 400 },
   [PopupType.DIALOG_INFO]: { height: 220, width: 400 },
-  Settings: { height: 450, width: 600 },
+  [PopupType.ANTHOR_DEVICE_LOGIN]: { height: 220, width: 400 },
+  Settings: { height: 520, width: 600 },
   Apply: { height: 320, width: 500 },
   Small: { height: 220, width: 400 },
 };

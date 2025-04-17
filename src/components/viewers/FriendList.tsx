@@ -30,11 +30,11 @@ import refreshService from '@/services/refresh.service';
 interface FriendGroupTabProps {
   friendGroup: FriendGroup;
   friends: UserFriend[];
-  user: User;
+  userId: User['userId'];
 }
 
 const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
-  ({ friendGroup, friends, user }) => {
+  ({ friendGroup, friends, userId }) => {
     // Hooks
     const lang = useLanguage();
     const contextMenu = useContextMenu();
@@ -46,7 +46,7 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
     const socket = useSocket();
 
     // Variables
-    const { id: friendGroupId, name: friendGroupName } = friendGroup;
+    const { friendGroupId, name: friendGroupName } = friendGroup;
     const friendGroupFriends =
       friendGroupId === ''
         ? friends
@@ -56,14 +56,21 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
     ).length;
 
     // Handlers
-    const handleOpenEditFriendGroup = (friendGroupId: FriendGroup['id']) => {
+    const handleOpenEditFriendGroup = (
+      friendGroupId: FriendGroup['friendGroupId'],
+      userId: User['userId'],
+    ) => {
       ipcService.popup.open(PopupType.EDIT_FRIENDGROUP);
       ipcService.initialData.onRequest(PopupType.EDIT_FRIENDGROUP, {
         friendGroupId,
+        userId,
       });
     };
 
-    const handleDeleteFriendGroup = (friendGroupId: FriendGroup['id']) => {
+    const handleDeleteFriendGroup = (
+      friendGroupId: FriendGroup['friendGroupId'],
+      userId: User['userId'],
+    ) => {
       ipcService.popup.open(PopupType.DIALOG_ALERT);
       ipcService.initialData.onRequest(PopupType.DIALOG_ALERT, {
         iconType: 'warning',
@@ -71,7 +78,7 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
         submitTo: PopupType.DIALOG_ALERT,
       });
       ipcService.popup.onSubmit(PopupType.DIALOG_ALERT, () => {
-        socket.send.deleteFriendGroup({ friendGroupId });
+        socket.send.deleteFriendGroup({ friendGroupId, userId });
       });
     };
 
@@ -87,13 +94,13 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
                 id: 'edit',
                 label: lang.tr.editFriendGroup,
                 show: friendGroupId !== '',
-                onClick: () => handleOpenEditFriendGroup(friendGroupId),
+                onClick: () => handleOpenEditFriendGroup(friendGroupId, userId),
               },
               {
                 id: 'delete',
                 label: lang.tr.delete,
                 show: friendGroupId !== '',
-                onClick: () => handleDeleteFriendGroup(friendGroupId),
+                onClick: () => handleDeleteFriendGroup(friendGroupId, userId),
               },
             ]);
           }}
@@ -113,7 +120,7 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
         {expanded && friends && (
           <div className={styles['tabContent']}>
             {friendGroupFriends.map((friend) => (
-              <FriendCard key={friend.id} user={user} friend={friend} />
+              <FriendCard key={friend.targetId} friend={friend} />
             ))}
           </div>
         )}
@@ -125,7 +132,6 @@ const FriendGroupTab: React.FC<FriendGroupTabProps> = React.memo(
 FriendGroupTab.displayName = 'FriendGroupTab';
 
 interface FriendCardProps {
-  user: User;
   friend: UserFriend;
 }
 
@@ -147,14 +153,13 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
 
   // Variables
   const {
-    id: friendId,
+    userId: friendUserId,
+    targetId: friendTargetId,
     name: friendName,
     avatarUrl: friendAvatarUrl,
     signature: friendSignature,
     vip: friendVip,
     level: friendLevel,
-    userId: friendUserId,
-    targetId: friendTargetId,
     badges: friendBadges = [],
     currentServerId: friendCurrentServerId,
   } = friend;
@@ -162,11 +167,11 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
 
   // Handlers
   const handleOpenDirectMessage = (
-    userId: User['id'],
-    targetId: User['id'],
+    userId: User['userId'],
+    targetId: User['userId'],
     targetName: User['name'],
   ) => {
-    ipcService.popup.open(PopupType.DIRECT_MESSAGE);
+    ipcService.popup.open(PopupType.DIRECT_MESSAGE, { targetId });
     ipcService.initialData.onRequest(PopupType.DIRECT_MESSAGE, {
       userId,
       targetId,
@@ -175,12 +180,15 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
   };
 
   // Handlers
-  const handleServerUpdate = (server: Server | null) => {
-    if (!server) return;
-    setFriendServerName(server.name);
+  const handleServerUpdate = (data: Server | null) => {
+    if (!data) data = createDefault.server();
+    setFriendServerName(data.name);
   };
 
-  const handleOpenEditFriend = (userId: User['id'], targetId: User['id']) => {
+  const handleOpenEditFriend = (
+    userId: User['userId'],
+    targetId: User['userId'],
+  ) => {
     ipcService.popup.open(PopupType.EDIT_FRIEND);
     ipcService.initialData.onRequest(PopupType.EDIT_FRIEND, {
       userId,
@@ -189,8 +197,8 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
   };
 
   const handleDeleteFriend = (
-    friendUserId: User['id'],
-    friendTargetId: User['id'],
+    userId: User['userId'],
+    targetId: User['userId'],
   ) => {
     ipcService.popup.open(PopupType.DIALOG_ALERT);
     ipcService.initialData.onRequest(PopupType.DIALOG_ALERT, {
@@ -200,8 +208,8 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
     });
     ipcService.popup.onSubmit(PopupType.DIALOG_ALERT, () => {
       socket.send.deleteFriend({
-        friendUserId,
-        friendTargetId,
+        userId,
+        targetId,
       });
     });
   };
@@ -222,7 +230,7 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
   }, [friendCurrentServerId]);
 
   return (
-    <div key={friendId}>
+    <div key={friendTargetId}>
       {/* User View */}
       <div
         className={styles['friendCard']}
@@ -281,11 +289,13 @@ const FriendCard: React.FC<FriendCardProps> = React.memo(({ friend }) => {
 FriendCard.displayName = 'FriendCard';
 
 interface FriendListViewerProps {
-  user: User;
+  friendGroups: FriendGroup[];
+  friends: UserFriend[];
+  userId: string;
 }
 
 const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
-  ({ user }) => {
+  ({ friendGroups, friends, userId }) => {
     // Hooks
     const lang = useLanguage();
 
@@ -294,17 +304,12 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
     const [selectedTabId, setSelectedTabId] = useState<number>(0);
 
     // Variables
-    const {
-      id: userId,
-      friends: userFriends = [],
-      friendGroups: userFriendGroups = [],
-    } = user;
-    userFriends.sort((a, b) => {
+    friends.sort((a, b) => {
       if (a.currentServerId && !b.currentServerId) return -1;
       if (!a.currentServerId && b.currentServerId) return 1;
       return 0;
     });
-    const filteredFriends = userFriends.filter((fd) =>
+    const filteredFriends = friends.filter((fd) =>
       fd.name.includes(searchQuery),
     );
     const defaultFriendGroup: FriendGroup = createDefault.friendGroup({
@@ -314,7 +319,7 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
     });
 
     // Handlers
-    const handleOpenSearchUser = (userId: User['id']) => {
+    const handleOpenSearchUser = (userId: User['userId']) => {
       ipcService.popup.open(PopupType.SEARCH_USER);
       ipcService.initialData.onRequest(PopupType.SEARCH_USER, {
         userId,
@@ -350,56 +355,62 @@ const FriendListViewer: React.FC<FriendListViewerProps> = React.memo(
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className={styles['searchBar']}>
+          <div className={styles['searchIcon']} />
+          <input
+            type="text"
+            placeholder={lang.tr.searchFriend}
+            className={styles['searchInput']}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className={styles['prevIcon']} />
+          <div className={styles['nextIcon']} />
+        </div>
+
         {/* Friend List */}
         {selectedTabId == 0 && (
-          <div className={styles['friendList']}>
-            {/* Search Bar */}
-            <div className={styles['searchBar']}>
-              <div className={styles['searchIcon']} />
-              <input
-                type="text"
-                placeholder={lang.tr.searchFriend}
-                className={styles['searchInput']}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className={styles['prevIcon']} />
-              <div className={styles['nextIcon']} />
-            </div>
+          <div className={styles['scrollView']}>
             {/* Friend Groups */}
-            <div className={styles['friendGroups']}>
-              {[defaultFriendGroup, ...userFriendGroups]
-                .sort((a, b) => a.order - b.order)
+            <div className={styles['friendList']}>
+              {[defaultFriendGroup, ...friendGroups]
+                .sort((a, b) =>
+                  a.order !== b.order
+                    ? a.order - b.order
+                    : a.createdAt - b.createdAt,
+                )
                 .map((friendGroup) => (
                   <FriendGroupTab
-                    key={friendGroup.id}
-                    user={user}
+                    key={friendGroup.friendGroupId}
                     friendGroup={friendGroup}
                     friends={filteredFriends}
+                    userId={userId}
                   />
                 ))}
-            </div>
-            {/* Bottom Buttons */}
-            <div className={styles['bottomButtons']}>
-              <div
-                className={styles['button']}
-                datatype="addGroup"
-                onClick={() => handleOpenCreateFriendGroup()}
-              >
-                {lang.tr.friendAddGroup}
-              </div>
-              <div
-                className={styles['button']}
-                datatype="addFriend"
-                onClick={() => handleOpenSearchUser(userId)}
-              >
-                {lang.tr.addFriend}
-              </div>
             </div>
           </div>
         )}
 
         {/* Recent */}
         {selectedTabId == 1 && <div className={styles['recentList']}></div>}
+
+        {/* Bottom Buttons */}
+        <div className={styles['sidebarFooter']}>
+          <div
+            className={styles['button']}
+            datatype="addGroup"
+            onClick={() => handleOpenCreateFriendGroup()}
+          >
+            {lang.tr.friendAddGroup}
+          </div>
+          <div
+            className={styles['button']}
+            datatype="addFriend"
+            onClick={() => handleOpenSearchUser(userId)}
+          >
+            {lang.tr.addFriend}
+          </div>
+        </div>
       </>
     );
   },

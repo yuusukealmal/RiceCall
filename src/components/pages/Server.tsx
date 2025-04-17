@@ -1,8 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 import dynamic from 'next/dynamic';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // CSS
 import styles from '@/styles/serverPage.module.css';
+import markdown from '@/styles/common/markdown.module.css';
 
 // Components
 import MarkdownViewer from '@/components/viewers/Markdown';
@@ -12,14 +15,14 @@ import MessageInputBox from '@/components/MessageInputBox';
 
 // Types
 import {
-  PopupType,
   User,
   Server,
   Message,
   Channel,
   Member,
+  ServerMember,
+  ChannelMessage,
   SocketServerEvent,
-  ContextMenuItem,
 } from '@/types';
 
 // Providers
@@ -27,11 +30,9 @@ import { useLanguage } from '@/providers/Language';
 import { useSocket } from '@/providers/Socket';
 import { useWebRTC } from '@/providers/WebRTC';
 import { useContextMenu } from '@/providers/ContextMenu';
-import { useExpandedContext } from '@/providers/Expanded';
 
 // Services
 import ipcService from '@/services/ipc.service';
-import refreshService from '@/services/refresh.service';
 
 // Utils
 import { createDefault } from '@/utils/createDefault';
@@ -39,49 +40,42 @@ import { createDefault } from '@/utils/createDefault';
 interface ServerPageProps {
   user: User;
   server: Server;
-  handleServerUpdate: (data: Partial<Server> | null) => void;
+  channel: Channel;
+  display: boolean;
 }
 
 const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
-  ({ user, server, handleServerUpdate }) => {
+  ({ user, server, channel, display }) => {
     // Hooks
     const lang = useLanguage();
     const socket = useSocket();
     const webRTC = useWebRTC();
     const contextMenu = useContextMenu();
-    const { handleSetCategoryExpanded, handleSetChannelExpanded } =
-      useExpandedContext();
-
-    // Refs
-    const refreshed = useRef(false);
 
     // States
+    const [serverChannels, setServerChannels] = useState<Channel[]>([]);
+    const [serverActiveMembers, setServerActiveMembers] = useState<
+      ServerMember[]
+    >([]);
+    const [channelMessages, setChannelMessages] = useState<
+      Record<Channel['channelId'], ChannelMessage[]>
+    >({});
+    const [member, setMember] = useState<Member>(createDefault.member());
     const [sidebarWidth, setSidebarWidth] = useState<number>(270);
     const [isResizing, setIsResizing] = useState<boolean>(false);
-    const [isFavorite, setIsFavorite] = useState<boolean>(
-      user.favServers?.some((favServer) => favServer.id === server.id) || false,
-    );
-    const [currentChannel, setCurrentChannel] = useState<Channel>(
-      createDefault.channel(),
-    );
-    const [member, setMember] = useState<Member>(createDefault.member());
     const [showMicVolume, setShowMicVolume] = useState(false);
     const [showSpeakerVolume, setShowSpeakerVolume] = useState(false);
     const [currentTime, setCurrentTime] = useState<number>(Date.now());
 
     // Variables
-    const { id: userId, currentChannelId: userCurrentChannelId } = user;
+    const { userId } = user;
     const {
-      id: serverId,
+      serverId,
       name: serverName,
-      avatarUrl: serverAvatarUrl,
-      displayId: serverDisplayId,
       announcement: serverAnnouncement,
-      users: serverUsers = [],
     } = server;
     const {
-      id: currentChannelId,
-      messages: channelMessages = [],
+      channelId,
       bitrate: channelBitrate,
       voiceMode: channelVoiceMode,
       forbidText: channelForbidText,
@@ -89,11 +83,14 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       guestTextMaxLength: channelGuestTextMaxLength,
       guestTextWaitTime: channelGuestTextWaitTime,
       guestTextGapTime: channelGuestTextGapTime,
-    } = currentChannel;
+    } = channel;
+
+    member.lastJoinChannelTime =
+      member.lastJoinChannelTime > 0 ? member.lastJoinChannelTime : Date.now();
     const {
       permissionLevel: memberPermissionLevel,
-      lastMessageTime: memberLastMessageTime,
       lastJoinChannelTime: memberLastJoinChannelTime,
+      lastMessageTime: memberLastMessageTime,
     } = member;
     const leftGapTime =
       channelGuestTextGapTime -
@@ -112,16 +109,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       memberPermissionLevel === 1;
     const textMaxLength =
       memberPermissionLevel === 1 ? channelGuestTextMaxLength || 100 : 2000;
-    const canEditNickname = memberPermissionLevel > 1;
-    const canApplyMember = memberPermissionLevel < 2;
-    const canOpenServerSettings = memberPermissionLevel > 4;
 
     // Handlers
     const handleSendMessage = (
       message: Partial<Message>,
-      userId: User['id'],
-      serverId: Server['id'],
-      channelId: Channel['id'],
+      userId: User['userId'],
+      serverId: Server['serverId'],
+      channelId: Channel['channelId'],
     ): void => {
       if (!socket) return;
       socket.send.message({ message, channelId, serverId, userId });
@@ -129,29 +123,11 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
 
     const handleUpdateChannel = (
       channel: Partial<Channel>,
-      channelId: Channel['id'],
-      serverId: Server['id'],
+      channelId: Channel['channelId'],
+      serverId: Server['serverId'],
     ) => {
       if (!socket) return;
       socket.send.updateChannel({ channel, channelId, serverId });
-    };
-
-    // FIXME: logic is wrong
-    const handleAddFavoriteServer = (serverId: Server['id']) => {
-      if (!socket) return;
-      socket.send.updateUser({
-        userId,
-        user: {
-          ...user,
-          favoriteServerId: serverId,
-        },
-      });
-      setIsFavorite(!isFavorite);
-    };
-
-    const handleChannelUpdate = (data: Partial<Channel> | null): void => {
-      if (!data) data = createDefault.channel();
-      setCurrentChannel((prev) => ({ ...prev, ...data }));
     };
 
     const handleMemberUpdate = (data: Partial<Member> | null): void => {
@@ -159,50 +135,24 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       setMember((prev) => ({ ...prev, ...data }));
     };
 
-    const handleOpenServerSetting = (
-      userId: User['id'],
-      serverId: Server['id'],
-    ) => {
-      ipcService.popup.open(PopupType.SERVER_SETTING);
-      ipcService.initialData.onRequest(PopupType.SERVER_SETTING, {
-        serverId,
-        userId,
-      });
+    const handleServerChannelsUpdate = (data: Channel[] | null): void => {
+      if (!data) data = [];
+      setServerChannels(data);
     };
 
-    const handleOpenApplyMember = (
-      userId: User['id'],
-      serverId: Server['id'],
-    ) => {
-      if (server.receiveApply === false) {
-        ipcService.popup.open(PopupType.DIALOG_ALERT2);
-        ipcService.initialData.onRequest(PopupType.DIALOG_ALERT2, {
-          title: lang.tr.cannotApply,
-        });
-        return;
-      }
-      ipcService.popup.open(PopupType.APPLY_MEMBER);
-      ipcService.initialData.onRequest(PopupType.APPLY_MEMBER, {
-        userId,
-        serverId,
-      });
+    const handleServerActiveMembersUpdate = (
+      data: ServerMember[] | null,
+    ): void => {
+      if (!data) data = [];
+      setServerActiveMembers(data);
     };
 
-    const handleOpenEditNickname = (
-      serverId: Server['id'],
-      userId: User['id'],
-    ) => {
-      ipcService.popup.open(PopupType.EDIT_NICKNAME);
-      ipcService.initialData.onRequest(PopupType.EDIT_NICKNAME, {
-        serverId,
-        userId,
-      });
-    };
-
-    const handleLocateUser = () => {
-      if (!handleSetCategoryExpanded || !handleSetChannelExpanded) return;
-      handleSetCategoryExpanded();
-      handleSetChannelExpanded();
+    const handleOnMessagesUpdate = (data: ChannelMessage): void => {
+      if (!data) return;
+      setChannelMessages((prev) => ({
+        ...prev,
+        [data.channelId]: [...(prev[data.channelId] || []), data],
+      }));
     };
 
     const handleStartResizing = useCallback((e: React.MouseEvent) => {
@@ -262,8 +212,11 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       if (!socket) return;
 
       const eventHandlers = {
-        [SocketServerEvent.CHANNEL_UPDATE]: handleChannelUpdate,
         [SocketServerEvent.MEMBER_UPDATE]: handleMemberUpdate,
+        [SocketServerEvent.SERVER_CHANNELS_UPDATE]: handleServerChannelsUpdate,
+        [SocketServerEvent.SERVER_ACTIVE_MEMBERS_UPDATE]:
+          handleServerActiveMembersUpdate,
+        [SocketServerEvent.ON_MESSAGE]: handleOnMessagesUpdate,
       };
       const unsubscribe: (() => void)[] = [];
 
@@ -278,55 +231,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
     }, [socket]);
 
     useEffect(() => {
-      if (!userId || !serverId || !userCurrentChannelId || refreshed.current)
-        return;
-      const refresh = async () => {
-        refreshed.current = true;
-        Promise.all([
-          refreshService.server({
-            serverId: serverId,
-          }),
-          refreshService.channel({
-            channelId: userCurrentChannelId,
-          }),
-          refreshService.member({
-            userId: userId,
-            serverId: serverId,
-          }),
-        ]).then(([server, channel, member]) => {
-          handleServerUpdate(server);
-          handleChannelUpdate(channel);
-          handleMemberUpdate(member);
-        });
-      };
-      refresh();
-    }, [userId, serverId, userCurrentChannelId, handleServerUpdate]);
-
-    useEffect(() => {
-      ipcService.discord.updatePresence({
-        details: `${lang.tr.in} ${serverName}`,
-        state: `${lang.tr.chatWithMembers.replace(
-          '{0}',
-          serverUsers.length.toString(),
-        )}`,
-        largeImageKey: 'app_icon',
-        largeImageText: 'RC Voice',
-        smallImageKey: 'home_icon',
-        smallImageText: lang.tr.RPCServer,
-        timestamp: Date.now(),
-        buttons: [
-          {
-            label: lang.tr.RPCJoinServer,
-            url: 'https://discord.gg/adCWzv6wwS',
-          },
-        ],
-      });
-    }, [lang, serverName, serverUsers]);
-
-    useEffect(() => {
-      if (!webRTC.updateBitrate || !channelBitrate) return;
-      webRTC.updateBitrate(channelBitrate);
-    }, [webRTC, webRTC.updateBitrate, channelBitrate]);
+      if (!webRTC || !channelBitrate) return;
+      webRTC.handleUpdateBitrate(channelBitrate);
+    }, [channelBitrate]);
 
     useEffect(() => {
       const timer = setInterval(() => {
@@ -335,8 +242,34 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
       return () => clearInterval(timer);
     }, []);
 
+    useEffect(() => {
+      if (serverName) {
+        ipcService.discord.updatePresence({
+          details: `${lang.tr.in} ${serverName}`,
+          state: `${lang.tr.chatWithMembers.replace(
+            '{0}',
+            serverActiveMembers.length.toString(),
+          )}`,
+          largeImageKey: 'app_icon',
+          largeImageText: 'RC Voice',
+          smallImageKey: 'home_icon',
+          smallImageText: lang.tr.RPCServer,
+          timestamp: Date.now(),
+          buttons: [
+            {
+              label: lang.tr.RPCJoinServer,
+              url: 'https://discord.gg/adCWzv6wwS',
+            },
+          ],
+        });
+      }
+    }, [lang, serverName, serverActiveMembers]);
+
     return (
-      <div className={styles['serverWrapper']}>
+      <div
+        className={styles['serverWrapper']}
+        style={{ display: display ? 'flex' : 'none' }}
+      >
         {/* Main Content */}
         <main className={styles['serverContent']}>
           {/* Left Sidebar */}
@@ -344,112 +277,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
             className={styles['sidebar']}
             style={{ width: `${sidebarWidth}px` }}
           >
-            <div className={styles['sidebarHeader']}>
-              <div
-                className={styles['avatarBox']}
-                onClick={() => {
-                  if (!canOpenServerSettings) return;
-                  handleOpenServerSetting(userId, serverId);
-                }}
-              >
-                <div
-                  className={styles['avatarPicture']}
-                  style={{ backgroundImage: `url(${serverAvatarUrl})` }}
-                />
-              </div>
-              <div className={styles['baseInfoBox']}>
-                <div className={styles['container']}>
-                  <div className={styles['verifyIcon']}></div>
-                  <div className={styles['name']}>{serverName} </div>
-                </div>
-                <div className={styles['container']}>
-                  <div className={styles['idText']}>{serverDisplayId}</div>
-                  <div className={styles['memberText']}>
-                    {serverUsers.length}
-                  </div>
-                </div>
-              </div>
-              <div className={styles['optionBox']}>
-                <div
-                  className={styles['invitation']}
-                  onClick={() => {
-                    // Handle invite friends
-                  }}
-                />
-                <div className={styles['saperator']} />
-                <div
-                  className={styles['setting']}
-                  onClick={(e) => {
-                    contextMenu.showContextMenu(
-                      e.clientX,
-                      e.clientY,
-                      [
-                        {
-                          id: 'invitation',
-                          label: lang.tr.invitation,
-                          show: canApplyMember,
-                          icon: 'memberapply',
-                          onClick: () =>
-                            handleOpenApplyMember(userId, serverId),
-                        },
-                        // {
-                        //   id: 'memberChat',
-                        //   label: '會員群聊',
-                        //   show: memberPermissionLevel > 2,
-                        //   onClick: () => {},
-                        // },
-                        // {
-                        //   id: 'admin',
-                        //   label: '查看管理員',
-                        //   onClick: () => {},
-                        // },
-                        {
-                          id: 'separator',
-                          label: '',
-                          show: canApplyMember,
-                        },
-                        {
-                          id: 'editNickname',
-                          label: lang.tr.editNickname,
-                          icon: 'editGroupcard',
-                          show: canEditNickname,
-                          onClick: () =>
-                            handleOpenEditNickname(serverId, userId),
-                        },
-                        {
-                          id: 'locateMe',
-                          label: lang.tr.locateMe,
-                          icon: 'locateme',
-                          onClick: () => handleLocateUser(),
-                        },
-                        {
-                          id: 'separator',
-                          label: '',
-                        },
-                        // {
-                        //   id: 'report',
-                        //   label: '舉報',
-                        //   onClick: () => {},
-                        // },
-                        {
-                          id: 'favorite',
-                          label: isFavorite
-                            ? lang.tr.unfavorite
-                            : lang.tr.favorite,
-                          icon: isFavorite ? 'collect' : 'uncollect',
-                          onClick: () => handleAddFavoriteServer(serverId),
-                        },
-                      ].filter(Boolean) as ContextMenuItem[],
-                    );
-                  }}
-                />
-              </div>
-            </div>
             <ChannelViewer
               user={user}
               server={server}
-              member={member}
-              currentChannel={currentChannel}
+              channel={channel}
+              serverActiveMembers={serverActiveMembers}
+              serverChannels={serverChannels}
+              permissionLevel={memberPermissionLevel}
             />
           </div>
           {/* Resize Handle */}
@@ -460,11 +294,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
           />
           {/* Right Content */}
           <div className={styles['mainContent']}>
-            <div className={styles['announcementArea']}>
+            <div
+              className={`${styles['announcementArea']} ${markdown['markdownContent']}`}
+            >
               <MarkdownViewer markdownText={serverAnnouncement} />
             </div>
             <div className={styles['messageArea']}>
-              <MessageViewer messages={channelMessages} />
+              <MessageViewer messages={channelMessages[channelId] || []} />
             </div>
             <div className={styles['inputArea']}>
               <MessageInputBox
@@ -473,7 +309,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                     { type: 'general', content: msg },
                     userId,
                     serverId,
-                    currentChannelId,
+                    channelId,
                   );
                 }}
                 disabled={
@@ -509,7 +345,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           onClick: () => {
                             handleUpdateChannel(
                               { voiceMode: 'free' },
-                              currentChannelId,
+                              channelId,
                               serverId,
                             );
                           },
@@ -520,7 +356,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           onClick: () => {
                             handleUpdateChannel(
                               { voiceMode: 'forbidden' },
-                              currentChannelId,
+                              channelId,
                               serverId,
                             );
                           },
@@ -529,11 +365,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                           id: 'queue',
                           label: lang.tr.queue,
                           icon: 'submenu',
+                          show: false,
+                          disabled: true,
                           hasSubmenu: true,
                           onClick: () => {
                             handleUpdateChannel(
                               { voiceMode: 'queue' },
-                              currentChannelId,
+                              channelId,
                               serverId,
                             );
                           },
@@ -570,14 +408,28 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 )}
               </div>
               <div
-                className={`${styles['micButton']} ${
-                  webRTC.isMute ? '' : styles['active']
-                }`}
-                onClick={() => webRTC.toggleMute?.()}
+                className={`
+                  ${styles['micButton']} 
+                  ${webRTC.isMute ? '' : styles['active']}`}
+                onClick={() => webRTC.handleToggleMute()}
               >
-                <div className={styles['micIcon']} />
+                <div
+                  className={`
+                    ${styles['micIcon']} 
+                    ${
+                      webRTC.volumePercent
+                        ? styles[
+                            `level${Math.ceil(webRTC.volumePercent / 10) - 1}`
+                          ]
+                        : ''
+                    }
+                  `}
+                />
                 <div className={styles['micText']}>
                   {webRTC.isMute ? lang.tr.takeMic : lang.tr.takenMic}
+                  <div className={styles['micSubText']}>
+                    {!webRTC.isMute && webRTC.micVolume === 0 ? '麥已靜音' : ''}
+                  </div>
                 </div>
               </div>
               <div className={styles['buttons']}>
@@ -585,11 +437,13 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                 <div className={styles['saperator']} />
                 <div className={styles['micVolumeContainer']}>
                   <div
-                    className={`${styles['micModeButton']} ${
-                      webRTC.isMute || webRTC.micVolume === 0
-                        ? styles['muted']
-                        : styles['active']
-                    }`}
+                    className={`
+                      ${styles['micModeButton']} 
+                      ${
+                        webRTC.isMute || webRTC.micVolume === 0
+                          ? styles['muted']
+                          : styles['active']
+                      }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowMicVolume(!showMicVolume);
@@ -604,7 +458,9 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         max="200"
                         value={webRTC.micVolume}
                         onChange={(e) => {
-                          webRTC.updateMicVolume?.(parseInt(e.target.value));
+                          webRTC.handleUpdateMicVolume?.(
+                            parseInt(e.target.value),
+                          );
                         }}
                         className={styles['slider']}
                       />
@@ -630,7 +486,7 @@ const ServerPageComponent: React.FC<ServerPageProps> = React.memo(
                         max="100"
                         value={webRTC.speakerVolume}
                         onChange={(e) => {
-                          webRTC.updateSpeakerVolume?.(
+                          webRTC.handleUpdateSpeakerVolume(
                             parseInt(e.target.value),
                           );
                         }}

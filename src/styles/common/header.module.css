@@ -4,12 +4,7 @@
   -webkit-app-region: drag;
   justify-content: space-between;
   min-height: 30px;
-  border-top: 1px solid #858585;
-  border-right: 1px solid #858585;
-  border-left: 1px solid #858585;
-  border-bottom: none;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
+  border: none;
 }
 
 .appIcon {
@@ -281,7 +276,7 @@
   right: 10px;
   min-width: 15px;
   min-height: 15px;
-  background-image: url('../../../public/tapCloseBtn.png');
+  background-image: url('../../../public/ctrl/tabitem_button.png');
   background-repeat: no-repeat;
   background-position: 0 0;
 }

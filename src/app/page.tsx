@@ -1,6 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import React, { useEffect, useRef, useState } from 'react';
 
 // CSS
 import header from '@/styles/common/header.module.css';
@@ -12,6 +15,7 @@ import {
   LanguageKey,
   Server,
   User,
+  Channel,
 } from '@/types';
 
 // Pages
@@ -24,6 +28,8 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // Utils
 import { createDefault } from '@/utils/createDefault';
+import { StandardizedError } from '@/utils/errorHandler';
+import { errorHandler } from '@/utils/errorHandler';
 
 // Providers
 import WebRTCProvider from '@/providers/WebRTC';
@@ -31,38 +37,37 @@ import ExpandedProvider from '@/providers/Expanded';
 import { useSocket } from '@/providers/Socket';
 import { useLanguage } from '@/providers/Language';
 import { useContextMenu } from '@/providers/ContextMenu';
+import { useMainTab } from '@/providers/MainTab';
 
 // Services
 import ipcService from '@/services/ipc.service';
 import authService from '@/services/auth.service';
 
 interface HeaderProps {
-  user: User;
-  server: Server;
-  selectedId: 'home' | 'friends' | 'server';
-  setSelectedTabId: (tabId: 'home' | 'friends' | 'server') => void;
+  userId: User['userId'];
+  userName: User['name'];
+  userStatus: User['status'];
+  serverId: Server['serverId'];
+  serverName: Server['name'];
 }
 
 const Header: React.FC<HeaderProps> = React.memo(
-  ({ user, server, selectedId, setSelectedTabId }) => {
+  ({ userId, userName, userStatus, serverId, serverName }) => {
     // Hooks
     const socket = useSocket();
     const lang = useLanguage();
     const contextMenu = useContextMenu();
+    const mainTab = useMainTab();
 
     // States
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
-    // Variables
-    const { id: serverId } = server;
-    const { id: userId, name: userName, status: userStatus } = user;
-
     // Constants
     const MAIN_TABS = [
       { id: 'home', label: lang.tr.home },
       { id: 'friends', label: lang.tr.friends },
-      { id: 'server', label: server.name },
+      { id: 'server', label: serverName },
     ];
     const STATUS_OPTIONS = [
       { status: 'online', label: lang.tr.online },
@@ -72,12 +77,18 @@ const Header: React.FC<HeaderProps> = React.memo(
     ];
 
     // Handlers
-    const handleLeaveServer = (userId: User['id'], serverId: Server['id']) => {
+    const handleLeaveServer = (
+      userId: User['userId'],
+      serverId: Server['serverId'],
+    ) => {
       if (!socket) return;
       socket.send.disconnectServer({ userId, serverId });
     };
 
-    const handleUpdateStatus = (status: User['status'], userId: User['id']) => {
+    const handleUpdateStatus = (
+      status: User['status'],
+      userId: User['userId'],
+    ) => {
       if (!socket) return;
       socket.send.updateUser({ user: { status }, userId });
     };
@@ -105,7 +116,7 @@ const Header: React.FC<HeaderProps> = React.memo(
       localStorage.setItem('language', language);
     };
 
-    const handleOpenUserSetting = (userId: User['id']) => {
+    const handleOpenUserSetting = (userId: User['userId']) => {
       ipcService.popup.open(PopupType.USER_SETTING);
       ipcService.initialData.onRequest(PopupType.USER_SETTING, {
         userId,
@@ -167,10 +178,12 @@ const Header: React.FC<HeaderProps> = React.memo(
               <div
                 key={`Tabs-${TabId}`}
                 className={`${header['tab']} ${
-                  TabId === selectedId ? header['selected'] : ''
+                  TabId === mainTab.selectedTabId ? header['selected'] : ''
                 }`}
                 onClick={() =>
-                  setSelectedTabId(TabId as 'home' | 'friends' | 'server')
+                  mainTab.setSelectedTabId(
+                    TabId as 'home' | 'friends' | 'server',
+                  )
                 }
               >
                 <div className={header['tabLable']}>{TabLable}</div>
@@ -178,7 +191,10 @@ const Header: React.FC<HeaderProps> = React.memo(
                 {TabClose && (
                   <div
                     className={header['tabClose']}
-                    onClick={() => handleLeaveServer(userId, serverId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLeaveServer(userId, serverId);
+                    }}
                   />
                 )}
               </div>
@@ -284,17 +300,31 @@ const Header: React.FC<HeaderProps> = React.memo(
 
 Header.displayName = 'Header';
 
-const Home = () => {
+const RootPageComponent = () => {
   // Hooks
   const socket = useSocket();
   const lang = useLanguage();
+  const mainTab = useMainTab();
+
+  // Refs
+  const joinAudioRef = useRef<HTMLAudioElement>(null);
+  joinAudioRef.current = new Audio('./sounds/Yconnect.wav');
+  joinAudioRef.current.volume = 0.5;
+  const leaveAudioRef = useRef<HTMLAudioElement>(null);
+  leaveAudioRef.current = new Audio('./sounds/Ydisconnect.wav');
+  leaveAudioRef.current.volume = 0.5;
+  const recieveAudioRef = useRef<HTMLAudioElement>(null);
+  recieveAudioRef.current = new Audio('./sounds/ReceiveChannelMsg.wav');
+  recieveAudioRef.current.volume = 0.5;
 
   // States
   const [user, setUser] = useState<User>(createDefault.user());
   const [server, setServer] = useState<Server>(createDefault.server());
-  const [selectedTabId, setSelectedTabId] = useState<
-    'home' | 'friends' | 'server'
-  >('home');
+  const [channel, setChannel] = useState<Channel>(createDefault.channel());
+
+  // Variables
+  const { userId, name: userName, status: userStatus } = user;
+  const { serverId, name: serverName } = server;
 
   // Handlers
   const handleUserUpdate = (data: Partial<User> | null) => {
@@ -303,10 +333,48 @@ const Home = () => {
   };
 
   const handleServerUpdate = (data: Partial<Server> | null) => {
-    if (data && data.id) setSelectedTabId('server');
-    if (!data) setSelectedTabId('home');
+    if (data != null) {
+      if (data.serverId) mainTab.setSelectedTabId('server');
+    } else {
+      mainTab.setSelectedTabId('home');
+    }
     if (!data) data = createDefault.server();
     setServer((prev) => ({ ...prev, ...data }));
+  };
+
+  const handleCurrentChannelUpdate = (data: Partial<Channel> | null) => {
+    if (!data) data = createDefault.channel();
+    setChannel((prev) => ({ ...prev, ...data }));
+  };
+
+  const handlePlaySound = (sound: string) => {
+    switch (sound) {
+      case 'leave':
+        leaveAudioRef.current?.play();
+        break;
+      case 'join':
+        joinAudioRef.current?.play();
+        break;
+      case 'recieveChannelMessage':
+        recieveAudioRef.current?.play();
+        break;
+    }
+  };
+
+  const handleError = (error: StandardizedError) => {
+    new errorHandler(error).show();
+  };
+
+  const handleOpenPopup = (data: { type: PopupType; initialData: any }) => {
+    console.log('Socket open popup', data);
+    ipcService.initialData.onRequest(data.type, data.initialData);
+    ipcService.popup.onSubmit(data.type, () => {
+      switch (data.type) {
+        case PopupType.DIALOG_ALERT:
+          ipcService.auth.logout();
+          break;
+      }
+    });
   };
 
   // Effects
@@ -316,6 +384,10 @@ const Home = () => {
     const eventHandlers = {
       [SocketServerEvent.USER_UPDATE]: handleUserUpdate,
       [SocketServerEvent.SERVER_UPDATE]: handleServerUpdate,
+      [SocketServerEvent.CHANNEL_UPDATE]: handleCurrentChannelUpdate,
+      [SocketServerEvent.PLAY_SOUND]: handlePlaySound,
+      [SocketServerEvent.ERROR]: handleError,
+      [SocketServerEvent.OPEN_POPUP]: handleOpenPopup,
     };
     const unsubscribe: (() => void)[] = [];
 
@@ -331,11 +403,12 @@ const Home = () => {
 
   useEffect(() => {
     if (socket.isConnected) {
-      setSelectedTabId('home');
+      mainTab.setSelectedTabId('home');
     } else {
-      setSelectedTabId('home');
+      mainTab.setSelectedTabId('home');
       setUser(createDefault.user());
       setServer(createDefault.server());
+      setChannel(createDefault.channel());
     }
   }, [socket.isConnected]);
 
@@ -347,32 +420,35 @@ const Home = () => {
 
   const getMainContent = () => {
     if (!socket.isConnected) return <LoadingSpinner />;
-    switch (selectedTabId) {
-      case 'home':
-        return <HomePage user={user} handleUserUpdate={handleUserUpdate} />;
-      case 'friends':
-        return <FriendPage user={user} handleUserUpdate={handleUserUpdate} />;
-      case 'server':
-        return (
-          <ExpandedProvider>
-            <ServerPage
-              user={user}
-              server={server}
-              handleServerUpdate={handleServerUpdate}
-            />
-          </ExpandedProvider>
-        );
-    }
+    return (
+      <>
+        <HomePage
+          user={user}
+          server={server}
+          display={mainTab.selectedTabId === 'home'}
+        />
+        <FriendPage user={user} display={mainTab.selectedTabId === 'friends'} />
+        <ExpandedProvider>
+          <ServerPage
+            user={user}
+            server={server}
+            channel={channel}
+            display={mainTab.selectedTabId === 'server'}
+          />
+        </ExpandedProvider>
+      </>
+    );
   };
 
   return (
     <WebRTCProvider>
       <div className="wrapper">
         <Header
-          user={user}
-          server={server}
-          selectedId={selectedTabId}
-          setSelectedTabId={setSelectedTabId}
+          userId={userId}
+          userName={userName}
+          userStatus={userStatus}
+          serverId={serverId}
+          serverName={serverName}
         />
         {/* Main Content */}
         <div className="content">{getMainContent()}</div>
@@ -381,6 +457,11 @@ const Home = () => {
   );
 };
 
-Home.displayName = 'Home';
+RootPageComponent.displayName = 'RootPageComponent';
 
-export default Home;
+// use dynamic import to disable SSR
+const RootPage = dynamic(() => Promise.resolve(RootPageComponent), {
+  ssr: false,
+});
+
+export default RootPage;

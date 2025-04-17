@@ -14,10 +14,12 @@ import UserSetting from '@/components/popups/UserSetting';
 import ServerSetting from '@/components/popups/ServerSetting';
 import ChannelSetting from '@/components/popups/ChannelSetting';
 import SystemSetting from '@/components/popups/SystemSetting';
+import ChannelPassword from '@/components/popups/ChannelPassword';
 import MemberApplySetting from '@/components/popups/MemberApplySetting';
 import CreateServer from '@/components/popups/CreateServer';
 import CreateChannel from '@/components/popups/CreateChannel';
 import CreateFriendGroup from '@/components/popups/CreateFriendGroup';
+import EditChannelOrder from '@/components/popups/EditChannelOrder';
 import EditNickname from '@/components/popups/EditNickname';
 import EditFriendGroup from '@/components/popups/EditFriendGroup';
 import EditFriend from '@/components/popups/EditFriend';
@@ -32,6 +34,7 @@ import ipcService from '@/services/ipc.service';
 
 // Providers
 import { useLanguage } from '@/providers/Language';
+import EditChannelName from '@/components/popups/EditChannelName';
 
 interface HeaderProps {
   title: string;
@@ -121,6 +124,11 @@ const Popup = React.memo(() => {
     if (!initialData || !type) return;
 
     switch (type) {
+      case PopupType.CHANNEL_PASSWORD:
+        setHeaderTitle(lang.tr.pleaseEnterTheChannelPassword);
+        setHeaderButtons(['close']);
+        setContent(<ChannelPassword {...initialData} />);
+        break;
       case PopupType.USER_SETTING:
         setHeaderTitle(lang.tr.editUser);
         setHeaderButtons(['close']);
@@ -161,6 +169,16 @@ const Popup = React.memo(() => {
         setHeaderButtons(['close']);
         setContent(<CreateFriendGroup {...initialData} />);
         break;
+      case PopupType.EDIT_CHANNEL_ORDER:
+        setHeaderTitle(lang.tr.editChannelOrder);
+        setHeaderButtons(['close']);
+        setContent(<EditChannelOrder {...initialData} />);
+        break;
+      case PopupType.EDIT_CHANNEL_NAME:
+        setHeaderTitle(lang.tr.editChannelName);
+        setHeaderButtons(['close']);
+        setContent(<EditChannelName {...initialData} />);
+        break;
       case PopupType.EDIT_NICKNAME:
         setHeaderTitle(lang.tr.editMemberCard);
         setHeaderButtons(['close']);
@@ -172,7 +190,7 @@ const Popup = React.memo(() => {
         setContent(<EditFriendGroup {...initialData} />);
         break;
       case PopupType.EDIT_FRIEND:
-        setHeaderTitle('編輯好友');
+        setHeaderTitle(lang.tr.editFriend);
         setHeaderButtons(['close']);
         setContent(<EditFriend {...initialData} />);
         break;
@@ -222,6 +240,11 @@ const Popup = React.memo(() => {
         setHeaderButtons(['close']);
         setContent(<Dialog {...{ ...initialData, iconType: 'INFO' }} />);
         break;
+      case PopupType.ANTHOR_DEVICE_LOGIN:
+        setHeaderTitle(lang.tr.dialogWarning);
+        setHeaderButtons(['close']);
+        setContent(<Dialog {...{ ...initialData, iconType: 'WARNING' }} />);
+        break;
       default:
         break;
     }
@@ -232,7 +255,7 @@ const Popup = React.memo(() => {
       {/* Top Nevigation */}
       {<Header title={headerTitle} buttons={headerButtons} />}
       {/* Main Content */}
-      {content}
+      <div className="content">{content}</div>
     </div>
   );
 });

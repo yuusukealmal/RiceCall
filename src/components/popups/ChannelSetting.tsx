@@ -19,8 +19,8 @@ import refreshService from '@/services/refresh.service';
 import { createDefault } from '@/utils/createDefault';
 
 interface ChannelSettingPopupProps {
-  serverId: string;
-  channelId: string;
+  serverId: Server['serverId'];
+  channelId: Channel['channelId'];
 }
 
 const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
@@ -46,6 +46,9 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
     const [channelVisibility, setChannelVisibility] = useState<
       Channel['visibility']
     >(createDefault.channel().visibility);
+    const [channelPassword, setChannelPassword] = useState<Channel['password']>(
+      createDefault.channel().password,
+    );
     const [channelForbidText, setChannelForbidText] = useState<
       Channel['forbidText']
     >(createDefault.channel().forbidText);
@@ -77,8 +80,8 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
     // Handlers
     const handleUpdateChannel = (
       channel: Partial<Channel>,
-      channelId: Channel['id'],
-      serverId: Server['id'],
+      channelId: Channel['channelId'],
+      serverId: Server['serverId'],
     ) => {
       if (!socket) return;
       socket.send.updateChannel({ channel, channelId, serverId });
@@ -87,8 +90,10 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
     const handleChannelUpdate = (data: Channel | null) => {
       if (!data) data = createDefault.channel();
       setChannelName(data.name);
+      setChannelOrder(data.order);
       setChannelIsLobby(data.isLobby);
       setChannelVisibility(data.visibility);
+      setChannelPassword(data.password);
       setChannelUserLimit(data.userLimit);
       setChannelVoiceMode(data.voiceMode);
       setChannelForbidText(data.forbidText);
@@ -97,7 +102,6 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
       setChannelGuestTextMaxLength(data.guestTextMaxLength);
       setChannelGuestTextWaitTime(data.guestTextWaitTime);
       setChannelGuestTextGapTime(data.guestTextGapTime);
-      setChannelOrder(data.order);
     };
 
     const handleClose = () => {
@@ -179,27 +183,6 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
                             ),
                           )
                         }
-                      />
-                    </div>
-
-                    <div className={`${popup['inputBox']} ${popup['col']}`}>
-                      <div className={popup['label']}>
-                        {lang.tr.channelOrder}
-                      </div>
-                      <input
-                        type="number"
-                        value={channelOrder || 0}
-                        min="-999"
-                        max="999"
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (!value || isNaN(parseInt(value)))
-                            setChannelOrder(0);
-                          else
-                            setChannelOrder(
-                              Math.max(-999, Math.min(999, parseInt(value))),
-                            );
-                        }}
                       />
                     </div>
                   </div>
@@ -331,26 +314,6 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
                     <input
                       type="radio"
                       name="voiceQuality"
-                      checked={channelVisibility === 'private'}
-                      onChange={() => {
-                        setChannelVisibility('private');
-                      }}
-                    />
-                    <div>
-                      <label className={popup['label']}>
-                        {lang.tr.channelPrivate}
-                      </label>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`${popup['inputBox']} ${
-                      channelIsLobby ? popup['disabled'] : ''
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="voiceQuality"
                       checked={channelVisibility === 'readonly'}
                       onChange={() => {
                         setChannelVisibility('readonly');
@@ -362,6 +325,40 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
                       </label>
                     </div>
                   </div>
+
+                  <div
+                    className={`${popup['inputBox']} ${
+                      channelIsLobby ? popup['disabled'] : ''
+                    } ${popup['row']}`}
+                  >
+                    <input
+                      type="radio"
+                      name="voiceQuality"
+                      checked={channelVisibility === 'private'}
+                      onChange={() => {
+                        setChannelVisibility('private');
+                      }}
+                    />
+                    <label className={popup['label']}>
+                      {lang.tr.channelPrivate}
+                    </label>
+                  </div>
+
+                  {channelVisibility === 'private' && (
+                    <div className={popup['inputBox']}>
+                      <input
+                        className={popup['input']}
+                        type="text"
+                        value={channelPassword || ''}
+                        maxLength={4}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (isNaN(parseInt(value))) setChannelPassword(null);
+                          else setChannelPassword(value);
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             ) : activeTabIndex === 3 ? (
@@ -502,6 +499,7 @@ const ChannelSettingPopup: React.FC<ChannelSettingPopupProps> = React.memo(
                 {
                   name: channelName,
                   visibility: channelVisibility,
+                  password: channelPassword,
                   userLimit: channelUserLimit,
                   voiceMode: channelVoiceMode,
                   order: channelOrder,

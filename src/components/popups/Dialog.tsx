@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 // CSS
 import popup from '@/styles/common/popup.module.css';
@@ -34,6 +34,8 @@ const DialogPopup: React.FC<DialogPopupProps> = (
   // Variables
   const { iconType, title, submitTo } = initialData;
 
+  const containerRef = useRef<HTMLFormElement>(null);
+
   // Handlers
   const handleClose = () => {
     ipcService.window.close();
@@ -44,8 +46,19 @@ const DialogPopup: React.FC<DialogPopupProps> = (
     handleClose();
   };
 
+  useEffect(() => {
+    containerRef.current?.focus();
+  }, []);
+
   return (
-    <div className={popup['popupContainer']}>
+    <form
+      className={popup['popupContainer']}
+      tabIndex={0}
+      ref={containerRef}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') handleSubmit();
+      }}
+    >
       <div className={popup['popupBody']}>
         <div className={setting['body']}>
           <div className={`${popup['inputGroup']} ${popup['dialogCenter']}`}>
@@ -65,7 +78,7 @@ const DialogPopup: React.FC<DialogPopupProps> = (
           {lang.tr.confirm}
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 
